@@ -11,7 +11,7 @@ class WhenWeRunASpec(object):
                 self.log += "arrange "
             def method_with_because_in_the_name(self):
                 self.log += "act "
-            def it_should_run_these_after_setup(self):
+            def method_with_should_in_the_name(self):
                 self.log += "assert "
             def method_with_cleanup_in_the_name(self):
                 self.log += "teardown "

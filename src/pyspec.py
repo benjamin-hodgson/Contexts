@@ -13,26 +13,22 @@ def no_op():
 
 class Spec(object):
     def __init__(self, spec):
-        self.establish = no_op
-        self.because = no_op
-        self.shoulds = []
-        self.cleanup = no_op
-        for name, meth in inspect.getmembers(spec, inspect.ismethod):
-            if re.search(establish_re, name):
-                self.establish = meth
-            if re.search(because_re, name):
-                self.because = meth
-            if re.search(should_re, name):
-                self.shoulds.append(meth)
-            if re.search(cleanup_re, name):
-                self.cleanup = meth
+        self.spec = spec
+
+    def find_methods_matching(self, regex):
+        for name, meth in inspect.getmembers(self.spec, inspect.ismethod):
+            if re.search(regex, name):
+                yield meth
+
+    def run_methods_matching(self, regex):
+        for method in self.find_methods_matching(regex):
+            method()
 
     def run(self):
-        self.establish()
-        self.because()
-        for should in self.shoulds:
-            should()
-        self.cleanup()
+        self.run_methods_matching(establish_re)
+        self.run_methods_matching(because_re)
+        self.run_methods_matching(should_re)
+        self.run_methods_matching(cleanup_re)
 
 
 def run(spec):
