@@ -105,9 +105,77 @@ class WhenASpecFails(object):
     def it_should_report_the_failure(self):
         self.result.summary().should.equal("1 assertions, 1 failed")
 
+class WhenASpecHasASuperclass(object):
+    def context(self):
+        class SharedContext(object):
+            def __init__(self):
+                self.log = ""
+            def context(self):
+                self.log += "superclass arrange "
+            def superclass_because(self):
+                self.log += "superclass action "
+            def it(self):
+                self.log += "superclass assertion "
+            def cleanup(self):
+                self.log += "superclass cleanup "
+        class Spec(SharedContext):
+            def context(self):
+                self.log += "subclass arrange "
+            def because(self):
+                self.log += "subclass action "
+            def it(self):
+                self.log += "subclass assertion "
+            def cleanup(self):
+                self.log += "subclass cleanup "
+
+        self.spec = Spec()
+
+    def because_we_run_the_spec(self):
+        pyspec.run(self.spec)
+
+    def it_should_run_the_superclass_ctx_first(self):
+        self.spec.log[:19].should.equal("superclass arrange ")
+
+    def it_should_run_the_subclass_ctx_next(self):
+        self.spec.log[19:36].should.equal("subclass arrange ")
+
+    def it_should_run_the_subclass_bec_next(self):
+        self.spec.log[36:52].should.equal("subclass action ")
+
+    def it_should_not_run_the_superclass_bec(self):
+        self.spec.log.should_not.contain("superclass action ")
+
+    def it_should_run_both_assertions(self):
+        # We don't care what order the two assertions get run in
+        self.spec.log[52:92].should.contain("superclass assertion ")
+        self.spec.log[52:92].should.contain("subclass assertion ")
+
+    def it_should_run_the_subclass_clean_first(self):
+        self.spec.log[92:109].should.equal("subclass cleanup ")
+
+    def it_should_run_the_superclass_clean_second(self):
+        self.spec.log[109:238].should.equal("superclass cleanup ")
+
+# class WhenSpecsError(object):
+#     def context(self):
+#         class ErrorInSetup(object):
+#             def context_error(self):
+#                 raise TypeError()
+#             def it_should_error(self):
+#                 pass
+
+#         self.spec1 = ErrorInSetup()
+
+#     def because_we_run_the_specs(self):
+#         self.result1 = pyspec.run(self.spec1)
+
+#     def it_should_report_the_failure(self):
+#         self.result1.summary().should.equal("1 assertions, 1 failed")
+
 
 if __name__ == "__main__":
     print(pyspec.run(WhenWeRunASpec()).summary())
     print(pyspec.run(WhenASpecFails()).summary())
     print(pyspec.run(WhenWeRunASpecWithMultipleAssertionsWithoutAnEstablishClause()).summary())
     print(pyspec.run(WhenWeRunSpecsWithAlternatelyNamedMethods()).summary())
+    print(pyspec.run(WhenASpecHasASuperclass()).summary())
