@@ -19,10 +19,13 @@ class WhenWeRunASpec(object):
         self.spec = TestSpec()
 
     def because_we_run_the_spec(self):
-        pyspec.run(self.spec)
+        self.result = pyspec.run(self.spec)
 
     def it_should_run_the_methods_in_the_correct_order(self):
         self.spec.log.should.equal("arrange act assert teardown ")
+
+    def it_should_report_the_results(self):
+        self.result.summary().should.equal("1 assertions, 0 failed")
 
 
 class WhenWeRunASpecWithMultipleAssertionsWithoutAnEstablishClause(object):
@@ -45,29 +48,33 @@ class WhenWeRunASpecWithMultipleAssertionsWithoutAnEstablishClause(object):
 
 
 class WhenWeRunSpecsWithAlternatelyNamedMethods(object):
-    def establish_the_specs(self):
+    def context(self):
         class AlternatelyNamedMethods(object):
             def __init__(self):
                 self.log = ""
-            def context(self):
+            def has_context_in_the_name(self):
                 self.log += "arrange "
-            def has_when_in_the_name(self):  # to prevent collision with Sure
+            def has_when_in_the_name(self):
                 self.log += "act "
-            def it(self):
+            def has_it_in_the_name(self):
                 self.log += "assert "
         class MoreAlternativeNames(object):
             def __init__(self):
                 self.log = ""
-            def since(self):
+            def has_setup_in_the_name(self):
+                self.log += "arrange "
+            def has_since_in_the_name(self):
                 self.log += "act "
             def has_must_in_the_name(self):
                 self.log += "assert "
+            def has_teardown_in_the_name(self):
+                self.log += "cleanup "
         class EvenMoreAlternativeNames(object):
             def __init__(self):
                 self.log = ""
-            def after(self):
+            def has_after_in_the_name(self):
                 self.log += "act "
-            def will(self):
+            def has_will_in_the_name(self):
                 self.log += "assert "
 
         self.spec1 = AlternatelyNamedMethods()
@@ -81,11 +88,26 @@ class WhenWeRunSpecsWithAlternatelyNamedMethods(object):
 
     def it_should_run_the_methods_in_the_correct_order(self):
         self.spec1.log.should.equal("arrange act assert ")
-        self.spec2.log.should.equal("act assert ")
+        self.spec2.log.should.equal("arrange act assert cleanup ")
         self.spec3.log.should.equal("act assert ")
+
+class WhenASpecFails(object):
+    def context(self):
+        class FailingSpec(object):
+            def it_should_fail(self):
+                assert False
+
+        self.spec = FailingSpec()
+
+    def because_we_run_the_spec(self):
+        self.result = pyspec.run(self.spec)
+
+    def it_should_report_the_failure(self):
+        self.result.summary().should.equal("1 assertions, 1 failed")
 
 
 if __name__ == "__main__":
-    pyspec.run(WhenWeRunASpec())
-    pyspec.run(WhenWeRunASpecWithMultipleAssertionsWithoutAnEstablishClause())
-    pyspec.run(WhenWeRunSpecsWithAlternatelyNamedMethods())
+    print(pyspec.run(WhenWeRunASpec()).summary())
+    print(pyspec.run(WhenASpecFails()).summary())
+    print(pyspec.run(WhenWeRunASpecWithMultipleAssertionsWithoutAnEstablishClause()).summary())
+    print(pyspec.run(WhenWeRunSpecsWithAlternatelyNamedMethods()).summary())
