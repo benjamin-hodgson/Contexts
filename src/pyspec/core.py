@@ -1,4 +1,3 @@
-import inspect
 import re
 
 
@@ -6,18 +5,6 @@ establish_re = re.compile(r"(^|_)([Ee]stablish|[Cc]ontext|[Ss]et_?[Uu]p)")
 because_re = re.compile(r"(^|_)([Bb]ecause|[Ww]hen|[Ss]ince|[Aa]fter)")
 should_re = re.compile(r"(^|_)([Ss]hould|[Ii]t|[Mm]ust|[Ww]ill)")
 cleanup_re = re.compile(r"(^|_)([Cc]leanup|[Tt]ear_?[Dd]own)")
-
-
-def no_op():
-    pass
-
-
-def find_methods_on_class_matching(cls, regex):
-    ret = []
-    for name, func in cls.__dict__.items():
-        if re.search(regex, name) and callable(func):
-            ret.append(func)
-    return ret
 
 
 class Spec(object):
@@ -59,10 +46,29 @@ class Spec(object):
         return self.result
 
 
+def find_methods_on_class_matching(cls, regex):
+    ret = []
+    for name, func in cls.__dict__.items():
+        if re.search(regex, name) and callable(func):
+            ret.append(func)
+    return ret
+
+
+class SpecSuite(object):
+    def __init__(self, specs):
+        self.specs = [Spec(spec) for spec in specs]
+
+    def run(self):
+        result = Result()
+        for spec in self.specs:
+            result += spec.run()
+        return result
+
+
 class Result(object):
-    def __init__(self):
-        self.assertions = 0
-        self.failures = 0
+    def __init__(self, assertions=0, failures=0):
+        self.assertions = assertions
+        self.failures = failures
 
     def add_success(self):
         self.assertions += 1
@@ -74,6 +80,7 @@ class Result(object):
     def summary(self):
         return "{} assertions, {} failed".format(self.assertions, self.failures)
 
-
-def run(spec):
-    return Spec(spec).run()
+    def __add__(self, other):
+        assertions = self.assertions + other.assertions
+        failures = self.failures + other.failures
+        return Result(assertions, failures)

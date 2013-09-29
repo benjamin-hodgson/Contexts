@@ -156,6 +156,49 @@ class WhenASpecHasASuperclass(object):
     def it_should_run_the_superclass_clean_second(self):
         self.spec.log[109:238].should.equal("superclass cleanup ")
 
+class WhenRunningMultipleSpecs(object):
+    def context(self):
+        class Spec1(object):
+            def it(self):
+                self.was_run = True
+        class Spec2(object):
+            def it(self):
+                self.was_run = True
+
+        self.suite = [Spec1(), Spec2()]
+
+    def because_we_run_the_suite(self):
+        self.result = pyspec.run(self.suite)
+
+    def it_should_run_both_tests(self):
+        self.suite[0].was_run.should.be.true
+        self.suite[1].was_run.should.be.true
+
+    def it_should_report_the_results(self):
+        self.result.summary().should.equal("2 assertions, 0 failed")
+
+class WhenRunningMultipleSpecsUsingUnpackedSyntax(object):
+    def context(self):
+        class Spec1(object):
+            def it(self):
+                self.was_run = True
+        class Spec2(object):
+            def it(self):
+                self.was_run = True
+
+        self.suite = [Spec1(), Spec2()]
+
+    def because_we_run_the_suite(self):
+        self.result = pyspec.run(*self.suite)
+
+    def it_should_run_both_tests(self):
+        self.suite[0].was_run.should.be.true
+        self.suite[1].was_run.should.be.true
+
+    def it_should_report_the_results(self):
+        self.result.summary().should.equal("2 assertions, 0 failed")
+
+
 # class WhenSpecsError(object):
 #     def context(self):
 #         class ErrorInSetup(object):
@@ -174,8 +217,13 @@ class WhenASpecHasASuperclass(object):
 
 
 if __name__ == "__main__":
-    print(pyspec.run(WhenWeRunASpec()).summary())
-    print(pyspec.run(WhenASpecFails()).summary())
-    print(pyspec.run(WhenWeRunASpecWithMultipleAssertionsWithoutAnEstablishClause()).summary())
-    print(pyspec.run(WhenWeRunSpecsWithAlternatelyNamedMethods()).summary())
-    print(pyspec.run(WhenASpecHasASuperclass()).summary())
+    specs = [
+        WhenWeRunASpec(),
+        WhenASpecFails(),
+        WhenWeRunASpecWithMultipleAssertionsWithoutAnEstablishClause(),
+        WhenWeRunSpecsWithAlternatelyNamedMethods(),
+        WhenASpecHasASuperclass(),
+        WhenRunningMultipleSpecs(),
+        WhenRunningMultipleSpecsUsingUnpackedSyntax()
+    ]
+    print(pyspec.run(specs).summary())
