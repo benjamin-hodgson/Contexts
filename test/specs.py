@@ -220,6 +220,8 @@ class WhenRunningMultipleSpecsUsingUnpackedSyntax(object):
 
 
 if __name__ == "__main__":
+    import sys
+
     specs = [
         WhenASpecPasses(),
         WhenASpecFails(),
@@ -229,4 +231,9 @@ if __name__ == "__main__":
         WhenRunningMultipleSpecs(),
         WhenRunningMultipleSpecsUsingUnpackedSyntax(),
     ]
-    print(pyspec.run(specs).summary())
+    result = pyspec.run(specs)
+    print(result.summary())
+    if result.failures or result.errors:
+        sys.exit(1)
+    sys.exit(0)
+
