@@ -2,7 +2,7 @@ import sure
 import pyspec
 
 
-class WhenWeRunASpec(object):
+class WhenASpecPasses(object):
     def establish_the_spec(self):
         class TestSpec(object):
             def __init__(self):
@@ -13,6 +13,8 @@ class WhenWeRunASpec(object):
                 self.log += "act "
             def method_with_should_in_the_name(self):
                 self.log += "assert "
+            def another_method_with_should_in_the_name(self):
+                self.log += "assert "
             def method_with_cleanup_in_the_name(self):
                 self.log += "teardown "
 
@@ -22,29 +24,61 @@ class WhenWeRunASpec(object):
         self.result = pyspec.run(self.spec)
 
     def it_should_run_the_methods_in_the_correct_order(self):
-        self.spec.log.should.equal("arrange act assert teardown ")
+        self.spec.log.should.equal("arrange act assert assert teardown ")
 
     def it_should_report_the_results(self):
-        self.result.summary().should.equal("1 assertions, 0 failed")
+        self.result.summary().should.equal("2 assertions, 0 failed, 0 errors")
 
+class WhenASpecFails(object):
+    def context(self):
+        class FailingSpec(object):
+            def it_should_fail(self):
+                assert False
 
-class WhenWeRunASpecWithMultipleAssertionsWithoutAnEstablishClause(object):
-    def establish_the_spec(self):
-        class SpecWithoutEstablishOrCleanup(object):
-            def __init__(self):
-                self.assertions = 0
-            def it_should_run_this(self):
-                self.assertions += 1
-            def it_should_also_run_this(self):
-                self.assertions += 1
-
-        self.spec = SpecWithoutEstablishOrCleanup()
+        self.spec = FailingSpec()
 
     def because_we_run_the_spec(self):
-        pyspec.run(self.spec)
+        self.result = pyspec.run(self.spec)
 
-    def it_should_still_run_it(self):
-        self.spec.assertions.should.equal(2)
+    def it_should_report_the_failure(self):
+        self.result.summary().should.equal("1 assertions, 1 failed, 0 errors")
+
+class WhenASpecErrors(object):
+    def context(self):
+        class ErrorInSetup(object):
+            def context(self):
+                raise ValueError
+            def it(self):
+                pass
+        class ErrorInAction(object):
+            def because(self):
+                raise TypeError
+            def it(self):
+                pass
+        class ErrorInAssertion(object):
+            def it(self):
+                raise TypeError
+        class ErrorInTeardown(object):
+            def it(self):
+                pass
+            def cleanup(self):
+                raise AttributeError
+
+        self.specs = [ErrorInSetup(), ErrorInAction(), ErrorInAssertion(), ErrorInTeardown()]
+
+    def because_we_run_the_specs(self):
+        self.results = []
+        for spec in self.specs:
+            self.results.append(pyspec.run(spec))
+
+    def it_should_report_the_first_failure(self):
+        self.results[0].summary().should.equal("1 assertions, 0 failed, 1 errors")
+    def it_should_report_the_second_failure(self):
+        self.results[1].summary().should.equal("1 assertions, 0 failed, 1 errors")
+    def it_should_report_the_third_failure(self):
+        self.results[2].summary().should.equal("1 assertions, 0 failed, 1 errors")
+    def it_should_report_the_fourth_failure(self):
+        self.results[3].summary().should.equal("1 assertions, 0 failed, 1 errors")
 
 
 class WhenWeRunSpecsWithAlternatelyNamedMethods(object):
@@ -90,20 +124,6 @@ class WhenWeRunSpecsWithAlternatelyNamedMethods(object):
         self.spec1.log.should.equal("arrange act assert ")
         self.spec2.log.should.equal("arrange act assert cleanup ")
         self.spec3.log.should.equal("act assert ")
-
-class WhenASpecFails(object):
-    def context(self):
-        class FailingSpec(object):
-            def it_should_fail(self):
-                assert False
-
-        self.spec = FailingSpec()
-
-    def because_we_run_the_spec(self):
-        self.result = pyspec.run(self.spec)
-
-    def it_should_report_the_failure(self):
-        self.result.summary().should.equal("1 assertions, 1 failed")
 
 class WhenASpecHasASuperclass(object):
     def context(self):
@@ -175,7 +195,7 @@ class WhenRunningMultipleSpecs(object):
         self.suite[1].was_run.should.be.true
 
     def it_should_report_the_results(self):
-        self.result.summary().should.equal("2 assertions, 0 failed")
+        self.result.summary().should.equal("2 assertions, 0 failed, 0 errors")
 
 class WhenRunningMultipleSpecsUsingUnpackedSyntax(object):
     def context(self):
@@ -196,34 +216,17 @@ class WhenRunningMultipleSpecsUsingUnpackedSyntax(object):
         self.suite[1].was_run.should.be.true
 
     def it_should_report_the_results(self):
-        self.result.summary().should.equal("2 assertions, 0 failed")
-
-
-# class WhenSpecsError(object):
-#     def context(self):
-#         class ErrorInSetup(object):
-#             def context_error(self):
-#                 raise TypeError()
-#             def it_should_error(self):
-#                 pass
-
-#         self.spec1 = ErrorInSetup()
-
-#     def because_we_run_the_specs(self):
-#         self.result1 = pyspec.run(self.spec1)
-
-#     def it_should_report_the_failure(self):
-#         self.result1.summary().should.equal("1 assertions, 1 failed")
+        self.result.summary().should.equal("2 assertions, 0 failed, 0 errors")
 
 
 if __name__ == "__main__":
     specs = [
-        WhenWeRunASpec(),
+        WhenASpecPasses(),
         WhenASpecFails(),
-        WhenWeRunASpecWithMultipleAssertionsWithoutAnEstablishClause(),
+        WhenASpecErrors(),
         WhenWeRunSpecsWithAlternatelyNamedMethods(),
         WhenASpecHasASuperclass(),
         WhenRunningMultipleSpecs(),
-        WhenRunningMultipleSpecsUsingUnpackedSyntax()
+        WhenRunningMultipleSpecsUsingUnpackedSyntax(),
     ]
     print(pyspec.run(specs).summary())

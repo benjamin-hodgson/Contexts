@@ -1,5 +1,5 @@
 import collections
-from .core import Spec, SpecSuite, Result
+from .core import Context, Result
 
 
 def run(*specs):
@@ -7,8 +7,10 @@ def run(*specs):
 
     for spec in specs:
         if isinstance(spec, collections.Iterable):
-            result += SpecSuite(spec).run()
+            # will fail if we're passed very deeply nested lists of specs
+            # though that won't happen
+            result += run(*spec)
         else:
-            result += Spec(spec).run()
+            result += Context(spec).run()
 
     return result

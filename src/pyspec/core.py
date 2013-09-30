@@ -1,4 +1,5 @@
 import re
+import types
 
 
 establish_re = re.compile(r"(^|_)([Ee]stablish|[Cc]ontext|[Ss]et_?[Uu]p)")
@@ -6,81 +7,96 @@ because_re = re.compile(r"(^|_)([Bb]ecause|[Ww]hen|[Ss]ince|[Aa]fter)")
 should_re = re.compile(r"(^|_)([Ss]hould|[Ii]t|[Mm]ust|[Ww]ill)")
 cleanup_re = re.compile(r"(^|_)([Cc]leanup|[Tt]ear_?[Dd]own)")
 
-
-class Spec(object):
-    def __init__(self, spec):
-        self.spec = spec
-        self.result = Result()
-
-    def run_methods_on_class_matching(self, cls, regex):
-        for func in find_methods_on_class_matching(cls, regex):
-            func(self.spec)
-
-    def run_context(self):
-        for cls in reversed(self.spec.__class__.__mro__):
-            self.run_methods_on_class_matching(cls, establish_re)
-
-    def run_actions(self):
-        self.run_methods_on_class_matching(self.spec.__class__, because_re)
-
-    def run_assertions(self):
-        for cls in self.spec.__class__.__mro__:
-            for func in find_methods_on_class_matching(cls, should_re):
-                try:
-                    func(self.spec)
-                except AssertionError:
-                    self.result.add_failure()
-                else:
-                    self.result.add_success()
-
-    def run_cleanups(self):
-        for cls in self.spec.__class__.__mro__:
-            for func in find_methods_on_class_matching(cls, cleanup_re):
-                func(self.spec)
-
-    def run(self):
-        self.run_context()
-        self.run_actions()
-        self.run_assertions()
-        self.run_cleanups()
-        return self.result
-
-
-def find_methods_on_class_matching(cls, regex):
+def find_methods_matching(spec, regex, *, top_down=False, one_only=False):
     ret = []
-    for name, func in cls.__dict__.items():
-        if re.search(regex, name) and callable(func):
-            ret.append(func)
+    mro = spec.__class__.__mro__
+    classes = reversed(mro) if top_down else mro
+    for cls in classes:
+        for name, func in cls.__dict__.items():
+            if re.search(regex, name) and callable(func):
+                method = types.MethodType(func, spec)
+                ret.append(method)
+                if one_only:
+                    return ret
     return ret
 
+class Assertion(object):
+    def __init__(self, func):
+        self.func = func
+        self.result = None
+        self.exception = None
 
-class SpecSuite(object):
-    def __init__(self, specs):
-        self.specs = [Spec(spec) for spec in specs]
+    def __call__(self):
+        try:
+            self.func()
+        except AssertionError as e:
+            self.exception = e
+            self.result = "failed"
+        except Exception as e:
+            self.exception = e
+            self.result = "errored"
+        else:
+            self.result = "succeeded"
+
+class Context(object):
+    def __init__(self, spec):
+        self.spec = spec
+        self.exception = None
+        self.setups = find_methods_matching(spec, establish_re, top_down=True)
+        self.actions = find_methods_matching(spec, because_re, one_only=True)
+        self.assertions = [Assertion(f) for f in find_methods_matching(spec, should_re)]
+        self.teardowns = find_methods_matching(spec, cleanup_re)
+
+    def run_setup(self):
+        for setup in self.setups:
+            setup()
+
+    def run_action(self):
+        for action in self.actions:
+            action()
+
+    def run_assertions(self):
+        for assertion in self.assertions:
+            assertion()
+
+    def run_teardown(self):
+        for teardown in self.teardowns:
+            teardown()
+
+    @property
+    def result(self):
+        return Result([self])
 
     def run(self):
-        result = Result()
-        for spec in self.specs:
-            result += spec.run()
-        return result
-
+        try:
+            self.run_setup()
+            self.run_action()
+            self.run_assertions()
+            self.run_teardown()
+        except Exception:
+            for assertion in self.assertions:
+                assertion.result = "errored"
+        return self.result
 
 class Result(object):
-    def __init__(self, assertions=0, failures=0):
-        self.assertions = assertions
-        self.failures = failures
+    def __init__(self, contexts=None):
+        self.contexts = contexts if contexts is not None else []
 
-    def add_success(self):
-        self.assertions += 1
+    @property
+    def assertions(self):
+        return [a for c in self.contexts for a in c.assertions]
 
-    def add_failure(self):
-        self.assertions += 1
-        self.failures += 1
+    @property
+    def failures(self):
+        return [a for a in self.assertions if a.result == "failed"]
+
+    @property
+    def errors(self):
+        return [a for a in self.assertions if a.result == "errored"]
 
     def summary(self):
-        return "{} assertions, {} failed".format(self.assertions, self.failures)
+        return "{} assertions, {} failed, {} errors".format(len(self.assertions), len(self.failures), len(self.errors))
 
     def __add__(self, other):
-        assertions = self.assertions + other.assertions
-        failures = self.failures + other.failures
-        return Result(assertions, failures)
+        contexts = self.contexts + other.contexts
+        return Result(contexts)
