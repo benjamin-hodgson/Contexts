@@ -26,7 +26,6 @@ def find_methods_matching(spec, regex, *, top_down=False, one_only=False):
 class Assertion(object):
     def __init__(self, func):
         self.func = func
-        self.result = None
         self.exception = None
 
     def __call__(self):
@@ -34,12 +33,8 @@ class Assertion(object):
             self.func()
         except AssertionError as e:
             self.exception = e
-            self.result = "failed"
         except Exception as e:
             self.exception = e
-            self.result = "errored"
-        else:
-            self.result = "succeeded"
 
 
 class Context(object):
@@ -79,7 +74,6 @@ class Context(object):
             self.run_teardown()
         except Exception as e:
             for assertion in self.assertions:
-                assertion.result = "errored"
                 assertion.exception = e
 
 
@@ -93,52 +87,64 @@ class Result(object):
 
     @property
     def failures(self):
-        return [a for a in self.assertions if a.result == "failed"]
+        return [a for a in self.assertions if isinstance(a.exception, AssertionError)]
 
     @property
     def errors(self):
-        return [a for a in self.assertions if a.result == "errored"]
+        pred = lambda a: (isinstance(a.exception, Exception) and not
+                          isinstance(a.exception, AssertionError))
+        return [a for a in self.assertions if pred(a)]
 
     def summary(self):
-        report = self.failure_summary() if self.failures or self.errors else self.success_summary()
-        report += self.details()
+        report = self.details()
+        report += "----------------------------------------------------------------------\n"
+        report += self.failure_summary() if self.failures or self.errors else self.success_summary()
         return report
 
     def details(self):
-        return self.error_details() + self.failure_details()
-
-    def failure_summary(self):
-        return """FAIL!
-{} contexts, {} assertions: {} failed, {} errors
-""".format(len(self.contexts), len(self.assertions), len(self.failures), len(self.errors))
+        return format_assertions(self.errors + self.failures)
 
     def success_summary(self):
-        return """PASS!
-{} contexts, {} assertions
-""".format(len(self.contexts), len(self.assertions))
+        num_ctx = len(self.contexts)
+        num_ass = len(self.assertions)
+        msg = """PASSED!
+{}, {}
+""".format(pluralise("context", num_ctx), pluralise("assertion", num_ass))
+        return msg
 
-    def failure_details(self):
-        return format_assertions(self.failures, "Failures")
-
-    def error_details(self):
-        return format_assertions(self.errors, "Errors")
+    def failure_summary(self):
+        num_ctx = len(self.contexts)
+        num_ass = len(self.assertions)
+        num_fail = len(self.failures)
+        num_err = len(self.errors)
+        msg =  """FAILED!
+{}, {}: {} failed, {}
+""".format(pluralise("context", num_ctx),
+           pluralise("assertion", num_ass),
+           num_fail,
+           pluralise("error", num_err))
+        return msg
 
     def __add__(self, other):
         contexts = self.contexts + other.contexts
         return Result(contexts)
 
-def format_assertions(assertions, msg_prefix):
-    if not assertions:
-        return ""
-    msg = msg_prefix + ":\n"
-    for assertion in assertions:
-        msg += format_assertion(assertion)
-    return msg
+def pluralise(noun, num):
+    string = str(num) + ' ' + noun
+    if num != 1:
+        string += 's'
+    return string
+
+def format_assertions(assertions):
+    return "".join([format_assertion(a) for a in assertions])
 
 def format_assertion(assertion):
     module_name = assertion.func.__self__.__class__.__module__
     method_name = assertion.func.__func__.__qualname__
     exc = assertion.exception
-    msg = '{}.{}\n'.format(module_name, method_name)
+    msg = "======================================================================\n"
+    msg += "FAIL: " if isinstance(exc, AssertionError) else "ERROR: "
+    msg += '{}.{}\n'.format(module_name, method_name)
+    msg += "----------------------------------------------------------------------\n"
     msg += ''.join(traceback.format_exception(type(exc), exc, exc.__traceback__))
     return msg

@@ -28,17 +28,21 @@ class WhenRunningASpec(object):
         self.spec.log.should.equal("arrange act assert assert teardown ")
 
     def it_should_report_the_results(self):
-        self.result.summary().should.equal("""FAIL!
-1 contexts, 2 assertions: 1 failed, 0 errors
-Failures:
-__main__.WhenRunningASpec.establish_the_spec.<locals>.TestSpec.failing_method_with_should_in_the_name
-Traceback (most recent call last):
-  File "{0}", line 34, in __call__
-    self.func()
-  File "{1}", line 18, in failing_method_with_should_in_the_name
+        self.result.summary().should.match(
+"""=+
+FAIL: __main__.WhenRunningASpec.establish_the_spec.<locals>.TestSpec.failing_method_with_should_in_the_name
+-+
+Traceback \(most recent call last\):
+  File "{0}", line \d+, in __call__
+    self.func\(\)
+  File "{1}", line \d+, in failing_method_with_should_in_the_name
     assert False, "failing assertion"
 AssertionError: failing assertion
+-+
+FAILED!
+1 context, 2 assertions: 1 failed, 0 errors
 """.format(pyspec.core.__file__, __file__))
+
 
 class WhenASpecErrors(object):
     def context(self):
@@ -69,62 +73,70 @@ class WhenASpecErrors(object):
             self.results.append(pyspec.run(spec))
 
     def it_should_report_the_ctx_error(self):
-        self.results[0].summary().should.equal(
-"""FAIL!
-1 contexts, 1 assertions: 0 failed, 1 errors
-Errors:
-__main__.WhenASpecErrors.context.<locals>.ErrorInSetup.it
-Traceback (most recent call last):
-  File "{0}", line 76, in run
-    self.run_setup()
-  File "{0}", line 56, in run_setup
-    setup()
-  File "{1}", line 47, in context
-    raise ValueError("explode")
+        self.results[0].summary().should.match(
+"""=+
+ERROR: __main__.WhenASpecErrors.context.<locals>.ErrorInSetup.it
+-+
+Traceback \(most recent call last\):
+  File "{0}", line \d+, in run
+    self.run_setup\(\)
+  File "{0}", line \d+, in run_setup
+    setup\(\)
+  File "{1}", line \d+, in context
+    raise ValueError\("explode"\)
 ValueError: explode
+-+
+FAILED!
+1 context, 1 assertion: 0 failed, 1 error
 """.format(pyspec.core.__file__, __file__))
     def it_should_report_the_action_error(self):
-        self.results[1].summary().should.equal(
-"""FAIL!
-1 contexts, 1 assertions: 0 failed, 1 errors
-Errors:
-__main__.WhenASpecErrors.context.<locals>.ErrorInAction.it
-Traceback (most recent call last):
-  File "{0}", line 77, in run
-    self.run_action()
-  File "{0}", line 60, in run_action
-    action()
-  File "{1}", line 52, in because
-    raise TypeError("oh no")
+        self.results[1].summary().should.match(
+"""=+
+ERROR: __main__.WhenASpecErrors.context.<locals>.ErrorInAction.it
+-+
+Traceback \(most recent call last\):
+  File "{0}", line \d+, in run
+    self.run_action\(\)
+  File "{0}", line \d+, in run_action
+    action\(\)
+  File "{1}", line \d+, in because
+    raise TypeError\("oh no"\)
 TypeError: oh no
+-+
+FAILED!
+1 context, 1 assertion: 0 failed, 1 error
 """.format(pyspec.core.__file__, __file__))
     def it_should_report_the_assertion_error(self):
-        self.results[2].summary().should.equal(
-"""FAIL!
-1 contexts, 1 assertions: 0 failed, 1 errors
-Errors:
-__main__.WhenASpecErrors.context.<locals>.ErrorInAssertion.it
-Traceback (most recent call last):
-  File "{0}", line 34, in __call__
-    self.func()
-  File "{1}", line 57, in it
+        self.results[2].summary().should.match(
+"""=+
+ERROR: __main__.WhenASpecErrors.context.<locals>.ErrorInAssertion.it
+-+
+Traceback \(most recent call last\):
+  File "{0}", line \d+, in __call__
+    self.func\(\)
+  File "{1}", line \d+, in it
     1/0
 ZeroDivisionError: division by zero
+-+
+FAILED!
+1 context, 1 assertion: 0 failed, 1 error
 """.format(pyspec.core.__file__, __file__))
     def it_should_report_the_trdn_error(self):
-        self.results[3].summary().should.equal(
-"""FAIL!
-1 contexts, 1 assertions: 0 failed, 1 errors
-Errors:
-__main__.WhenASpecErrors.context.<locals>.ErrorInTeardown.it
-Traceback (most recent call last):
-  File "{0}", line 79, in run
-    self.run_teardown()
-  File "{0}", line 68, in run_teardown
-    teardown()
-  File "{1}", line 62, in cleanup
-    raise AttributeError("got it wrong")
+        self.results[3].summary().should.match(
+"""=+
+ERROR: __main__.WhenASpecErrors.context.<locals>.ErrorInTeardown.it
+-+
+Traceback \(most recent call last\):
+  File "{0}", line \d+, in run
+    self.run_teardown\(\)
+  File "{0}", line \d+, in run_teardown
+    teardown\(\)
+  File "{1}", line \d+, in cleanup
+    raise AttributeError\("got it wrong"\)
 AttributeError: got it wrong
+-+
+FAILED!
+1 context, 1 assertion: 0 failed, 1 error
 """.format(pyspec.core.__file__, __file__))
 
 class WhenWeRunSpecsWithAlternatelyNamedMethods(object):
@@ -241,7 +253,7 @@ class WhenRunningMultipleSpecs(object):
         self.suite[1].was_run.should.be.true
 
     def it_should_report_the_results(self):
-        self.result.summary().should.equal("PASS!\n2 contexts, 2 assertions\n")
+        self.result.summary().should.match("-+\nPASSED!\n2 contexts, 2 assertions\n")
 
 class WhenRunningMultipleSpecsUsingUnpackedSyntax(object):
     def context(self):
@@ -262,7 +274,7 @@ class WhenRunningMultipleSpecsUsingUnpackedSyntax(object):
         self.suite[1].was_run.should.be.true
 
     def it_should_report_the_results(self):
-        self.result.summary().should.equal("PASS!\n2 contexts, 2 assertions\n")
+        self.result.summary().should.match("-+\nPASSED!\n2 contexts, 2 assertions\n")
 
 
 if __name__ == "__main__":
@@ -274,7 +286,7 @@ if __name__ == "__main__":
         WhenWeRunSpecsWithAlternatelyNamedMethods(),
         WhenASpecHasASuperclass(),
         WhenRunningMultipleSpecs(),
-        WhenRunningMultipleSpecsUsingUnpackedSyntax(),
+        WhenRunningMultipleSpecsUsingUnpackedSyntax()
     ]
     result = pyspec.run(specs)
     print(result.summary())

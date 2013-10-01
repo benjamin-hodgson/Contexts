@@ -6,5 +6,6 @@ setup(
     package_dir = {'':"src"},
     packages = [
         "pyspec",
-    ]
+    ],
+    tests_require = ["sure >= 1.2.2"]
 )
