@@ -7,6 +7,7 @@ because_re = re.compile(r"(^|_)([Bb]ecause|[Ww]hen|[Ss]ince|[Aa]fter)")
 should_re = re.compile(r"(^|_)([Ss]hould|[Ii]t|[Mm]ust|[Ww]ill)")
 cleanup_re = re.compile(r"(^|_)([Cc]leanup|[Tt]ear_?[Dd]own)")
 
+
 def find_methods_matching(spec, regex, *, top_down=False, one_only=False):
     ret = []
     mro = spec.__class__.__mro__
@@ -19,6 +20,7 @@ def find_methods_matching(spec, regex, *, top_down=False, one_only=False):
                 if one_only:
                     return ret
     return ret
+
 
 class Assertion(object):
     def __init__(self, func):
@@ -37,6 +39,7 @@ class Assertion(object):
             self.result = "errored"
         else:
             self.result = "succeeded"
+
 
 class Context(object):
     def __init__(self, spec):
@@ -78,6 +81,7 @@ class Context(object):
                 assertion.result = "errored"
         return self.result
 
+
 class Result(object):
     def __init__(self, contexts=None):
         self.contexts = contexts if contexts is not None else []
@@ -95,7 +99,7 @@ class Result(object):
         return [a for a in self.assertions if a.result == "errored"]
 
     def summary(self):
-        return "{} assertions, {} failed, {} errors".format(len(self.assertions), len(self.failures), len(self.errors))
+        return "{} contexts, {} assertions, {} failed, {} errors".format(len(self.contexts), len(self.assertions), len(self.failures), len(self.errors))
 
     def __add__(self, other):
         contexts = self.contexts + other.contexts
