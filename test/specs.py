@@ -33,12 +33,12 @@ class WhenRunningASpec(object):
 Failures:
 __main__.WhenRunningASpec.establish_the_spec.<locals>.TestSpec.failing_method_with_should_in_the_name
 Traceback (most recent call last):
-  File "d:\\dev\\pyspec\\src\\pyspec\\core.py", line 34, in __call__
+  File "{0}", line 34, in __call__
     self.func()
-  File "D:\\dev\\PySpec\\test\\specs.py", line 18, in failing_method_with_should_in_the_name
+  File "{1}", line 18, in failing_method_with_should_in_the_name
     assert False, "failing assertion"
 AssertionError: failing assertion
-""")
+""".format(pyspec.core.__file__, __file__))
 
 class WhenASpecErrors(object):
     def context(self):
@@ -75,14 +75,14 @@ class WhenASpecErrors(object):
 Errors:
 __main__.WhenASpecErrors.context.<locals>.ErrorInSetup.it
 Traceback (most recent call last):
-  File "d:\\dev\\pyspec\\src\\pyspec\\core.py", line 76, in run
+  File "{0}", line 76, in run
     self.run_setup()
-  File "d:\\dev\\pyspec\\src\\pyspec\\core.py", line 56, in run_setup
+  File "{0}", line 56, in run_setup
     setup()
-  File "D:\\dev\\PySpec\\test\\specs.py", line 47, in context
+  File "{1}", line 47, in context
     raise ValueError("explode")
 ValueError: explode
-""")
+""".format(pyspec.core.__file__, __file__))
     def it_should_report_the_action_error(self):
         self.results[1].summary().should.equal(
 """FAIL!
@@ -90,14 +90,14 @@ ValueError: explode
 Errors:
 __main__.WhenASpecErrors.context.<locals>.ErrorInAction.it
 Traceback (most recent call last):
-  File "d:\\dev\\pyspec\\src\\pyspec\\core.py", line 77, in run
+  File "{0}", line 77, in run
     self.run_action()
-  File "d:\\dev\\pyspec\\src\\pyspec\\core.py", line 60, in run_action
+  File "{0}", line 60, in run_action
     action()
-  File "D:\\dev\\PySpec\\test\\specs.py", line 52, in because
+  File "{1}", line 52, in because
     raise TypeError("oh no")
 TypeError: oh no
-""")
+""".format(pyspec.core.__file__, __file__))
     def it_should_report_the_assertion_error(self):
         self.results[2].summary().should.equal(
 """FAIL!
@@ -105,12 +105,12 @@ TypeError: oh no
 Errors:
 __main__.WhenASpecErrors.context.<locals>.ErrorInAssertion.it
 Traceback (most recent call last):
-  File "d:\\dev\\pyspec\\src\\pyspec\\core.py", line 34, in __call__
+  File "{0}", line 34, in __call__
     self.func()
-  File "D:\\dev\\PySpec\\test\\specs.py", line 57, in it
+  File "{1}", line 57, in it
     1/0
 ZeroDivisionError: division by zero
-""")
+""".format(pyspec.core.__file__, __file__))
     def it_should_report_the_trdn_error(self):
         self.results[3].summary().should.equal(
 """FAIL!
@@ -118,14 +118,14 @@ ZeroDivisionError: division by zero
 Errors:
 __main__.WhenASpecErrors.context.<locals>.ErrorInTeardown.it
 Traceback (most recent call last):
-  File "d:\\dev\\pyspec\\src\\pyspec\\core.py", line 79, in run
+  File "{0}", line 79, in run
     self.run_teardown()
-  File "d:\\dev\\pyspec\\src\\pyspec\\core.py", line 68, in run_teardown
+  File "{0}", line 68, in run_teardown
     teardown()
-  File "D:\\dev\\PySpec\\test\\specs.py", line 62, in cleanup
+  File "{1}", line 62, in cleanup
     raise AttributeError("got it wrong")
 AttributeError: got it wrong
-""")
+""".format(pyspec.core.__file__, __file__))
 
 class WhenWeRunSpecsWithAlternatelyNamedMethods(object):
     def context(self):
