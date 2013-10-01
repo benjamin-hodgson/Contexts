@@ -1,5 +1,6 @@
 import re
 import types
+import traceback
 
 
 establish_re = re.compile(r"(^|_)([Ee]stablish|[Cc]ontext|[Ss]et_?[Uu]p)")
@@ -76,9 +77,10 @@ class Context(object):
             self.run_action()
             self.run_assertions()
             self.run_teardown()
-        except Exception:
+        except Exception as e:
             for assertion in self.assertions:
                 assertion.result = "errored"
+                assertion.exception = e
 
 
 class Result(object):
@@ -98,45 +100,45 @@ class Result(object):
         return [a for a in self.assertions if a.result == "errored"]
 
     def summary(self):
-        report = self.failure_report() if self.failures or self.errors else self.success_report()
+        report = self.failure_summary() if self.failures or self.errors else self.success_summary()
         report += self.details()
         return report
 
-    def failure_report(self):
-        report = "FAIL!\n"
-        report += "{} contexts, {} assertions: ".format(len(self.contexts), len(self.assertions))
-        report += "{} failed, {} errors\n".format(len(self.failures), len(self.errors))
-        return report
-
-    def success_report(self):
-        report = "PASS!\n"
-        report += "{} contexts, {} assertions\n".format(len(self.contexts), len(self.assertions))
-        return report
-
     def details(self):
-        msg = ""
-        if self.failures:
-            msg += self.failure_details()
-        if self.errors:
-            msg += self.error_details()
-        return msg
+        return self.error_details() + self.failure_details()
+
+    def failure_summary(self):
+        return """FAIL!
+{} contexts, {} assertions: {} failed, {} errors
+""".format(len(self.contexts), len(self.assertions), len(self.failures), len(self.errors))
+
+    def success_summary(self):
+        return """PASS!
+{} contexts, {} assertions
+""".format(len(self.contexts), len(self.assertions))
 
     def failure_details(self):
-        msg = "Failures:\n"
-        for assertion in self.failures:
-            module_name = assertion.func.__self__.__class__.__module__
-            method_name = assertion.func.__func__.__qualname__
-            msg += '{}.{}\n'.format(module_name, method_name)
-        return msg
+        return format_assertions(self.failures, "Failures")
 
     def error_details(self):
-        msg = "Errors:\n"
-        for assertion in self.errors:
-            module_name = assertion.func.__self__.__class__.__module__
-            method_name = assertion.func.__func__.__qualname__
-            msg += '{}.{}\n'.format(module_name, method_name)
-        return msg
+        return format_assertions(self.errors, "Errors")
 
     def __add__(self, other):
         contexts = self.contexts + other.contexts
         return Result(contexts)
+
+def format_assertions(assertions, msg_prefix):
+    if not assertions:
+        return ""
+    msg = msg_prefix + ":\n"
+    for assertion in assertions:
+        msg += format_assertion(assertion)
+    return msg
+
+def format_assertion(assertion):
+    module_name = assertion.func.__self__.__class__.__module__
+    method_name = assertion.func.__func__.__qualname__
+    exc = assertion.exception
+    msg = '{}.{}\n'.format(module_name, method_name)
+    msg += ''.join(traceback.format_exception(type(exc), exc, exc.__traceback__))
+    return msg

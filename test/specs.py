@@ -3,7 +3,7 @@ import pyspec
 
 
 class WhenRunningASpec(object):
-    def context(self):
+    def establish_the_spec(self):
         class TestSpec(object):
             def __init__(self):
                 self.log = ""
@@ -15,7 +15,7 @@ class WhenRunningASpec(object):
                 self.log += "assert "
             def failing_method_with_should_in_the_name(self):
                 self.log += "assert "
-                assert False
+                assert False, "failing assertion"
             def method_with_cleanup_in_the_name(self):
                 self.log += "teardown "
 
@@ -31,19 +31,25 @@ class WhenRunningASpec(object):
         self.result.summary().should.equal("""FAIL!
 1 contexts, 2 assertions: 1 failed, 0 errors
 Failures:
-__main__.WhenRunningASpec.context.<locals>.TestSpec.failing_method_with_should_in_the_name
+__main__.WhenRunningASpec.establish_the_spec.<locals>.TestSpec.failing_method_with_should_in_the_name
+Traceback (most recent call last):
+  File "d:\\dev\\pyspec\\src\\pyspec\\core.py", line 34, in __call__
+    self.func()
+  File "D:\\dev\\PySpec\\test\\specs.py", line 18, in failing_method_with_should_in_the_name
+    assert False, "failing assertion"
+AssertionError: failing assertion
 """)
 
 class WhenASpecErrors(object):
     def context(self):
         class ErrorInSetup(object):
             def context(self):
-                raise ValueError
+                raise ValueError("explode")
             def it(self):
                 pass
         class ErrorInAction(object):
             def because(self):
-                raise TypeError
+                raise TypeError("oh no")
             def it(self):
                 pass
         class ErrorInAssertion(object):
@@ -53,7 +59,7 @@ class WhenASpecErrors(object):
             def it(self):
                 pass
             def cleanup(self):
-                raise AttributeError
+                raise AttributeError("got it wrong")
 
         self.specs = [ErrorInSetup(), ErrorInAction(), ErrorInAssertion(), ErrorInTeardown()]
 
@@ -62,12 +68,20 @@ class WhenASpecErrors(object):
         for spec in self.specs:
             self.results.append(pyspec.run(spec))
 
-    def it_should_report_the_errors(self):
+    def it_should_report_the_ctx_error(self):
         self.results[0].summary().should.equal(
 """FAIL!
 1 contexts, 1 assertions: 0 failed, 1 errors
 Errors:
 __main__.WhenASpecErrors.context.<locals>.ErrorInSetup.it
+Traceback (most recent call last):
+  File "d:\\dev\\pyspec\\src\\pyspec\\core.py", line 76, in run
+    self.run_setup()
+  File "d:\\dev\\pyspec\\src\\pyspec\\core.py", line 56, in run_setup
+    setup()
+  File "D:\\dev\\PySpec\\test\\specs.py", line 47, in context
+    raise ValueError("explode")
+ValueError: explode
 """)
     def it_should_report_the_action_error(self):
         self.results[1].summary().should.equal(
@@ -75,6 +89,14 @@ __main__.WhenASpecErrors.context.<locals>.ErrorInSetup.it
 1 contexts, 1 assertions: 0 failed, 1 errors
 Errors:
 __main__.WhenASpecErrors.context.<locals>.ErrorInAction.it
+Traceback (most recent call last):
+  File "d:\\dev\\pyspec\\src\\pyspec\\core.py", line 77, in run
+    self.run_action()
+  File "d:\\dev\\pyspec\\src\\pyspec\\core.py", line 60, in run_action
+    action()
+  File "D:\\dev\\PySpec\\test\\specs.py", line 52, in because
+    raise TypeError("oh no")
+TypeError: oh no
 """)
     def it_should_report_the_assertion_error(self):
         self.results[2].summary().should.equal(
@@ -82,13 +104,27 @@ __main__.WhenASpecErrors.context.<locals>.ErrorInAction.it
 1 contexts, 1 assertions: 0 failed, 1 errors
 Errors:
 __main__.WhenASpecErrors.context.<locals>.ErrorInAssertion.it
+Traceback (most recent call last):
+  File "d:\\dev\\pyspec\\src\\pyspec\\core.py", line 34, in __call__
+    self.func()
+  File "D:\\dev\\PySpec\\test\\specs.py", line 57, in it
+    1/0
+ZeroDivisionError: division by zero
 """)
-    def it_should_report_the_teardown_error(self):
+    def it_should_report_the_trdn_error(self):
         self.results[3].summary().should.equal(
 """FAIL!
 1 contexts, 1 assertions: 0 failed, 1 errors
 Errors:
 __main__.WhenASpecErrors.context.<locals>.ErrorInTeardown.it
+Traceback (most recent call last):
+  File "d:\\dev\\pyspec\\src\\pyspec\\core.py", line 79, in run
+    self.run_teardown()
+  File "d:\\dev\\pyspec\\src\\pyspec\\core.py", line 68, in run_teardown
+    teardown()
+  File "D:\\dev\\PySpec\\test\\specs.py", line 62, in cleanup
+    raise AttributeError("got it wrong")
+AttributeError: got it wrong
 """)
 
 class WhenWeRunSpecsWithAlternatelyNamedMethods(object):
