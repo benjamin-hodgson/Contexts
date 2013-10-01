@@ -99,7 +99,10 @@ class Result(object):
         return [a for a in self.assertions if a.result == "errored"]
 
     def summary(self):
-        return "{} contexts, {} assertions, {} failed, {} errors".format(len(self.contexts), len(self.assertions), len(self.failures), len(self.errors))
+        ret = "{} contexts, {} assertions".format(len(self.contexts), len(self.assertions))
+        if self.failures or self.errors:
+            ret += ", {} failed, {} errors".format(len(self.failures), len(self.errors))
+        return ret
 
     def __add__(self, other):
         contexts = self.contexts + other.contexts

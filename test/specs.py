@@ -35,7 +35,7 @@ class WhenASpecErrors(object):
         class ErrorInSetup(object):
             def context(self):
                 raise ValueError
-            def it(self):
+            def it1(self):
                 pass
         class ErrorInAction(object):
             def because(self):
@@ -58,13 +58,10 @@ class WhenASpecErrors(object):
         for spec in self.specs:
             self.results.append(pyspec.run(spec))
 
-    def it_should_report_the_first_failure(self):
+    def it_should_report_the_errors(self):
         self.results[0].summary().should.equal("1 contexts, 1 assertions, 0 failed, 1 errors")
-    def it_should_report_the_second_failure(self):
         self.results[1].summary().should.equal("1 contexts, 1 assertions, 0 failed, 1 errors")
-    def it_should_report_the_third_failure(self):
         self.results[2].summary().should.equal("1 contexts, 1 assertions, 0 failed, 1 errors")
-    def it_should_report_the_fourth_failure(self):
         self.results[3].summary().should.equal("1 contexts, 1 assertions, 0 failed, 1 errors")
 
 
@@ -182,7 +179,7 @@ class WhenRunningMultipleSpecs(object):
         self.suite[1].was_run.should.be.true
 
     def it_should_report_the_results(self):
-        self.result.summary().should.equal("2 contexts, 2 assertions, 0 failed, 0 errors")
+        self.result.summary().should.equal("2 contexts, 2 assertions")
 
 class WhenRunningMultipleSpecsUsingUnpackedSyntax(object):
     def context(self):
@@ -203,7 +200,7 @@ class WhenRunningMultipleSpecsUsingUnpackedSyntax(object):
         self.suite[1].was_run.should.be.true
 
     def it_should_report_the_results(self):
-        self.result.summary().should.equal("2 contexts, 2 assertions, 0 failed, 0 errors")
+        self.result.summary().should.equal("2 contexts, 2 assertions")
 
 
 if __name__ == "__main__":
