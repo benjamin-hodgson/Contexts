@@ -11,6 +11,8 @@ def run(*specs):
             # though that won't happen
             result += run(*spec)
         else:
-            result += Context(spec).run()
+            ctx = Context(spec)
+            ctx.run()
+            result += ctx.result
 
     return result

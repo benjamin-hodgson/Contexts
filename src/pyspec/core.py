@@ -79,7 +79,6 @@ class Context(object):
         except Exception:
             for assertion in self.assertions:
                 assertion.result = "errored"
-        return self.result
 
 
 class Result(object):
@@ -99,13 +98,44 @@ class Result(object):
         return [a for a in self.assertions if a.result == "errored"]
 
     def summary(self):
-        report = "{} contexts, {} assertions".format(len(self.contexts), len(self.assertions))
-        if self.failures or self.errors:
-            report = "FAIL!\n" + report
-            report += ", {} failed, {} errors".format(len(self.failures), len(self.errors))
-        else:
-            report = "PASS!\n" + report
+        report = self.failure_report() if self.failures or self.errors else self.success_report()
+        report += self.details()
         return report
+
+    def failure_report(self):
+        report = "FAIL!\n"
+        report += "{} contexts, {} assertions: ".format(len(self.contexts), len(self.assertions))
+        report += "{} failed, {} errors\n".format(len(self.failures), len(self.errors))
+        return report
+
+    def success_report(self):
+        report = "PASS!\n"
+        report += "{} contexts, {} assertions\n".format(len(self.contexts), len(self.assertions))
+        return report
+
+    def details(self):
+        msg = ""
+        if self.failures:
+            msg += self.failure_details()
+        if self.errors:
+            msg += self.error_details()
+        return msg
+
+    def failure_details(self):
+        msg = "Failures:\n"
+        for assertion in self.failures:
+            module_name = assertion.func.__self__.__class__.__module__
+            method_name = assertion.func.__func__.__qualname__
+            msg += '{}.{}\n'.format(module_name, method_name)
+        return msg
+
+    def error_details(self):
+        msg = "Errors:\n"
+        for assertion in self.errors:
+            module_name = assertion.func.__self__.__class__.__module__
+            method_name = assertion.func.__func__.__qualname__
+            msg += '{}.{}\n'.format(module_name, method_name)
+        return msg
 
     def __add__(self, other):
         contexts = self.contexts + other.contexts
