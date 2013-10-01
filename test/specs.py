@@ -28,7 +28,7 @@ class WhenRunningASpec(object):
         self.spec.log.should.equal("arrange act assert assert teardown ")
 
     def it_should_report_the_results(self):
-        self.result.summary().should.equal("1 contexts, 2 assertions, 1 failed, 0 errors")
+        self.result.summary().should.equal("FAIL!\n1 contexts, 2 assertions, 1 failed, 0 errors")
 
 class WhenASpecErrors(object):
     def context(self):
@@ -59,10 +59,10 @@ class WhenASpecErrors(object):
             self.results.append(pyspec.run(spec))
 
     def it_should_report_the_errors(self):
-        self.results[0].summary().should.equal("1 contexts, 1 assertions, 0 failed, 1 errors")
-        self.results[1].summary().should.equal("1 contexts, 1 assertions, 0 failed, 1 errors")
-        self.results[2].summary().should.equal("1 contexts, 1 assertions, 0 failed, 1 errors")
-        self.results[3].summary().should.equal("1 contexts, 1 assertions, 0 failed, 1 errors")
+        self.results[0].summary().should.equal("FAIL!\n1 contexts, 1 assertions, 0 failed, 1 errors")
+        self.results[1].summary().should.equal("FAIL!\n1 contexts, 1 assertions, 0 failed, 1 errors")
+        self.results[2].summary().should.equal("FAIL!\n1 contexts, 1 assertions, 0 failed, 1 errors")
+        self.results[3].summary().should.equal("FAIL!\n1 contexts, 1 assertions, 0 failed, 1 errors")
 
 
 class WhenWeRunSpecsWithAlternatelyNamedMethods(object):
@@ -179,7 +179,7 @@ class WhenRunningMultipleSpecs(object):
         self.suite[1].was_run.should.be.true
 
     def it_should_report_the_results(self):
-        self.result.summary().should.equal("2 contexts, 2 assertions")
+        self.result.summary().should.equal("PASS!\n2 contexts, 2 assertions")
 
 class WhenRunningMultipleSpecsUsingUnpackedSyntax(object):
     def context(self):
@@ -200,7 +200,7 @@ class WhenRunningMultipleSpecsUsingUnpackedSyntax(object):
         self.suite[1].was_run.should.be.true
 
     def it_should_report_the_results(self):
-        self.result.summary().should.equal("2 contexts, 2 assertions")
+        self.result.summary().should.equal("PASS!\n2 contexts, 2 assertions")
 
 
 if __name__ == "__main__":
