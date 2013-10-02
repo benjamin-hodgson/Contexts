@@ -1,6 +1,9 @@
 import sure
 import pyspec
 
+core_file = repr(pyspec.core.__file__)[1:-1]
+this_file = repr(__file__)[1:-1]
+
 
 class WhenRunningASpec(object):
     def establish_the_spec(self):
@@ -41,7 +44,7 @@ AssertionError: failing assertion
 -+
 FAILED!
 1 context, 2 assertions: 1 failed, 0 errors
-""".format(pyspec.core.__file__, __file__))
+""".format(core_file, this_file))
 
 
 class WhenASpecErrors(object):
@@ -88,7 +91,7 @@ ValueError: explode
 -+
 FAILED!
 1 context, 1 assertion: 0 failed, 1 error
-""".format(pyspec.core.__file__, __file__))
+""".format(core_file, this_file))
     def it_should_report_the_action_error(self):
         self.results[1].summary().should.match(
 """=+
@@ -105,7 +108,7 @@ TypeError: oh no
 -+
 FAILED!
 1 context, 1 assertion: 0 failed, 1 error
-""".format(pyspec.core.__file__, __file__))
+""".format(core_file, this_file))
     def it_should_report_the_assertion_error(self):
         self.results[2].summary().should.match(
 """=+
@@ -120,7 +123,7 @@ ZeroDivisionError: division by zero
 -+
 FAILED!
 1 context, 1 assertion: 0 failed, 1 error
-""".format(pyspec.core.__file__, __file__))
+""".format(core_file, this_file))
     def it_should_report_the_trdn_error(self):
         self.results[3].summary().should.match(
 """=+
@@ -137,7 +140,7 @@ AttributeError: got it wrong
 -+
 FAILED!
 1 context, 1 assertion: 0 failed, 1 error
-""".format(pyspec.core.__file__, __file__))
+""".format(core_file, this_file))
 
 class WhenWeRunSpecsWithAlternatelyNamedMethods(object):
     def context(self):
