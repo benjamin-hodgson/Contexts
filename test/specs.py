@@ -1,11 +1,11 @@
 import types
 import sure
 import pyspec
+from pyspec import core
 from pyspec.reporting import format_result
 
 core_file = repr(pyspec.core.__file__)[1:-1]
 this_file = repr(__file__)[1:-1]
-
 
 class WhenRunningASpec(object):
     def establish_the_spec(self):
@@ -32,6 +32,8 @@ class WhenRunningASpec(object):
     def it_should_run_the_methods_in_the_correct_order(self):
         self.spec.log.should.equal("arrange act assert assert teardown ")
 
+    # Do we want to assert that the context/assertions point to the right class/method?
+    # Runs the risk of coupling the test code to the implementation of Context, Assertion and so on.
     def the_result_should_have_one_ctx(self):
         self.result.contexts.should.have.length_of(1)
 
@@ -40,23 +42,6 @@ class WhenRunningASpec(object):
 
     def the_result_should_have_the_failure(self):
         self.result.failures.should.have.length_of(1)
-
-    # TODO: move this
-    def it_should_report_the_results(self):
-        format_result(self.result).should.match(
-"""=+
-FAIL: __main__.WhenRunningASpec.establish_the_spec.<locals>.TestSpec.failing_method_with_should_in_the_name
--+
-Traceback \(most recent call last\):
-  File "{0}", line \d+, in run
-    self.func\(\)
-  File "{1}", line \d+, in failing_method_with_should_in_the_name
-    assert False, "failing assertion"
-AssertionError: failing assertion
--+
-FAILED!
-1 context, 2 assertions: 1 failed, 0 errors
-""".format(core_file, this_file))
 
 
 class WhenASpecErrors(object):
@@ -98,80 +83,6 @@ class WhenASpecErrors(object):
 
     def the_result_should_contain_the_trdn_error(self):
         self.results[3].errors.should.have.length_of(1)
-
-    # TODO: move this
-    def it_should_report_the_ctx_error(self):
-        format_result(self.results[0]).should.match(
-"""=+
-ERROR: __main__.WhenASpecErrors.context.<locals>.ErrorInSetup.it
--+
-Traceback \(most recent call last\):
-  File "{0}", line \d+, in run
-    self.run_setup\(\)
-  File "{0}", line \d+, in run_setup
-    setup\(\)
-  File "{1}", line \d+, in context
-    raise ValueError\("explode"\)
-ValueError: explode
--+
-FAILED!
-1 context, 1 assertion: 0 failed, 1 error
-""".format(core_file, this_file))
-    
-    # TODO: move this
-    def it_should_report_the_action_error(self):
-        format_result(self.results[1]).should.match(
-"""=+
-ERROR: __main__.WhenASpecErrors.context.<locals>.ErrorInAction.it
--+
-Traceback \(most recent call last\):
-  File "{0}", line \d+, in run
-    self.run_action\(\)
-  File "{0}", line \d+, in run_action
-    action\(\)
-  File "{1}", line \d+, in because
-    raise TypeError\("oh no"\)
-TypeError: oh no
--+
-FAILED!
-1 context, 1 assertion: 0 failed, 1 error
-""".format(core_file, this_file))
-    
-    # TODO: move this
-    def it_should_report_the_assertion_error(self):
-        format_result(self.results[2]).should.match(
-"""=+
-ERROR: __main__.WhenASpecErrors.context.<locals>.ErrorInAssertion.it
--+
-Traceback \(most recent call last\):
-  File "{0}", line \d+, in run
-    self.func\(\)
-  File "{1}", line \d+, in it
-    1/0
-ZeroDivisionError: division by zero
--+
-FAILED!
-1 context, 1 assertion: 0 failed, 1 error
-""".format(core_file, this_file))
-    
-    # TODO: move this
-    def it_should_report_the_trdn_error(self):
-        format_result(self.results[3]).should.match(
-"""=+
-ERROR: __main__.WhenASpecErrors.context.<locals>.ErrorInTeardown.it
--+
-Traceback \(most recent call last\):
-  File "{0}", line \d+, in run
-    self.run_teardown\(\)
-  File "{0}", line \d+, in run_teardown
-    teardown\(\)
-  File "{1}", line \d+, in cleanup
-    raise AttributeError\("got it wrong"\)
-AttributeError: got it wrong
--+
-FAILED!
-1 context, 1 assertion: 0 failed, 1 error
-""".format(core_file, this_file))
 
 class WhenWeRunSpecsWithAlternatelyNamedMethods(object):
     def context(self):
@@ -286,9 +197,11 @@ class WhenRunningMultipleSpecs(object):
         self.suite[0].was_run.should.be.true
         self.suite[1].was_run.should.be.true
 
-    # TODO: move this
-    def it_should_report_the_results(self):
-        format_result(self.result).should.match("-+\nPASSED!\n2 contexts, 2 assertions\n")
+    def the_result_should_have_two_ctxs(self):
+        self.result.contexts.should.have.length_of(2)
+
+    def the_result_should_have_two_assertions(self):
+        self.result.assertions.should.have.length_of(2)
 
 class WhenRunningMultipleSpecsUsingUnpackedSyntax(object):
     def context(self):
@@ -308,9 +221,11 @@ class WhenRunningMultipleSpecsUsingUnpackedSyntax(object):
         self.suite[0].was_run.should.be.true
         self.suite[1].was_run.should.be.true
 
-    # TODO: move this
-    def it_should_report_the_results(self):
-        format_result(self.result).should.match("-+\nPASSED!\n2 contexts, 2 assertions\n")
+    def the_result_should_have_two_ctxs(self):
+        self.result.contexts.should.have.length_of(2)
+
+    def the_result_should_have_two_assertions(self):
+        self.result.assertions.should.have.length_of(2)
 
 class WhenLoadingTestsFromAModule(object):
     def context(self):
@@ -323,9 +238,9 @@ class WhenLoadingTestsFromAModule(object):
             def it_should_run_this(self):
                 self.__class__.was_run = True
         class NormalClass(object):
-            was_run = False
-            def it_should_not_run_this(self):
-                self.__class__.was_run = True
+            was_instantiated = False
+            def __init__(self):
+                self.__class__.was_instantiated = True
         self.module = types.ModuleType('fake_specs')
         self.module.Spec = Spec
         self.module.When = When
@@ -340,9 +255,81 @@ class WhenLoadingTestsFromAModule(object):
     def it_should_run_the_other_spec(self):
         self.module.When.was_run.should.be.true
 
-    def it_should_not_run_the_normal_class(self):
-        self.module.NormalClass.was_run.should.be.false
+    def it_should_not_instantiate_the_normal_class(self):
+        self.module.NormalClass.was_instantiated.should.be.false
 
+
+class WhenFormattingASuccessfulResult(object):
+    def context_of_successful_run(self):
+        assertion1 = core.Assertion(lambda: 2)
+        assertion1.ran = True
+        assertion2 = core.Assertion(lambda: 2)
+        assertion2.ran = True
+        assertion3 = core.Assertion(lambda: 2)
+        assertion3.ran = True
+        ctx1 = core.Context([],[],[assertion1],[])
+        ctx2 = core.Context([],[],[assertion2, assertion3],[])
+        self.result = core.Result([ctx1, ctx2])
+
+    def because_we_format_the_result(self):
+        self.output_string = format_result(self.result)
+
+    def it_should_output_a_summary(self):
+        self.output_string.should.equal(
+"""----------------------------------------------------------------------
+PASSED!
+2 contexts, 3 assertions
+""")
+
+class WhenFormattingAFailureResult(object):
+    def context_of_failed_run(self):
+        class TestSpec(object):
+            # It'd be nice if I could get away with not throwing real exceptions
+            # in this test code.
+            # I'd prefer to set up a fake Result object with some assertions and
+            # a fake traceback. That way it'd be easier to control the content of
+            # the output, and our test of the reporting code would be totally
+            # detached from the behaviour of the runner.
+            # Unfortunately, looks like you can't really fake traceback objects: see
+            # http://stackoverflow.com/a/9193252/1523776
+            def this_should_pass(self):
+                assert True
+            def this_should_fail(self):
+                assert False, "failing assertion"
+            def this_should_also_fail(self):
+                raise AttributeError("Gotcha")
+        self.result = pyspec.run(TestSpec())
+
+    def because_we_format_the_result(self):
+        self.output_string = format_result(self.result)
+
+    def it_should_output_a_traceback_for_each_failure(self):
+        self.output_string.should.match(
+# We don't know which way around the assertions will be reported;
+# nor do we know the exact file or line number.
+# (if we had full control over the Result in this case, this wouldn't be an issue)
+r"""(======================================================================
+ERROR: __main__.WhenFormattingAFailureResult.context_of_failed_run.<locals>.TestSpec.this_should_also_fail
+----------------------------------------------------------------------
+Traceback \(most recent call last\):
+  File "{0}", line \d+, in run
+    self.func\(\)
+  File "{1}", line \d+, in this_should_also_fail
+    raise AttributeError\("Gotcha"\)
+AttributeError: Gotcha
+|======================================================================
+FAIL: __main__.WhenFormattingAFailureResult.context_of_failed_run.<locals>.TestSpec.this_should_fail
+----------------------------------------------------------------------
+Traceback \(most recent call last\):
+  File "{0}", line \d+, in run
+    self.func\(\)
+  File "{1}", line \d+, in this_should_fail
+    assert False, "failing assertion"
+AssertionError: failing assertion
+){{2}}----------------------------------------------------------------------
+FAILED!
+1 context, 3 assertions: 1 failed, 1 error
+""".format(core_file, this_file))
 
 if __name__ == "__main__":
     pyspec.main()
