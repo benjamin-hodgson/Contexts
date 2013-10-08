@@ -1,18 +1,15 @@
-import collections
-from .core import Context, Result
+from .core import Result
+from .builder import build_suite
 
 
 def run(*specs):
     result = Result()
 
     for spec in specs:
-        if isinstance(spec, collections.Iterable):
-            # will fail if we're passed very deeply nested lists of specs
-            # though that won't happen
-            result += run(*spec)
-        else:
-            ctx = Context(spec)
-            ctx.run()
-            result += ctx.result
+        suite = build_suite(spec)
+        suite.run()
+        result += suite.result
 
     return result
+
+

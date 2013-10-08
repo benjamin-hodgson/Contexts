@@ -1,3 +1,4 @@
+import types
 import sure
 import pyspec
 
@@ -279,19 +280,42 @@ class WhenRunningMultipleSpecsUsingUnpackedSyntax(object):
     def it_should_report_the_results(self):
         self.result.summary().should.match("-+\nPASSED!\n2 contexts, 2 assertions\n")
 
+class WhenLoadingTestsFromAModule(object):
+    def context(self):
+        class Spec(object):
+            was_run = False
+            def it_should_run_this(self):
+                self.__class__.was_run = True
+        class When(object):
+            was_run = False
+            def it_should_run_this(self):
+                self.__class__.was_run = True
+        class NormalClass(object):
+            was_run = False
+            def it_should_not_run_this(self):
+                self.__class__.was_run = True
+        self.module = types.ModuleType('fake_specs')
+        self.module.Spec = Spec
+        self.module.When = When
+        self.module.NormalClass = NormalClass
+
+    def because_we_run_the_module(self):
+        self.result = pyspec.run(self.module)
+
+    def it_should_run_the_spec(self):
+        self.module.Spec.was_run.should.be.true
+
+    def it_should_run_the_other_spec(self):
+        self.module.When.was_run.should.be.true
+
+    def it_should_not_run_the_normal_class(self):
+        self.module.NormalClass.was_run.should.be.false
+
 
 if __name__ == "__main__":
     import sys
-
-    specs = [
-        WhenRunningASpec(),
-        WhenASpecErrors(),
-        WhenWeRunSpecsWithAlternatelyNamedMethods(),
-        WhenASpecHasASuperclass(),
-        WhenRunningMultipleSpecs(),
-        WhenRunningMultipleSpecsUsingUnpackedSyntax()
-    ]
-    result = pyspec.run(specs)
+    this_module = sys.modules[__name__]
+    result = pyspec.run(this_module)
     print(result.summary())
     if result.failures or result.errors:
         sys.exit(1)

@@ -1,26 +1,5 @@
-import re
-import types
 import traceback
-
-
-establish_re = re.compile(r"(^|_)([Ee]stablish|[Cc]ontext|[Ss]et_?[Uu]p)")
-because_re = re.compile(r"(^|_)([Bb]ecause|[Ww]hen|[Ss]ince|[Aa]fter)")
-should_re = re.compile(r"(^|_)([Ss]hould|[Ii]t|[Mm]ust|[Ww]ill)")
-cleanup_re = re.compile(r"(^|_)([Cc]leanup|[Tt]ear_?[Dd]own)")
-
-
-def find_methods_matching(spec, regex, *, top_down=False, one_only=False):
-    ret = []
-    mro = spec.__class__.__mro__
-    classes = reversed(mro) if top_down else mro
-    for cls in classes:
-        for name, func in cls.__dict__.items():
-            if re.search(regex, name) and callable(func):
-                method = types.MethodType(func, spec)
-                ret.append(method)
-                if one_only:
-                    return ret
-    return ret
+from . import finder
 
 
 class Assertion(object):
@@ -41,10 +20,10 @@ class Context(object):
     def __init__(self, spec):
         self.spec = spec
         self.exception = None
-        self.setups = find_methods_matching(spec, establish_re, top_down=True)
-        self.actions = find_methods_matching(spec, because_re, one_only=True)
-        self.assertions = [Assertion(f) for f in find_methods_matching(spec, should_re)]
-        self.teardowns = find_methods_matching(spec, cleanup_re)
+        self.setups = finder.find_methods_matching(spec, finder.establish_re, top_down=True)
+        self.actions = finder.find_methods_matching(spec, finder.because_re, one_only=True)
+        self.assertions = [Assertion(f) for f in finder.find_methods_matching(spec, finder.should_re)]
+        self.teardowns = finder.find_methods_matching(spec, finder.cleanup_re)
 
     def run_setup(self):
         for setup in self.setups:
@@ -75,6 +54,16 @@ class Context(object):
         except Exception as e:
             for assertion in self.assertions:
                 assertion.exception = e
+
+
+class Suite(object):
+    def __init__(self, contexts):
+        self.contexts = contexts
+        self.result = Result(self.contexts)
+
+    def run(self):
+        for ctx in self.contexts:
+            ctx.run()
 
 
 class Result(object):
