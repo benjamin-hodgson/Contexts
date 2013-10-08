@@ -313,10 +313,4 @@ class WhenLoadingTestsFromAModule(object):
 
 
 if __name__ == "__main__":
-    import sys
-    this_module = sys.modules[__name__]
-    result = pyspec.run(this_module)
-    print(result.summary())
-    if result.failures or result.errors:
-        sys.exit(1)
-    sys.exit(0)
+    pyspec.main()

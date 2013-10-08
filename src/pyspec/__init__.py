@@ -1,8 +1,12 @@
+import sys
 from .core import Result
 from .builder import build_suite
 
 
 def run(*specs):
+    if not specs:
+        return run_main_module()
+
     result = Result()
 
     for spec in specs:
@@ -13,3 +17,14 @@ def run(*specs):
     return result
 
 
+def main():
+    result = run_main_module()
+
+    if result.failures or result.errors:
+        sys.exit(1)
+    sys.exit(0)
+
+def run_main_module():
+    result = run(sys.modules["__main__"])
+    print(result.summary())
+    return result
