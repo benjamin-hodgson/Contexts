@@ -1,6 +1,7 @@
 import sys
+from .reporting import format_result
 from .core import Result
-from .builder import build_suite
+from .builders import build_suite
 
 
 def run(*specs):
@@ -24,7 +25,8 @@ def main():
         sys.exit(1)
     sys.exit(0)
 
+
 def run_main_module():
     result = run(sys.modules["__main__"])
-    print(result.summary())
+    print(format_result(result))
     return result

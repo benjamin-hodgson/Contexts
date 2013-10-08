@@ -23,10 +23,14 @@ def find_methods_matching(spec, regex, *, top_down=False, one_only=False):
     mro = spec.__class__.__mro__
     classes = reversed(mro) if top_down else mro
     for cls in classes:
-        for name, func in cls.__dict__.items():
-            if re.search(regex, name) and callable(func):
-                method = types.MethodType(func, spec)
-                ret.append(method)
-                if one_only:
-                    return ret
+        for func in find_methods_on_class_matching(cls, regex):
+            method = types.MethodType(func, spec)
+            ret.append(method)
+            if one_only:
+                return ret
     return ret
+
+def find_methods_on_class_matching(cls, regex):
+    for name, func in cls.__dict__.items():
+        if re.search(regex, name) and callable(func):
+            yield func

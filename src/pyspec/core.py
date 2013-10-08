@@ -1,13 +1,15 @@
-import traceback
-from . import finder
+from .reporting import format_assertions, pluralise, failure_summary, success_summary
+from . import finders
 
 
 class Assertion(object):
     def __init__(self, func):
+        self.ran = False
         self.func = func
         self.exception = None
 
-    def __call__(self):
+    def run(self):
+        self.ran = True
         try:
             self.func()
         except AssertionError as e:
@@ -17,13 +19,12 @@ class Assertion(object):
 
 
 class Context(object):
-    def __init__(self, spec):
-        self.spec = spec
-        self.exception = None
-        self.setups = finder.find_methods_matching(spec, finder.establish_re, top_down=True)
-        self.actions = finder.find_methods_matching(spec, finder.because_re, one_only=True)
-        self.assertions = [Assertion(f) for f in finder.find_methods_matching(spec, finder.should_re)]
-        self.teardowns = finder.find_methods_matching(spec, finder.cleanup_re)
+    def __init__(self, setups, actions, assertions, teardowns):
+        self.ran = False
+        self.setups = setups
+        self.actions = actions
+        self.assertions = assertions
+        self.teardowns = teardowns
 
     def run_setup(self):
         for setup in self.setups:
@@ -35,7 +36,7 @@ class Context(object):
 
     def run_assertions(self):
         for assertion in self.assertions:
-            assertion()
+            assertion.run()
 
     def run_teardown(self):
         for teardown in self.teardowns:
@@ -46,6 +47,7 @@ class Context(object):
         return Result([self])
 
     def run(self):
+        self.ran = True
         try:
             self.run_setup()
             self.run_action()
@@ -84,56 +86,9 @@ class Result(object):
                           isinstance(a.exception, AssertionError))
         return [a for a in self.assertions if pred(a)]
 
-    def summary(self):
-        report = self.details()
-        report += "----------------------------------------------------------------------\n"
-        report += self.failure_summary() if self.failures or self.errors else self.success_summary()
-        return report
-
-    def details(self):
-        return format_assertions(self.errors + self.failures)
-
-    def success_summary(self):
-        num_ctx = len(self.contexts)
-        num_ass = len(self.assertions)
-        msg = """PASSED!
-{}, {}
-""".format(pluralise("context", num_ctx), pluralise("assertion", num_ass))
-        return msg
-
-    def failure_summary(self):
-        num_ctx = len(self.contexts)
-        num_ass = len(self.assertions)
-        num_fail = len(self.failures)
-        num_err = len(self.errors)
-        msg =  """FAILED!
-{}, {}: {} failed, {}
-""".format(pluralise("context", num_ctx),
-           pluralise("assertion", num_ass),
-           num_fail,
-           pluralise("error", num_err))
-        return msg
-
     def __add__(self, other):
         contexts = self.contexts + other.contexts
         return Result(contexts)
 
-def pluralise(noun, num):
-    string = str(num) + ' ' + noun
-    if num != 1:
-        string += 's'
-    return string
-
-def format_assertions(assertions):
-    return "".join([format_assertion(a) for a in assertions])
-
-def format_assertion(assertion):
-    module_name = assertion.func.__self__.__class__.__module__
-    method_name = assertion.func.__func__.__qualname__
-    exc = assertion.exception
-    msg = "======================================================================\n"
-    msg += "FAIL: " if isinstance(exc, AssertionError) else "ERROR: "
-    msg += '{}.{}\n'.format(module_name, method_name)
-    msg += "----------------------------------------------------------------------\n"
-    msg += ''.join(traceback.format_exception(type(exc), exc, exc.__traceback__))
-    return msg
+    def __eq__(self, other):
+        return self.contexts == other.contexts

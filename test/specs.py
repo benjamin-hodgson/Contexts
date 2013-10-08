@@ -1,6 +1,7 @@
 import types
 import sure
 import pyspec
+from pyspec.reporting import format_result
 
 core_file = repr(pyspec.core.__file__)[1:-1]
 this_file = repr(__file__)[1:-1]
@@ -31,13 +32,23 @@ class WhenRunningASpec(object):
     def it_should_run_the_methods_in_the_correct_order(self):
         self.spec.log.should.equal("arrange act assert assert teardown ")
 
+    def the_result_should_have_one_ctx(self):
+        self.result.contexts.should.have.length_of(1)
+
+    def the_result_should_have_two_assertions(self):
+        self.result.assertions.should.have.length_of(2)
+
+    def the_result_should_have_the_failure(self):
+        self.result.failures.should.have.length_of(1)
+
+    # TODO: move this
     def it_should_report_the_results(self):
-        self.result.summary().should.match(
+        format_result(self.result).should.match(
 """=+
 FAIL: __main__.WhenRunningASpec.establish_the_spec.<locals>.TestSpec.failing_method_with_should_in_the_name
 -+
 Traceback \(most recent call last\):
-  File "{0}", line \d+, in __call__
+  File "{0}", line \d+, in run
     self.func\(\)
   File "{1}", line \d+, in failing_method_with_should_in_the_name
     assert False, "failing assertion"
@@ -76,8 +87,21 @@ class WhenASpecErrors(object):
         for spec in self.specs:
             self.results.append(pyspec.run(spec))
 
+    def the_result_should_contain_the_ctx_error(self):
+        self.results[0].errors.should.have.length_of(1)
+
+    def the_result_should_contain_the_action_error(self):
+        self.results[1].errors.should.have.length_of(1)
+
+    def the_result_should_contain_the_assertion_error(self):
+        self.results[2].errors.should.have.length_of(1)
+
+    def the_result_should_contain_the_trdn_error(self):
+        self.results[3].errors.should.have.length_of(1)
+
+    # TODO: move this
     def it_should_report_the_ctx_error(self):
-        self.results[0].summary().should.match(
+        format_result(self.results[0]).should.match(
 """=+
 ERROR: __main__.WhenASpecErrors.context.<locals>.ErrorInSetup.it
 -+
@@ -93,8 +117,10 @@ ValueError: explode
 FAILED!
 1 context, 1 assertion: 0 failed, 1 error
 """.format(core_file, this_file))
+    
+    # TODO: move this
     def it_should_report_the_action_error(self):
-        self.results[1].summary().should.match(
+        format_result(self.results[1]).should.match(
 """=+
 ERROR: __main__.WhenASpecErrors.context.<locals>.ErrorInAction.it
 -+
@@ -110,13 +136,15 @@ TypeError: oh no
 FAILED!
 1 context, 1 assertion: 0 failed, 1 error
 """.format(core_file, this_file))
+    
+    # TODO: move this
     def it_should_report_the_assertion_error(self):
-        self.results[2].summary().should.match(
+        format_result(self.results[2]).should.match(
 """=+
 ERROR: __main__.WhenASpecErrors.context.<locals>.ErrorInAssertion.it
 -+
 Traceback \(most recent call last\):
-  File "{0}", line \d+, in __call__
+  File "{0}", line \d+, in run
     self.func\(\)
   File "{1}", line \d+, in it
     1/0
@@ -125,8 +153,10 @@ ZeroDivisionError: division by zero
 FAILED!
 1 context, 1 assertion: 0 failed, 1 error
 """.format(core_file, this_file))
+    
+    # TODO: move this
     def it_should_report_the_trdn_error(self):
-        self.results[3].summary().should.match(
+        format_result(self.results[3]).should.match(
 """=+
 ERROR: __main__.WhenASpecErrors.context.<locals>.ErrorInTeardown.it
 -+
@@ -256,8 +286,9 @@ class WhenRunningMultipleSpecs(object):
         self.suite[0].was_run.should.be.true
         self.suite[1].was_run.should.be.true
 
+    # TODO: move this
     def it_should_report_the_results(self):
-        self.result.summary().should.match("-+\nPASSED!\n2 contexts, 2 assertions\n")
+        format_result(self.result).should.match("-+\nPASSED!\n2 contexts, 2 assertions\n")
 
 class WhenRunningMultipleSpecsUsingUnpackedSyntax(object):
     def context(self):
@@ -277,8 +308,9 @@ class WhenRunningMultipleSpecsUsingUnpackedSyntax(object):
         self.suite[0].was_run.should.be.true
         self.suite[1].was_run.should.be.true
 
+    # TODO: move this
     def it_should_report_the_results(self):
-        self.result.summary().should.match("-+\nPASSED!\n2 contexts, 2 assertions\n")
+        format_result(self.result).should.match("-+\nPASSED!\n2 contexts, 2 assertions\n")
 
 class WhenLoadingTestsFromAModule(object):
     def context(self):
