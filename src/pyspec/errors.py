@@ -1,2 +1,5 @@
 class MethodNamingError(Exception):
-	pass
+    pass
+
+class TooManySpecialMethodsError(Exception):
+    pass

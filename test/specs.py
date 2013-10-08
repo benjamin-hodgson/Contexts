@@ -145,7 +145,7 @@ class WhenRunningAmbiguouslyNamedMethods(object):
         self.specs = [AmbiguousMethods1(), AmbiguousMethods2(), AmbiguousMethods3(), AmbiguousMethods4()]
         self.exceptions = []
 
-    def because_we_try_to_run_the_spec(self):
+    def because_we_try_to_run_the_specs(self):
         for spec in self.specs:
             self.exceptions.append(pyspec.catch(lambda: pyspec.run(spec)))
 
@@ -173,7 +173,7 @@ class WhenRunningNotSoAmbiguouslyNamedMethods(object):
         self.specs = [NotAmbiguousMethods1(), NotAmbiguousMethods2(), NotAmbiguousMethods3(), NotAmbiguousMethods4()]
         self.exceptions = []
 
-    def because_we_try_to_run_the_spec(self):
+    def because_we_try_to_run_the_specs(self):
         for spec in self.specs:
             self.exceptions.append(pyspec.catch(lambda: pyspec.run(spec)))
 
@@ -182,6 +182,36 @@ class WhenRunningNotSoAmbiguouslyNamedMethods(object):
         self.exceptions[1].should.be.none
         self.exceptions[2].should.be.none
         self.exceptions[3].should.be.none
+
+class WhenRunningSpecsWithTooManySpecialMethods(object):
+    def context(self):
+        class TooManyContexts(object):
+            def context(self):
+                pass
+            def establish(self):
+                pass
+        class TooManyActions(object):
+            def because(self):
+                pass
+            def when(self):
+                pass
+        class TooManyTeardowns(object):
+            def cleanup(self):
+                pass
+            def teardown(self):
+                pass
+
+        self.specs = [TooManyContexts(), TooManyActions(), TooManyTeardowns()]
+        self.exceptions = []
+
+    def because_we_try_to_run_the_specs(self):
+        for spec in self.specs:
+            self.exceptions.append(pyspec.catch(lambda: pyspec.run(spec)))
+
+    def it_should_raise_TooManySpecialMethodsError(self):
+        self.exceptions[0].should.be.a(pyspec.errors.TooManySpecialMethodsError)
+        self.exceptions[1].should.be.a(pyspec.errors.TooManySpecialMethodsError)
+        self.exceptions[2].should.be.a(pyspec.errors.TooManySpecialMethodsError)
 
 class WhenDeliberatelyCatchingAnException(object):
     def context(self):

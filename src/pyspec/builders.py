@@ -14,17 +14,19 @@ def build_suite(obj):
         return Suite([build_context(ctx) for ctx in contexts])
     return Suite([build_context(obj)])
 
-def build_context(spec):
-    setups = finders.find_methods_matching(spec, finders.establish_re, top_down=True)
-    actions = finders.find_methods_matching(spec, finders.because_re, one_only=True)
-    assertions = finders.find_methods_matching(spec, finders.should_re)
-    teardowns = finders.find_methods_matching(spec, finders.cleanup_re)
 
-    assert_no_duplicate_entries([setups, actions, assertions, teardowns])
+def build_context(spec):
+    setups = finders.find_setups(spec)
+    actions = finders.find_actions(spec)
+    assertions = finders.find_assertions(spec)
+    teardowns = finders.find_teardowns(spec)
+
+    assert_no_duplicate_entries(setups, actions, assertions, teardowns)
 
     return Context(setups, actions, [Assertion(f) for f in assertions], teardowns)
 
-def assert_no_duplicate_entries(iterables):
+
+def assert_no_duplicate_entries(*iterables):
     for a, b in itertools.combinations((set(i) for i in iterables), 2):
         overlap = a & b
         if overlap:

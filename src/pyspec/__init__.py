@@ -4,6 +4,7 @@ from .reporting import format_result
 from .core import Result
 from .builders import build_suite
 
+
 def run(*specs):
     if not specs:
         return run_main_module()
