@@ -1,0 +1,2 @@
+class MethodNamingError(Exception):
+	pass

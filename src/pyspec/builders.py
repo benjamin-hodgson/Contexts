@@ -1,7 +1,9 @@
 import types
 import collections
+import itertools
 from .core import Suite, Context, Assertion
 from . import finders
+from . import errors
 
 
 def build_suite(obj):
@@ -15,6 +17,17 @@ def build_suite(obj):
 def build_context(spec):
     setups = finders.find_methods_matching(spec, finders.establish_re, top_down=True)
     actions = finders.find_methods_matching(spec, finders.because_re, one_only=True)
-    assertions = assertions = [Assertion(f) for f in finders.find_methods_matching(spec, finders.should_re)]
+    assertions = finders.find_methods_matching(spec, finders.should_re)
     teardowns = finders.find_methods_matching(spec, finders.cleanup_re)
-    return Context(setups, actions, assertions, teardowns)
+
+    assert_no_duplicate_entries([setups, actions, assertions, teardowns])
+
+    return Context(setups, actions, [Assertion(f) for f in assertions], teardowns)
+
+def assert_no_duplicate_entries(iterables):
+    for a, b in itertools.combinations((set(i) for i in iterables), 2):
+        overlap = a & b
+        if overlap:
+            msg = "The following methods are ambiguously named:\n"
+            msg += '\n'.join([func.__qualname__ for func in overlap])
+            raise errors.MethodNamingError(msg)

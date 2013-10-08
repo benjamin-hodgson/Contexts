@@ -1,4 +1,5 @@
 import sys
+from . import errors
 from .reporting import format_result
 from .core import Result
 from .builders import build_suite

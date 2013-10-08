@@ -127,6 +127,62 @@ class WhenWeRunSpecsWithAlternatelyNamedMethods(object):
         self.spec2.log.should.equal("arrange act assert cleanup ")
         self.spec3.log.should.equal("act assert ")
 
+class WhenRunningAmbiguouslyNamedMethods(object):
+    def context(self):
+        class AmbiguousMethods1(object):
+            def this_has_both_context_and_because_in_the_name(self):
+                pass
+        class AmbiguousMethods2(object):
+            def this_has_both_because_and_should_in_the_name(self):
+                pass
+        class AmbiguousMethods3(object):
+            def this_has_both_should_and_teardown_in_the_name(self):
+                pass
+        class AmbiguousMethods4(object):
+            def this_has_both_teardown_and_establish_in_the_name(self):
+                pass
+
+        self.specs = [AmbiguousMethods1(), AmbiguousMethods2(), AmbiguousMethods3(), AmbiguousMethods4()]
+        self.exceptions = []
+
+    def because_we_try_to_run_the_spec(self):
+        for spec in self.specs:
+            self.exceptions.append(pyspec.catch(lambda: pyspec.run(spec)))
+
+    def it_should_raise_MethodNamingError(self):
+        self.exceptions[0].should.be.a(pyspec.errors.MethodNamingError)
+        self.exceptions[1].should.be.a(pyspec.errors.MethodNamingError)
+        self.exceptions[2].should.be.a(pyspec.errors.MethodNamingError)
+        self.exceptions[3].should.be.a(pyspec.errors.MethodNamingError)
+
+class WhenRunningNotSoAmbiguouslyNamedMethods(object):
+    def context(self):
+        class NotAmbiguousMethods1(object):
+            def this_has_both_context_and_establish_in_the_name(self):
+                pass
+        class NotAmbiguousMethods2(object):
+            def this_has_both_because_and_when_in_the_name(self):
+                pass
+        class NotAmbiguousMethods3(object):
+            def this_has_both_should_and_it_in_the_name(self):
+                pass
+        class NotAmbiguousMethods4(object):
+            def this_has_both_teardown_and_cleanup_in_the_name(self):
+                pass
+
+        self.specs = [NotAmbiguousMethods1(), NotAmbiguousMethods2(), NotAmbiguousMethods3(), NotAmbiguousMethods4()]
+        self.exceptions = []
+
+    def because_we_try_to_run_the_spec(self):
+        for spec in self.specs:
+            self.exceptions.append(pyspec.catch(lambda: pyspec.run(spec)))
+
+    def it_should_not_raise_any_exceptions(self):
+        self.exceptions[0].should.be.none
+        self.exceptions[1].should.be.none
+        self.exceptions[2].should.be.none
+        self.exceptions[3].should.be.none
+
 class WhenDeliberatelyCatchingAnException(object):
     def context(self):
         self.exception = ValueError("test exception")
