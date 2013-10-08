@@ -8,7 +8,7 @@ core_file = repr(pyspec.core.__file__)[1:-1]
 this_file = repr(__file__)[1:-1]
 
 class WhenRunningASpec(object):
-    def establish_the_spec(self):
+    def context(self):
         class TestSpec(object):
             def __init__(self):
                 self.log = ""
@@ -42,7 +42,6 @@ class WhenRunningASpec(object):
 
     def the_result_should_have_the_failure(self):
         self.result.failures.should.have.length_of(1)
-
 
 class WhenASpecErrors(object):
     def context(self):
@@ -128,6 +127,34 @@ class WhenWeRunSpecsWithAlternatelyNamedMethods(object):
         self.spec2.log.should.equal("arrange act assert cleanup ")
         self.spec3.log.should.equal("act assert ")
 
+class WhenDeliberatelyCatchingAnException(object):
+    def context(self):
+        self.exception = ValueError("test exception")
+
+        class TestSpec(object):
+            def __init__(s):
+                s.exception = None
+            def context(s):
+                def throwing_function():
+                    # Looks weird! Referencing 'self' from outer scope
+                    raise self.exception
+                s.throwing_function = throwing_function
+            def should(s):
+                s.exception = pyspec.catch(s.throwing_function)
+
+        self.spec = TestSpec()
+
+    def because_we_run_the_spec(self):
+        self.result = pyspec.run(self.spec)
+
+    def it_should_catch_and_return_the_exception(self):
+        self.spec.exception.should.equal(self.exception)
+
+    def it_should_not_have_a_failure_result(self):
+        self.result.assertions.should.have.length_of(1)
+        self.result.failures.should.be.empty
+        self.result.errors.should.be.empty
+
 class WhenASpecHasASuperclass(object):
     def context(self):
         class SharedContext(object):
@@ -142,6 +169,8 @@ class WhenASpecHasASuperclass(object):
             def cleanup(self):
                 self.log += "superclass cleanup "
         class Spec(SharedContext):
+            # I want it to run the superclasses' specially-named methods
+            # _even if_ they are masked by the subclass
             def context(self):
                 self.log += "subclass arrange "
             def because(self):
@@ -257,7 +286,6 @@ class WhenLoadingTestsFromAModule(object):
 
     def it_should_not_instantiate_the_normal_class(self):
         self.module.NormalClass.was_instantiated.should.be.false
-
 
 class WhenFormattingASuccessfulResult(object):
     def context_of_successful_run(self):

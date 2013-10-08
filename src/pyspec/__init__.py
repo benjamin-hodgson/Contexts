@@ -3,7 +3,6 @@ from .reporting import format_result
 from .core import Result
 from .builders import build_suite
 
-
 def run(*specs):
     if not specs:
         return run_main_module()
@@ -30,3 +29,10 @@ def run_main_module():
     result = run(sys.modules["__main__"])
     print(format_result(result))
     return result
+
+
+def catch(func):
+    try:
+        func()
+    except Exception as e:
+        return e
