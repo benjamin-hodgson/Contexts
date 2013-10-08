@@ -53,9 +53,13 @@ def find_methods_on_class_matching(cls, instance, regex, one_per_class):
             method = types.MethodType(func, instance)
             found.append(method)
 
-    if one_per_class and len(found) > 1:
+    if one_per_class:
+        assert_single_method_of_given_type(cls, found)
+
+    return found
+
+def assert_single_method_of_given_type(cls, found):
+    if len(found) > 1:
         msg = "Context {} has multiple methods of the same type:\n".format(cls.__qualname__)
         msg += ", ".join([meth.__func__.__name__ for meth in found])
         raise errors.TooManySpecialMethodsError(msg)
-
-    return found

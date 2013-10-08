@@ -1,22 +1,15 @@
 import sys
-from . import errors
-from .reporting import format_result
-from .core import Result
 from .builders import build_suite
+from .runners import run_main_module
 
 
-def run(*specs):
-    if not specs:
+def run(spec=None):
+    if spec is None:
         return run_main_module()
 
-    result = Result()
-
-    for spec in specs:
-        suite = build_suite(spec)
-        suite.run()
-        result += suite.result
-
-    return result
+    suite = build_suite(spec)
+    suite.run()
+    return suite.result
 
 
 def main():
@@ -25,12 +18,6 @@ def main():
     if result.failures or result.errors:
         sys.exit(1)
     sys.exit(0)
-
-
-def run_main_module():
-    result = run(sys.modules["__main__"])
-    print(format_result(result))
-    return result
 
 
 def catch(func):

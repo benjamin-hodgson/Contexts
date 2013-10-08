@@ -318,30 +318,6 @@ class WhenRunningMultipleSpecs(object):
     def the_result_should_have_two_assertions(self):
         self.result.assertions.should.have.length_of(2)
 
-class WhenRunningMultipleSpecsUsingUnpackedSyntax(object):
-    def context(self):
-        class Spec1(object):
-            def it(self):
-                self.was_run = True
-        class Spec2(object):
-            def it(self):
-                self.was_run = True
-
-        self.suite = [Spec1(), Spec2()]
-
-    def because_we_run_the_suite(self):
-        self.result = pyspec.run(*self.suite)
-
-    def it_should_run_both_tests(self):
-        self.suite[0].was_run.should.be.true
-        self.suite[1].was_run.should.be.true
-
-    def the_result_should_have_two_ctxs(self):
-        self.result.contexts.should.have.length_of(2)
-
-    def the_result_should_have_two_assertions(self):
-        self.result.assertions.should.have.length_of(2)
-
 class WhenLoadingTestsFromAModule(object):
     def context(self):
         class Spec(object):

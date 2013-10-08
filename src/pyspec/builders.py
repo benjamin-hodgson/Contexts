@@ -8,25 +8,40 @@ from . import errors
 
 def build_suite(obj):
     if isinstance(obj, collections.Iterable):
-        return Suite([build_context(x) for x in obj])
+        return build_suite_from_iterable(obj)
     if isinstance(obj, types.ModuleType):
-        contexts = finders.get_contexts_from_module(obj)
-        return Suite([build_context(ctx) for ctx in contexts])
-    return Suite([build_context(obj)])
+        return build_suite_from_module(obj)
+    return build_suite_from_single_class(obj)
 
 
-def build_context(spec):
-    setups = finders.find_setups(spec)
-    actions = finders.find_actions(spec)
-    assertions = finders.find_assertions(spec)
-    teardowns = finders.find_teardowns(spec)
+def build_suite_from_iterable(iterable):
+    contexts = [build_context(x) for x in iterable]
+    return Suite(contexts)
 
-    assert_no_duplicate_entries(setups, actions, assertions, teardowns)
+
+def build_suite_from_module(module):
+    classes = finders.get_contexts_from_module(module)
+    contexts = [build_context(cls) for cls in classes]
+    return Suite(contexts)
+
+
+def build_suite_from_single_class(cls):
+    contexts = [build_context(cls)]
+    return Suite(contexts)
+
+
+def build_context(cls):
+    setups = finders.find_setups(cls)
+    actions = finders.find_actions(cls)
+    assertions = finders.find_assertions(cls)
+    teardowns = finders.find_teardowns(cls)
+
+    assert_no_ambiguous_methods(setups, actions, assertions, teardowns)
 
     return Context(setups, actions, [Assertion(f) for f in assertions], teardowns)
 
 
-def assert_no_duplicate_entries(*iterables):
+def assert_no_ambiguous_methods(*iterables):
     for a, b in itertools.combinations((set(i) for i in iterables), 2):
         overlap = a & b
         if overlap:
