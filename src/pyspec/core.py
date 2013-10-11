@@ -1,11 +1,8 @@
-from .reporting import format_assertions, pluralise, failure_summary, success_summary
-from . import finders
-
-
 class Assertion(object):
-    def __init__(self, func):
+    def __init__(self, func, full_name):
         self.ran = False
         self.func = func
+        self.name = full_name
         self.exception = None
 
     def run(self):

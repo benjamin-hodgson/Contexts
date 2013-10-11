@@ -349,13 +349,70 @@ class WhenLoadingTestsFromAModule(object):
     def it_should_not_instantiate_the_normal_class(self):
         self.module.NormalClass.was_instantiated.should.be.false
 
+
+#####################################################################
+# Reporting tests (will be in separate file later)
+#####################################################################
+
+class FakeLoader(object):
+    def __init__(self, source):
+        self.source = source
+
+    def get_source(self, name):
+        return self.source
+
+class FakeCode(object):
+    def __init__(self, co_filename, co_name):
+        self.co_filename = co_filename
+        self.co_name = co_name
+
+class FakeFrame(object):
+    def __init__(self, f_code, source):
+        self.f_code = f_code
+        self.f_globals = {'__loader__': FakeLoader(source),
+                          '__name__': f_code.co_filename[:-3]}
+
+class FakeTraceback(object):
+    def __init__(self, frames, line_nums):
+        if len(frames) != len(line_nums):
+            raise ValueError("Ya messed up!")
+        self._frames = frames
+        self._line_nums = line_nums
+        self.tb_frame = frames[0]
+        self.tb_lineno = line_nums[0]
+
+    @property
+    def tb_next(self):
+        if len(self._frames) > 1:
+            return FakeTraceback(self._frames[1:], self._line_nums[1:])
+
+class FakeException(Exception):
+    def __init__(self, *args, **kwargs):
+        self._tb = None
+        super().__init__(*args, **kwargs)
+
+    @property
+    def __traceback__(self):
+        return self._tb
+
+    @__traceback__.setter
+    def __traceback__(self, value):
+        self._tb = value
+
+    def with_traceback(self, value):
+        self._tb = value
+        return self
+
+class FakeAssertionError(FakeException, AssertionError):
+    pass
+
 class WhenFormattingASuccessfulResult(object):
     def context_of_successful_run(self):
-        assertion1 = core.Assertion(lambda: 2)
+        assertion1 = core.Assertion(lambda: 2, "name")
         assertion1.ran = True
-        assertion2 = core.Assertion(lambda: 2)
+        assertion2 = core.Assertion(lambda: 2, "name")
         assertion2.ran = True
-        assertion3 = core.Assertion(lambda: 2)
+        assertion3 = core.Assertion(lambda: 2, "name")
         assertion3.ran = True
         ctx1 = core.Context([],[],[assertion1],[])
         ctx2 = core.Context([],[],[assertion2, assertion3],[])
@@ -372,53 +429,56 @@ PASSED!
 """)
 
 class WhenFormattingAFailureResult(object):
-    def context_of_failed_run(self):
-        class TestSpec(object):
-            # It'd be nice if I could get away with not throwing real exceptions
-            # in this test code.
-            # I'd prefer to set up a fake Result object with some assertions and
-            # a fake traceback. That way it'd be easier to control the content of
-            # the output, and our test of the reporting code would be totally
-            # detached from the behaviour of the runner.
-            # Unfortunately, looks like you can't really fake traceback objects: see
-            # http://stackoverflow.com/a/9193252/1523776
-            def this_should_pass(self):
-                assert True
-            def this_should_fail(self):
-                assert False, "failing assertion"
-            def this_should_also_fail(self):
-                raise AttributeError("Gotcha")
-        self.result = pyspec.run(TestSpec())
+    def in_the_context_of_a_failed_run(self):
+        code1 = FakeCode("made_up_file.py", "made_up_function")
+        frame1 = FakeFrame(code1, "source\ncode\nframe1\n")
+
+        code2 = FakeCode("another_made_up_file.py", "another_made_up_function")
+        frame2 = FakeFrame(code2, "source\nframe2\n")
+
+        assertion1 = pyspec.core.Assertion(lambda: 2, "made.up.assertion_1")
+        assertion1.exception = FakeException("Gotcha")
+        assertion1.exception.__traceback__ = FakeTraceback([frame1,frame2], [3,2])
+
+        code3 = FakeCode("made_up_file_3.py", "made_up_function_3")
+        frame3 = FakeFrame(code3, "frame3\nsource\n")
+
+        code4 = FakeCode("made_up_file_4.py", "made_up_function_4")
+        frame4 = FakeFrame(code4, "code\nframe4\n")
+
+        assertion2 = pyspec.core.Assertion(lambda: 2, "made.up.assertion_2")
+        assertion2.exception = FakeAssertionError("you fail")
+        assertion2.exception.__traceback__ = FakeTraceback([frame3,frame4], [1,2])
+
+        context = pyspec.core.Context([],[],[assertion1, assertion2],[])
+        self.result = pyspec.core.Result([context])
 
     def because_we_format_the_result(self):
         self.output_string = format_result(self.result)
 
     def it_should_output_a_traceback_for_each_failure(self):
-        self.output_string.should.match(
-# We don't know which way around the assertions will be reported;
-# nor do we know the exact file or line number.
-# (if we had full control over the Result in this case, this wouldn't be an issue)
-r"""(======================================================================
-ERROR: __main__.WhenFormattingAFailureResult.context_of_failed_run.<locals>.TestSpec.this_should_also_fail
+        self.output_string.should.equal(
+"""======================================================================
+ERROR: made.up.assertion_1
 ----------------------------------------------------------------------
-Traceback \(most recent call last\):
-  File "{0}", line \d+, in run
-    self.func\(\)
-  File "{1}", line \d+, in this_should_also_fail
-    raise AttributeError\("Gotcha"\)
-AttributeError: Gotcha
-|======================================================================
-FAIL: __main__.WhenFormattingAFailureResult.context_of_failed_run.<locals>.TestSpec.this_should_fail
+Traceback (most recent call last):
+  File "made_up_file.py", line 3, in made_up_function
+    frame1
+  File "another_made_up_file.py", line 2, in another_made_up_function
+    frame2
+FakeException: Gotcha
+======================================================================
+FAIL: made.up.assertion_2
 ----------------------------------------------------------------------
-Traceback \(most recent call last\):
-  File "{0}", line \d+, in run
-    self.func\(\)
-  File "{1}", line \d+, in this_should_fail
-    assert False, "failing assertion"
-AssertionError: failing assertion
-){{2}}----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "made_up_file_3.py", line 1, in made_up_function_3
+    frame3
+  File "made_up_file_4.py", line 2, in made_up_function_4
+    frame4
+FakeAssertionError: you fail
+----------------------------------------------------------------------
 FAILED!
-1 context, 3 assertions: 1 failed, 1 error
+1 context, 2 assertions: 1 failed, 1 error
 """.format(core_file, this_file))
 
 if __name__ == "__main__":

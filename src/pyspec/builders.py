@@ -38,7 +38,14 @@ def build_context(cls):
 
     assert_no_ambiguous_methods(setups, actions, assertions, teardowns)
 
-    return Context(setups, actions, [Assertion(f) for f in assertions], teardowns)
+    wrapped_assertions = [Assertion(f, build_assertion_name(f)) for f in assertions]
+    return Context(setups, actions, wrapped_assertions, teardowns)
+
+
+def build_assertion_name(func):
+    module_name = func.__self__.__class__.__module__
+    method_name = func.__func__.__qualname__
+    return '{}.{}\n'.format(module_name, method_name)
 
 
 def assert_no_ambiguous_methods(*iterables):

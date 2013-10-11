@@ -13,12 +13,10 @@ def format_assertions(assertions):
 
 
 def format_assertion(assertion):
-    module_name = assertion.func.__self__.__class__.__module__
-    method_name = assertion.func.__func__.__qualname__
     exc = assertion.exception
     msg = "======================================================================\n"
     msg += "FAIL: " if isinstance(exc, AssertionError) else "ERROR: "
-    msg += '{}.{}\n'.format(module_name, method_name)
+    msg += assertion.name + '\n'
     msg += "----------------------------------------------------------------------\n"
     msg += ''.join(traceback.format_exception(type(exc), exc, exc.__traceback__))
     return msg
