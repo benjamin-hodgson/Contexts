@@ -18,7 +18,8 @@ def format_assertion(assertion):
     msg += "FAIL: " if isinstance(exc, AssertionError) else "ERROR: "
     msg += assertion.name + '\n'
     msg += "----------------------------------------------------------------------\n"
-    msg += ''.join(traceback.format_exception(type(exc), exc, exc.__traceback__))
+    msg += "Traceback (most recent call last):\n"
+    msg += ''.join(traceback.format_list(exc.tb)) + ''.join(traceback.format_exception_only(exc.__class__, exc))
     return msg
 
 

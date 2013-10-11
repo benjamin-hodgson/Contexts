@@ -1,3 +1,4 @@
+import traceback
 import types
 import sure
 import pyspec
@@ -352,7 +353,7 @@ class WhenLoadingTestsFromAModule(object):
 
 #####################################################################
 # Reporting tests (will be in separate file later)
-#####################################################################
+##################################################################### b
 
 class FakeLoader(object):
     def __init__(self, source):
@@ -438,7 +439,7 @@ class WhenFormattingAFailureResult(object):
 
         assertion1 = pyspec.core.Assertion(lambda: 2, "made.up.assertion_1")
         assertion1.exception = FakeException("Gotcha")
-        assertion1.exception.__traceback__ = FakeTraceback([frame1,frame2], [3,2])
+        assertion1.exception.tb = traceback.extract_tb(FakeTraceback([frame1,frame2], [3,2]))
 
         code3 = FakeCode("made_up_file_3.py", "made_up_function_3")
         frame3 = FakeFrame(code3, "frame3\nsource\n")
@@ -448,7 +449,7 @@ class WhenFormattingAFailureResult(object):
 
         assertion2 = pyspec.core.Assertion(lambda: 2, "made.up.assertion_2")
         assertion2.exception = FakeAssertionError("you fail")
-        assertion2.exception.__traceback__ = FakeTraceback([frame3,frame4], [1,2])
+        assertion2.exception.tb = traceback.extract_tb(FakeTraceback([frame3,frame4], [1,2]))
 
         context = pyspec.core.Context([],[],[assertion1, assertion2],[])
         self.result = pyspec.core.Result([context])

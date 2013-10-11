@@ -1,3 +1,6 @@
+import traceback
+
+
 class Assertion(object):
     def __init__(self, func, full_name):
         self.ran = False
@@ -9,10 +12,14 @@ class Assertion(object):
         self.ran = True
         try:
             self.func()
-        except AssertionError as e:
-            self.exception = e
         except Exception as e:
-            self.exception = e
+            self.set_exception(e)
+
+    def set_exception(self, e):
+        self.exception = e
+        self.exception.tb = traceback.extract_tb(e.__traceback__)
+        self.exception.__traceback__ = None
+
 
 
 class Context(object):
@@ -52,7 +59,7 @@ class Context(object):
             self.run_teardown()
         except Exception as e:
             for assertion in self.assertions:
-                assertion.exception = e
+                assertion.set_exception(e)
 
 
 class Suite(object):
