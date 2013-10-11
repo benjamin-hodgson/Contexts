@@ -387,26 +387,6 @@ class FakeTraceback(object):
         if len(self._frames) > 1:
             return FakeTraceback(self._frames[1:], self._line_nums[1:])
 
-class FakeException(Exception):
-    def __init__(self, *args, **kwargs):
-        self._tb = None
-        super().__init__(*args, **kwargs)
-
-    @property
-    def __traceback__(self):
-        return self._tb
-
-    @__traceback__.setter
-    def __traceback__(self, value):
-        self._tb = value
-
-    def with_traceback(self, value):
-        self._tb = value
-        return self
-
-class FakeAssertionError(FakeException, AssertionError):
-    pass
-
 class WhenFormattingASuccessfulResult(object):
     def context_of_successful_run(self):
         assertion1 = core.Assertion(lambda: 2, "name")
@@ -437,9 +417,10 @@ class WhenFormattingAFailureResult(object):
         code2 = FakeCode("another_made_up_file.py", "another_made_up_function")
         frame2 = FakeFrame(code2, "source\nframe2\n")
 
+        exception1 = TypeError("Gotcha")
+        exception1.tb = traceback.extract_tb(FakeTraceback([frame1,frame2], [3,2]))
         assertion1 = pyspec.core.Assertion(lambda: 2, "made.up.assertion_1")
-        assertion1.exception = FakeException("Gotcha")
-        assertion1.exception.tb = traceback.extract_tb(FakeTraceback([frame1,frame2], [3,2]))
+        assertion1.exception = exception1
 
         code3 = FakeCode("made_up_file_3.py", "made_up_function_3")
         frame3 = FakeFrame(code3, "frame3\nsource\n")
@@ -447,9 +428,10 @@ class WhenFormattingAFailureResult(object):
         code4 = FakeCode("made_up_file_4.py", "made_up_function_4")
         frame4 = FakeFrame(code4, "code\nframe4\n")
 
+        exception2 = AssertionError("you fail")
+        exception2.tb = traceback.extract_tb(FakeTraceback([frame3,frame4], [1,2]))
         assertion2 = pyspec.core.Assertion(lambda: 2, "made.up.assertion_2")
-        assertion2.exception = FakeAssertionError("you fail")
-        assertion2.exception.tb = traceback.extract_tb(FakeTraceback([frame3,frame4], [1,2]))
+        assertion2.exception = exception2
 
         context = pyspec.core.Context([],[],[assertion1, assertion2],[])
         self.result = pyspec.core.Result([context])
@@ -467,7 +449,7 @@ Traceback (most recent call last):
     frame1
   File "another_made_up_file.py", line 2, in another_made_up_function
     frame2
-FakeException: Gotcha
+TypeError: Gotcha
 ======================================================================
 FAIL: made.up.assertion_2
 ----------------------------------------------------------------------
@@ -476,7 +458,7 @@ Traceback (most recent call last):
     frame3
   File "made_up_file_4.py", line 2, in made_up_function_4
     frame4
-FakeAssertionError: you fail
+AssertionError: you fail
 ----------------------------------------------------------------------
 FAILED!
 1 context, 2 assertions: 1 failed, 1 error

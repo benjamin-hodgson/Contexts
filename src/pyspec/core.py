@@ -21,7 +21,6 @@ class Assertion(object):
         self.exception.__traceback__ = None
 
 
-
 class Context(object):
     def __init__(self, setups, actions, assertions, teardowns):
         self.ran = False
