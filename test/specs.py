@@ -1,4 +1,3 @@
-import traceback
 import types
 import sure
 import pyspec
@@ -406,38 +405,6 @@ class WhenRunningAModule(object):
 # Reporting tests (will be in separate file later)
 #####################################################################
 
-class FakeLoader(object):
-    def __init__(self, source):
-        self.source = source
-
-    def get_source(self, name):
-        return self.source
-
-class FakeCode(object):
-    def __init__(self, co_filename, co_name):
-        self.co_filename = co_filename
-        self.co_name = co_name
-
-class FakeFrame(object):
-    def __init__(self, f_code, source):
-        self.f_code = f_code
-        self.f_globals = {'__loader__': FakeLoader(source),
-                          '__name__': f_code.co_filename[:-3]}
-
-class FakeTraceback(object):
-    def __init__(self, frames, line_nums):
-        if len(frames) != len(line_nums):
-            raise ValueError("Ya messed up!")
-        self._frames = frames
-        self._line_nums = line_nums
-        self.tb_frame = frames[0]
-        self.tb_lineno = line_nums[0]
-
-    @property
-    def tb_next(self):
-        if len(self._frames) > 1:
-            return FakeTraceback(self._frames[1:], self._line_nums[1:])
-
 class WhenFormattingASuccessfulResult(object):
     def context_of_successful_run(self):
         self.result = reporting.TextResult()
@@ -459,32 +426,22 @@ PASSED!
 
 class WhenFormattingAFailureResult(object):
     def in_the_context_of_a_failed_run(self):
-        code1 = FakeCode("made_up_file.py", "made_up_function")
-        frame1 = FakeFrame(code1, "source\ncode\nframe1\n")
-
-        code2 = FakeCode("another_made_up_file.py", "another_made_up_function")
-        frame2 = FakeFrame(code2, "source\nframe2\n")
-
+        self.result = reporting.TextResult()
         exception1 = TypeError("Gotcha")
-        exception1.tb = traceback.extract_tb(FakeTraceback([frame1,frame2], [3,2]))
-        assertion1 = pyspec.core.Assertion(lambda: 2, "made.up.assertion_1")
-
-        code3 = FakeCode("made_up_file_3.py", "made_up_function_3")
-        frame3 = FakeFrame(code3, "frame3\nsource\n")
-
-        code4 = FakeCode("made_up_file_4.py", "made_up_function_4")
-        frame4 = FakeFrame(code4, "code\nframe4\n")
+        tb1 = [('made_up_file.py', 3, 'made_up_function', 'frame1'),
+               ('another_made_up_file.py', 2, 'another_made_up_function', 'frame2')]
+        assertion1 = pyspec.core.Assertion(None, "made.up.assertion_1")
 
         exception2 = AssertionError("you fail")
-        exception2.tb = traceback.extract_tb(FakeTraceback([frame3,frame4], [1,2]))
-        assertion2 = pyspec.core.Assertion(lambda: 2, "made.up.assertion_2")
+        tb2 = [('made_up_file_3.py', 1, 'made_up_function_3', 'frame3'),
+               ('made_up_file_4.py', 2, 'made_up_function_4', 'frame4')]
+        assertion2 = pyspec.core.Assertion(None, "made.up.assertion_2")
 
-        self.result = reporting.TextResult()
         self.result.add_context(None)
         self.result.add_assertion(None)
         self.result.add_assertion(None)
-        self.result.assertion_errored(assertion1, exception1, exception1.tb)
-        self.result.assertion_failed(assertion2, exception2, exception2.tb)
+        self.result.assertion_errored(assertion1, exception1, tb1)
+        self.result.assertion_failed(assertion2, exception2, tb2)
 
     def because_we_format_the_result(self):
         self.output_string = self.result.format_result()
