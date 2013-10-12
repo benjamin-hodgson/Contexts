@@ -1,6 +1,6 @@
 import types
-import sure
 from io import StringIO
+import sure
 import pyspec
 from pyspec import reporting
 
@@ -34,10 +34,13 @@ class WhenRunningASpec(object):
         self.spec = TestSpec()
 
     def because_we_run_the_spec(self):
-        self.result = pyspec.run(self.spec)
+        self.result = pyspec.run(self.spec, pyspec.core.Result())
 
     def it_should_run_the_methods_in_the_correct_order(self):
         self.spec.log.should.equal("arrange act assert assert assert teardown ")
+
+    def the_result_should_report_failure(self):
+        self.result.failed.should.be.true
 
     def the_result_should_have_one_ctx(self):
         self.result.contexts.should.have.length_of(1)
@@ -82,6 +85,19 @@ class WhenRunningASpec(object):
     def the_error_should_have_the_traceback(self):
         self.result.assertion_errors[0][2].should_not.be.empty
 
+class WhenASpecPasses(object):
+    def context(self):
+        class TestSpec(object):
+            def it(self):
+                pass
+        self.spec = TestSpec()
+
+    def because_we_run_the_spec(self):
+        self.result = pyspec.run(self.spec, pyspec.core.Result())
+
+    def the_result_should_report_success(self):
+        self.result.failed.should.be.false
+
 class WhenAContextErrors(object):
     def context(self):
         class ErrorInSetup(object):
@@ -105,7 +121,7 @@ class WhenAContextErrors(object):
     def because_we_run_the_specs(self):
         self.results = []
         for spec in self.specs:
-            self.results.append(pyspec.run(spec))
+            self.results.append(pyspec.run(spec, pyspec.core.Result()))
 
     def the_result_should_contain_the_ctx_error(self):
         self.results[0].context_errors.should.have.length_of(1)
@@ -151,9 +167,9 @@ class WhenWeRunSpecsWithAlternatelyNamedMethods(object):
         self.spec3 = EvenMoreAlternativeNames()
 
     def because_we_run_the_specs(self):
-        pyspec.run(self.spec1)
-        pyspec.run(self.spec2)
-        pyspec.run(self.spec3)
+        pyspec.run(self.spec1, pyspec.core.Result())
+        pyspec.run(self.spec2, pyspec.core.Result())
+        pyspec.run(self.spec3, pyspec.core.Result())
 
     def it_should_run_the_methods_in_the_correct_order(self):
         self.spec1.log.should.equal("arrange act assert ")
@@ -180,7 +196,7 @@ class WhenRunningAmbiguouslyNamedMethods(object):
 
     def because_we_try_to_run_the_specs(self):
         for spec in self.specs:
-            self.exceptions.append(pyspec.catch(lambda: pyspec.run(spec)))
+            self.exceptions.append(pyspec.catch(lambda: pyspec.run(spec, pyspec.core.Result())))
 
     def it_should_raise_MethodNamingError(self):
         self.exceptions[0].should.be.a(pyspec.errors.MethodNamingError)
@@ -208,7 +224,7 @@ class WhenRunningNotSoAmbiguouslyNamedMethods(object):
 
     def because_we_try_to_run_the_specs(self):
         for spec in self.specs:
-            self.exceptions.append(pyspec.catch(lambda: pyspec.run(spec)))
+            self.exceptions.append(pyspec.catch(lambda: pyspec.run(spec, pyspec.core.Result())))
 
     def it_should_not_raise_any_exceptions(self):
         self.exceptions[0].should.be.none
@@ -239,7 +255,7 @@ class WhenRunningSpecsWithTooManySpecialMethods(object):
 
     def because_we_try_to_run_the_specs(self):
         for spec in self.specs:
-            self.exceptions.append(pyspec.catch(lambda: pyspec.run(spec)))
+            self.exceptions.append(pyspec.catch(lambda: pyspec.run(spec, pyspec.core.Result())))
 
     def it_should_raise_TooManySpecialMethodsError(self):
         self.exceptions[0].should.be.a(pyspec.errors.TooManySpecialMethodsError)
@@ -265,7 +281,7 @@ class WhenCatchingAnException(object):
         self.spec = TestSpec()
 
     def because_we_run_the_spec(self):
-        self.result = pyspec.run(self.spec)
+        self.result = pyspec.run(self.spec, pyspec.core.Result())
 
     def it_should_catch_and_return_the_exception(self):
         self.spec.exception.should.equal(self.exception)
@@ -307,7 +323,7 @@ class WhenASpecHasASuperclass(object):
         self.spec = Spec()
 
     def because_we_run_the_spec(self):
-        pyspec.run(self.spec)
+        pyspec.run(self.spec, pyspec.core.Result())
 
     def it_should_run_the_superclass_ctx_first(self):
         self.spec.log[:19].should.equal("superclass arrange ")
@@ -344,7 +360,7 @@ class WhenRunningMultipleSpecs(object):
         self.suite = [Spec1(), Spec2()]
 
     def because_we_run_the_suite(self):
-        self.result = pyspec.run(self.suite)
+        self.result = pyspec.run(self.suite, pyspec.core.Result())
 
     def it_should_run_both_tests(self):
         self.suite[0].was_run.should.be.true
@@ -365,7 +381,7 @@ class WhenRunningAClass(object):
         self.spec = TestSpec
 
     def because_we_run_the_class(self):
-        pyspec.run(self.spec)
+        pyspec.run(self.spec, pyspec.core.Result())
 
     def it_should_run_the_test(self):
         self.spec.was_run.should.be.true
@@ -390,7 +406,7 @@ class WhenRunningAModule(object):
         self.module.NormalClass = NormalClass
 
     def because_we_run_the_module(self):
-        self.result = pyspec.run(self.module)
+        self.result = pyspec.run(self.module, pyspec.core.Result())
 
     def it_should_run_the_spec(self):
         self.module.Spec.was_run.should.be.true
@@ -406,10 +422,46 @@ class WhenRunningAModule(object):
 # Reporting tests (will be in separate file later)
 #####################################################################
 
-class WhenFormattingASuccessfulResult(object):
-    def context_of_successful_run(self):
+class WhenWatchingForDots(object):
+    def context(self):
         self.stringio = StringIO()
         self.result = reporting.TextResult(self.stringio)
+
+    def because_we_run_some_assertions(self):
+        with self.result.run_context(None):
+            with self.result.run_assertion(None):
+                pass
+            self.first = self.stringio.getvalue()
+            with self.result.run_assertion(None):
+                pass
+            self.second = self.stringio.getvalue()
+            with self.result.run_assertion(None):
+                raise AssertionError()
+            self.third = self.stringio.getvalue()
+            with self.result.run_assertion(None):
+                raise TypeError()
+            self.fourth = self.stringio.getvalue()
+            raise ValueError()
+        self.fifth = self.stringio.getvalue()
+
+    def it_should_print_a_dot_for_the_first_pass(self):
+        self.first.should.equal('.')
+
+    def it_should_print_a_dot_for_the_second_pass(self):
+        self.second.should.equal('..')
+
+    def it_should_print_an_F_for_the_failure(self):
+        self.third.should.equal('..F')
+
+    def it_should_print_an_E_for_the_assertion_error(self):
+        self.fourth.should.equal('..FE')
+
+    def it_should_print_an_E_for_the_ctx_error(self):
+        self.fifth.should.equal('..FEE')
+
+class WhenPrintingASuccessfulResult(object):
+    def in_the_context_of_a_successful_run(self):
+        self.result = reporting.TextResult(StringIO())
         with self.result.run_context(None):
             with self.result.run_assertion(None):
                 pass
@@ -418,21 +470,24 @@ class WhenFormattingASuccessfulResult(object):
         with self.result.run_context(None):
             with self.result.run_assertion(None):
                 pass
+
+        self.stringio = StringIO()
+        self.result.stream = self.stringio
 
     def because_we_print_the_summary(self):
         self.result.print_summary()
 
     def it_should_print_the_summary_to_the_stream(self):
         self.stringio.getvalue().should.equal(
-"""----------------------------------------------------------------------
+"""
+----------------------------------------------------------------------
 PASSED!
 2 contexts, 3 assertions
 """)
 
-class WhenFormattingAFailureResult(object):
+class WhenPrintingAFailureResult(object):
     def in_the_context_of_a_failed_run(self):
-        self.stringio = StringIO()
-        self.result = reporting.TextResult(self.stringio)
+        self.result = reporting.TextResult(StringIO())
 
         exception1 = TypeError("Gotcha")
         tb1 = [('made_up_file.py', 3, 'made_up_function', 'frame1'),
@@ -451,20 +506,21 @@ class WhenFormattingAFailureResult(object):
 
         with self.result.run_context(None):
             # Figure out a way to do this using the context manager?
-            self.result.add_assertion(None)
             self.result.assertion_errored(assertion1, exception1, tb1)
-            self.result.add_assertion(None)
             self.result.assertion_failed(assertion2, exception2, tb2)
 
-        self.result.add_context(None)
         self.result.context_errored(context3, exception3, tb3)
+
+        self.stringio = StringIO()
+        self.result.stream = self.stringio
 
     def because_we_print_the_summary(self):
         self.result.print_summary()
 
     def it_should_print_a_traceback_for_each_failure(self):
         self.stringio.getvalue().should.equal(
-"""======================================================================
+"""
+======================================================================
 ERROR: made.up_context
 ----------------------------------------------------------------------
 Traceback (most recent call last):

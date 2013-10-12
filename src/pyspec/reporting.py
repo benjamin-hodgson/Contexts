@@ -11,7 +11,24 @@ class TextResult(Result):
     def _print(self, *args, sep=' ', end='\n', flush=True):
         print(*args, sep=sep, end=end, file=self.stream, flush=flush)
 
+    def assertion_passed(self, *args, **kwargs):
+        super().assertion_passed(*args, **kwargs)
+        self._print('.', end='')
+
+    def assertion_failed(self, *args, **kwargs):
+        super().assertion_failed(*args, **kwargs)
+        self._print('F', end='')
+
+    def assertion_errored(self, *args, **kwargs):
+        super().assertion_errored(*args, **kwargs)
+        self._print('E', end='')
+
+    def context_errored(self, *args, **kwargs):
+        super().context_errored(*args, **kwargs)
+        self._print('E', end='')
+
     def print_summary(self):
+        self._print('')
         if self.failed:
             for tup in self.context_errors + self.assertion_errors + self.assertion_failures:
                 self.print_assertion_failure(*tup)

@@ -66,17 +66,17 @@ class Result(object):
 
     @contextmanager
     def run_context(self, context):
-        self.add_context(context)
         try:
             yield
         except Exception as e:
             tb = traceback.extract_tb(e.__traceback__)
             e.__traceback__ = None  # to prevent memory leaks caused by keeping tracebacks around
             self.context_errored(context, e, tb)
+        else:
+            self.context_ran(context)
 
     @contextmanager
     def run_assertion(self, assertion):
-        self.add_assertion(assertion)
         try:
             yield
         except AssertionError as e:
@@ -87,18 +87,23 @@ class Result(object):
             tb = traceback.extract_tb(e.__traceback__)
             e.__traceback__ = None
             self.assertion_errored(assertion, e, tb)
+        else:
+            self.assertion_passed(assertion)
 
-    def add_context(self, context):
+    def context_ran(self, context):
         self.contexts.append(context)
 
     def context_errored(self, context, exception, extracted_traceback):
+        self.contexts.append(context)
         self.context_errors.append((context, exception, extracted_traceback))
 
-    def add_assertion(self, assertion):
+    def assertion_passed(self, assertion):
         self.assertions.append(assertion)
 
     def assertion_errored(self, assertion, exception, extracted_traceback):
+        self.assertions.append(assertion)
         self.assertion_errors.append((assertion, exception, extracted_traceback))
 
     def assertion_failed(self, assertion, exception, extracted_traceback):
+        self.assertions.append(assertion)
         self.assertion_failures.append((assertion, exception, extracted_traceback))
