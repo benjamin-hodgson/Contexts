@@ -1,10 +1,10 @@
 import types
 import collections
 from . import builders
-from .reporting import Result
+from .reporting import TextResult
 
 
-def run(spec=None):
+def run(spec=None, result=None):
     if spec is None:
         suite = builders.build_suite_from_module(spec)
     elif isinstance(spec, types.ModuleType):
@@ -15,10 +15,11 @@ def run(spec=None):
         suite = builders.build_suite_from_class(spec)
     else:
         suite = builders.build_suite_from_instance(spec)
-    return run_suite(suite)
+    return run_suite(suite, result)
 
 
-def run_suite(suite):
-    result = Result()
+def run_suite(suite, result=None):
+    if result is None:
+        result = TextResult()
     suite.run(result)
     return result

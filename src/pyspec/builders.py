@@ -24,16 +24,16 @@ def build_suite_from_instance(spec):
     return Suite(contexts)
 
 
-def build_context(cls):
-    setups = finders.find_setups(cls)
-    actions = finders.find_actions(cls)
-    assertions = finders.find_assertions(cls)
-    teardowns = finders.find_teardowns(cls)
+def build_context(spec):
+    setups = finders.find_setups(spec)
+    actions = finders.find_actions(spec)
+    assertions = finders.find_assertions(spec)
+    teardowns = finders.find_teardowns(spec)
 
     assert_no_ambiguous_methods(setups, actions, assertions, teardowns)
 
     wrapped_assertions = [Assertion(f, build_assertion_name(f)) for f in assertions]
-    return Context(setups, actions, wrapped_assertions, teardowns)
+    return Context(setups, actions, wrapped_assertions, teardowns, spec.__class__.__name__)
 
 
 def build_assertion_name(func):

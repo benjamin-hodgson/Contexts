@@ -1,34 +1,23 @@
+from contextlib import contextmanager
 import traceback
 
-
-def freeze_traceback(e):
-    e.tb = traceback.extract_tb(e.__traceback__)
-    e.__traceback__ = None
-
-
 class Assertion(object):
-    def __init__(self, func, full_name):
+    def __init__(self, func, name):
         self.func = func
-        self.name = full_name
+        self.name = name
 
     def run(self, result):
-        result.add_assertion(self)
-        try:
+        with result.run_assertion(self):
             self.func()
-        except AssertionError as e:
-            freeze_traceback(e)
-            result.assertion_failed(self, e)
-        except Exception as e:
-            freeze_traceback(e)
-            result.assertion_errored(self, e)
 
 
 class Context(object):
-    def __init__(self, setups, actions, assertions, teardowns):
+    def __init__(self, setups, actions, assertions, teardowns, name):
         self.setups = setups
         self.actions = actions
         self.assertions = assertions
         self.teardowns = teardowns
+        self.name = name
 
     def run_setup(self):
         for setup in self.setups:
@@ -47,15 +36,11 @@ class Context(object):
             teardown()
 
     def run(self, result):
-        result.add_context(self)
-        try:
+        with result.run_context(self):
             self.run_setup()
             self.run_action()
             self.run_assertions(result)
             self.run_teardown()
-        except Exception as e:
-            freeze_traceback(e)
-            result.context_errored(self, e)
 
 
 class Suite(object):
@@ -66,3 +51,54 @@ class Suite(object):
         for ctx in self.contexts:
             ctx.run(result)
 
+
+class Result(object):
+    def __init__(self):
+        self.contexts = []
+        self.assertions = []
+        self.context_errors = []
+        self.assertion_errors = []
+        self.assertion_failures = []
+
+    @property
+    def failed(self):
+        return self.context_errors or self.assertion_errors or self.assertion_failures
+
+    @contextmanager
+    def run_context(self, context):
+        self.add_context(context)
+        try:
+            yield
+        except Exception as e:
+            tb = traceback.extract_tb(e.__traceback__)
+            e.__traceback__ = None  # to prevent memory leaks caused by keeping tracebacks around
+            self.context_errored(context, e, tb)
+
+    @contextmanager
+    def run_assertion(self, assertion):
+        self.add_assertion(assertion)
+        try:
+            yield
+        except AssertionError as e:
+            tb = traceback.extract_tb(e.__traceback__)
+            e.__traceback__ = None
+            self.assertion_failed(assertion, e, tb)
+        except Exception as e:
+            tb = traceback.extract_tb(e.__traceback__)
+            e.__traceback__ = None
+            self.assertion_errored(assertion, e, tb)
+
+    def add_context(self, context):
+        self.contexts.append(context)
+
+    def context_errored(self, context, exception, extracted_traceback):
+        self.context_errors.append((context, exception, extracted_traceback))
+
+    def add_assertion(self, assertion):
+        self.assertions.append(assertion)
+
+    def assertion_errored(self, assertion, exception, extracted_traceback):
+        self.assertion_errors.append((assertion, exception, extracted_traceback))
+
+    def assertion_failed(self, assertion, exception, extracted_traceback):
+        self.assertion_failures.append((assertion, exception, extracted_traceback))

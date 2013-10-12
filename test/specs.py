@@ -2,28 +2,34 @@ import traceback
 import types
 import sure
 import pyspec
-from pyspec import core
 from pyspec import reporting
 
 core_file = repr(pyspec.core.__file__)[1:-1]
 this_file = repr(__file__)[1:-1]
 
+
 class WhenRunningASpec(object):
     def context(self):
+        self.assertion_err = AssertionError()
+        self.value_err = ValueError()
+
         class TestSpec(object):
-            def __init__(self):
-                self.log = ""
-            def method_with_establish_in_the_name(self):
-                self.log += "arrange "
-            def method_with_because_in_the_name(self):
-                self.log += "act "
-            def method_with_should_in_the_name(self):
-                self.log += "assert "
-            def failing_method_with_should_in_the_name(self):
-                self.log += "assert "
-                assert False, "failing assertion"
-            def method_with_cleanup_in_the_name(self):
-                self.log += "teardown "
+            def __init__(s):
+                s.log = ""
+            def method_with_establish_in_the_name(s):
+                s.log += "arrange "
+            def method_with_because_in_the_name(s):
+                s.log += "act "
+            def method_with_should_in_the_name(s):
+                s.log += "assert "
+            def failing_method_with_should_in_the_name(s):
+                s.log += "assert "
+                raise self.assertion_err
+            def erroring_method_with_should_in_the_name(s):
+                s.log += "assert "
+                raise self.value_err
+            def method_with_cleanup_in_the_name(s):
+                s.log += "teardown "
 
         self.spec = TestSpec()
 
@@ -31,20 +37,52 @@ class WhenRunningASpec(object):
         self.result = pyspec.run(self.spec)
 
     def it_should_run_the_methods_in_the_correct_order(self):
-        self.spec.log.should.equal("arrange act assert assert teardown ")
+        self.spec.log.should.equal("arrange act assert assert assert teardown ")
 
-    # Do we want to assert that the context/assertions point to the right class/method?
-    # Runs the risk of coupling the test code to the implementation of Context, Assertion and so on.
     def the_result_should_have_one_ctx(self):
         self.result.contexts.should.have.length_of(1)
 
-    def the_result_should_have_two_assertions(self):
-        self.result.assertions.should.have.length_of(2)
+    def the_ctx_should_have_the_right_name(self):
+        self.result.contexts[0].name.should.equal("TestSpec")
 
-    def the_result_should_have_the_failure(self):
+    def the_result_should_have_two_assertions(self):
+        self.result.assertions.should.have.length_of(3)
+
+    def the_assertions_should_have_the_right_names(self):
+        names = [a.name for a in self.result.assertions]
+        names.should.contain('__main__.WhenRunningASpec.context.<locals>.TestSpec.method_with_should_in_the_name')
+        names.should.contain('__main__.WhenRunningASpec.context.<locals>.TestSpec.failing_method_with_should_in_the_name')
+        names.should.contain('__main__.WhenRunningASpec.context.<locals>.TestSpec.erroring_method_with_should_in_the_name')
+
+    def the_result_should_have_one_failure(self):
         self.result.assertion_failures.should.have.length_of(1)
 
-class WhenASpecErrors(object):
+    def the_failure_should_have_the_right_name(self):
+        self.result.assertion_failures[0][0].name.should.equal(
+            '__main__.WhenRunningASpec.context.<locals>.TestSpec.failing_method_with_should_in_the_name'
+        )
+
+    def the_failure_should_have_the_exception(self):
+        self.result.assertion_failures[0][1].should.equal(self.assertion_err)
+
+    def the_failure_should_have_the_traceback(self):
+        self.result.assertion_failures[0][2].should_not.be.empty
+
+    def the_result_should_have_one_error(self):
+        self.result.assertion_errors.should.have.length_of(1)
+
+    def the_error_should_have_the_right_name(self):
+        self.result.assertion_errors[0][0].name.should.equal(
+            '__main__.WhenRunningASpec.context.<locals>.TestSpec.erroring_method_with_should_in_the_name'
+        )
+
+    def the_error_should_have_the_exception(self):
+        self.result.assertion_errors[0][1].should.equal(self.value_err)
+
+    def the_error_should_have_the_traceback(self):
+        self.result.assertion_errors[0][2].should_not.be.empty
+
+class WhenAContextErrors(object):
     def context(self):
         class ErrorInSetup(object):
             def context(self):
@@ -56,16 +94,13 @@ class WhenASpecErrors(object):
                 raise TypeError("oh no")
             def it(self):
                 pass
-        class ErrorInAssertion(object):
-            def it(self):
-                1/0
         class ErrorInTeardown(object):
             def it(self):
                 pass
             def cleanup(self):
                 raise AttributeError("got it wrong")
 
-        self.specs = [ErrorInSetup(), ErrorInAction(), ErrorInAssertion(), ErrorInTeardown()]
+        self.specs = [ErrorInSetup(), ErrorInAction(), ErrorInTeardown()]
 
     def because_we_run_the_specs(self):
         self.results = []
@@ -78,11 +113,8 @@ class WhenASpecErrors(object):
     def the_result_should_contain_the_action_error(self):
         self.results[1].context_errors.should.have.length_of(1)
 
-    def the_result_should_contain_the_assertion_error(self):
-        self.results[2].assertion_errors.should.have.length_of(1)
-
     def the_result_should_contain_the_trdn_error(self):
-        self.results[3].context_errors.should.have.length_of(1)
+        self.results[2].context_errors.should.have.length_of(1)
 
 class WhenWeRunSpecsWithAlternatelyNamedMethods(object):
     def context(self):
@@ -408,20 +440,15 @@ class FakeTraceback(object):
 
 class WhenFormattingASuccessfulResult(object):
     def context_of_successful_run(self):
-        assertion1 = core.Assertion(lambda: 2, "name")
-        assertion1.ran = True
-        assertion2 = core.Assertion(lambda: 2, "name")
-        assertion2.ran = True
-        assertion3 = core.Assertion(lambda: 2, "name")
-        assertion3.ran = True
-        ctx1 = core.Context([],[],[assertion1],[])
-        ctx2 = core.Context([],[],[assertion2, assertion3],[])
-        self.result = reporting.Result()
-        self.result.add_contexts([ctx1, ctx2])
-        self.result.add_assertions([assertion1, assertion2, assertion3])
+        self.result = reporting.TextResult()
+        self.result.add_context(None)
+        self.result.add_context(None)
+        self.result.add_assertion(None)
+        self.result.add_assertion(None)
+        self.result.add_assertion(None)
 
     def because_we_format_the_result(self):
-        self.output_string = reporting.format_result(self.result)
+        self.output_string = self.result.format_result()
 
     def it_should_output_a_summary(self):
         self.output_string.should.equal(
@@ -441,7 +468,6 @@ class WhenFormattingAFailureResult(object):
         exception1 = TypeError("Gotcha")
         exception1.tb = traceback.extract_tb(FakeTraceback([frame1,frame2], [3,2]))
         assertion1 = pyspec.core.Assertion(lambda: 2, "made.up.assertion_1")
-        assertion1.exception = exception1
 
         code3 = FakeCode("made_up_file_3.py", "made_up_function_3")
         frame3 = FakeFrame(code3, "frame3\nsource\n")
@@ -452,17 +478,16 @@ class WhenFormattingAFailureResult(object):
         exception2 = AssertionError("you fail")
         exception2.tb = traceback.extract_tb(FakeTraceback([frame3,frame4], [1,2]))
         assertion2 = pyspec.core.Assertion(lambda: 2, "made.up.assertion_2")
-        assertion2.exception = exception2
 
-        self.result = reporting.Result()
+        self.result = reporting.TextResult()
         self.result.add_context(None)
         self.result.add_assertion(None)
         self.result.add_assertion(None)
-        self.result.assertion_errored(assertion1, exception1)
-        self.result.assertion_failed(assertion2, exception2)
+        self.result.assertion_errored(assertion1, exception1, exception1.tb)
+        self.result.assertion_failed(assertion2, exception2, exception2.tb)
 
     def because_we_format_the_result(self):
-        self.output_string = reporting.format_result(self.result)
+        self.output_string = self.result.format_result()
 
     def it_should_output_a_traceback_for_each_failure(self):
         self.output_string.should.equal(
