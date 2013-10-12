@@ -1,27 +1,22 @@
 import sys
-from .builders import build_suite
-from .runners import run_main_module
+from .runners import run
+from .reporting import format_result
 
 
-def run(spec=None):
-    if spec is None:
-        return run_main_module()
-
-    suite = build_suite(spec)
-    suite.run()
-    return suite.result
+__all__ = ['run', 'main', 'catch']
 
 
 def main():
-    result = run_main_module()
+    result = run(sys.modules["__main__"])
+    print(format_result(result))
 
-    if result.failures or result.errors:
+    if result.failed:
         sys.exit(1)
     sys.exit(0)
 
 
-def catch(func):
+def catch(func, *args, **kwargs):
     try:
-        func()
+        func(*args, **kwargs)
     except Exception as e:
         return e

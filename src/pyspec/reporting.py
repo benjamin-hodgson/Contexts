@@ -1,19 +1,51 @@
 import traceback
 
 
+class Result(object):
+    def __init__(self):
+        self.contexts = []
+        self.assertions = []
+        self.context_errors = []
+        self.assertion_errors = []
+        self.assertion_failures = []
+
+    @property
+    def failed(self):
+        return self.context_errors or self.assertion_errors or self.assertion_failures
+
+    def add_context(self, context):
+        self.contexts.append(context)
+
+    def add_contexts(self, contexts):
+        self.contexts.extend(contexts)
+
+    def context_errored(self, context, exception):
+        self.context_errors.append((context, exception))
+
+    def add_assertion(self, assertion):
+        self.assertions.append(assertion)
+
+    def add_assertions(self, assertions):
+        self.assertions.extend(assertions)
+
+    def assertion_errored(self, assertion, exception):
+        self.assertion_errors.append((assertion, exception))
+
+    def assertion_failed(self, assertion, exception):
+        self.assertion_failures.append((assertion, exception))
+
 def format_result(result):
-    report = format_assertions(result.errors + result.failures)
+    report = format_failures(result.assertion_errors + result.assertion_failures)
     report += "----------------------------------------------------------------------\n"
-    report += failure_summary(result) if result.failures or result.errors else success_summary(result)
+    report += failure_summary(result) if result.failed else success_summary(result)
     return report
 
 
-def format_assertions(assertions):
-    return "".join([format_assertion(a) for a in assertions])
+def format_failures(failures):
+    return "".join([format_failure(a, e) for a, e in failures])
 
 
-def format_assertion(assertion):
-    exc = assertion.exception
+def format_failure(assertion, exc):
     msg = "======================================================================\n"
     msg += "FAIL: " if isinstance(exc, AssertionError) else "ERROR: "
     msg += assertion.name + '\n'
@@ -33,8 +65,8 @@ def pluralise(noun, num):
 def failure_summary(result):
     num_ctx = len(result.contexts)
     num_ass = len(result.assertions)
-    num_fail = len(result.failures)
-    num_err = len(result.errors)
+    num_fail = len(result.assertion_failures)
+    num_err = len(result.assertion_errors)
     msg =  """FAILED!
 {}, {}: {} failed, {}
 """.format(pluralise("context", num_ctx),

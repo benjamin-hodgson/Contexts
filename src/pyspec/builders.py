@@ -1,17 +1,7 @@
-import types
-import collections
 import itertools
 from .core import Suite, Context, Assertion
 from . import finders
 from . import errors
-
-
-def build_suite(obj):
-    if isinstance(obj, collections.Iterable):
-        return build_suite_from_iterable(obj)
-    if isinstance(obj, types.ModuleType):
-        return build_suite_from_module(obj)
-    return build_suite_from_single_class(obj)
 
 
 def build_suite_from_iterable(iterable):
@@ -20,13 +10,17 @@ def build_suite_from_iterable(iterable):
 
 
 def build_suite_from_module(module):
-    classes = finders.get_contexts_from_module(module)
-    contexts = [build_context(cls) for cls in classes]
+    specs = finders.get_contexts_from_module(module)
+    contexts = [build_context(spec) for spec in specs]
     return Suite(contexts)
 
 
-def build_suite_from_single_class(cls):
-    contexts = [build_context(cls)]
+def build_suite_from_class(cls):
+    return build_suite_from_instance(cls())
+
+
+def build_suite_from_instance(spec):
+    contexts = [build_context(spec)]
     return Suite(contexts)
 
 
@@ -45,7 +39,7 @@ def build_context(cls):
 def build_assertion_name(func):
     module_name = func.__self__.__class__.__module__
     method_name = func.__func__.__qualname__
-    return '{}.{}\n'.format(module_name, method_name)
+    return '{}.{}'.format(module_name, method_name)
 
 
 def assert_no_ambiguous_methods(*iterables):

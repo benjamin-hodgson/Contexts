@@ -3,7 +3,7 @@ import types
 import sure
 import pyspec
 from pyspec import core
-from pyspec.reporting import format_result
+from pyspec import reporting
 
 core_file = repr(pyspec.core.__file__)[1:-1]
 this_file = repr(__file__)[1:-1]
@@ -42,7 +42,7 @@ class WhenRunningASpec(object):
         self.result.assertions.should.have.length_of(2)
 
     def the_result_should_have_the_failure(self):
-        self.result.failures.should.have.length_of(1)
+        self.result.assertion_failures.should.have.length_of(1)
 
 class WhenASpecErrors(object):
     def context(self):
@@ -73,16 +73,16 @@ class WhenASpecErrors(object):
             self.results.append(pyspec.run(spec))
 
     def the_result_should_contain_the_ctx_error(self):
-        self.results[0].errors.should.have.length_of(1)
+        self.results[0].context_errors.should.have.length_of(1)
 
     def the_result_should_contain_the_action_error(self):
-        self.results[1].errors.should.have.length_of(1)
+        self.results[1].context_errors.should.have.length_of(1)
 
     def the_result_should_contain_the_assertion_error(self):
-        self.results[2].errors.should.have.length_of(1)
+        self.results[2].assertion_errors.should.have.length_of(1)
 
     def the_result_should_contain_the_trdn_error(self):
-        self.results[3].errors.should.have.length_of(1)
+        self.results[3].context_errors.should.have.length_of(1)
 
 class WhenWeRunSpecsWithAlternatelyNamedMethods(object):
     def context(self):
@@ -214,7 +214,7 @@ class WhenRunningSpecsWithTooManySpecialMethods(object):
         self.exceptions[1].should.be.a(pyspec.errors.TooManySpecialMethodsError)
         self.exceptions[2].should.be.a(pyspec.errors.TooManySpecialMethodsError)
 
-class WhenDeliberatelyCatchingAnException(object):
+class WhenCatchingAnException(object):
     def context(self):
         self.exception = ValueError("test exception")
 
@@ -222,12 +222,13 @@ class WhenDeliberatelyCatchingAnException(object):
             def __init__(s):
                 s.exception = None
             def context(s):
-                def throwing_function():
+                def throwing_function(a, b, c, d=[]):
+                    s.call_args = (a,b,c,d)
                     # Looks weird! Referencing 'self' from outer scope
                     raise self.exception
                 s.throwing_function = throwing_function
             def should(s):
-                s.exception = pyspec.catch(s.throwing_function)
+                s.exception = pyspec.catch(s.throwing_function, 3, c='yes', b=None)
 
         self.spec = TestSpec()
 
@@ -237,10 +238,14 @@ class WhenDeliberatelyCatchingAnException(object):
     def it_should_catch_and_return_the_exception(self):
         self.spec.exception.should.equal(self.exception)
 
+    def it_should_call_it_with_the_supplied_arguments(self):
+        self.spec.call_args.should.equal((3, None, 'yes', []))
+
     def it_should_not_have_a_failure_result(self):
         self.result.assertions.should.have.length_of(1)
-        self.result.failures.should.be.empty
-        self.result.errors.should.be.empty
+        self.result.assertion_failures.should.be.empty
+        self.result.context_errors.should.be.empty
+        self.result.assertion_errors.should.be.empty
 
 class WhenASpecHasASuperclass(object):
     def context(self):
@@ -319,7 +324,21 @@ class WhenRunningMultipleSpecs(object):
     def the_result_should_have_two_assertions(self):
         self.result.assertions.should.have.length_of(2)
 
-class WhenLoadingTestsFromAModule(object):
+class WhenRunningAClass(object):
+    def context(self):
+        class TestSpec(object):
+            was_run = False
+            def it(self):
+                self.__class__.was_run = True
+        self.spec = TestSpec
+
+    def because_we_run_the_class(self):
+        pyspec.run(self.spec)
+
+    def it_should_run_the_test(self):
+        self.spec.was_run.should.be.true
+
+class WhenRunningAModule(object):
     def context(self):
         class Spec(object):
             was_run = False
@@ -353,7 +372,7 @@ class WhenLoadingTestsFromAModule(object):
 
 #####################################################################
 # Reporting tests (will be in separate file later)
-##################################################################### b
+#####################################################################
 
 class FakeLoader(object):
     def __init__(self, source):
@@ -397,10 +416,12 @@ class WhenFormattingASuccessfulResult(object):
         assertion3.ran = True
         ctx1 = core.Context([],[],[assertion1],[])
         ctx2 = core.Context([],[],[assertion2, assertion3],[])
-        self.result = core.Result([ctx1, ctx2])
+        self.result = reporting.Result()
+        self.result.add_contexts([ctx1, ctx2])
+        self.result.add_assertions([assertion1, assertion2, assertion3])
 
     def because_we_format_the_result(self):
-        self.output_string = format_result(self.result)
+        self.output_string = reporting.format_result(self.result)
 
     def it_should_output_a_summary(self):
         self.output_string.should.equal(
@@ -433,11 +454,15 @@ class WhenFormattingAFailureResult(object):
         assertion2 = pyspec.core.Assertion(lambda: 2, "made.up.assertion_2")
         assertion2.exception = exception2
 
-        context = pyspec.core.Context([],[],[assertion1, assertion2],[])
-        self.result = pyspec.core.Result([context])
+        self.result = reporting.Result()
+        self.result.add_context(None)
+        self.result.add_assertion(None)
+        self.result.add_assertion(None)
+        self.result.assertion_errored(assertion1, exception1)
+        self.result.assertion_failed(assertion2, exception2)
 
     def because_we_format_the_result(self):
-        self.output_string = format_result(self.result)
+        self.output_string = reporting.format_result(self.result)
 
     def it_should_output_a_traceback_for_each_failure(self):
         self.output_string.should.equal(
