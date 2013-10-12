@@ -13,7 +13,7 @@ class TextResult(Result):
 
     def print_summary(self):
         if self.failed:
-            for tup in self.assertion_errors + self.assertion_failures:
+            for tup in self.context_errors + self.assertion_errors + self.assertion_failures:
                 self.print_assertion_failure(*tup)
         self._print("----------------------------------------------------------------------")
         if self.failed:
@@ -40,12 +40,13 @@ class TextResult(Result):
     def failure_numbers(self):
         num_ctx = len(self.contexts)
         num_ass = len(self.assertions)
+        num_ctx_err = len(self.context_errors)
         num_fail = len(self.assertion_failures)
         num_err = len(self.assertion_errors)
         msg =  "{}, {}: {} failed, {}".format(pluralise("context", num_ctx),
            pluralise("assertion", num_ass),
            num_fail,
-           pluralise("error", num_err))
+           pluralise("error", num_err + num_ctx_err))
         return msg
 
 def pluralise(noun, num):

@@ -410,11 +410,14 @@ class WhenFormattingASuccessfulResult(object):
     def context_of_successful_run(self):
         self.stringio = StringIO()
         self.result = reporting.TextResult(self.stringio)
-        self.result.add_context(None)
-        self.result.add_context(None)
-        self.result.add_assertion(None)
-        self.result.add_assertion(None)
-        self.result.add_assertion(None)
+        with self.result.run_context(None):
+            with self.result.run_assertion(None):
+                pass
+            with self.result.run_assertion(None):
+                pass
+        with self.result.run_context(None):
+            with self.result.run_assertion(None):
+                pass
 
     def because_we_print_the_summary(self):
         self.result.print_summary()
@@ -441,11 +444,20 @@ class WhenFormattingAFailureResult(object):
                ('made_up_file_4.py', 2, 'made_up_function_4', 'frame4')]
         assertion2 = pyspec.core.Assertion(None, "made.up.assertion_2")
 
+        exception3 = ZeroDivisionError("oh dear")
+        tb3 = [('made_up_file_4.py', 1, 'made_up_function_4', 'frame4'),
+               ('made_up_file_5.py', 2, 'made_up_function_5', 'frame5')]
+        context3 = pyspec.core.Context([],[],[],[],"made.up_context")
+
+        with self.result.run_context(None):
+            # Figure out a way to do this using the context manager?
+            self.result.add_assertion(None)
+            self.result.assertion_errored(assertion1, exception1, tb1)
+            self.result.add_assertion(None)
+            self.result.assertion_failed(assertion2, exception2, tb2)
+
         self.result.add_context(None)
-        self.result.add_assertion(None)
-        self.result.add_assertion(None)
-        self.result.assertion_errored(assertion1, exception1, tb1)
-        self.result.assertion_failed(assertion2, exception2, tb2)
+        self.result.context_errored(context3, exception3, tb3)
 
     def because_we_print_the_summary(self):
         self.result.print_summary()
@@ -453,6 +465,15 @@ class WhenFormattingAFailureResult(object):
     def it_should_print_a_traceback_for_each_failure(self):
         self.stringio.getvalue().should.equal(
 """======================================================================
+ERROR: made.up_context
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "made_up_file_4.py", line 1, in made_up_function_4
+    frame4
+  File "made_up_file_5.py", line 2, in made_up_function_5
+    frame5
+ZeroDivisionError: oh dear
+======================================================================
 ERROR: made.up.assertion_1
 ----------------------------------------------------------------------
 Traceback (most recent call last):
@@ -472,8 +493,8 @@ Traceback (most recent call last):
 AssertionError: you fail
 ----------------------------------------------------------------------
 FAILED!
-1 context, 2 assertions: 1 failed, 1 error
-""".format(core_file, this_file))
+2 contexts, 2 assertions: 1 failed, 2 errors
+""")
 
 if __name__ == "__main__":
     pyspec.main()
