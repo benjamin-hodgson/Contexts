@@ -7,7 +7,7 @@ __all__ = ['run', 'main', 'catch']
 
 def main():
     result = run(sys.modules["__main__"])
-    print(result.format_result())
+    result.print_summary()
 
     if result.failed:
         sys.exit(1)

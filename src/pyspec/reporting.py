@@ -1,47 +1,52 @@
+import sys
 import traceback
 from .core import Result
 
 
 class TextResult(Result):
-    def format_result(self):
-        report = self.format_failures()
-        report += "----------------------------------------------------------------------\n"
-        report += self.failure_summary() if self.failed else self.success_summary()
-        return report
+    def __init__(self, stream=sys.stderr):
+        self.stream = stream
+        super().__init__()
 
-    def format_failures(self):
-        return "".join([format_assertion_failure(a, e, t) for a, e, t in self.assertion_errors + self.assertion_failures])
+    def _print(self, *args, sep=' ', end='\n', flush=True):
+        print(*args, sep=sep, end=end, file=self.stream, flush=flush)
 
-    def success_summary(self):
+    def print_summary(self):
+        if self.failed:
+            for tup in self.assertion_errors + self.assertion_failures:
+                self.print_assertion_failure(*tup)
+        self._print("----------------------------------------------------------------------")
+        if self.failed:
+            self._print('FAILED!')
+            self._print(self.failure_numbers())
+        else:
+            self._print('PASSED!')
+            self._print(self.success_numbers())
+
+    def print_assertion_failure(self, assertion, exception, extracted_tb):
+        self._print("======================================================================")
+        self._print("FAIL:" if isinstance(exception, AssertionError) else "ERROR:", assertion.name)
+        self._print("----------------------------------------------------------------------")
+        self._print("Traceback (most recent call last):")
+        self._print(''.join(traceback.format_list(extracted_tb)), end='')
+        self._print(''.join(traceback.format_exception_only(exception.__class__, exception)), end='')
+
+    def success_numbers(self):
         num_ctx = len(self.contexts)
         num_ass = len(self.assertions)
-        msg = """PASSED!
-{}, {}
-""".format(pluralise("context", num_ctx), pluralise("assertion", num_ass))
+        msg = "{}, {}".format(pluralise("context", num_ctx), pluralise("assertion", num_ass))
         return msg
 
-    def failure_summary(self):
+    def failure_numbers(self):
         num_ctx = len(self.contexts)
         num_ass = len(self.assertions)
         num_fail = len(self.assertion_failures)
         num_err = len(self.assertion_errors)
-        msg =  """FAILED!
-{}, {}: {} failed, {}
-""".format(pluralise("context", num_ctx),
+        msg =  "{}, {}: {} failed, {}".format(pluralise("context", num_ctx),
            pluralise("assertion", num_ass),
            num_fail,
            pluralise("error", num_err))
         return msg
-
-def format_assertion_failure(assertion, exc, extracted_tb):
-    msg = "======================================================================\n"
-    msg += "FAIL: " if isinstance(exc, AssertionError) else "ERROR: "
-    msg += assertion.name + '\n'
-    msg += "----------------------------------------------------------------------\n"
-    msg += "Traceback (most recent call last):\n"
-    msg += ''.join(traceback.format_list(extracted_tb)) + ''.join(traceback.format_exception_only(exc.__class__, exc))
-    return msg
-
 
 def pluralise(noun, num):
     string = str(num) + ' ' + noun

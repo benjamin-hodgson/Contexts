@@ -1,5 +1,6 @@
 import types
 import sure
+from io import StringIO
 import pyspec
 from pyspec import reporting
 
@@ -407,18 +408,19 @@ class WhenRunningAModule(object):
 
 class WhenFormattingASuccessfulResult(object):
     def context_of_successful_run(self):
-        self.result = reporting.TextResult()
+        self.stringio = StringIO()
+        self.result = reporting.TextResult(self.stringio)
         self.result.add_context(None)
         self.result.add_context(None)
         self.result.add_assertion(None)
         self.result.add_assertion(None)
         self.result.add_assertion(None)
 
-    def because_we_format_the_result(self):
-        self.output_string = self.result.format_result()
+    def because_we_print_the_summary(self):
+        self.result.print_summary()
 
-    def it_should_output_a_summary(self):
-        self.output_string.should.equal(
+    def it_should_print_the_summary_to_the_stream(self):
+        self.stringio.getvalue().should.equal(
 """----------------------------------------------------------------------
 PASSED!
 2 contexts, 3 assertions
@@ -426,7 +428,9 @@ PASSED!
 
 class WhenFormattingAFailureResult(object):
     def in_the_context_of_a_failed_run(self):
-        self.result = reporting.TextResult()
+        self.stringio = StringIO()
+        self.result = reporting.TextResult(self.stringio)
+
         exception1 = TypeError("Gotcha")
         tb1 = [('made_up_file.py', 3, 'made_up_function', 'frame1'),
                ('another_made_up_file.py', 2, 'another_made_up_function', 'frame2')]
@@ -443,11 +447,11 @@ class WhenFormattingAFailureResult(object):
         self.result.assertion_errored(assertion1, exception1, tb1)
         self.result.assertion_failed(assertion2, exception2, tb2)
 
-    def because_we_format_the_result(self):
-        self.output_string = self.result.format_result()
+    def because_we_print_the_summary(self):
+        self.result.print_summary()
 
-    def it_should_output_a_traceback_for_each_failure(self):
-        self.output_string.should.equal(
+    def it_should_print_a_traceback_for_each_failure(self):
+        self.stringio.getvalue().should.equal(
 """======================================================================
 ERROR: made.up.assertion_1
 ----------------------------------------------------------------------
