@@ -1,12 +1,14 @@
 import sys
 from .runners import run
+from .reporting import TextResult
 
 
 __all__ = ['run', 'main', 'catch']
 
 
 def main():
-    result = run(sys.modules["__main__"])
+    result = TextResult()
+    run(sys.modules["__main__"], result)
     result.print_summary()
 
     if result.failed:

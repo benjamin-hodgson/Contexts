@@ -32,9 +32,10 @@ class WhenRunningASpec(object):
                 s.log += "teardown "
 
         self.spec = TestSpec()
+        self.result = pyspec.core.Result()
 
     def because_we_run_the_spec(self):
-        self.result = pyspec.run(self.spec, pyspec.core.Result())
+        pyspec.run(self.spec, self.result)
 
     def it_should_run_the_methods_in_the_correct_order(self):
         self.spec.log.should.equal("arrange act assert assert assert teardown ")
@@ -91,9 +92,10 @@ class WhenASpecPasses(object):
             def it(self):
                 pass
         self.spec = TestSpec()
+        self.result = pyspec.core.Result()
 
     def because_we_run_the_spec(self):
-        self.result = pyspec.run(self.spec, pyspec.core.Result())
+        pyspec.run(self.spec, self.result)
 
     def the_result_should_report_success(self):
         self.result.failed.should.be.false
@@ -121,7 +123,9 @@ class WhenAContextErrors(object):
     def because_we_run_the_specs(self):
         self.results = []
         for spec in self.specs:
-            self.results.append(pyspec.run(spec, pyspec.core.Result()))
+            result = pyspec.core.Result()
+            self.results.append(result)
+            pyspec.run(spec, result)
 
     def the_result_should_contain_the_ctx_error(self):
         self.results[0].context_errors.should.have.length_of(1)
@@ -279,9 +283,10 @@ class WhenCatchingAnException(object):
                 s.exception = pyspec.catch(s.throwing_function, 3, c='yes', b=None)
 
         self.spec = TestSpec()
+        self.result = pyspec.core.Result()
 
     def because_we_run_the_spec(self):
-        self.result = pyspec.run(self.spec, pyspec.core.Result())
+        pyspec.run(self.spec, self.result)
 
     def it_should_catch_and_return_the_exception(self):
         self.spec.exception.should.equal(self.exception)
@@ -358,9 +363,10 @@ class WhenRunningMultipleSpecs(object):
                 self.was_run = True
 
         self.suite = [Spec1(), Spec2()]
+        self.result = pyspec.core.Result()
 
     def because_we_run_the_suite(self):
-        self.result = pyspec.run(self.suite, pyspec.core.Result())
+        pyspec.run(self.suite, self.result)
 
     def it_should_run_both_tests(self):
         self.suite[0].was_run.should.be.true
@@ -406,7 +412,7 @@ class WhenRunningAModule(object):
         self.module.NormalClass = NormalClass
 
     def because_we_run_the_module(self):
-        self.result = pyspec.run(self.module, pyspec.core.Result())
+        pyspec.run(self.module, pyspec.core.Result())
 
     def it_should_run_the_spec(self):
         self.module.Spec.was_run.should.be.true
@@ -461,6 +467,7 @@ class WhenWatchingForDots(object):
 
 class WhenPrintingASuccessfulResult(object):
     def in_the_context_of_a_successful_run(self):
+        # We don't want it to try and print anything while we set it up
         self.result = reporting.TextResult(StringIO())
         with self.result.run_context(None):
             with self.result.run_assertion(None):

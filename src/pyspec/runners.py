@@ -1,7 +1,6 @@
 import types
 import collections
 from . import builders
-from .reporting import TextResult
 
 
 def run(spec=None, result=None):
@@ -15,11 +14,4 @@ def run(spec=None, result=None):
         suite = builders.build_suite_from_class(spec)
     else:
         suite = builders.build_suite_from_instance(spec)
-    return run_suite(suite, result)
-
-
-def run_suite(suite, result=None):
-    if result is None:
-        result = TextResult()
     suite.run(result)
-    return result

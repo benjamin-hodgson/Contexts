@@ -1,6 +1,7 @@
 from contextlib import contextmanager
 import traceback
 
+
 class Assertion(object):
     def __init__(self, func, name):
         self.func = func
