@@ -161,6 +161,8 @@ class WhenWeRunSpecsWithAlternatelyNamedMethods(object):
         class EvenMoreAlternativeNames(object):
             def __init__(self):
                 self.log = ""
+            def has_given_in_the_name(self):
+                self.log += "arrange "
             def has_after_in_the_name(self):
                 self.log += "act "
             def has_will_in_the_name(self):
@@ -178,7 +180,7 @@ class WhenWeRunSpecsWithAlternatelyNamedMethods(object):
     def it_should_run_the_methods_in_the_correct_order(self):
         self.spec1.log.should.equal("arrange act assert ")
         self.spec2.log.should.equal("arrange act assert cleanup ")
-        self.spec3.log.should.equal("act assert ")
+        self.spec3.log.should.equal("arrange act assert ")
 
 class WhenRunningAmbiguouslyNamedMethods(object):
     def context(self):
