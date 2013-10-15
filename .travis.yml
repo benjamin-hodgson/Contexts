@@ -6,3 +6,6 @@ install:
   - python setup.py install
 script:
   - python test/specs.py
+branches:
+  only:
+    - master
