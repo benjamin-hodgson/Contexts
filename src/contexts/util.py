@@ -10,7 +10,7 @@ def import_module_from_filename(file_path):
     module_name = os.path.splitext(filename)[0]
 
     with prepend_folder_to_sys_dot_path(folder):
-        module = importlib.__import__(module_name)
+        module = importlib.import_module(module_name)
     
     return module
 

@@ -442,33 +442,6 @@ class WhenRunningAModule(object):
     def it_should_not_instantiate_the_normal_class(self):
         self.module.NormalClass.was_instantiated.should.be.false
 
-class WhenRunningAPackage(object):
-    def context(self):
-        class Spec1(object):
-            was_run = False
-            def it_should_run_this(self):
-                self.__class__.was_run = True
-        class Spec2(object):
-            was_run = False
-            def it_should_run_this(self):
-                self.__class__.was_run = True
-        self.package = types.ModuleType('fake_specs')
-        self.module1 = types.ModuleType('module_with_spec_in_the_name')
-        self.module2 = types.ModuleType('module_with_test_in_the_name')
-        self.module1.Spec1 = Spec1
-        self.module2.Spec2 = Spec2
-        self.package.module_with_specs_in_the_name = self.module1
-        self.package.module_with_test_in_the_name = self.module2
-
-    def because_we_run_the_module(self):
-        contexts.run(self.package, contexts.core.Result())
-
-    def it_should_run_the_module_with_spec_in_the_name(self):
-        self.module1.Spec1.was_run.should.be.true
-
-    def it_should_run_the_module_with_test_in_the_name(self):
-        self.module2.Spec2.was_run.should.be.true
-
 class WhenRunningAFile(object):
     def establish_that_there_is_a_file_in_the_filesystem(self):
         self.code = """
@@ -550,6 +523,57 @@ class TestSpec(object):
     def create_folder(self):
         this_file = os.path.realpath(__file__)
         self.foldername = os.path.join(os.path.dirname(this_file), 'data')
+        os.mkdir(self.foldername)
+
+    def write_files(self):
+        for module_name in self.module_names:
+            filename = os.path.join(self.foldername, module_name+".py")
+            with open(filename, 'w+') as f:
+                f.write(self.code)
+
+class WhenRunningAFolderWhichIsAPackage(object):
+    def establish_that_there_is_a_folder_containing_tests(self):
+        self.code = """
+module_ran = False
+class TestSpec(object):
+    def it(self):
+        global module_ran
+        module_ran = True
+"""
+        self.old_sys_dot_path = sys.path[:]
+        self.package_name = 'test_package'
+        self.module_names = ["__init__", "test_file", "another_innocent_module"]
+        self.create_folder()
+        self.write_files()
+
+    def because_we_run_the_file(self):
+        contexts.run(self.foldername, contexts.core.Result())
+
+    def it_should_import_the_package(self):
+        sys.modules.should.contain(self.package_name)
+
+    def it_should_import_the_test_submodule(self):
+        sys.modules.should.contain(self.package_name + '.' + self.module_names[1])
+
+    def it_should_not_import_the_normal_module(self):
+        sys.modules.should_not.contain(self.package_name + '.' + self.module_names[2])
+        sys.modules.should_not.contain(self.module_names[2])
+
+    def it_should_run_the_specs_in_the_package_file(self):
+        sys.modules[self.package_name].module_ran.should.be.true
+    
+    def it_should_run_the_specs_in_the_test_submodule(self):
+        sys.modules[self.package_name + '.' + self.module_names[1]].module_ran.should.be.true
+
+    def it_should_not_modify_sys_dot_path(self):
+        sys.path.should.equal(self.old_sys_dot_path)
+
+    def cleanup_the_file_system(self):
+        shutil.rmtree(self.foldername)
+
+    def create_folder(self):
+        this_file = os.path.realpath(__file__)
+        self.foldername = os.path.join(os.path.dirname(this_file), self.package_name)
         os.mkdir(self.foldername)
 
     def write_files(self):

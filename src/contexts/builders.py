@@ -11,11 +11,10 @@ from . import util
 def build_suite(spec):
     if isinstance(spec, types.ModuleType):
         return build_suite_from_module(spec)
-    elif isinstance(spec, str):
-        if os.path.isfile(spec):
-            return build_suite_from_file_path(spec)
-        elif os.path.isdir(spec):
-            return build_suite_from_directory_path(spec)
+    elif isinstance(spec, str) and os.path.isfile(spec):
+        return build_suite_from_file_path(spec)
+    elif isinstance(spec, str) and os.path.isdir(spec):
+        return build_suite_from_directory_path(spec)
     elif isinstance(spec, collections.Iterable):
         return build_suite_from_iterable(spec)
     elif isinstance(spec, type):
@@ -36,7 +35,7 @@ def build_suite_from_file_path(filepath):
 
 
 def build_suite_from_module(module):
-    specs = finders.get_specs_from_package(module)
+    specs = finders.get_specs_from_module(module)
     return build_suite_from_iterable(specs)
 
 

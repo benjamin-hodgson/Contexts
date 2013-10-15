@@ -1,6 +1,9 @@
+import contextlib
+import importlib
 import inspect
 import os
 import re
+import sys
 import types
 from . import errors
 from . import util
@@ -16,14 +19,8 @@ module_re = re.compile(r"([Ss]pec|[Tt]est)")
 
 def get_specs_from_modules(modules):
     for module in modules:
-        for context in get_specs_from_package(module):
+        for context in get_specs_from_module(module):
             yield context
-
-
-def get_specs_from_package(module):
-    yield from get_specs_from_module(module)
-    for sub_module in get_modules_from_package(module):
-        yield from get_specs_from_package(sub_module)
 
 
 def get_specs_from_module(module):
@@ -32,19 +29,35 @@ def get_specs_from_module(module):
             yield cls()
 
 
-def get_modules_from_package(package):
-    for name, module in inspect.getmembers(package, inspect.ismodule):
-        if re.search(module_re, name):
-            yield module
+def find_modules_in_directory(directory):
+    containing_folder, package_name = extract_package_info(directory)
+    with util.prepend_folder_to_sys_dot_path(containing_folder):
+        yield from import_modules_from_directory(directory, package_name)
 
 
-def find_modules_in_directory(toplevel_path):
-    for dirpath, _, filenames in os.walk(toplevel_path):
-        for f in filenames:
-            if re.search(module_re, f):
-                yield util.import_module_from_filename(os.path.join(dirpath, f))
-        break # only interested in the top level folder at the moment
+def extract_package_info(directory):
+    if os.path.isfile(os.path.join(directory, '__init__.py')):
+        return os.path.split(directory)
+    return directory, ''
 
+
+def import_modules_from_directory(directory, package_name):
+    if package_name:
+        yield importlib.import_module(package_name)
+        package_name += '.'
+
+    for dirpath, _, filenames in os.walk(directory):
+        for filename in filenames:
+            if re.search(module_re, filename):
+                module_name = os.path.splitext(filename)[0]
+                yield importlib.import_module(package_name + module_name)
+        break
+
+
+# Refactoring hint: below this comment are functions that find special methods on an instance.
+# Above it are functions that find modules from a directory. Perhaps the top half is
+# an 'importer' object (which would incorporate at least some of the contents of 'util.py')
+# and the bottom is something like a 'special method finder'.
 
 def find_setups(spec):
     return find_methods_matching(spec, establish_re, top_down=True, one_per_class=True)
