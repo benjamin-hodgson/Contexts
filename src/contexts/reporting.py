@@ -27,7 +27,7 @@ class TextResult(Result):
         super().context_errored(*args, **kwargs)
         self._print('E', end='')
 
-    def print_summary(self):
+    def summarise(self):
         self._print('')
         if self.failed:
             for tup in self.context_errors + self.assertion_errors + self.assertion_failures:

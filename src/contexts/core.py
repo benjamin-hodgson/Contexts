@@ -110,3 +110,6 @@ class Result(object):
     def assertion_failed(self, assertion, exception, extracted_traceback):
         self.assertions.append(assertion)
         self.assertion_failures.append((assertion, exception, extracted_traceback))
+
+    def summarise(self):
+        pass

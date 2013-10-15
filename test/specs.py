@@ -617,7 +617,7 @@ class WhenPrintingASuccessfulResult(object):
         self.result.stream = self.stringio
 
     def because_we_print_the_summary(self):
-        self.result.print_summary()
+        self.result.summarise()
 
     def it_should_print_the_summary_to_the_stream(self):
         self.stringio.getvalue().should.equal(
@@ -657,7 +657,7 @@ class WhenPrintingAFailureResult(object):
         self.result.stream = self.stringio
 
     def because_we_print_the_summary(self):
-        self.result.print_summary()
+        self.result.summarise()
 
     def it_should_print_a_traceback_for_each_failure(self):
         self.stringio.getvalue().should.equal(
