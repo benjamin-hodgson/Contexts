@@ -1,7 +1,7 @@
 Contexts
 ========
 
-[![Build Status](https://travis-ci.org/benjamin-hodgson/PySpec.png?branch=master)](https://travis-ci.org/benjamin-hodgson/PySpec)
+[![Build Status](https://travis-ci.org/benjamin-hodgson/Contexts.png?branch=master)](https://travis-ci.org/benjamin-hodgson/Contexts)
 
 Contexts is a 'Context-Specification'-style test runner for Python, inspired by C#'s
 [`Machine.Specifications`](https://github.com/machine/machine.specifications).
