@@ -1,5 +1,8 @@
-import types
 from io import StringIO
+import os
+import shutil
+import sys
+import types
 import sure
 import contexts
 from contexts import reporting
@@ -438,6 +441,46 @@ class WhenRunningAModule(object):
 
     def it_should_not_instantiate_the_normal_class(self):
         self.module.NormalClass.was_instantiated.should.be.false
+
+class WhenRunningAFile(object):
+    def establish_that_there_is_a_file_in_the_filesystem(self):
+        self.code = """
+module_ran = False
+
+class TestSpec(object):
+    def it(self):
+        global module_ran
+        module_ran = True
+"""
+        self.old_sys_dot_path = sys.path[:]
+        self.module_name = "test_file"
+        self.create_folder()
+        self.write_file()
+
+    def because_we_run_the_test_runner(self):
+        contexts.run(self.filename, contexts.core.Result())
+
+    def it_should_import_the_file(self):
+        sys.modules.should.contain(self.module_name)
+
+    def it_should_run_the_specs(self):
+        sys.modules[self.module_name].module_ran.should.be.true
+
+    def it_should_not_modify_sys_dot_path(self):
+        sys.path.should.equal(self.old_sys_dot_path)
+
+    def cleanup_the_file_system(self):
+        shutil.rmtree(self.foldername)
+
+    def create_folder(self):
+        this_file = os.path.realpath(__file__)
+        self.foldername = os.path.join(os.path.dirname(this_file), 'data')
+        os.mkdir(self.foldername)
+
+    def write_file(self):
+        self.filename = os.path.join(self.foldername, self.module_name+".py")
+        with open(self.filename, 'w+') as f:
+            f.write(self.code)
 
 
 #####################################################################

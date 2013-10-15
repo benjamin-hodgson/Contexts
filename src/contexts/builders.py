@@ -1,17 +1,23 @@
 import itertools
 from .core import Suite, Context, Assertion
-from . import finders
 from . import errors
+from . import finders
+from . import util
 
 
-def build_suite_from_iterable(iterable):
-    contexts = [build_context(x) for x in iterable]
-    return Suite(contexts)
+def build_suite_from_file_path(filepath):
+    module = util.import_module_from_filename(filepath)
+    return build_suite_from_module(module)
 
 
 def build_suite_from_module(module):
     specs = finders.get_contexts_from_module(module)
     contexts = [build_context(spec) for spec in specs]
+    return Suite(contexts)
+
+
+def build_suite_from_iterable(iterable):
+    contexts = [build_context(x) for x in iterable]
     return Suite(contexts)
 
 
