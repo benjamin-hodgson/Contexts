@@ -410,11 +410,11 @@ class WhenRunningAClass(object):
 
 class WhenRunningAModule(object):
     def context(self):
-        class Spec(object):
+        class HasSpecInTheName(object):
             was_run = False
             def it_should_run_this(self):
                 self.__class__.was_run = True
-        class When(object):
+        class HasWhenInTheName(object):
             was_run = False
             def it_should_run_this(self):
                 self.__class__.was_run = True
@@ -423,18 +423,18 @@ class WhenRunningAModule(object):
             def __init__(self):
                 self.__class__.was_instantiated = True
         self.module = types.ModuleType('fake_specs')
-        self.module.Spec = Spec
-        self.module.When = When
+        self.module.HasSpecInTheName = HasSpecInTheName
+        self.module.HasWhenInTheName = HasWhenInTheName
         self.module.NormalClass = NormalClass
 
     def because_we_run_the_module(self):
         contexts.run(self.module, contexts.core.Result())
 
     def it_should_run_the_spec(self):
-        self.module.Spec.was_run.should.be.true
+        self.module.HasSpecInTheName.was_run.should.be.true
 
     def it_should_run_the_other_spec(self):
-        self.module.When.was_run.should.be.true
+        self.module.HasWhenInTheName.was_run.should.be.true
 
     def it_should_not_instantiate_the_normal_class(self):
         self.module.NormalClass.was_instantiated.should.be.false

@@ -8,7 +8,7 @@ establish_re = re.compile(r"(^|_)([Ee]stablish|[Cc]ontext|[Gg]iven|[Ss]et_?[Uu]p
 because_re = re.compile(r"(^|_)([Bb]ecause|[Ww]hen|[Ss]ince|[Aa]fter)")
 should_re = re.compile(r"(^|_)([Ss]hould|[Ii]t|[Mm]ust|[Ww]ill)")
 cleanup_re = re.compile(r"(^|_)([Cc]leanup|[Tt]ear_?[Dd]own)")
-spec_re = re.compile(r"(^|_)([Ss]pec|[Ww]hen)")
+spec_re = re.compile(r"([Ss]pec|[Ww]hen)")
 
 
 def get_contexts_from_module(module):
@@ -57,6 +57,7 @@ def find_methods_on_class_matching(cls, instance, regex, one_per_class):
         assert_single_method_of_given_type(cls, found)
 
     return found
+
 
 def assert_single_method_of_given_type(cls, found):
     if len(found) > 1:
