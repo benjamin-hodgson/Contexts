@@ -26,8 +26,8 @@ def build_suite(spec):
 
 def build_suite_from_directory_path(dir_path):
     modules = finders.find_modules_in_directory(dir_path)
-    contexts = finders.get_contexts_from_modules(modules)
-    return build_suite_from_iterable(contexts)
+    specs = finders.get_specs_from_modules(modules)
+    return build_suite_from_iterable(specs)
 
 
 def build_suite_from_file_path(filepath):
@@ -36,13 +36,12 @@ def build_suite_from_file_path(filepath):
 
 
 def build_suite_from_module(module):
-    specs = finders.get_contexts_from_module(module)
-    contexts = [build_context(spec) for spec in specs]
-    return Suite(contexts)
+    specs = finders.get_specs_from_package(module)
+    return build_suite_from_iterable(specs)
 
 
-def build_suite_from_iterable(iterable):
-    contexts = [build_context(x) for x in iterable]
+def build_suite_from_iterable(specs):
+    contexts = [build_context(x) for x in specs]
     return Suite(contexts)
 
 

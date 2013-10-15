@@ -8,7 +8,7 @@ __all__ = ['run', 'main', 'catch']
 
 def main():
     result = TextResult()
-    run(sys.modules["__main__"], result)
+    run(result=result)
     result.print_summary()
 
     if result.failed:

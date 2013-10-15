@@ -14,15 +14,19 @@ spec_re = re.compile(r"([Ss]pec|[Ww]hen)")
 module_re = re.compile(r"([Ss]pec|[Tt]est)")
 
 
-def get_contexts_from_module(module):
-    contexts = []
-    contexts.extend(get_classes_from_module(module))
+def get_specs_from_modules(modules):
+    for module in modules:
+        for context in get_specs_from_package(module):
+            yield context
+
+
+def get_specs_from_package(module):
+    yield from get_specs_from_module(module)
     for sub_module in get_modules_from_package(module):
-        contexts.extend(get_contexts_from_module(sub_module))
-    return contexts
+        yield from get_specs_from_package(sub_module)
 
 
-def get_classes_from_module(module):
+def get_specs_from_module(module):
     for name, cls in inspect.getmembers(module, inspect.isclass):
         if re.search(spec_re, name):
             yield cls()
@@ -32,12 +36,6 @@ def get_modules_from_package(package):
     for name, module in inspect.getmembers(package, inspect.ismodule):
         if re.search(module_re, name):
             yield module
-
-
-def get_contexts_from_modules(modules):
-    for module in modules:
-        for context in get_contexts_from_module(module):
-            yield context
 
 
 def find_modules_in_directory(toplevel_path):
