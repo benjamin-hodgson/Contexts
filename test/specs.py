@@ -1,10 +1,10 @@
 import types
 from io import StringIO
 import sure
-import pyspec
-from pyspec import reporting
+import contexts
+from contexts import reporting
 
-core_file = repr(pyspec.core.__file__)[1:-1]
+core_file = repr(contexts.core.__file__)[1:-1]
 this_file = repr(__file__)[1:-1]
 
 
@@ -32,10 +32,10 @@ class WhenRunningASpec(object):
                 s.log += "teardown "
 
         self.spec = TestSpec()
-        self.result = pyspec.core.Result()
+        self.result = contexts.core.Result()
 
     def because_we_run_the_spec(self):
-        pyspec.run(self.spec, self.result)
+        contexts.run(self.spec, self.result)
 
     def it_should_run_the_methods_in_the_correct_order(self):
         self.spec.log.should.equal("arrange act assert assert assert teardown ")
@@ -92,10 +92,10 @@ class WhenASpecPasses(object):
             def it(self):
                 pass
         self.spec = TestSpec()
-        self.result = pyspec.core.Result()
+        self.result = contexts.core.Result()
 
     def because_we_run_the_spec(self):
-        pyspec.run(self.spec, self.result)
+        contexts.run(self.spec, self.result)
 
     def the_result_should_report_success(self):
         self.result.failed.should.be.false
@@ -123,9 +123,9 @@ class WhenAContextErrors(object):
     def because_we_run_the_specs(self):
         self.results = []
         for spec in self.specs:
-            result = pyspec.core.Result()
+            result = contexts.core.Result()
             self.results.append(result)
-            pyspec.run(spec, result)
+            contexts.run(spec, result)
 
     def the_result_should_contain_the_ctx_error(self):
         self.results[0].context_errors.should.have.length_of(1)
@@ -173,9 +173,9 @@ class WhenWeRunSpecsWithAlternatelyNamedMethods(object):
         self.spec3 = EvenMoreAlternativeNames()
 
     def because_we_run_the_specs(self):
-        pyspec.run(self.spec1, pyspec.core.Result())
-        pyspec.run(self.spec2, pyspec.core.Result())
-        pyspec.run(self.spec3, pyspec.core.Result())
+        contexts.run(self.spec1, contexts.core.Result())
+        contexts.run(self.spec2, contexts.core.Result())
+        contexts.run(self.spec3, contexts.core.Result())
 
     def it_should_run_the_methods_in_the_correct_order(self):
         self.spec1.log.should.equal("arrange act assert ")
@@ -202,13 +202,13 @@ class WhenRunningAmbiguouslyNamedMethods(object):
 
     def because_we_try_to_run_the_specs(self):
         for spec in self.specs:
-            self.exceptions.append(pyspec.catch(lambda: pyspec.run(spec, pyspec.core.Result())))
+            self.exceptions.append(contexts.catch(lambda: contexts.run(spec, contexts.core.Result())))
 
     def it_should_raise_MethodNamingError(self):
-        self.exceptions[0].should.be.a(pyspec.errors.MethodNamingError)
-        self.exceptions[1].should.be.a(pyspec.errors.MethodNamingError)
-        self.exceptions[2].should.be.a(pyspec.errors.MethodNamingError)
-        self.exceptions[3].should.be.a(pyspec.errors.MethodNamingError)
+        self.exceptions[0].should.be.a(contexts.errors.MethodNamingError)
+        self.exceptions[1].should.be.a(contexts.errors.MethodNamingError)
+        self.exceptions[2].should.be.a(contexts.errors.MethodNamingError)
+        self.exceptions[3].should.be.a(contexts.errors.MethodNamingError)
 
 class WhenRunningNotSoAmbiguouslyNamedMethods(object):
     def context(self):
@@ -230,7 +230,7 @@ class WhenRunningNotSoAmbiguouslyNamedMethods(object):
 
     def because_we_try_to_run_the_specs(self):
         for spec in self.specs:
-            self.exceptions.append(pyspec.catch(lambda: pyspec.run(spec, pyspec.core.Result())))
+            self.exceptions.append(contexts.catch(lambda: contexts.run(spec, contexts.core.Result())))
 
     def it_should_not_raise_any_exceptions(self):
         self.exceptions[0].should.be.none
@@ -261,12 +261,12 @@ class WhenRunningSpecsWithTooManySpecialMethods(object):
 
     def because_we_try_to_run_the_specs(self):
         for spec in self.specs:
-            self.exceptions.append(pyspec.catch(lambda: pyspec.run(spec, pyspec.core.Result())))
+            self.exceptions.append(contexts.catch(lambda: contexts.run(spec, contexts.core.Result())))
 
     def it_should_raise_TooManySpecialMethodsError(self):
-        self.exceptions[0].should.be.a(pyspec.errors.TooManySpecialMethodsError)
-        self.exceptions[1].should.be.a(pyspec.errors.TooManySpecialMethodsError)
-        self.exceptions[2].should.be.a(pyspec.errors.TooManySpecialMethodsError)
+        self.exceptions[0].should.be.a(contexts.errors.TooManySpecialMethodsError)
+        self.exceptions[1].should.be.a(contexts.errors.TooManySpecialMethodsError)
+        self.exceptions[2].should.be.a(contexts.errors.TooManySpecialMethodsError)
 
 class WhenCatchingAnException(object):
     def context(self):
@@ -282,13 +282,13 @@ class WhenCatchingAnException(object):
                     raise self.exception
                 s.throwing_function = throwing_function
             def should(s):
-                s.exception = pyspec.catch(s.throwing_function, 3, c='yes', b=None)
+                s.exception = contexts.catch(s.throwing_function, 3, c='yes', b=None)
 
         self.spec = TestSpec()
-        self.result = pyspec.core.Result()
+        self.result = contexts.core.Result()
 
     def because_we_run_the_spec(self):
-        pyspec.run(self.spec, self.result)
+        contexts.run(self.spec, self.result)
 
     def it_should_catch_and_return_the_exception(self):
         self.spec.exception.should.equal(self.exception)
@@ -330,7 +330,7 @@ class WhenASpecHasASuperclass(object):
         self.spec = Spec()
 
     def because_we_run_the_spec(self):
-        pyspec.run(self.spec, pyspec.core.Result())
+        contexts.run(self.spec, contexts.core.Result())
 
     def it_should_run_the_superclass_ctx_first(self):
         self.spec.log[:19].should.equal("superclass arrange ")
@@ -365,10 +365,10 @@ class WhenRunningMultipleSpecs(object):
                 self.was_run = True
 
         self.suite = [Spec1(), Spec2()]
-        self.result = pyspec.core.Result()
+        self.result = contexts.core.Result()
 
     def because_we_run_the_suite(self):
-        pyspec.run(self.suite, self.result)
+        contexts.run(self.suite, self.result)
 
     def it_should_run_both_tests(self):
         self.suite[0].was_run.should.be.true
@@ -389,7 +389,7 @@ class WhenRunningAClass(object):
         self.spec = TestSpec
 
     def because_we_run_the_class(self):
-        pyspec.run(self.spec, pyspec.core.Result())
+        contexts.run(self.spec, contexts.core.Result())
 
     def it_should_run_the_test(self):
         self.spec.was_run.should.be.true
@@ -414,7 +414,7 @@ class WhenRunningAModule(object):
         self.module.NormalClass = NormalClass
 
     def because_we_run_the_module(self):
-        pyspec.run(self.module, pyspec.core.Result())
+        contexts.run(self.module, contexts.core.Result())
 
     def it_should_run_the_spec(self):
         self.module.Spec.was_run.should.be.true
@@ -501,17 +501,17 @@ class WhenPrintingAFailureResult(object):
         exception1 = TypeError("Gotcha")
         tb1 = [('made_up_file.py', 3, 'made_up_function', 'frame1'),
                ('another_made_up_file.py', 2, 'another_made_up_function', 'frame2')]
-        assertion1 = pyspec.core.Assertion(None, "made.up.assertion_1")
+        assertion1 = contexts.core.Assertion(None, "made.up.assertion_1")
 
         exception2 = AssertionError("you fail")
         tb2 = [('made_up_file_3.py', 1, 'made_up_function_3', 'frame3'),
                ('made_up_file_4.py', 2, 'made_up_function_4', 'frame4')]
-        assertion2 = pyspec.core.Assertion(None, "made.up.assertion_2")
+        assertion2 = contexts.core.Assertion(None, "made.up.assertion_2")
 
         exception3 = ZeroDivisionError("oh dear")
         tb3 = [('made_up_file_4.py', 1, 'made_up_function_4', 'frame4'),
                ('made_up_file_5.py', 2, 'made_up_function_5', 'frame5')]
-        context3 = pyspec.core.Context([],[],[],[],"made.up_context")
+        context3 = contexts.core.Context([],[],[],[],"made.up_context")
 
         with self.result.run_context(None):
             # Figure out a way to do this using the context manager?
@@ -562,4 +562,4 @@ FAILED!
 """)
 
 if __name__ == "__main__":
-    pyspec.main()
+    contexts.main()
