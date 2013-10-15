@@ -38,10 +38,12 @@ class Context(object):
 
     def run(self, result):
         with result.run_context(self):
-            self.run_setup()
-            self.run_action()
-            self.run_assertions(result)
-            self.run_teardown()
+            try:
+                self.run_setup()
+                self.run_action()
+                self.run_assertions(result)
+            finally:
+                self.run_teardown()
 
 
 class Suite(object):

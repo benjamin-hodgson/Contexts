@@ -103,15 +103,23 @@ class WhenASpecPasses(object):
 class WhenAContextErrors(object):
     def context(self):
         class ErrorInSetup(object):
+            def __init__(self):
+                self.ran_cleanup = False
             def context(self):
                 raise ValueError("explode")
             def it(self):
                 pass
+            def cleanup(self):
+                self.ran_cleanup = True
         class ErrorInAction(object):
+            def __init__(self):
+                self.ran_cleanup = False
             def because(self):
                 raise TypeError("oh no")
             def it(self):
                 pass
+            def cleanup(self):
+                self.ran_cleanup = True
         class ErrorInTeardown(object):
             def it(self):
                 pass
@@ -135,6 +143,12 @@ class WhenAContextErrors(object):
 
     def the_result_should_contain_the_trdn_error(self):
         self.results[2].context_errors.should.have.length_of(1)
+
+    def it_should_still_run_the_trdn_despite_the_ctx_error(self):
+        self.specs[0].ran_cleanup.should.be.true
+
+    def it_should_still_run_the_trdn_despite_the_action_error(self):
+        self.specs[1].ran_cleanup.should.be.true
 
 class WhenWeRunSpecsWithAlternatelyNamedMethods(object):
     def context(self):
