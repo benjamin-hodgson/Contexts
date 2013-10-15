@@ -53,7 +53,7 @@ class WhenRequestingAResourceThatDoesNotExist(object):
 
 if __name__ == '__main__':
     import contexts
-    contexts.run()
+    contexts.main()
 ```
 If you read the method names in order, you can make out a sentence:
 
