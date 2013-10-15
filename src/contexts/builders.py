@@ -1,8 +1,33 @@
+import collections
 import itertools
+import os
+import types
 from .core import Suite, Context, Assertion
 from . import errors
 from . import finders
 from . import util
+
+
+def build_suite(spec):
+    if isinstance(spec, types.ModuleType):
+        return build_suite_from_module(spec)
+    elif isinstance(spec, str):
+        if os.path.isfile(spec):
+            return build_suite_from_file_path(spec)
+        elif os.path.isdir(spec):
+            return build_suite_from_directory_path(spec)
+    elif isinstance(spec, collections.Iterable):
+        return build_suite_from_iterable(spec)
+    elif isinstance(spec, type):
+        return build_suite_from_class(spec)
+    else:
+        return build_suite_from_instance(spec)
+
+
+def build_suite_from_directory_path(dir_path):
+    modules = finders.find_modules_in_directory(dir_path)
+    contexts = finders.get_contexts_from_modules(modules)
+    return build_suite_from_iterable(contexts)
 
 
 def build_suite_from_file_path(filepath):

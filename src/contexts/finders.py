@@ -1,7 +1,9 @@
+import inspect
+import os
 import re
 import types
-import inspect
 from . import errors
+from . import util
 
 
 establish_re = re.compile(r"(^|_)([Ee]stablish|[Cc]ontext|[Gg]iven|[Ss]et_?[Uu]p)")
@@ -30,6 +32,20 @@ def get_modules_from_package(package):
     for name, module in inspect.getmembers(package, inspect.ismodule):
         if re.search(module_re, name):
             yield module
+
+
+def get_contexts_from_modules(modules):
+    for module in modules:
+        for context in get_contexts_from_module(module):
+            yield context
+
+
+def find_modules_in_directory(toplevel_path):
+    for dirpath, _, filenames in os.walk(toplevel_path):
+        for f in filenames:
+            if re.search(module_re, f):
+                yield util.import_module_from_filename(os.path.join(dirpath, f))
+        break # only interested in the top level folder at the moment
 
 
 def find_setups(spec):

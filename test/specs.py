@@ -509,6 +509,55 @@ class TestSpec(object):
         with open(self.filename, 'w+') as f:
             f.write(self.code)
 
+class WhenRunningAFolderWhichIsNotAPackage(object):
+    def establish_that_there_is_a_folder_containing_tests(self):
+        self.code = """
+module_ran = False
+class TestSpec(object):
+    def it(self):
+        global module_ran
+        module_ran = True
+"""
+        self.old_sys_dot_path = sys.path[:]
+        self.module_names = ["test_file1", "test_file2", "another_innocent_module"]
+        self.create_folder()
+        self.write_files()
+
+    def because_we_run_the_file(self):
+        contexts.run(self.foldername, contexts.core.Result())
+
+    def it_should_import_the_first_test_file(self):
+        sys.modules.should.contain(self.module_names[0])
+
+    def it_should_import_the_second_test_file(self):
+        sys.modules.should.contain(self.module_names[1])
+
+    def it_should_not_import_the_normal_module(self):
+        sys.modules.should_not.contain(self.module_names[2])
+
+    def it_should_run_the_specs_in_the_first_file(self):
+        sys.modules[self.module_names[0]].module_ran.should.be.true
+    
+    def it_should_run_the_specs_in_the_second_file(self):
+        sys.modules[self.module_names[1]].module_ran.should.be.true
+
+    def it_should_not_modify_sys_dot_path(self):
+        sys.path.should.equal(self.old_sys_dot_path)
+
+    def cleanup_the_file_system(self):
+        shutil.rmtree(self.foldername)
+
+    def create_folder(self):
+        this_file = os.path.realpath(__file__)
+        self.foldername = os.path.join(os.path.dirname(this_file), 'data')
+        os.mkdir(self.foldername)
+
+    def write_files(self):
+        for module_name in self.module_names:
+            filename = os.path.join(self.foldername, module_name+".py")
+            with open(filename, 'w+') as f:
+                f.write(self.code)
+
 
 #####################################################################
 # Reporting tests (will be in separate file later)
