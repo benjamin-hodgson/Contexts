@@ -469,7 +469,8 @@ class TestSpec(object):
     def it_should_not_modify_sys_dot_path(self):
         sys.path.should.equal(self.old_sys_dot_path)
 
-    def cleanup_the_file_system(self):
+    def cleanup_the_file_system_and_sys_dot_modules(self):
+        sys.modules.pop(self.module_name, None)
         shutil.rmtree(self.foldername)
 
     def create_folder(self):
@@ -493,8 +494,8 @@ class TestSpec(object):
 """
         self.old_sys_dot_path = sys.path[:]
         self.module_names = ["test_file1", "test_file2", "another_innocent_module"]
-        self.create_folder()
-        self.write_files()
+        self.create_folders()
+        self.write_files(self.module_names, self.foldername)
 
     def because_we_run_the_file(self):
         contexts.run(self.foldername, contexts.core.Result())
@@ -517,17 +518,71 @@ class TestSpec(object):
     def it_should_not_modify_sys_dot_path(self):
         sys.path.should.equal(self.old_sys_dot_path)
 
-    def cleanup_the_file_system(self):
+    def cleanup_the_file_system_and_sys_dot_modules(self):
+        sys.modules.pop(self.module_names[0], None)
+        sys.modules.pop(self.module_names[1], None)
         shutil.rmtree(self.foldername)
 
-    def create_folder(self):
+    def create_folders(self):
         this_file = os.path.realpath(__file__)
         self.foldername = os.path.join(os.path.dirname(this_file), 'data')
         os.mkdir(self.foldername)
 
-    def write_files(self):
-        for module_name in self.module_names:
-            filename = os.path.join(self.foldername, module_name+".py")
+    def write_files(self, module_names, foldername):
+        for module_name in module_names:
+            filename = os.path.join(foldername, module_name+".py")
+            with open(filename, 'w+') as f:
+                f.write(self.code)
+
+class WhenRunningAFolderWithSubfolders(object):
+    def establish_that_there_is_a_folder_containing_tests(self):
+        self.code = """
+module_ran = False
+class TestSpec(object):
+    def it(self):
+        global module_ran
+        module_ran = True
+"""
+        self.old_sys_dot_path = sys.path[:]
+        self.module_name1 = "test_file1"
+        self.module_name2 = "test_file2"
+        self.create_folders()
+        self.write_files([self.module_name1], self.folder_name)
+        self.write_files([self.module_name2], self.subfolder_name)
+
+    def because_we_run_the_file(self):
+        contexts.run(self.folder_name, contexts.core.Result())
+
+    def it_should_import_the_first_test_file(self):
+        sys.modules.should.contain(self.module_name1)
+
+    def it_should_import_the_second_test_file(self):
+        sys.modules.should.contain(self.module_name2)
+
+    def it_should_run_the_specs_in_the_first_file(self):
+        sys.modules[self.module_name1].module_ran.should.be.true
+    
+    def it_should_run_the_specs_in_the_second_file(self):
+        sys.modules[self.module_name2].module_ran.should.be.true
+
+    def it_should_not_modify_sys_dot_path(self):
+        sys.path.should.equal(self.old_sys_dot_path)
+
+    def cleanup_the_file_system_and_sys_dot_modules(self):
+        sys.modules.pop(self.module_name1, None)
+        sys.modules.pop(self.module_name2, None)
+        shutil.rmtree(self.folder_name)
+
+    def create_folders(self):
+        this_file = os.path.realpath(__file__)
+        self.folder_name = os.path.join(os.path.dirname(this_file), 'data')
+        self.subfolder_name = os.path.join(self.folder_name, 'subfolder')
+        os.mkdir(self.folder_name)
+        os.mkdir(self.subfolder_name)
+
+    def write_files(self, module_names, foldername):
+        for module_name in module_names:
+            filename = os.path.join(foldername, module_name+".py")
             with open(filename, 'w+') as f:
                 f.write(self.code)
 
@@ -568,7 +623,9 @@ class TestSpec(object):
     def it_should_not_modify_sys_dot_path(self):
         sys.path.should.equal(self.old_sys_dot_path)
 
-    def cleanup_the_file_system(self):
+    def cleanup_the_file_system_and_sys_dot_modules(self):
+        sys.modules.pop(self.package_name, None)
+        sys.modules.pop(self.module_names[1], None)
         shutil.rmtree(self.foldername)
 
     def create_folder(self):

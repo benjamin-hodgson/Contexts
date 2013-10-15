@@ -32,7 +32,7 @@ def get_specs_from_module(module):
 def find_modules_in_directory(directory):
     containing_folder, package_name = extract_package_info(directory)
     with util.prepend_folder_to_sys_dot_path(containing_folder):
-        yield from import_modules_from_directory(directory, package_name)
+        return list(import_modules_from_directory(directory, package_name))
 
 
 def extract_package_info(directory):
@@ -46,12 +46,15 @@ def import_modules_from_directory(directory, package_name):
         yield importlib.import_module(package_name)
         package_name += '.'
 
-    for dirpath, _, filenames in os.walk(directory):
+    for dirpath, dirnames, filenames in os.walk(directory):
+        for i, dirname in enumerate(dirnames[:]):
+            if not re.search(module_re, dirname):
+                dirnames.pop(i)
         for filename in filenames:
             if re.search(module_re, filename):
                 module_name = os.path.splitext(filename)[0]
-                yield importlib.import_module(package_name + module_name)
-        break
+                with util.prepend_folder_to_sys_dot_path(dirpath):
+                    yield importlib.import_module(package_name + module_name)
 
 
 # Refactoring hint: below this comment are functions that find special methods on an instance.
