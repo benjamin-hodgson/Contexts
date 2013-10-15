@@ -43,7 +43,7 @@ class WhenRequestingAResourceThatDoesNotExist(object):
 
     def it_should_raise_an_HTTPError_when_we_ask_it_to(self):
         # 'catch' runs a function that you expect to raise an exception, and returns the exception.
-        # This assertion should really be another class, but I wanted to show you 'catch'!
+        # In the real world, this assertion would be another class, but I wanted to show you 'catch'!
         exception = contexts.catch(self.response.raise_for_status)
         assert isinstance(exception, requests.exceptions.HTTPError)
 
@@ -55,15 +55,4 @@ if __name__ == '__main__':
     import contexts
     contexts.main()
 ```
-If you read the method names in order, you can make out a sentence:
-
-"_When_ requesting a resource that does not exist,
-
-  _because_ we make a request,
-  
-  the response _should_ return a 404,
-  
-  the response _should_ have an HTML content type, and
-  
-  it _should_ raise an HTTPError when we ask it to."
 
