@@ -9,14 +9,27 @@ because_re = re.compile(r"(^|_)([Bb]ecause|[Ww]hen|[Ss]ince|[Aa]fter)")
 should_re = re.compile(r"(^|_)([Ss]hould|[Ii]t|[Mm]ust|[Ww]ill)")
 cleanup_re = re.compile(r"(^|_)([Cc]leanup|[Tt]ear_?[Dd]own)")
 spec_re = re.compile(r"([Ss]pec|[Ww]hen)")
+module_re = re.compile(r"([Ss]pec|[Tt]est)")
 
 
 def get_contexts_from_module(module):
     contexts = []
+    contexts.extend(get_classes_from_module(module))
+    for sub_module in get_modules_from_package(module):
+        contexts.extend(get_contexts_from_module(sub_module))
+    return contexts
+
+
+def get_classes_from_module(module):
     for name, cls in inspect.getmembers(module, inspect.isclass):
         if re.search(spec_re, name):
-            contexts.append(cls())
-    return contexts
+            yield cls()
+
+
+def get_modules_from_package(package):
+    for name, module in inspect.getmembers(package, inspect.ismodule):
+        if re.search(module_re, name):
+            yield module
 
 
 def find_setups(spec):

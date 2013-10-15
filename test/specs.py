@@ -442,6 +442,33 @@ class WhenRunningAModule(object):
     def it_should_not_instantiate_the_normal_class(self):
         self.module.NormalClass.was_instantiated.should.be.false
 
+class WhenRunningAPackage(object):
+    def context(self):
+        class Spec1(object):
+            was_run = False
+            def it_should_run_this(self):
+                self.__class__.was_run = True
+        class Spec2(object):
+            was_run = False
+            def it_should_run_this(self):
+                self.__class__.was_run = True
+        self.package = types.ModuleType('fake_specs')
+        self.module1 = types.ModuleType('module_with_spec_in_the_name')
+        self.module2 = types.ModuleType('module_with_test_in_the_name')
+        self.module1.Spec1 = Spec1
+        self.module2.Spec2 = Spec2
+        self.package.module_with_specs_in_the_name = self.module1
+        self.package.module_with_test_in_the_name = self.module2
+
+    def because_we_run_the_module(self):
+        contexts.run(self.package, contexts.core.Result())
+
+    def it_should_run_the_module_with_spec_in_the_name(self):
+        self.module1.Spec1.was_run.should.be.true
+
+    def it_should_run_the_module_with_test_in_the_name(self):
+        self.module2.Spec2.was_run.should.be.true
+
 class WhenRunningAFile(object):
     def establish_that_there_is_a_file_in_the_filesystem(self):
         self.code = """
@@ -457,7 +484,7 @@ class TestSpec(object):
         self.create_folder()
         self.write_file()
 
-    def because_we_run_the_test_runner(self):
+    def because_we_run_the_file(self):
         contexts.run(self.filename, contexts.core.Result())
 
     def it_should_import_the_file(self):
