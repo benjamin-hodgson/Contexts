@@ -55,15 +55,4 @@ if __name__ == '__main__':
     import contexts
     contexts.main()
 ```
-If you read the method names in order, you can make out a sentence:
-
-"_When_ requesting a resource that does not exist,
-
-  _because_ we make a request,
-  
-  the response _should_ return a 404,
-  
-  the response _should_ have an HTML content type, and
-  
-  it _should_ raise an HTTPError when we ask it to."
 
