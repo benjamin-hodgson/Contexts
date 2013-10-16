@@ -43,7 +43,7 @@ class WhenRequestingAResourceThatDoesNotExist(object):
 
     def it_should_raise_an_HTTPError_when_we_ask_it_to(self):
         # 'catch' runs a function that you expect to raise an exception, and returns the exception.
-        # In the real world, this assertion would be another class, but I wanted to show you 'catch'!
+        # In the real world this assertion would be another class, but I wanted to show you 'catch'!
         exception = contexts.catch(self.response.raise_for_status)
         assert isinstance(exception, requests.exceptions.HTTPError)
 
