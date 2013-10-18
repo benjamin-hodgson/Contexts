@@ -470,8 +470,10 @@ class TestSpec(object):
         sys.path.should.equal(self.old_sys_dot_path)
 
     def cleanup_the_file_system_and_sys_dot_modules(self):
-        sys.modules.pop(self.module_name, None)
-        shutil.rmtree(self.foldername)
+        try:
+            shutil.rmtree(self.foldername)
+        finally:
+            del sys.modules[self.module_name]
 
     def create_folder(self):
         this_file = os.path.realpath(__file__)

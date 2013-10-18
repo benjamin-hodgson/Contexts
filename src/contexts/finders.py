@@ -1,9 +1,6 @@
-import contextlib
-import importlib
 import inspect
 import os
 import re
-import sys
 import types
 from . import errors
 from . import util
@@ -27,34 +24,6 @@ def get_specs_from_module(module):
     for name, cls in inspect.getmembers(module, inspect.isclass):
         if re.search(spec_re, name):
             yield cls()
-
-
-def find_modules_in_directory(directory):
-    containing_folder, package_name = extract_package_info(directory)
-    with util.prepend_folder_to_sys_dot_path(containing_folder):
-        return list(import_modules_from_directory(directory, package_name))
-
-
-def extract_package_info(directory):
-    if os.path.isfile(os.path.join(directory, '__init__.py')):
-        return os.path.split(directory)
-    return directory, ''
-
-
-def import_modules_from_directory(directory, package_name):
-    if package_name:
-        yield importlib.import_module(package_name)
-        package_name += '.'
-
-    for dirpath, dirnames, filenames in os.walk(directory):
-        for i, dirname in enumerate(dirnames[:]):
-            if not re.search(module_re, dirname):
-                dirnames.pop(i)
-        for filename in filenames:
-            if re.search(module_re, filename):
-                module_name = os.path.splitext(filename)[0]
-                with util.prepend_folder_to_sys_dot_path(dirpath):
-                    yield importlib.import_module(package_name + module_name)
 
 
 # Refactoring hint: below this comment are functions that find special methods on an instance.

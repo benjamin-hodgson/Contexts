@@ -4,15 +4,13 @@ import os
 import sys
 
 
-def import_module_from_filename(file_path):
+def import_module_from_file(file_path):
     folder = os.path.dirname(file_path)
     filename = os.path.basename(file_path)
     module_name = os.path.splitext(filename)[0]
 
     with prepend_folder_to_sys_dot_path(folder):
-        module = importlib.import_module(module_name)
-    
-    return module
+        return importlib.import_module(module_name)
 
 
 @contextlib.contextmanager

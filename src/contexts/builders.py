@@ -30,7 +30,7 @@ def build_suite_from_directory_path(dir_path):
 
 
 def build_suite_from_file_path(filepath):
-    module = util.import_module_from_filename(filepath)
+    module = util.import_module_from_file(filepath)
     return build_suite_from_module(module)
 
 
