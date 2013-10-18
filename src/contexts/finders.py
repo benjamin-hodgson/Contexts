@@ -1,3 +1,4 @@
+import glob
 import inspect
 import os
 import re
@@ -24,6 +25,11 @@ def get_specs_from_module(module):
     for name, cls in inspect.getmembers(module, inspect.isclass):
         if re.search(spec_re, name):
             yield cls()
+
+
+def find_modules_in_directory(dir_path):
+    for file_path in glob.iglob(os.path.join(dir_path, '*.py')):
+        yield util.import_module_from_file(file_path)
 
 
 # Refactoring hint: below this comment are functions that find special methods on an instance.
