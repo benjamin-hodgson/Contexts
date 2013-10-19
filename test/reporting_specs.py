@@ -134,3 +134,7 @@ AssertionError: you fail
 FAILED!
 2 contexts, 2 assertions: 1 failed, 2 errors
 """)
+
+
+if __name__ == "__main__":
+    contexts.main()
