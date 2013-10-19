@@ -9,7 +9,7 @@ Contexts is a 'Context-Specification'-style test runner for Python, inspired by 
 
 Writing tests which read like sentences can encourage you to focus your testing efforts on the externally
 observable behaviour of the code. Contexts is designed around this test-as-sentence idea.
-It makes it easier for you to give your tests fluent descriptions by running methods
+It makes it easier for you to give your tests fluent descriptions, because it runs methods
 in sequence based on their names.
 
 
