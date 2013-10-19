@@ -1,9 +1,8 @@
-import contextlib
+import glob
 import importlib
 import inspect
 import os
 import re
-import sys
 import types
 from . import errors
 from . import util
@@ -29,29 +28,29 @@ def get_specs_from_module(module):
             yield cls()
 
 
-def find_modules_in_directory(directory):
-    containing_folder, package_name = extract_package_info(directory)
-    with util.prepend_folder_to_sys_dot_path(containing_folder):
-        yield from import_modules_from_directory(directory, package_name)
+def find_modules_in_directory(dir_path):
+    if os.path.join(dir_path, "__init__.py") in glob.glob(os.path.join(dir_path, '*.py')):
+        return import_modules_in_package(dir_path)
+    return import_modules_in_directory(dir_path)
 
+def import_modules_in_package(dir_path):
+    imported_modules = []
+    imported_modules.append(util.import_module_from_file(dir_path))
+    for file_path in glob.iglob(os.path.join(dir_path, '*.py')):
+        if "__init__.py" in file_path:
+            continue
+        module_name = os.path.splitext(os.path.basename(file_path))[0]
+        package_name = os.path.basename(dir_path)
+        with util.prepend_folder_to_sys_dot_path(os.path.dirname(dir_path)):
+            imported_modules.append(importlib.import_module(package_name + '.' + module_name))
+    return imported_modules
 
-def extract_package_info(directory):
-    if os.path.isfile(os.path.join(directory, '__init__.py')):
-        return os.path.split(directory)
-    return directory, ''
-
-
-def import_modules_from_directory(directory, package_name):
-    if package_name:
-        yield importlib.import_module(package_name)
-        package_name += '.'
-
-    for dirpath, _, filenames in os.walk(directory):
-        for filename in filenames:
-            if re.search(module_re, filename):
-                module_name = os.path.splitext(filename)[0]
-                yield importlib.import_module(package_name + module_name)
-        break
+def import_modules_in_directory(dir_path):
+    imported_modules = []
+    for file_path in glob.iglob(os.path.join(dir_path, '*.py')):
+        if re.search(module_re, os.path.basename(file_path)):
+            imported_modules.append(util.import_module_from_file(file_path))
+    return imported_modules
 
 
 # Refactoring hint: below this comment are functions that find special methods on an instance.
