@@ -8,7 +8,8 @@ Contexts is a 'Context-Specification'-style test runner for Python, inspired by 
 [`Machine.Specifications`](https://github.com/machine/machine.specifications).
 
 Writing tests which read like sentences can encourage you to focus your testing efforts on the externally
-observable behaviour of the code. Contexts can make this easy for you, by running test methods in sequence based on their names.
+observable behaviour of the code. Contexts is designed around this test-as-sentence idea.
+It makes it easier for you by running methods in sequence based on their names.
 
 
 Guide
@@ -41,8 +42,8 @@ will be run. It's therefore important to ensure that all your test cases are ind
 #### Setting up
 If the words 'establish', 'when', or 'given' appear in a method,
 it will be run before the other test methods in the class. 'Establish' methods are typically used
-to build test data, instantiate the object under test, write to the file system, and otherwise
-prepare the test.
+to build test data, instantiate the object under test, set up mock objects,
+write test files to the file system, and otherwise prepare the test.
 
 The setup method is run _once for each test class_, to encourage you to ensure your assertions
 don't modify any state.
