@@ -9,7 +9,8 @@ Contexts is a 'Context-Specification'-style test runner for Python, inspired by 
 
 Writing tests which read like sentences can encourage you to focus your testing efforts on the externally
 observable behaviour of the code. Contexts is designed around this test-as-sentence idea.
-It makes it easier for you by running methods in sequence based on their names.
+It makes it easier for you to give your tests fluent descriptions by running methods
+in sequence based on their names.
 
 
 Guide
@@ -76,7 +77,8 @@ the concrete class of the test object.
 #### Making assertions about your action
 If a method contains the words 'it', 'should', 'must' or 'will' in its name, it is treated as an
 assertion. Good style suggests that assertion methods should be very granular - one assertion per method,
-if possible.
+if possible - and named to describe the _behaviour_ you're trying to test (rather than details such as
+function names).
 
 Assertions may be made using the `assert` statement, or any assertion library which
 raises `AssertionError` upon failure. Contexts makes a great partner with
