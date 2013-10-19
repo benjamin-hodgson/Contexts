@@ -8,10 +8,10 @@ from . import errors
 from . import util
 
 
-establish_re = re.compile(r"(^|_)([Ee]stablish|[Cc]ontext|[Gg]iven|[Ss]et_?[Uu]p)")
+establish_re = re.compile(r"(^|_)([Ee]stablish|[Cc]ontext|[Gg]iven)")
 because_re = re.compile(r"(^|_)([Bb]ecause|[Ww]hen|[Ss]ince|[Aa]fter)")
 should_re = re.compile(r"(^|_)([Ss]hould|[Ii]t|[Mm]ust|[Ww]ill)")
-cleanup_re = re.compile(r"(^|_)([Cc]leanup|[Tt]ear_?[Dd]own)")
+cleanup_re = re.compile(r"(^|_)[Cc]leanup")
 spec_re = re.compile(r"([Ss]pec|[Ww]hen)")
 module_re = re.compile(r"([Ss]pec|[Tt]est)")
 

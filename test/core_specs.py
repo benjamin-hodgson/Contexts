@@ -1,11 +1,5 @@
-from io import StringIO
-import os
-import shutil
-import sys
-import types
 import sure
 import contexts
-from contexts import reporting
 
 core_file = repr(contexts.core.__file__)[1:-1]
 this_file = repr(__file__)[1:-1]
@@ -167,14 +161,10 @@ class WhenWeRunSpecsWithAlternatelyNamedMethods(object):
         class MoreAlternativeNames(object):
             def __init__(self):
                 self.log = ""
-            def has_setup_in_the_name(self):
-                self.log += "arrange "
             def has_since_in_the_name(self):
                 self.log += "act "
             def has_must_in_the_name(self):
                 self.log += "assert "
-            def has_teardown_in_the_name(self):
-                self.log += "cleanup "
         class EvenMoreAlternativeNames(object):
             def __init__(self):
                 self.log = ""
@@ -196,7 +186,7 @@ class WhenWeRunSpecsWithAlternatelyNamedMethods(object):
 
     def it_should_run_the_methods_in_the_correct_order(self):
         self.spec1.log.should.equal("arrange act assert ")
-        self.spec2.log.should.equal("arrange act assert cleanup ")
+        self.spec2.log.should.equal("act assert ")
         self.spec3.log.should.equal("arrange act assert ")
 
 class WhenRunningAmbiguouslyNamedMethods(object):
@@ -208,10 +198,10 @@ class WhenRunningAmbiguouslyNamedMethods(object):
             def this_has_both_because_and_should_in_the_name(self):
                 pass
         class AmbiguousMethods3(object):
-            def this_has_both_should_and_teardown_in_the_name(self):
+            def this_has_both_should_and_cleanup_in_the_name(self):
                 pass
         class AmbiguousMethods4(object):
-            def this_has_both_teardown_and_establish_in_the_name(self):
+            def this_has_both_cleanup_and_establish_in_the_name(self):
                 pass
 
         self.specs = [AmbiguousMethods1(), AmbiguousMethods2(), AmbiguousMethods3(), AmbiguousMethods4()]
@@ -238,11 +228,8 @@ class WhenRunningNotSoAmbiguouslyNamedMethods(object):
         class NotAmbiguousMethods3(object):
             def this_has_both_should_and_it_in_the_name(self):
                 pass
-        class NotAmbiguousMethods4(object):
-            def this_has_both_teardown_and_cleanup_in_the_name(self):
-                pass
 
-        self.specs = [NotAmbiguousMethods1(), NotAmbiguousMethods2(), NotAmbiguousMethods3(), NotAmbiguousMethods4()]
+        self.specs = [NotAmbiguousMethods1(), NotAmbiguousMethods2(), NotAmbiguousMethods3()]
         self.exceptions = []
 
     def because_we_try_to_run_the_specs(self):
@@ -253,7 +240,6 @@ class WhenRunningNotSoAmbiguouslyNamedMethods(object):
         self.exceptions[0].should.be.none
         self.exceptions[1].should.be.none
         self.exceptions[2].should.be.none
-        self.exceptions[3].should.be.none
 
 class WhenRunningSpecsWithTooManySpecialMethods(object):
     def context(self):
@@ -268,9 +254,9 @@ class WhenRunningSpecsWithTooManySpecialMethods(object):
             def when(self):
                 pass
         class TooManyTeardowns(object):
-            def cleanup(self):
+            def cleanup1(self):
                 pass
-            def teardown(self):
+            def cleanup2(self):
                 pass
 
         self.specs = [TooManyContexts(), TooManyActions(), TooManyTeardowns()]
