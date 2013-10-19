@@ -57,16 +57,16 @@ class WhenRunningASpec(object):
 
     def the_assertions_should_have_the_right_names(self):
         names = [a.name for a in self.result.assertions]
-        names.should.contain('__main__.WhenRunningASpec.context.<locals>.TestSpec.method_with_should_in_the_name')
-        names.should.contain('__main__.WhenRunningASpec.context.<locals>.TestSpec.failing_method_with_should_in_the_name')
-        names.should.contain('__main__.WhenRunningASpec.context.<locals>.TestSpec.erroring_method_with_should_in_the_name')
+        names.should.contain(__name__ + '.WhenRunningASpec.context.<locals>.TestSpec.method_with_should_in_the_name')
+        names.should.contain(__name__ + '.WhenRunningASpec.context.<locals>.TestSpec.failing_method_with_should_in_the_name')
+        names.should.contain(__name__ + '.WhenRunningASpec.context.<locals>.TestSpec.erroring_method_with_should_in_the_name')
 
     def the_result_should_have_one_failure(self):
         self.result.assertion_failures.should.have.length_of(1)
 
     def the_failure_should_have_the_right_name(self):
         self.result.assertion_failures[0][0].name.should.equal(
-            '__main__.WhenRunningASpec.context.<locals>.TestSpec.failing_method_with_should_in_the_name'
+            __name__ + '.WhenRunningASpec.context.<locals>.TestSpec.failing_method_with_should_in_the_name'
         )
 
     def the_failure_should_have_the_exception(self):
@@ -80,7 +80,7 @@ class WhenRunningASpec(object):
 
     def the_error_should_have_the_right_name(self):
         self.result.assertion_errors[0][0].name.should.equal(
-            '__main__.WhenRunningASpec.context.<locals>.TestSpec.erroring_method_with_should_in_the_name'
+            __name__ + '.WhenRunningASpec.context.<locals>.TestSpec.erroring_method_with_should_in_the_name'
         )
 
     def the_error_should_have_the_exception(self):
