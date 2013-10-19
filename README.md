@@ -135,8 +135,8 @@ instance methods. They can be called as usual by the other methods of the class.
 
 Example
 -------
-Here's an example of a test case that the authors of [Requests](https://github.com/kennethreitz/requests) might have written, if they
-were using Contexts.
+Here's an example of a test case that the authors of [Requests](https://github.com/kennethreitz/requests)
+might have written, if they were using Contexts.
 
 ```python
 import requests
@@ -156,6 +156,8 @@ class WhenRequestingAResourceThatDoesNotExist(object):
         assert self.response.headers['content-type'] == 'text/html'
 
     def it_should_raise_an_HTTPError_when_we_ask_it_to(self):
+        # In the real world, this assertion would be a whole test class of its own.
+        # I put it in because I wanted to demonstrate 'catch()'!
         exception = contexts.catch(self.response.raise_for_status)
         assert isinstance(exception, requests.exceptions.HTTPError)
 
