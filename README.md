@@ -40,7 +40,9 @@ will be run. It's therefore important to ensure that all your test cases are ind
 
 #### Setting up
 If the words 'establish', 'when', or 'given' appear in a method,
-it will be run before the other test methods in the class.
+it will be run before the other test methods in the class. 'Establish' methods are typically used
+to build test data, instantiate the object under test, write to the file system, and otherwise
+prepare the test.
 
 The setup method is run _once for each test class_, to encourage you to ensure your assertions
 don't modify any state.
@@ -118,6 +120,10 @@ it returns `None`.
 
 You'll typically see `catch` in a 'because' method. The caught exception generally gets saved as an
 instance attribute, and assertions are made about (for example) its type in assertion methods.
+
+#### Other methods
+Other methods, which do not contain any of the keywords detailed above, are treated as normal
+instance methods. They can be called as usual by the other methods of the class.
 
 
 Example
