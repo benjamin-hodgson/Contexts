@@ -22,7 +22,7 @@ representing each step in the process.
 If certain words appear in the name of an object, Contexts will treat it in a certain way.
 
 
-### Defining tests
+### Test discovery
 If a _module_ contains the words 'test' or 'spec' in its name, Contexts will
 import it and run any tests therein.
 If a _folder_ has the words 'test' or 'spec' in its name,
@@ -31,10 +31,12 @@ If a _package_ has the words 'test' or 'spec' in its name, Contexts will
 import it, and scan the package's contents for modules and subfolders matching this pattern.
 
 If a class has 'spec' or 'when' in the name, Contexts will treat it as a test case.
-Each test class will be instantiated and run once, following the
+
+### Defining test classes
+Contexts will instantiate and run each test class once, following the
 'arrange-act-assert' pattern detailed below.
 
-If a methods in a test class has an ambiguous name (its name would place it in more than one
+If a method in a test class has an ambiguous name (its name would place it in more than one
 of the categories below), Contexts will raise an exception.
 
 Contexts makes no promises about the order in which test classes, modules, folders or packages
