@@ -24,13 +24,6 @@ def load_module(dir_path, module_name):
         return importlib.import_module(module_name)
 
 
-def load_package(dir_path):
-    parent_folder = os.path.dirname(dir_path)
-    filename = os.path.basename(dir_path)
-    module_name = os.path.splitext(filename)[0]
-    return load_module(parent_folder, module_name)
-
-
 def load_module_from_file(file_path):
     folder = os.path.dirname(file_path)
     filename = os.path.basename(file_path)
