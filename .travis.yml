@@ -4,6 +4,8 @@ python:
 install:
   - pip install sure --use-mirrors
   - python setup.py install
+script:
+  - python -c "import contexts; import sys; result = contexts.run('test'); sys.exit(not result)"
 branches:
   only:
     - master
