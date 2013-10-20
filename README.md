@@ -140,6 +140,7 @@ might have written, if they were using Contexts.
 
 ```python
 import requests
+import contexts
 
 class WhenRequestingAResourceThatDoesNotExist(object):
     def establish_that_we_are_asking_for_a_made_up_resource(self):
@@ -165,6 +166,5 @@ class WhenRequestingAResourceThatDoesNotExist(object):
         self.session.close()
 
 if __name__ == '__main__':
-    import contexts
     contexts.main()
 ```
