@@ -1,11 +1,7 @@
-import glob
-import importlib
 import inspect
-import os
 import re
 import types
 from . import errors
-from . import util
 
 
 establish_re = re.compile(r"(^|_)([Ee]stablish|[Cc]ontext|[Gg]iven)")
@@ -26,31 +22,6 @@ def get_specs_from_module(module):
     for name, cls in inspect.getmembers(module, inspect.isclass):
         if re.search(spec_re, name):
             yield cls()
-
-
-def find_modules_in_directory(dir_path):
-    if os.path.join(dir_path, "__init__.py") in glob.glob(os.path.join(dir_path, '*.py')):
-        return import_modules_in_package(dir_path)
-    return import_modules_in_directory(dir_path)
-
-def import_modules_in_package(dir_path):
-    imported_modules = []
-    imported_modules.append(util.import_module_from_file(dir_path))
-    for file_path in glob.iglob(os.path.join(dir_path, '*.py')):
-        if "__init__.py" in file_path:
-            continue
-        module_name = os.path.splitext(os.path.basename(file_path))[0]
-        package_name = os.path.basename(dir_path)
-        with util.prepend_folder_to_sys_dot_path(os.path.dirname(dir_path)):
-            imported_modules.append(importlib.import_module(package_name + '.' + module_name))
-    return imported_modules
-
-def import_modules_in_directory(dir_path):
-    imported_modules = []
-    for file_path in glob.iglob(os.path.join(dir_path, '*.py')):
-        if re.search(module_re, os.path.basename(file_path)):
-            imported_modules.append(util.import_module_from_file(file_path))
-    return imported_modules
 
 
 # Refactoring hint: below this comment are functions that find special methods on an instance.
