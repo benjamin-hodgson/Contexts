@@ -1,5 +1,4 @@
 import contextlib
-import glob
 import importlib
 import os
 import sys
@@ -11,17 +10,9 @@ from . import finders
 ###########################################################
 
 def import_modules_in_directory(dir_path):
-    if os.path.join(dir_path, "__init__.py") in glob.glob(os.path.join(dir_path, '*.py')):
-        return import_modules_in_package(dir_path)
-
-    found_filenames = finders.find_modules_in_directory(dir_path)
-    return [load_module_from_file(f) for f in found_filenames]
-
-
-def import_modules_in_package(package_directory):
-    parent_folder = os.path.dirname(package_directory)
-    found_module_names = finders.find_modules_in_package(package_directory)
-    return [load_package(package_directory)] + [load_module(parent_folder, n) for n in found_module_names]
+    finder = finders.ModuleFinder(dir_path)
+    parent_folder, found_module_names = finder.find_modules()
+    return (load_module(parent_folder, n) for n in found_module_names)
 
 
 ###########################################################
@@ -34,7 +25,10 @@ def load_module(dir_path, module_name):
 
 
 def load_package(dir_path):
-    return load_module_from_file(dir_path)
+    parent_folder = os.path.dirname(dir_path)
+    filename = os.path.basename(dir_path)
+    module_name = os.path.splitext(filename)[0]
+    return load_module(parent_folder, module_name)
 
 
 def load_module_from_file(file_path):

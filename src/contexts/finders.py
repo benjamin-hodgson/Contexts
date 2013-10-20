@@ -1,5 +1,6 @@
 import glob
 import inspect
+import itertools
 import os
 import re
 import types
@@ -8,32 +9,47 @@ from . import errors
 
 
 spec_re = re.compile(r"([Ss]pec|[Ww]hen)")
-module_re = re.compile(r"([Ss]pec|[Tt]est)")
 
 
 ###########################################################
 # Finding modules
 ###########################################################
 
-def find_modules_in_directory(dir_path):
-    found_modules = []
-    for file_path in glob.iglob(os.path.join(dir_path, '*.py')):
-        if re.search(module_re, os.path.basename(file_path)):
-            found_modules.append(file_path)
-    return found_modules
+class ModuleFinder(object):
+    ModuleSpec = namedtuple('ModuleSpec', ['parent_folder', 'module_names'])
 
+    module_re = re.compile(r"([Ss]pec|[Tt]est)")
 
-def find_modules_in_package(package_path):
-    found_module_names = []
+    def __init__(self, directory):
+        self.directory = directory
 
-    package_name = os.path.basename(package_path)
-    for file_path in glob.iglob(os.path.join(package_path, '*.py')):
-        if "__init__.py" in file_path:
-            continue
-        module_name = os.path.splitext(os.path.basename(file_path))[0]
-        found_module_names.append(package_name + '.' + module_name)
+    def find_modules(self):
+        if self.ispackage():
+            return self.find_modules_in_package()
+        return self.find_modules_in_directory()
 
-    return found_module_names
+    def find_modules_in_directory(self):
+        paths = glob.iglob(os.path.join(self.directory, '*.py'))
+        file_names = (os.path.basename(p) for p in paths)
+        module_names = (os.path.splitext(f)[0] for f in file_names)
+        test_module_names = (m for m in module_names if re.search(self.module_re, m))
+
+        return self.ModuleSpec(self.directory, test_module_names)
+
+    def find_modules_in_package(self):
+        paths = glob.iglob(os.path.join(self.directory, '*.py'))
+        file_names = (os.path.basename(p) for p in paths if "__init__.py" not in p)
+        module_names = (os.path.splitext(f)[0] for f in file_names)
+
+        package_name = os.path.basename(self.directory)
+        full_names = (package_name + '.' + m for m in module_names)
+
+        parent_folder = os.path.dirname(self.directory)
+
+        return self.ModuleSpec(parent_folder, itertools.chain([package_name], full_names))
+
+    def ispackage(self):
+        return os.path.join(self.directory, "__init__.py") in glob.glob(os.path.join(self.directory, '*.py'))
 
 
 ###########################################################
