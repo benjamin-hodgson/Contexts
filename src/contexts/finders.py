@@ -40,9 +40,10 @@ class ModuleFinder(object):
         paths = glob.iglob(os.path.join(self.directory, '*.py'))
         file_names = (os.path.basename(p) for p in paths if "__init__.py" not in p)
         module_names = (os.path.splitext(f)[0] for f in file_names)
+        test_module_names = (m for m in module_names if re.search(self.module_re, m))
 
         package_name = os.path.basename(self.directory)
-        full_names = (package_name + '.' + m for m in module_names)
+        full_names = (package_name + '.' + m for m in test_module_names)
 
         parent_folder = os.path.dirname(self.directory)
 

@@ -157,12 +157,13 @@ class TestSpec(object):
         sys.modules.should.contain(self.package_name)
 
     def it_should_import_the_first_module(self):
-        assert self.package_name + '.' + self.module_names[1] in sys.modules
         sys.modules.should.contain(self.package_name + '.' + self.module_names[1])
 
     def it_should_import_the_second_module(self):
-        assert self.package_name + '.' + self.module_names[2] in sys.modules
         sys.modules.should.contain(self.package_name + '.' + self.module_names[2])
+
+    def it_should_not_import_the_third_module(self):
+        sys.modules.should_not.contain(self.package_name + '.' + self.module_names[3])
 
     def it_should_run_the_package(self):
         sys.modules[self.package_name].module_ran.should.be.true
