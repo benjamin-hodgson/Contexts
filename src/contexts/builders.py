@@ -25,7 +25,9 @@ def build_suite(spec):
 
 def build_suite_from_directory_path(dir_path):
     modules = importers.import_modules_in_directory(dir_path)
-    specs = finders.find_specs_in_modules(modules)
+
+    finder = finders.ClassFinder()
+    specs = finder.find_specs_in_modules(modules)
     return build_suite_from_iterable(specs)
 
 
@@ -35,7 +37,8 @@ def build_suite_from_file_path(filepath):
 
 
 def build_suite_from_module(module):
-    specs = finders.find_specs_in_module(module)
+    finder = finders.ClassFinder()
+    specs = finder.find_specs_in_module(module)
     return build_suite_from_iterable(specs)
 
 

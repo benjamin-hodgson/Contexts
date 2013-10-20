@@ -8,13 +8,6 @@ from collections import namedtuple
 from . import errors
 
 
-spec_re = re.compile(r"([Ss]pec|[Ww]hen)")
-
-
-###########################################################
-# Finding modules
-###########################################################
-
 class ModuleFinder(object):
     ModuleSpec = namedtuple('ModuleSpec', ['parent_folder', 'module_names'])
 
@@ -53,20 +46,19 @@ class ModuleFinder(object):
         return os.path.join(self.directory, "__init__.py") in glob.glob(os.path.join(self.directory, '*.py'))
 
 
-###########################################################
-# Finding classes
-###########################################################
+class ClassFinder(object):
+    class_re = re.compile(r"([Ss]pec|[Ww]hen)")
 
-def find_specs_in_modules(modules):
-    for module in modules:
-        for context in find_specs_in_module(module):
-            yield context
+    def find_specs_in_modules(self, modules):
+        for module in modules:
+            for context in self.find_specs_in_module(module):
+                yield context
 
 
-def find_specs_in_module(module):
-    for name, cls in inspect.getmembers(module, inspect.isclass):
-        if re.search(spec_re, name):
-            yield cls()
+    def find_specs_in_module(self, module):
+        for name, cls in inspect.getmembers(module, inspect.isclass):
+            if re.search(self.class_re, name):
+                yield cls()
 
 
 class MethodFinder(object):
