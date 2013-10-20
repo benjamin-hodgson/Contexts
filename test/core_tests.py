@@ -40,10 +40,10 @@ class WhenRunningASpec(object):
     def the_result_should_report_failure(self):
         self.result.failed.should.be.true
 
-    def the_result_should_have_one_ctx(self):
+    def the_result_should_have_one_spec(self):
         self.result.contexts.should.have.length_of(1)
 
-    def the_ctx_should_have_the_right_name(self):
+    def the_spec_should_have_the_right_name(self):
         self.result.contexts[0].name.should.equal("TestSpec")
 
     def the_result_should_have_two_assertions(self):
@@ -132,19 +132,19 @@ class WhenAContextErrors(object):
             self.results.append(result)
             contexts.run(spec, result)
 
-    def the_result_should_contain_the_ctx_error(self):
+    def the_result_should_contain_the_setup_error(self):
         self.results[0].context_errors.should.have.length_of(1)
 
     def the_result_should_contain_the_action_error(self):
         self.results[1].context_errors.should.have.length_of(1)
 
-    def the_result_should_contain_the_trdn_error(self):
+    def the_result_should_contain_the_teardown_error(self):
         self.results[2].context_errors.should.have.length_of(1)
 
-    def it_should_still_run_the_trdn_despite_the_ctx_error(self):
+    def it_should_still_run_the_teardown_despite_the_setup_error(self):
         self.specs[0].ran_cleanup.should.be.true
 
-    def it_should_still_run_the_trdn_despite_the_action_error(self):
+    def it_should_still_run_the_teardown_despite_the_action_error(self):
         self.specs[1].ran_cleanup.should.be.true
 
 class WhenWeRunSpecsWithAlternatelyNamedMethods(object):
@@ -335,16 +335,16 @@ class WhenASpecHasASuperclass(object):
     def because_we_run_the_spec(self):
         contexts.run(self.spec, contexts.core.Result())
 
-    def it_should_run_the_superclass_ctx_first(self):
+    def it_should_run_the_superclass_setup_first(self):
         self.spec.log[:19].should.equal("superclass arrange ")
 
-    def it_should_run_the_subclass_ctx_next(self):
+    def it_should_run_the_subclass_setup_next(self):
         self.spec.log[19:36].should.equal("subclass arrange ")
 
-    def it_should_run_the_subclass_bec_next(self):
+    def it_should_run_the_subclass_action_next(self):
         self.spec.log[36:52].should.equal("subclass action ")
 
-    def it_should_not_run_the_superclass_bec(self):
+    def it_should_not_run_the_superclass_action(self):
         self.spec.log.should_not.contain("superclass action ")
 
     def it_should_run_both_assertions(self):
@@ -352,10 +352,10 @@ class WhenASpecHasASuperclass(object):
         self.spec.log[52:92].should.contain("superclass assertion ")
         self.spec.log[52:92].should.contain("subclass assertion ")
 
-    def it_should_run_the_subclass_clean_first(self):
+    def it_should_run_the_subclass_teardown_first(self):
         self.spec.log[92:109].should.equal("subclass cleanup ")
 
-    def it_should_run_the_superclass_clean_second(self):
+    def it_should_run_the_superclass_teardown_second(self):
         self.spec.log[109:238].should.equal("superclass cleanup ")
 
 class WhenRunningAClass(object):
