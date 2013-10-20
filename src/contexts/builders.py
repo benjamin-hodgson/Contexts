@@ -25,17 +25,17 @@ def build_suite(spec):
 
 def build_suite_from_directory_path(dir_path):
     modules = importer.import_modules_in_directory(dir_path)
-    specs = finders.get_specs_from_modules(modules)
+    specs = finders.find_specs_in_modules(modules)
     return build_suite_from_iterable(specs)
 
 
 def build_suite_from_file_path(filepath):
-    module = importer.import_module_from_file(filepath)
+    module = importer.load_module_from_file(filepath)
     return build_suite_from_module(module)
 
 
 def build_suite_from_module(module):
-    specs = finders.get_specs_from_module(module)
+    specs = finders.find_specs_in_module(module)
     return build_suite_from_iterable(specs)
 
 

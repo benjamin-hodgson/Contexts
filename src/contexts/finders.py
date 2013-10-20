@@ -1,4 +1,6 @@
+import glob
 import inspect
+import os
 import re
 import types
 from . import errors
@@ -12,22 +14,50 @@ spec_re = re.compile(r"([Ss]pec|[Ww]hen)")
 module_re = re.compile(r"([Ss]pec|[Tt]est)")
 
 
-def get_specs_from_modules(modules):
+###########################################################
+# Finding modules
+###########################################################
+
+def find_modules_in_directory(dir_path):
+    found_modules = []
+    for file_path in glob.iglob(os.path.join(dir_path, '*.py')):
+        if re.search(module_re, os.path.basename(file_path)):
+            found_modules.append(file_path)
+    return found_modules
+
+
+def find_modules_in_package(package_path):
+    found_module_names = []
+
+    package_name = os.path.basename(package_path)
+    for file_path in glob.iglob(os.path.join(package_path, '*.py')):
+        if "__init__.py" in file_path:
+            continue
+        module_name = os.path.splitext(os.path.basename(file_path))[0]
+        found_module_names.append(package_name + '.' + module_name)
+
+    return found_module_names
+
+
+###########################################################
+# Finding classes
+###########################################################
+
+def find_specs_in_modules(modules):
     for module in modules:
-        for context in get_specs_from_module(module):
+        for context in find_specs_in_module(module):
             yield context
 
 
-def get_specs_from_module(module):
+def find_specs_in_module(module):
     for name, cls in inspect.getmembers(module, inspect.isclass):
         if re.search(spec_re, name):
             yield cls()
 
 
-# Refactoring hint: below this comment are functions that find special methods on an instance.
-# Above it are functions that find modules from a directory. Perhaps the top half is
-# an 'importer' object (which would incorporate at least some of the contents of 'util.py')
-# and the bottom is something like a 'special method finder'.
+###########################################################
+# Finding methods
+###########################################################
 
 def find_setups(spec):
     return find_methods_matching(spec, establish_re, top_down=True, one_per_class=True)
