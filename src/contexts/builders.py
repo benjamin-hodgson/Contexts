@@ -24,7 +24,7 @@ def build_suite(spec):
 
 
 def build_suite_from_directory_path(dir_path):
-    modules = importers.import_modules_in_directory(dir_path)
+    modules = importers.import_from_directory(dir_path)
 
     finder = finders.ClassFinder()
     specs = finder.find_specs_in_modules(modules)

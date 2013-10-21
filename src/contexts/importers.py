@@ -9,7 +9,7 @@ from . import finders
 # 'Importer' functions - call finders and loaders
 ###########################################################
 
-def import_modules_in_directory(dir_path):
+def import_from_directory(dir_path):
     finder = finders.ModuleFinder(dir_path)
     parent_folder, found_module_names = finder.find_modules()
     return (load_module(parent_folder, n) for n in found_module_names)
