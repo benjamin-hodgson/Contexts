@@ -4,6 +4,9 @@ from .core import Result
 
 
 class TextResult(Result):
+    dashes = '-' * 70
+    equalses = '=' * 70
+
     def __init__(self, stream=sys.stderr):
         self.stream = stream
         super().__init__()
@@ -32,7 +35,7 @@ class TextResult(Result):
         if self.failed:
             for tup in self.context_errors + self.assertion_errors + self.assertion_failures:
                 self.print_assertion_failure(*tup)
-        self._print("----------------------------------------------------------------------")
+        self._print(self.dashes)
         if self.failed:
             self._print('FAILED!')
             self._print(self.failure_numbers())
@@ -41,9 +44,9 @@ class TextResult(Result):
             self._print(self.success_numbers())
 
     def print_assertion_failure(self, assertion, exception, extracted_tb):
-        self._print("======================================================================")
+        self._print(self.equalses)
         self._print("FAIL:" if isinstance(exception, AssertionError) else "ERROR:", assertion.name)
-        self._print("----------------------------------------------------------------------")
+        self._print(self.dashes)
         self._print("Traceback (most recent call last):")
         self._print(''.join(traceback.format_list(extracted_tb)), end='')
         self._print(''.join(traceback.format_exception_only(exception.__class__, exception)), end='')
