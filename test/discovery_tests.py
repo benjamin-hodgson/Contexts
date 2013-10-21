@@ -181,12 +181,9 @@ class TestSpec(object):
         try:
             shutil.rmtree(self.folder_path)
         finally:
-            try:
-                del sys.modules[self.package_name + '.' + self.module_names[1]]
-                del sys.modules[self.package_name + '.' + self.module_names[2]]
-                del sys.modules[self.package_name]
-            except KeyError:
-                pass
+            del sys.modules[self.package_name + '.' + self.module_names[1]]
+            del sys.modules[self.package_name + '.' + self.module_names[2]]
+            del sys.modules[self.package_name]
 
     def create_folder(self):
         this_file = os.path.realpath(__file__)
@@ -198,6 +195,56 @@ class TestSpec(object):
         for fn in self.filenames:
             with open(fn, 'w+') as f:
                 f.write(self.code)
+
+class WhenRunningAFolderWithSubfolders(object):
+    def establish_that_there_is_a_folder_containing_subfolders(self):
+        self.code = """
+module_ran = False
+
+class TestSpec(object):
+    def it(self):
+        global module_ran
+        module_ran = True
+"""
+        self.old_sys_dot_path = sys.path[:]
+        self.folder_name = 'folder3'
+        self.tree = {
+            "test_subfolder": ["test_file1"],
+            "test_subpackage": ["__init__", "test_file2"],
+            "another_subfolder": ["test_file3"],
+            "another_subpackage": ["__init__", "test_file4"]
+        }
+        self.create_tree()
+
+    def because_we_run_the_folder(self):
+        contexts.run(self.folder_path, contexts.core.Result())
+
+    def it_should_import_the_file_in_the_test_folder(self):
+        sys.modules.should.contain("test_file1")
+
+    def it_should_run_the_file_in_the_test_folder(self):
+        sys.modules["test_file1"].module_ran.should.be.true
+
+    def it_should_not_import_the_file_in_the_non_test_folder(self):
+        sys.modules.should_not.contain("test_file3")
+
+    def cleanup_the_file_system_and_sys_dot_modules(self):
+        try:
+            shutil.rmtree(self.folder_path)
+        finally:
+            del sys.modules["test_file1"]
+
+    def create_tree(self):
+        this_file = os.path.realpath(__file__)
+        self.folder_path = os.path.join(os.path.dirname(this_file), self.folder_name)
+        os.mkdir(self.folder_path)
+
+        for subfolder in self.tree:
+            folder_path = os.path.join(self.folder_path, subfolder)
+            os.mkdir(folder_path)
+            for module_name in self.tree[subfolder]:
+                with open(os.path.join(folder_path, module_name) + ".py", 'w+') as f:
+                    f.write(self.code)
 
 
 if __name__ == "__main__":

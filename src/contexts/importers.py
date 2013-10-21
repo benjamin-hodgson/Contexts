@@ -11,8 +11,8 @@ from . import finders
 
 def import_from_directory(dir_path):
     finder = finders.ModuleFinder(dir_path)
-    parent_folder, found_module_names = finder.find_modules()
-    return (load_module(parent_folder, n) for n in found_module_names)
+    module_specs = finder.find_modules()
+    return (load_module(*spec) for spec in module_specs)
 
 
 ###########################################################

@@ -1,6 +1,5 @@
 import glob
 import inspect
-import itertools
 import os
 import re
 import types
@@ -9,9 +8,10 @@ from . import errors
 
 
 class ModuleFinder(object):
-    ModuleSpec = namedtuple('ModuleSpec', ['parent_folder', 'module_names'])
+    ModuleSpecification = namedtuple('ModuleSpecification', ['parent_folder', 'module_name'])
 
-    module_re = re.compile(r"([Ss]pec|[Tt]est)")
+    file_re = re.compile(r"([Ss]pec|[Tt]est).*?\.py$")
+    folder_re = re.compile(r"([Ss]pec|[Tt]est)")
 
     def __init__(self, directory):
         self.directory = directory
@@ -22,28 +22,46 @@ class ModuleFinder(object):
         return self.find_modules_in_directory()
 
     def find_modules_in_directory(self):
-        paths = glob.iglob(os.path.join(self.directory, '*.py'))
-        file_names = (os.path.basename(p) for p in paths)
-        module_names = (os.path.splitext(f)[0] for f in file_names)
-        test_module_names = (m for m in module_names if re.search(self.module_re, m))
+        module_specs = []
 
-        return self.ModuleSpec(self.directory, test_module_names)
+        # extract method on this whole loop
+        for dirpath, dirnames, filenames in os.walk(self.directory):
+            self.delete_non_test_folders(dirnames)
+            module_names = (remove_extension(f) for f in filenames if self.file_re.search(f))
+
+            # replace extend with yield?
+            module_specs.extend(self.ModuleSpecification(dirpath, n) for n in module_names)
+
+        return module_specs
 
     def find_modules_in_package(self):
-        paths = glob.iglob(os.path.join(self.directory, '*.py'))
-        file_names = (os.path.basename(p) for p in paths if "__init__.py" not in p)
-        module_names = (os.path.splitext(f)[0] for f in file_names)
-        test_module_names = (m for m in module_names if re.search(self.module_re, m))
-
-        package_name = os.path.basename(self.directory)
-        full_names = (package_name + '.' + m for m in test_module_names)
-
         parent_folder = os.path.dirname(self.directory)
+        package_name = os.path.basename(self.directory)
+        module_specs = [self.ModuleSpecification(parent_folder, package_name)]
 
-        return self.ModuleSpec(parent_folder, itertools.chain([package_name], full_names))
+        # extract method on this whole loop
+        for dirpath, dirnames, filenames in os.walk(self.directory):
+            module_names = (remove_extension(f) for f in filenames if self.file_re.search(f))
+            full_names = (package_name + '.' + m for m in module_names)
+            # replace extend with yield?
+            module_specs.extend(self.ModuleSpecification(parent_folder, n) for n in full_names)
+
+        return module_specs
 
     def ispackage(self):
         return os.path.join(self.directory, "__init__.py") in glob.glob(os.path.join(self.directory, '*.py'))
+
+    @classmethod
+    def delete_non_test_folders(cls, dirnames):
+        for minus_i, name in enumerate(dirnames):
+            if not cls.folder_re.search(name):
+                del dirnames[-minus_i]
+
+
+def remove_extension(filename):
+    basename = os.path.basename(filename)
+    name, extension = os.path.splitext(basename)
+    return name
 
 
 class ClassFinder(object):
@@ -57,7 +75,7 @@ class ClassFinder(object):
 
     def find_specs_in_module(self, module):
         for name, cls in inspect.getmembers(module, inspect.isclass):
-            if re.search(self.class_re, name):
+            if self.class_re.search(name):
                 yield cls()
 
 
@@ -104,7 +122,7 @@ class MethodFinder(object):
     def find_methods_on_class_matching(self, cls, regex, one_per_class):
         found = []
         for name, func in cls.__dict__.items():
-            if re.search(regex, name) and callable(func):
+            if regex.search(name) and callable(func):
                 method = types.MethodType(func, self.spec)
                 found.append(method)
 
