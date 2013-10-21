@@ -235,6 +235,25 @@ class TestSpec(object):
     def it_should_not_import_the_file_in_the_non_test_folder(self):
         sys.modules.should_not.contain("test_file3")
 
+    # def it_should_import_the_test_package(self):
+    #     sys.modules.should.contain("test_subpackage")
+
+    # def it_should_run_the_test_package(self):
+    #     sys.modules["test_subpackage"].module_ran.should.be.true
+
+    # def it_should_import_the_file_in_the_test_package(self):
+    #     sys.modules.should.contain("test_subpackage.test_file2")
+
+    # def it_should_run_the_file_in_the_test_package(self):
+    #     sys.modules["test_subpackage.test_file2"].module_ran.should.be.true
+
+    # def it_should_not_import_the_non_test_package(self):
+    #     sys.modules.should_not.contain("another_subpackage")
+
+    # def it_should_not_import_the_file_in_the_non_test_package(self):
+    #     sys.modules.should_not.contain("another_subpackage.test_file4")
+    #     sys.modules.should_not.contain("test_file4")
+
     def cleanup_the_file_system_and_sys_dot_modules(self):
         try:
             shutil.rmtree(self.folder_path)
