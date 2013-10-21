@@ -53,9 +53,7 @@ class ModuleFinder(object):
 
     @classmethod
     def delete_non_test_folders(cls, dirnames):
-        for minus_i, name in enumerate(dirnames):
-            if not cls.folder_re.search(name):
-                del dirnames[-minus_i]
+        dirnames[:] = [n for n in dirnames if cls.folder_re.search(n)]
 
 
 def remove_extension(filename):
