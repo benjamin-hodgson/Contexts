@@ -1,6 +1,7 @@
 import datetime
 import sys
 import traceback
+from io import StringIO
 from .core import Result
 
 
@@ -124,9 +125,23 @@ class TimedTextResult(TextResult):
 
     def suite_ended(self, suite):
         self.end_time = datetime.datetime.now()
+        super().suite_ended(suite)
 
     def summarise(self):
         super().summarise()
         total_secs = (self.end_time - self.start_time).total_seconds()
         rounded = round(total_secs, 1)
         self._print("({} seconds)".format(rounded))
+
+
+class CapturingTextResult(TextResult):
+    def suite_started(self, suite):
+        self.real_stdout = sys.stdout
+        self.real_stderr = sys.stderr
+
+        sys.stdout = StringIO()
+        sys.stderr = StringIO()
+
+    def suite_ended(self, suite):
+        sys.stdout = self.real_stdout
+        sys.stderr = self.real_stderr

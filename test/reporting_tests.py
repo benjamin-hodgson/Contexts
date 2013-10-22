@@ -1,6 +1,7 @@
+import datetime
+import sys
 from io import StringIO
 from unittest import mock
-import datetime
 import sure
 import contexts
 from contexts import reporting
@@ -165,6 +166,47 @@ PASSED!
 0 contexts, 0 assertions
 (10.5 seconds)
 """)
+
+class WhenCapturingStdOut(object):
+    def context(self):
+        self.real_stdout = sys.stdout
+        self.real_stderr = sys.stderr
+        sys.stdout = self.fake_stdout = StringIO()
+        sys.stderr = self.fake_stderr = StringIO()
+
+        self.stringio = StringIO()
+        # we don't want the output to be cluttered up with dots
+        self.result = reporting.CapturingTextResult(StringIO())
+
+    def because_we_print_some_stuff(self):
+        with self.result.run_suite(None):
+            with self.result.run_assertion(None):
+                print("passing assertion")
+            with self.result.run_assertion(None):
+                print("failing assertion")
+                assert False
+            with self.result.run_assertion(None):
+                print("erroring assertion")
+                raise ValueError()
+
+            with self.result.run_context(None):
+                print("passing context")
+            with self.result.run_context(None):
+                print("erroring context")
+                raise ValueError()
+            with self.result.run_context(None):
+                print("failing context")
+                with self.result.run_assertion(None):
+                    assert False
+
+            self.result.stream = self.stringio
+
+    def it_should_not_print_anything_to_stdout(self):
+        self.fake_stdout.getvalue().should.be.empty
+
+    def cleanup_stdout_and_stderr(self):
+        sys.stdout = self.real_stdout
+        sys.stderr = self.real_stderr
 
 if __name__ == "__main__":
     contexts.main()
