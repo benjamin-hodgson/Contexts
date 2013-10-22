@@ -65,10 +65,8 @@ class TestSpec(object):
         sys.path.should.equal(self.old_sys_dot_path)
 
     def cleanup_the_file_system_and_sys_dot_modules(self):
-        try:
-            shutil.rmtree(self.folder_path)
-        finally:
-            del sys.modules[self.module_name]
+        shutil.rmtree(self.folder_path)
+        del sys.modules[self.module_name]
 
     def create_folder(self):
         this_file = os.path.realpath(__file__)
@@ -117,11 +115,9 @@ class TestSpec(object):
         sys.path.should.equal(self.old_sys_dot_path)
 
     def cleanup_the_file_system_and_sys_dot_modules(self):
-        try:
-            shutil.rmtree(self.folder_path)
-        finally:
-            del sys.modules[self.module_names[0]]
-            del sys.modules[self.module_names[1]]
+        shutil.rmtree(self.folder_path)
+        del sys.modules[self.module_names[0]]
+        del sys.modules[self.module_names[1]]
 
     def create_folder(self):
         this_file = os.path.realpath(__file__)
@@ -172,6 +168,10 @@ class TestSpec(object):
         sys.modules.should_not.contain(self.package_name + '.' + self.module_names[3])
         sys.modules.should_not.contain(self.module_names[3])
 
+    def it_should_not_import_init(self):
+        sys.modules.should_not.contain("__init__")
+        sys.modules.should_not.contain("package_folder.__init__")
+
     def it_should_run_the_package(self):
         sys.modules[self.package_name].module_ran.should.be.true
 
@@ -185,12 +185,10 @@ class TestSpec(object):
         sys.path.should.equal(self.old_sys_dot_path)
 
     def cleanup_the_file_system_and_sys_dot_modules(self):
-        try:
-            shutil.rmtree(self.folder_path)
-        finally:
-            del sys.modules[self.package_name + '.' + self.module_names[1]]
-            del sys.modules[self.package_name + '.' + self.module_names[2]]
-            del sys.modules[self.package_name]
+        shutil.rmtree(self.folder_path)
+        del sys.modules[self.package_name + '.' + self.module_names[1]]
+        del sys.modules[self.package_name + '.' + self.module_names[2]]
+        del sys.modules[self.package_name]
 
     def create_folder(self):
         this_file = os.path.realpath(__file__)
@@ -244,6 +242,9 @@ class TestSpec(object):
     def it_should_import_the_file_in_the_test_package(self):
         sys.modules.should.contain("test_subpackage.test_file2")
 
+    def it_should_only_import_the_file_in_the_test_package_using_its_full_name(self):
+        sys.modules.should_not.contain("test_file2")
+
     def it_should_run_the_file_in_the_test_package(self):
         sys.modules["test_subpackage.test_file2"].module_ran.should.be.true
 
@@ -254,11 +255,19 @@ class TestSpec(object):
         sys.modules.should_not.contain("another_subpackage.test_file4")
         sys.modules.should_not.contain("test_file4")
 
+    def it_should_not_import_any_init_files(self):
+        sys.modules.should_not.contain("__init__")
+        sys.modules.should_not.contain("test_subpackage.__init__")
+        sys.modules.should_not.contain("another_subpackage.__init__")
+
+    def it_should_not_modify_sys_dot_path(self):
+        sys.path.should.equal(self.old_sys_dot_path)
+
     def cleanup_the_file_system_and_sys_dot_modules(self):
-        try:
-            shutil.rmtree(self.folder_path)
-        finally:
-            del sys.modules["test_file1"]
+        shutil.rmtree(self.folder_path)
+        del sys.modules["test_file1"]
+        del sys.modules["test_subpackage"]
+        del sys.modules["test_subpackage.test_file2"]
 
     def create_tree(self):
         this_file = os.path.realpath(__file__)

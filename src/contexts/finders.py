@@ -1,4 +1,3 @@
-import glob
 import inspect
 import os
 import re
@@ -17,8 +16,8 @@ class ModuleFinder(object):
         self.directory = directory
 
     def find_modules(self):
-        if self.ispackage():
-            return self.find_modules_in_package()
+        if ispackage(self.directory):
+            return self.find_modules_in_package(self.directory)
         return self.find_modules_in_directory()
 
     def find_modules_in_directory(self):
@@ -26,21 +25,24 @@ class ModuleFinder(object):
 
         # extract method on this whole loop
         for dirpath, dirnames, filenames in os.walk(self.directory):
-            self.delete_non_test_folders(dirnames)
-            module_names = (remove_extension(f) for f in filenames if self.file_re.search(f))
+            if ispackage(dirpath):
+                module_specs.extend(self.find_modules_in_package(dirpath))
+            else:
+                self.remove_non_test_folders(dirnames)
+                module_names = (remove_extension(f) for f in filenames if self.file_re.search(f))
 
-            # replace extend with yield?
-            module_specs.extend(self.ModuleSpecification(dirpath, n) for n in module_names)
+                # replace extend with yield?
+                module_specs.extend(self.ModuleSpecification(dirpath, n) for n in module_names)
 
         return module_specs
 
-    def find_modules_in_package(self):
-        parent_folder = os.path.dirname(self.directory)
-        package_name = os.path.basename(self.directory)
+    def find_modules_in_package(self, directory):
+        parent_folder = os.path.dirname(directory)
+        package_name = os.path.basename(directory)
         module_specs = [self.ModuleSpecification(parent_folder, package_name)]
 
         # extract method on this whole loop
-        for dirpath, dirnames, filenames in os.walk(self.directory):
+        for dirpath, dirnames, filenames in os.walk(directory):
             module_names = (remove_extension(f) for f in filenames if self.file_re.search(f))
             full_names = (package_name + '.' + m for m in module_names)
             # replace extend with yield?
@@ -48,12 +50,14 @@ class ModuleFinder(object):
 
         return module_specs
 
-    def ispackage(self):
-        return os.path.join(self.directory, "__init__.py") in glob.glob(os.path.join(self.directory, '*.py'))
 
     @classmethod
-    def delete_non_test_folders(cls, dirnames):
+    def remove_non_test_folders(cls, dirnames):
         dirnames[:] = [n for n in dirnames if cls.folder_re.search(n)]
+
+
+def ispackage(directory):
+    return "__init__.py" in os.listdir(directory)
 
 
 def remove_extension(filename):
