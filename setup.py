@@ -13,6 +13,6 @@ setup(
     packages = find_packages('src'),
     tests_require = ["sure >= 1.2.2"],
     entry_points = {
-    	'console_scripts': ['contexts-run = contexts:cmd']
+    	'console_scripts': ['run-contexts = contexts:cmd']
     }
 )
