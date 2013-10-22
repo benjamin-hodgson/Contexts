@@ -32,7 +32,10 @@ def build_suite_from_directory_path(dir_path):
 
 
 def build_suite_from_file_path(filepath):
-    module = importers.load_module_from_file(filepath)
+    folder = os.path.dirname(filepath)
+    filename = os.path.basename(filepath)
+    module_name = os.path.splitext(filename)[0]
+    module = importers.load_module(folder, module_name)
     return build_suite_from_module(module)
 
 
