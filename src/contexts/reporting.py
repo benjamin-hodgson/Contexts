@@ -166,3 +166,7 @@ class CapturingTextResult(TextResult):
         self.summary.append(self.buffer.getvalue()[:-1])
         self.summary.append("--------------------- >> end captured stdout << ----------------------")
 
+
+class TimedCapturingTextResult(TimedTextResult, CapturingTextResult):
+    pass
+
