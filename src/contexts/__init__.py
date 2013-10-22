@@ -25,8 +25,16 @@ def run(spec=None, result=None):
 
     return not result.failed
 
+
 def catch(func, *args, **kwargs):
     try:
         func(*args, **kwargs)
     except Exception as e:
         return e
+
+
+def cmd():
+    result = run('.')
+    if not result:
+        sys.exit(1)
+    sys.exit(0)

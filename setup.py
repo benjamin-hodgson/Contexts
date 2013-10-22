@@ -10,9 +10,9 @@ setup(
     url = "https://github.com/benjamin-hodgson/Contexts",
     description = "Contexts is a test runner for Python. It lets you write your tests in the style of C#'s Machine.Specifications.",
     package_dir = {'':'src'},
-    packages = find_packages('src', exclude=["scripts"]),
+    packages = find_packages('src'),
     tests_require = ["sure >= 1.2.2"],
     entry_points = {
-    	'console_scripts': ['contexts-run = scripts:main']
+    	'console_scripts': ['contexts-run = contexts:cmd']
     }
 )
