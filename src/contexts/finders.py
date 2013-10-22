@@ -16,44 +16,42 @@ class ModuleFinder(object):
         self.directory = directory
 
     def find_modules(self):
-        if ispackage(self.directory):
-            return self.find_modules_in_package(self.directory)
-        return self.find_modules_in_directory()
-
-    def find_modules_in_directory(self):
         module_specs = []
 
-        # extract method on this whole loop
         for dirpath, dirnames, filenames in os.walk(self.directory):
+            self.remove_non_test_folders(dirnames)
             if ispackage(dirpath):
-                module_specs.extend(self.find_modules_in_package(dirpath))
+                package_spec = self.get_package_specification(dirpath)
+                module_specs.append(package_spec)
+                found_modules = self.get_modules(filenames, package_spec[0], package_spec[1] + '.')
             else:
-                self.remove_non_test_folders(dirnames)
-                module_names = (remove_extension(f) for f in filenames if self.file_re.search(f))
-
-                # replace extend with yield?
-                module_specs.extend(self.ModuleSpecification(dirpath, n) for n in module_names)
+                found_modules = self.get_modules(filenames, dirpath)
+            
+            module_specs.extend(found_modules)
 
         return module_specs
-
-    def find_modules_in_package(self, directory):
-        parent_folder = os.path.dirname(directory)
-        package_name = os.path.basename(directory)
-        module_specs = [self.ModuleSpecification(parent_folder, package_name)]
-
-        # extract method on this whole loop
-        for dirpath, dirnames, filenames in os.walk(directory):
-            module_names = (remove_extension(f) for f in filenames if self.file_re.search(f))
-            full_names = (package_name + '.' + m for m in module_names)
-            # replace extend with yield?
-            module_specs.extend(self.ModuleSpecification(parent_folder, n) for n in full_names)
-
-        return module_specs
-
 
     @classmethod
     def remove_non_test_folders(cls, dirnames):
         dirnames[:] = [n for n in dirnames if cls.folder_re.search(n)]
+
+    @classmethod
+    def get_modules(cls, filenames, dirpath, package_prefix=''):
+        module_names = (remove_extension(f) for f in filenames if cls.file_re.search(f))
+        full_names = (package_prefix + m for m in module_names)
+        return (cls.ModuleSpecification(dirpath, n) for n in full_names)
+
+    @classmethod
+    def get_package_specification(cls, dirpath):
+        parent = os.path.dirname(dirpath)
+        package_names = [os.path.basename(dirpath)]
+
+        while ispackage(parent):
+            dirpath, parent = parent, os.path.dirname(parent)
+            package_names.append(os.path.basename(dirpath))
+        
+        full_package_name = '.'.join(reversed(package_names))
+        return cls.ModuleSpecification(parent, full_package_name)
 
 
 def ispackage(directory):
