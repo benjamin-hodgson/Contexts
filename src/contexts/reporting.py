@@ -17,28 +17,25 @@ class SimpleResult(Result):
     def failed(self):
         return self.context_errors or self.assertion_errors or self.assertion_failures
     
-    def context_ran(self, context):
+    def context_started(self, context):
         self.contexts.append(context)
-        super().context_ran(context)
+        super().context_started(context)
 
-    def context_errored(self, context, exception, extracted_traceback):
-        self.contexts.append(context)
-        self.context_errors.append((context, exception, extracted_traceback))
-        super().context_errored(context, exception, extracted_traceback)
+    def context_errored(self, context, exception, extracted_tb):
+        self.context_errors.append((context, exception, extracted_tb))
+        super().context_errored(context, exception, extracted_tb)
 
-    def assertion_passed(self, assertion):
+    def assertion_started(self, assertion):
         self.assertions.append(assertion)
-        super().assertion_passed(assertion)
+        super().assertion_started(assertion)
 
-    def assertion_errored(self, assertion, exception, extracted_traceback):
-        self.assertions.append(assertion)
-        self.assertion_errors.append((assertion, exception, extracted_traceback))
-        super().assertion_errored(assertion, exception, extracted_traceback)
+    def assertion_errored(self, assertion, exception, extracted_tb):
+        self.assertion_errors.append((assertion, exception, extracted_tb))
+        super().assertion_errored(assertion, exception, extracted_tb)
 
-    def assertion_failed(self, assertion, exception, extracted_traceback):
-        self.assertions.append(assertion)
-        self.assertion_failures.append((assertion, exception, extracted_traceback))
-        super().assertion_failed(assertion, exception, extracted_traceback)
+    def assertion_failed(self, assertion, exception, extracted_tb):
+        self.assertion_failures.append((assertion, exception, extracted_tb))
+        super().assertion_failed(assertion, exception, extracted_tb)
 
 
 class TextResult(SimpleResult):
@@ -47,6 +44,7 @@ class TextResult(SimpleResult):
 
     def __init__(self, stream=sys.stderr):
         self.stream = stream
+        self.summary = []
         super().__init__()
 
     def _print(self, *args, sep=' ', end='\n', flush=True):
@@ -60,23 +58,25 @@ class TextResult(SimpleResult):
         super().assertion_passed(*args, **kwargs)
         self._print('.', end='')
 
-    def assertion_failed(self, *args, **kwargs):
-        super().assertion_failed(*args, **kwargs)
+    def assertion_failed(self, assertion, exception, extracted_tb):
+        super().assertion_failed(assertion, exception, extracted_tb)
         self._print('F', end='')
+        self.summary.append(self.format_assertion_failure(assertion, exception, extracted_tb))
 
-    def assertion_errored(self, *args, **kwargs):
-        super().assertion_errored(*args, **kwargs)
+    def assertion_errored(self, assertion, exception, extracted_tb):
+        super().assertion_errored(assertion, exception, extracted_tb)
         self._print('E', end='')
+        self.summary.append(self.format_assertion_failure(assertion, exception, extracted_tb))
 
-    def context_errored(self, *args, **kwargs):
-        super().context_errored(*args, **kwargs)
+    def context_errored(self, context, exception, extracted_tb):
+        super().context_errored(context, exception, extracted_tb)
         self._print('E', end='')
+        self.summary.append(self.format_assertion_failure(context, exception, extracted_tb))
 
     def summarise(self):
         self._print('')
         if self.failed:
-            for tup in self.context_errors + self.assertion_errors + self.assertion_failures:
-                self.print_assertion_failure(*tup)
+            self._print('\n'.join(self.summary))
         self._print(self.dashes)
         if self.failed:
             self._print('FAILED!')
@@ -85,13 +85,16 @@ class TextResult(SimpleResult):
             self._print('PASSED!')
             self._print(self.success_numbers())
 
-    def print_assertion_failure(self, assertion, exception, extracted_tb):
-        self._print(self.equalses)
-        self._print("FAIL:" if isinstance(exception, AssertionError) else "ERROR:", assertion.name)
-        self._print(self.dashes)
-        self._print("Traceback (most recent call last):")
-        self._print(''.join(traceback.format_list(extracted_tb)), end='')
-        self._print(''.join(traceback.format_exception_only(exception.__class__, exception)), end='')
+    def format_assertion_failure(self, assertion, exception, extracted_tb):
+        formatted_failure = ""
+        formatted_failure += self.equalses + '\n'
+        formatted_failure += ("FAIL: " if isinstance(exception, AssertionError) else "ERROR: ")
+        formatted_failure += assertion.name + '\n'
+        formatted_failure += self.dashes + '\n'
+        formatted_failure += "Traceback (most recent call last):" + '\n'
+        formatted_failure += ''.join(traceback.format_list(extracted_tb))
+        formatted_failure += ''.join(traceback.format_exception_only(exception.__class__, exception))
+        return formatted_failure[:-1]  # remove trailing \n
 
     def success_numbers(self):
         num_ctx = len(self.contexts)
@@ -135,11 +138,31 @@ class TimedTextResult(TextResult):
 
 
 class CapturingTextResult(TextResult):
-    def suite_started(self, suite):
+    def context_started(self, context):
+        super().context_started(context)
         self.real_stdout = sys.stdout
-        sys.stdout = StringIO()
-        super().suite_started(suite)
+        self.buffer = StringIO()
+        sys.stdout = self.buffer
 
-    def suite_ended(self, suite):
-        super().suite_ended(suite)
+    def context_ended(self, context):
         sys.stdout = self.real_stdout
+        super().context_ended(context)
+
+    def context_errored(self, context, exception, extracted_tb):
+        sys.stdout = self.real_stdout
+        super().context_errored(context, exception, extracted_tb)
+        self.append_buffer_to_summary()
+
+    def assertion_failed(self, assertion, exception, extracted_tb):
+        super().assertion_failed(assertion, exception, extracted_tb)
+        self.append_buffer_to_summary()
+
+    def assertion_errored(self, assertion, exception, extracted_tb):
+        super().assertion_errored(assertion, exception, extracted_tb)
+        self.append_buffer_to_summary()
+
+    def append_buffer_to_summary(self):
+        self.summary.append("-------------------- >> begin captured stdout << ---------------------")
+        self.summary.append(self.buffer.getvalue()[:-1])
+        self.summary.append("--------------------- >> end captured stdout << ----------------------")
+

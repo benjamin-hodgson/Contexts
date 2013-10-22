@@ -11,19 +11,21 @@ class WhenWatchingForDots(object):
     def context(self):
         self.stringio = StringIO()
         self.result = reporting.TextResult(self.stringio)
+        self.fake_context = contexts.core.Context([],[],[],[],"context")
+        self.fake_assertion = contexts.core.Assertion(None, "assertion")
 
     def because_we_run_some_assertions(self):
-        with self.result.run_context(None):
-            with self.result.run_assertion(None):
+        with self.result.run_context(self.fake_context):
+            with self.result.run_assertion(self.fake_assertion):
                 pass
             self.first = self.stringio.getvalue()
-            with self.result.run_assertion(None):
+            with self.result.run_assertion(self.fake_assertion):
                 pass
             self.second = self.stringio.getvalue()
-            with self.result.run_assertion(None):
+            with self.result.run_assertion(self.fake_assertion):
                 raise AssertionError()
             self.third = self.stringio.getvalue()
-            with self.result.run_assertion(None):
+            with self.result.run_assertion(self.fake_assertion):
                 raise TypeError()
             self.fourth = self.stringio.getvalue()
             raise ValueError()
@@ -94,23 +96,18 @@ class WhenPrintingAFailureResult(object):
         with self.result.run_suite(None):
             with self.result.run_context(None):
                 # Figure out a way to do this using the context manager and raising actual exceptions?
+                self.result.assertion_started(self.assertion1)
                 self.result.assertion_errored(self.assertion1, self.exception1, self.tb1)
+                self.result.assertion_started(self.assertion2)
                 self.result.assertion_failed(self.assertion2, self.exception2, self.tb2)
+
+            self.result.context_started(self.context3)
             self.result.context_errored(self.context3, self.exception3, self.tb3)
+
             self.result.stream = self.stringio
 
     def it_should_print_a_traceback_for_each_failure(self):
-        self.stringio.getvalue().should.equal(
-"""
-======================================================================
-ERROR: made.up_context
-----------------------------------------------------------------------
-Traceback (most recent call last):
-  File "made_up_file_4.py", line 1, in made_up_function_4
-    frame4
-  File "made_up_file_5.py", line 2, in made_up_function_5
-    frame5
-ZeroDivisionError: oh dear
+        self.stringio.getvalue().should.equal("""
 ======================================================================
 ERROR: made.up.assertion_1
 ----------------------------------------------------------------------
@@ -129,6 +126,15 @@ Traceback (most recent call last):
   File "made_up_file_4.py", line 2, in made_up_function_4
     frame4
 AssertionError: you fail
+======================================================================
+ERROR: made.up_context
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "made_up_file_4.py", line 1, in made_up_function_4
+    frame4
+  File "made_up_file_5.py", line 2, in made_up_function_5
+    frame5
+ZeroDivisionError: oh dear
 ----------------------------------------------------------------------
 FAILED!
 2 contexts, 2 assertions: 1 failed, 2 errors
@@ -175,33 +181,75 @@ class WhenCapturingStdOut(object):
         self.result = reporting.CapturingTextResult(StringIO())
 
     def because_we_print_some_stuff(self):
+        # It'd be nice if this could be done using the context managers
         with self.result.run_suite(None):
-            with self.result.run_context(self.fake_context):
-                print("passing context")
-                with self.result.run_assertion(self.fake_assertion):
-                    print("passing assertion")
-                    print("to stderr", file=sys.stderr)
+            self.result.context_started(self.fake_context)
+            print("passing context")
+            self.result.assertion_started(self.fake_assertion)
+            print("passing assertion")
+            print("to stderr", file=sys.stderr)
+            self.result.assertion_passed(self.fake_assertion)
+            self.result.context_ended(self.fake_context)
 
-            with self.result.run_context(self.fake_context):
-                print("failing context")
-                with self.result.run_assertion(self.fake_assertion):
-                    print("failing assertion")
-                    assert False
-                with self.result.run_assertion(self.fake_assertion):
-                    print("erroring assertion")
-                    raise ValueError()
+            self.result.context_started(self.fake_context)
+            print("failing context")
+            self.result.assertion_started(self.fake_assertion)
+            print("failing assertion")
+            self.result.assertion_failed(self.fake_assertion, None, [])
+            self.result.assertion_started(self.fake_assertion)
+            print("erroring assertion")
+            self.result.assertion_errored(self.fake_assertion, None, [])
+            self.result.context_ended(self.fake_context)
 
-            with self.result.run_context(self.fake_context):
-                print("erroring context")
-                raise ValueError()
+            self.result.context_started(self.fake_context)
+            print("erroring context")
+            self.result.assertion_started(self.fake_assertion)
+            print("assertion in erroring context")
+            self.result.assertion_passed(self.fake_assertion)
+            self.result.context_errored(self.fake_context, None, [])
 
             self.result.stream = self.stringio
 
     def it_should_not_print_anything_to_stdout(self):
         self.fake_stdout.getvalue().should.be.empty
 
-    def it_should_not_let_stderr_through(self):
+    def it_should_let_stderr_through(self):
         self.fake_stderr.getvalue().should.equal("to stderr\n")
+
+    def it_should_output_the_captured_stdout_for_the_failures(self):
+        self.stringio.getvalue().should.equal("""
+======================================================================
+ERROR: assertion
+----------------------------------------------------------------------
+Traceback (most recent call last):
+NoneType
+-------------------- >> begin captured stdout << ---------------------
+failing context
+failing assertion
+--------------------- >> end captured stdout << ----------------------
+======================================================================
+ERROR: assertion
+----------------------------------------------------------------------
+Traceback (most recent call last):
+NoneType
+-------------------- >> begin captured stdout << ---------------------
+failing context
+failing assertion
+erroring assertion
+--------------------- >> end captured stdout << ----------------------
+======================================================================
+ERROR: context
+----------------------------------------------------------------------
+Traceback (most recent call last):
+NoneType
+-------------------- >> begin captured stdout << ---------------------
+erroring context
+assertion in erroring context
+--------------------- >> end captured stdout << ----------------------
+----------------------------------------------------------------------
+FAILED!
+3 contexts, 4 assertions: 1 failed, 2 errors
+""")
 
     def cleanup_stdout_and_stderr(self):
         sys.stdout = self.real_stdout

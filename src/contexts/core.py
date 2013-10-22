@@ -74,7 +74,7 @@ class Result(metaclass=abc.ABCMeta):
             e.__traceback__ = None  # to prevent memory leaks caused by keeping tracebacks around
             self.context_errored(context, e, tb)
         else:
-            self.context_ran(context)
+            self.context_ended(context)
 
     @contextmanager
     def run_assertion(self, assertion):
@@ -106,7 +106,7 @@ class Result(metaclass=abc.ABCMeta):
     def context_started(self, context):
         """Called when a test context begins its run"""
 
-    def context_ran(self, context):
+    def context_ended(self, context):
         """Called when a test context completes its run"""
 
     def context_errored(self, context, exception, extracted_traceback):
