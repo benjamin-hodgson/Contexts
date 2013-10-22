@@ -93,6 +93,10 @@ Each assertion method will be run once, after the 'because' method and before th
 order may change between runs, so it's important to ensure that all the assertions on a given class
 are independent of one another (they do not modify any state).
 
+If an assertion fails, all the remaining assertions will still be run, and Contexts will report
+precisely which ones failed. Contrast this with the xUnit testing style, wherein a failing assertion
+ends the test and any subsequent assertions will not be run.
+
 You can have as many assertion methods as you like on a single class.
 
 #### Cleaning up
