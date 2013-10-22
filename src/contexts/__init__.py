@@ -15,7 +15,7 @@ def main():
 
 def run(spec=None, result=None):
     if result is None:
-        result = reporting.TextResult()
+        result = reporting.TimedTextResult()
     if spec is None:
         spec = sys.modules['__main__']
 
