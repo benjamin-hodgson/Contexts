@@ -137,11 +137,9 @@ class TimedTextResult(TextResult):
 class CapturingTextResult(TextResult):
     def suite_started(self, suite):
         self.real_stdout = sys.stdout
-        self.real_stderr = sys.stderr
-
         sys.stdout = StringIO()
-        sys.stderr = StringIO()
+        super().suite_started(suite)
 
     def suite_ended(self, suite):
+        super().suite_ended(suite)
         sys.stdout = self.real_stdout
-        sys.stderr = self.real_stderr

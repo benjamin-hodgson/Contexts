@@ -77,23 +77,23 @@ class WhenPrintingAFailureResult(object):
 
         self.exception1 = TypeError("Gotcha")
         self.tb1 = [('made_up_file.py', 3, 'made_up_function', 'frame1'),
-               ('another_made_up_file.py', 2, 'another_made_up_function', 'frame2')]
+                    ('another_made_up_file.py', 2, 'another_made_up_function', 'frame2')]
         self.assertion1 = contexts.core.Assertion(None, "made.up.assertion_1")
 
         self.exception2 = AssertionError("you fail")
         self.tb2 = [('made_up_file_3.py', 1, 'made_up_function_3', 'frame3'),
-               ('made_up_file_4.py', 2, 'made_up_function_4', 'frame4')]
+                    ('made_up_file_4.py', 2, 'made_up_function_4', 'frame4')]
         self.assertion2 = contexts.core.Assertion(None, "made.up.assertion_2")
 
         self.exception3 = ZeroDivisionError("oh dear")
         self.tb3 = [('made_up_file_4.py', 1, 'made_up_function_4', 'frame4'),
-               ('made_up_file_5.py', 2, 'made_up_function_5', 'frame5')]
+                    ('made_up_file_5.py', 2, 'made_up_function_5', 'frame5')]
         self.context3 = contexts.core.Context([],[],[],[],"made.up_context")
 
     def because_we_run_some_tests(self):
         with self.result.run_suite(None):
             with self.result.run_context(None):
-                # Figure out a way to do this using the context manager?
+                # Figure out a way to do this using the context manager and raising actual exceptions?
                 self.result.assertion_errored(self.assertion1, self.exception1, self.tb1)
                 self.result.assertion_failed(self.assertion2, self.exception2, self.tb2)
             self.result.context_errored(self.context3, self.exception3, self.tb3)
@@ -167,39 +167,46 @@ class WhenCapturingStdOut(object):
         sys.stdout = self.fake_stdout = StringIO()
         sys.stderr = self.fake_stderr = StringIO()
 
+        self.fake_context = contexts.core.Context([],[],[],[],"context")
+        self.fake_assertion = contexts.core.Assertion(None, "assertion")
+
         self.stringio = StringIO()
         # we don't want the output to be cluttered up with dots
         self.result = reporting.CapturingTextResult(StringIO())
 
     def because_we_print_some_stuff(self):
         with self.result.run_suite(None):
-            with self.result.run_assertion(None):
-                print("passing assertion")
-            with self.result.run_assertion(None):
-                print("failing assertion")
-                assert False
-            with self.result.run_assertion(None):
-                print("erroring assertion")
-                raise ValueError()
-
-            with self.result.run_context(None):
+            with self.result.run_context(self.fake_context):
                 print("passing context")
-            with self.result.run_context(None):
+                with self.result.run_assertion(self.fake_assertion):
+                    print("passing assertion")
+                    print("to stderr", file=sys.stderr)
+
+            with self.result.run_context(self.fake_context):
+                print("failing context")
+                with self.result.run_assertion(self.fake_assertion):
+                    print("failing assertion")
+                    assert False
+                with self.result.run_assertion(self.fake_assertion):
+                    print("erroring assertion")
+                    raise ValueError()
+
+            with self.result.run_context(self.fake_context):
                 print("erroring context")
                 raise ValueError()
-            with self.result.run_context(None):
-                print("failing context")
-                with self.result.run_assertion(None):
-                    assert False
 
             self.result.stream = self.stringio
 
     def it_should_not_print_anything_to_stdout(self):
         self.fake_stdout.getvalue().should.be.empty
 
+    def it_should_not_let_stderr_through(self):
+        self.fake_stderr.getvalue().should.equal("to stderr\n")
+
     def cleanup_stdout_and_stderr(self):
         sys.stdout = self.real_stdout
         sys.stderr = self.real_stderr
+
 
 if __name__ == "__main__":
     contexts.main()
