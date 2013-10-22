@@ -51,6 +51,10 @@ class TextResult(SimpleResult):
     def _print(self, *args, sep=' ', end='\n', flush=True):
         print(*args, sep=sep, end=end, file=self.stream, flush=flush)
 
+    def suite_ended(self, suite):
+        self.summarise()
+        super().suite_ended(suite)
+
     def assertion_passed(self, *args, **kwargs):
         super().assertion_passed(*args, **kwargs)
         self._print('.', end='')

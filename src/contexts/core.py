@@ -92,6 +92,11 @@ class Result(metaclass=abc.ABCMeta):
         else:
             self.assertion_passed(assertion)
 
+    @property
+    @abc.abstractmethod
+    def failed(self):
+        return True
+
     def suite_started(self, suite):
         """Called at the beginning of a test run"""
 
@@ -118,11 +123,3 @@ class Result(metaclass=abc.ABCMeta):
 
     def assertion_failed(self, assertion, exception, extracted_traceback):
         """Called when an assertion throws an AssertionError"""
-
-    def summarise(self):
-        """Called by the runner - result should output a summary to its outlet (eg the command line)"""
-
-    @property
-    @abc.abstractmethod
-    def failed(self):
-        return True

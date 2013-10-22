@@ -21,7 +21,6 @@ def run(spec=None, result=None):
 
     suite = builders.build_suite(spec)
     suite.run(result)
-    result.summarise()
 
     return not result.failed
 
