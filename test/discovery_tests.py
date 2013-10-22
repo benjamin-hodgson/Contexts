@@ -168,7 +168,6 @@ class TestSpec(object):
             def it(self):
                 global module_ran
                 module_ran = True
-
         test = types.ModuleType(self.module_name)
         test.is_fake = True
         test.module_ran = False

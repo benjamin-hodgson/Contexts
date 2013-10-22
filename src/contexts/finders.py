@@ -6,6 +6,7 @@ from collections import namedtuple
 from . import errors
 
 
+# This class needs a tidy up
 class ModuleFinder(object):
     ModuleSpecification = namedtuple('ModuleSpecification', ['parent_folder', 'module_name'])
 
