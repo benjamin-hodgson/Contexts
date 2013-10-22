@@ -51,8 +51,9 @@ class Suite(object):
         self.contexts = contexts
 
     def run(self, result):
-        for ctx in self.contexts:
-            ctx.run(result)
+        with result.run_suite(self):
+            for ctx in self.contexts:
+                ctx.run(result)
 
 
 class Result(object):
@@ -68,7 +69,14 @@ class Result(object):
         return self.context_errors or self.assertion_errors or self.assertion_failures
 
     @contextmanager
+    def run_suite(self, suite):
+        self.suite_started(suite)
+        yield
+        self.suite_ended(suite)
+
+    @contextmanager
     def run_context(self, context):
+        self.context_started(context)
         try:
             yield
         except Exception as e:
@@ -80,6 +88,7 @@ class Result(object):
 
     @contextmanager
     def run_assertion(self, assertion):
+        self.assertion_started(assertion)
         try:
             yield
         except AssertionError as e:
@@ -93,12 +102,24 @@ class Result(object):
         else:
             self.assertion_passed(assertion)
 
+    def suite_started(self, suite):
+        pass
+
+    def suite_ended(self, suite):
+        pass
+
+    def context_started(self, context):
+        pass
+
     def context_ran(self, context):
         self.contexts.append(context)
 
     def context_errored(self, context, exception, extracted_traceback):
         self.contexts.append(context)
         self.context_errors.append((context, exception, extracted_traceback))
+
+    def assertion_started(self, assertion):
+        pass
 
     def assertion_passed(self, assertion):
         self.assertions.append(assertion)

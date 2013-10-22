@@ -1,3 +1,4 @@
+import datetime
 import sys
 import traceback
 from .core import Result
@@ -69,8 +70,23 @@ class TextResult(Result):
            pluralise("error", num_err + num_ctx_err))
         return msg
 
+
 def pluralise(noun, num):
     string = str(num) + ' ' + noun
     if num != 1:
         string += 's'
     return string
+
+
+class TimedTextResult(TextResult):
+    def suite_started(self, suite):
+        self.start_time = datetime.datetime.now()
+
+    def suite_ended(self, suite):
+        self.end_time = datetime.datetime.now()
+
+    def summarise(self):
+        super().summarise()
+        total_secs = (self.end_time - self.start_time).total_seconds()
+        rounded = round(total_secs, 1)
+        self._print("({} seconds)".format(rounded))

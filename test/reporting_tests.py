@@ -1,4 +1,6 @@
 from io import StringIO
+from unittest import mock
+import datetime
 import sure
 import contexts
 from contexts import reporting
@@ -135,6 +137,34 @@ FAILED!
 2 contexts, 2 assertions: 1 failed, 2 errors
 """)
 
+
+class WhenTimingATestRun(object):
+    def context(self):
+        self.fake_now = datetime.datetime(2013, 10, 22, 13, 41, 0)
+        self.fake_soon = datetime.timedelta(seconds=10, milliseconds=530)
+
+        class FakeDateTime(datetime.datetime):
+            now = mock.Mock(return_value=self.fake_now)
+        self.FakeDateTime = FakeDateTime
+
+        self.stringio = StringIO()
+        self.result = reporting.TimedTextResult(StringIO())
+
+    def because_we_run_a_suite(self):
+        with mock.patch('datetime.datetime', self.FakeDateTime):
+            with self.result.run_suite(None):
+                datetime.datetime.now.return_value += self.fake_soon
+
+        self.result.stream = self.stringio
+        self.result.summarise()
+
+    def it_should_report_the_total_time_for_the_test_run(self):
+        self.stringio.getvalue().should.equal("""
+----------------------------------------------------------------------
+PASSED!
+0 contexts, 0 assertions
+(10.5 seconds)
+""")
 
 if __name__ == "__main__":
     contexts.main()
