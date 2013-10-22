@@ -4,7 +4,43 @@ import traceback
 from .core import Result
 
 
-class TextResult(Result):
+class SimpleResult(Result):
+    def __init__(self):
+        self.contexts = []
+        self.assertions = []
+        self.context_errors = []
+        self.assertion_errors = []
+        self.assertion_failures = []
+
+    @property
+    def failed(self):
+        return self.context_errors or self.assertion_errors or self.assertion_failures
+    
+    def context_ran(self, context):
+        self.contexts.append(context)
+        super().context_ran(context)
+
+    def context_errored(self, context, exception, extracted_traceback):
+        self.contexts.append(context)
+        self.context_errors.append((context, exception, extracted_traceback))
+        super().context_errored(context, exception, extracted_traceback)
+
+    def assertion_passed(self, assertion):
+        self.assertions.append(assertion)
+        super().assertion_passed(assertion)
+
+    def assertion_errored(self, assertion, exception, extracted_traceback):
+        self.assertions.append(assertion)
+        self.assertion_errors.append((assertion, exception, extracted_traceback))
+        super().assertion_errored(assertion, exception, extracted_traceback)
+
+    def assertion_failed(self, assertion, exception, extracted_traceback):
+        self.assertions.append(assertion)
+        self.assertion_failures.append((assertion, exception, extracted_traceback))
+        super().assertion_failed(assertion, exception, extracted_traceback)
+
+
+class TextResult(SimpleResult):
     dashes = '-' * 70
     equalses = '=' * 70
 

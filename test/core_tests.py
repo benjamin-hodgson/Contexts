@@ -29,7 +29,7 @@ class WhenRunningASpec(object):
                 s.log += "teardown "
 
         self.spec = TestSpec()
-        self.result = contexts.core.Result()
+        self.result = contexts.reporting.SimpleResult()
 
     def because_we_run_the_spec(self):
         contexts.run(self.spec, self.result)
@@ -89,7 +89,7 @@ class WhenASpecPasses(object):
             def it(self):
                 pass
         self.spec = TestSpec()
-        self.result = contexts.core.Result()
+        self.result = contexts.reporting.SimpleResult()
 
     def because_we_run_the_spec(self):
         contexts.run(self.spec, self.result)
@@ -128,7 +128,7 @@ class WhenAContextErrors(object):
     def because_we_run_the_specs(self):
         self.results = []
         for spec in self.specs:
-            result = contexts.core.Result()
+            result = contexts.reporting.SimpleResult()
             self.results.append(result)
             contexts.run(spec, result)
 
@@ -180,9 +180,9 @@ class WhenWeRunSpecsWithAlternatelyNamedMethods(object):
         self.spec3 = EvenMoreAlternativeNames()
 
     def because_we_run_the_specs(self):
-        contexts.run(self.spec1, contexts.core.Result())
-        contexts.run(self.spec2, contexts.core.Result())
-        contexts.run(self.spec3, contexts.core.Result())
+        contexts.run(self.spec1, contexts.reporting.SimpleResult())
+        contexts.run(self.spec2, contexts.reporting.SimpleResult())
+        contexts.run(self.spec3, contexts.reporting.SimpleResult())
 
     def it_should_run_the_methods_in_the_correct_order(self):
         self.spec1.log.should.equal("arrange act assert ")
@@ -209,7 +209,7 @@ class WhenRunningAmbiguouslyNamedMethods(object):
 
     def because_we_try_to_run_the_specs(self):
         for spec in self.specs:
-            self.exceptions.append(contexts.catch(lambda: contexts.run(spec, contexts.core.Result())))
+            self.exceptions.append(contexts.catch(lambda: contexts.run(spec, contexts.reporting.SimpleResult())))
 
     def it_should_raise_MethodNamingError(self):
         self.exceptions[0].should.be.a(contexts.errors.MethodNamingError)
@@ -234,7 +234,7 @@ class WhenRunningNotSoAmbiguouslyNamedMethods(object):
 
     def because_we_try_to_run_the_specs(self):
         for spec in self.specs:
-            self.exceptions.append(contexts.catch(lambda: contexts.run(spec, contexts.core.Result())))
+            self.exceptions.append(contexts.catch(lambda: contexts.run(spec, contexts.reporting.SimpleResult())))
 
     def it_should_not_raise_any_exceptions(self):
         self.exceptions[0].should.be.none
@@ -264,7 +264,7 @@ class WhenRunningSpecsWithTooManySpecialMethods(object):
 
     def because_we_try_to_run_the_specs(self):
         for spec in self.specs:
-            self.exceptions.append(contexts.catch(lambda: contexts.run(spec, contexts.core.Result())))
+            self.exceptions.append(contexts.catch(lambda: contexts.run(spec, contexts.reporting.SimpleResult())))
 
     def it_should_raise_TooManySpecialMethodsError(self):
         self.exceptions[0].should.be.a(contexts.errors.TooManySpecialMethodsError)
@@ -288,7 +288,7 @@ class WhenCatchingAnException(object):
                 s.exception = contexts.catch(s.throwing_function, 3, c='yes', b=None)
 
         self.spec = TestSpec()
-        self.result = contexts.core.Result()
+        self.result = contexts.reporting.SimpleResult()
 
     def because_we_run_the_spec(self):
         contexts.run(self.spec, self.result)
@@ -333,7 +333,7 @@ class WhenASpecHasASuperclass(object):
         self.spec = Spec()
 
     def because_we_run_the_spec(self):
-        contexts.run(self.spec, contexts.core.Result())
+        contexts.run(self.spec, contexts.reporting.SimpleResult())
 
     def it_should_run_the_superclass_setup_first(self):
         self.spec.log[:19].should.equal("superclass arrange ")
@@ -367,7 +367,7 @@ class WhenRunningAClass(object):
         self.spec = TestSpec
 
     def because_we_run_the_class(self):
-        contexts.run(self.spec, contexts.core.Result())
+        contexts.run(self.spec, contexts.reporting.SimpleResult())
 
     def it_should_run_the_test(self):
         self.spec.was_run.should.be.true
@@ -382,7 +382,7 @@ class WhenRunningMultipleSpecs(object):
                 self.was_run = True
 
         self.suite = [Spec1(), Spec2()]
-        self.result = contexts.core.Result()
+        self.result = contexts.reporting.SimpleResult()
 
     def because_we_run_the_suite(self):
         contexts.run(self.suite, self.result)

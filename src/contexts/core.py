@@ -1,5 +1,6 @@
-from contextlib import contextmanager
+import abc
 import traceback
+from contextlib import contextmanager
 
 
 class Assertion(object):
@@ -56,18 +57,7 @@ class Suite(object):
                 ctx.run(result)
 
 
-class Result(object):
-    def __init__(self):
-        self.contexts = []
-        self.assertions = []
-        self.context_errors = []
-        self.assertion_errors = []
-        self.assertion_failures = []
-
-    @property
-    def failed(self):
-        return self.context_errors or self.assertion_errors or self.assertion_failures
-
+class Result(metaclass=abc.ABCMeta):
     @contextmanager
     def run_suite(self, suite):
         self.suite_started(suite)
@@ -103,34 +93,36 @@ class Result(object):
             self.assertion_passed(assertion)
 
     def suite_started(self, suite):
-        pass
+        """Called at the beginning of a test run"""
 
     def suite_ended(self, suite):
-        pass
+        """Called at the end of a test run"""
 
     def context_started(self, context):
-        pass
+        """Called when a test context begins its run"""
 
     def context_ran(self, context):
-        self.contexts.append(context)
+        """Called when a test context completes its run"""
 
     def context_errored(self, context, exception, extracted_traceback):
-        self.contexts.append(context)
-        self.context_errors.append((context, exception, extracted_traceback))
+        """Called when a test context (not an assertion) throws an exception"""
 
     def assertion_started(self, assertion):
-        pass
+        """Called when an assertion begins"""
 
     def assertion_passed(self, assertion):
-        self.assertions.append(assertion)
+        """Called when an assertion passes"""
 
     def assertion_errored(self, assertion, exception, extracted_traceback):
-        self.assertions.append(assertion)
-        self.assertion_errors.append((assertion, exception, extracted_traceback))
+        """Called when an assertion throws an exception"""
 
     def assertion_failed(self, assertion, exception, extracted_traceback):
-        self.assertions.append(assertion)
-        self.assertion_failures.append((assertion, exception, extracted_traceback))
+        """Called when an assertion throws an AssertionError"""
 
     def summarise(self):
-        pass
+        """Called by the runner - result should output a summary to its outlet (eg the command line)"""
+
+    @property
+    @abc.abstractmethod
+    def failed(self):
+        return True
