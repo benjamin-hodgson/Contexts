@@ -195,7 +195,7 @@ class WhenCapturingStdOut(object):
             print("failing context")
             self.result.assertion_started(self.fake_assertion)
             print("failing assertion")
-            self.result.assertion_failed(self.fake_assertion, None, [])
+            self.result.assertion_failed(self.fake_assertion, AssertionError(), [])
             self.result.assertion_started(self.fake_assertion)
             print("erroring assertion")
             self.result.assertion_errored(self.fake_assertion, None, [])
@@ -208,6 +208,12 @@ class WhenCapturingStdOut(object):
             self.result.assertion_passed(self.fake_assertion)
             self.result.context_errored(self.fake_context, None, [])
 
+            self.result.context_started(self.fake_context)
+            self.result.assertion_started(self.fake_assertion)
+            # don't print anything
+            self.result.assertion_failed(self.fake_assertion, None, [])
+            self.result.context_ended(self.fake_context)
+
             self.result.stream = self.stringio
 
     def it_should_not_print_anything_to_stdout(self):
@@ -219,10 +225,10 @@ class WhenCapturingStdOut(object):
     def it_should_output_the_captured_stdout_for_the_failures(self):
         self.stringio.getvalue().should.equal("""
 ======================================================================
-ERROR: assertion
+FAIL: assertion
 ----------------------------------------------------------------------
 Traceback (most recent call last):
-NoneType
+AssertionError
 -------------------- >> begin captured stdout << ---------------------
 failing context
 failing assertion
@@ -246,9 +252,14 @@ NoneType
 erroring context
 assertion in erroring context
 --------------------- >> end captured stdout << ----------------------
+======================================================================
+ERROR: assertion
+----------------------------------------------------------------------
+Traceback (most recent call last):
+NoneType
 ----------------------------------------------------------------------
 FAILED!
-3 contexts, 4 assertions: 1 failed, 2 errors
+4 contexts, 5 assertions: 2 failed, 2 errors
 """)
 
     def cleanup_stdout_and_stderr(self):

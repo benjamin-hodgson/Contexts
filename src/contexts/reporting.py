@@ -16,7 +16,7 @@ class SimpleResult(Result):
     @property
     def failed(self):
         return self.context_errors or self.assertion_errors or self.assertion_failures
-    
+
     def context_started(self, context):
         self.contexts.append(context)
         super().context_started(context)
@@ -162,9 +162,10 @@ class CapturingTextResult(TextResult):
         self.append_buffer_to_summary()
 
     def append_buffer_to_summary(self):
-        self.summary.append("-------------------- >> begin captured stdout << ---------------------")
-        self.summary.append(self.buffer.getvalue()[:-1])
-        self.summary.append("--------------------- >> end captured stdout << ----------------------")
+        if self.buffer.getvalue():
+            self.summary.append("-------------------- >> begin captured stdout << ---------------------")
+            self.summary.append(self.buffer.getvalue()[:-1])
+            self.summary.append("--------------------- >> end captured stdout << ----------------------")
 
 
 class TimedCapturingTextResult(TimedTextResult, CapturingTextResult):
