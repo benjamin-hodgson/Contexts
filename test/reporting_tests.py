@@ -15,20 +15,25 @@ class WhenWatchingForDots(object):
         self.fake_assertion = contexts.core.Assertion(None, "assertion")
 
     def because_we_run_some_assertions(self):
-        with self.result.run_context(self.fake_context):
-            with self.result.run_assertion(self.fake_assertion):
-                pass
-            self.first = self.stringio.getvalue()
-            with self.result.run_assertion(self.fake_assertion):
-                pass
-            self.second = self.stringio.getvalue()
-            with self.result.run_assertion(self.fake_assertion):
-                raise AssertionError()
-            self.third = self.stringio.getvalue()
-            with self.result.run_assertion(self.fake_assertion):
-                raise TypeError()
-            self.fourth = self.stringio.getvalue()
-            raise ValueError()
+        self.result.context_started(self.fake_context)
+
+        self.result.assertion_started(self.fake_assertion)
+        self.result.assertion_passed(self.fake_assertion)
+        self.first = self.stringio.getvalue()
+
+        self.result.assertion_started(self.fake_assertion)
+        self.result.assertion_passed(self.fake_assertion)
+        self.second = self.stringio.getvalue()
+
+        self.result.assertion_started(self.fake_assertion)
+        self.result.assertion_failed(self.fake_assertion, None, [])
+        self.third = self.stringio.getvalue()
+
+        self.result.assertion_started(self.fake_assertion)
+        self.result.assertion_errored(self.fake_assertion, None, [])
+        self.fourth = self.stringio.getvalue()
+
+        self.result.context_errored(self.fake_context, None, [])
         self.fifth = self.stringio.getvalue()
 
     def it_should_print_a_dot_for_the_first_pass(self):
@@ -53,16 +58,22 @@ class WhenPrintingASuccessfulResult(object):
         self.result = reporting.TextResult(StringIO())
 
     def because_we_run_some_tests(self):
-        with self.result.run_suite(None):
-            with self.result.run_context(None):
-                with self.result.run_assertion(None):
-                    pass
-                with self.result.run_assertion(None):
-                    pass
-            with self.result.run_context(None):
-                with self.result.run_assertion(None):
-                    pass
-            self.result.stream = self.stringio
+        self.result.suite_started(None)
+
+        self.result.context_started(None)
+        self.result.assertion_started(None)
+        self.result.assertion_passed(None)
+        self.result.assertion_started(None)
+        self.result.assertion_passed(None)
+        self.result.context_ended(None)
+
+        self.result.context_started(None)
+        self.result.assertion_started(None)
+        self.result.assertion_passed(None)
+        self.result.context_ended(None)
+
+        self.result.stream = self.stringio
+        self.result.suite_ended(None)
 
     def it_should_print_the_summary_to_the_stream(self):
         self.stringio.getvalue().should.equal(
@@ -93,18 +104,20 @@ class WhenPrintingAFailureResult(object):
         self.context3 = contexts.core.Context([],[],[],[],"made.up_context")
 
     def because_we_run_some_tests(self):
-        with self.result.run_suite(None):
-            with self.result.run_context(None):
-                # Figure out a way to do this using the context manager and raising actual exceptions?
-                self.result.assertion_started(self.assertion1)
-                self.result.assertion_errored(self.assertion1, self.exception1, self.tb1)
-                self.result.assertion_started(self.assertion2)
-                self.result.assertion_failed(self.assertion2, self.exception2, self.tb2)
+        self.result.suite_started(None)
 
-            self.result.context_started(self.context3)
-            self.result.context_errored(self.context3, self.exception3, self.tb3)
+        self.result.context_started(None)
+        self.result.assertion_started(self.assertion1)
+        self.result.assertion_errored(self.assertion1, self.exception1, self.tb1)
+        self.result.assertion_started(self.assertion2)
+        self.result.assertion_failed(self.assertion2, self.exception2, self.tb2)
+        self.result.context_ended(None)
 
-            self.result.stream = self.stringio
+        self.result.context_started(self.context3)
+        self.result.context_errored(self.context3, self.exception3, self.tb3)
+
+        self.result.stream = self.stringio
+        self.result.suite_ended(None)
 
     def it_should_print_a_traceback_for_each_failure(self):
         self.stringio.getvalue().should.equal("""
@@ -144,7 +157,7 @@ FAILED!
 class WhenTimingATestRun(object):
     def context(self):
         self.fake_now = datetime.datetime(2013, 10, 22, 13, 41, 0)
-        self.fake_soon = datetime.timedelta(seconds=10, milliseconds=530)
+        self.fake_soon = datetime.timedelta(seconds=10, milliseconds=490)
 
         class FakeDateTime(datetime.datetime):
             now = mock.Mock(return_value=self.fake_now)
@@ -155,8 +168,9 @@ class WhenTimingATestRun(object):
 
     def because_we_run_a_suite(self):
         with mock.patch('datetime.datetime', self.FakeDateTime):
-            with self.result.run_suite(None):
-                datetime.datetime.now.return_value += self.fake_soon
+            self.result.suite_started(None)
+            datetime.datetime.now.return_value += self.fake_soon
+            self.result.suite_ended(None)
 
     def it_should_report_the_total_time_for_the_test_run(self):
         self.stringio.getvalue().should.equal("""
@@ -182,39 +196,41 @@ class WhenCapturingStdOut(object):
 
     def because_we_print_some_stuff(self):
         # It'd be nice if this could be done using the context managers
-        with self.result.run_suite(None):
-            self.result.context_started(self.fake_context)
-            print("passing context")
-            self.result.assertion_started(self.fake_assertion)
-            print("passing assertion")
-            print("to stderr", file=sys.stderr)
-            self.result.assertion_passed(self.fake_assertion)
-            self.result.context_ended(self.fake_context)
+        self.result.suite_started(None)
 
-            self.result.context_started(self.fake_context)
-            print("failing context")
-            self.result.assertion_started(self.fake_assertion)
-            print("failing assertion")
-            self.result.assertion_failed(self.fake_assertion, None, [])
-            self.result.assertion_started(self.fake_assertion)
-            print("erroring assertion")
-            self.result.assertion_errored(self.fake_assertion, None, [])
-            self.result.context_ended(self.fake_context)
+        self.result.context_started(self.fake_context)
+        print("passing context")
+        self.result.assertion_started(self.fake_assertion)
+        print("passing assertion")
+        print("to stderr", file=sys.stderr)
+        self.result.assertion_passed(self.fake_assertion)
+        self.result.context_ended(self.fake_context)
 
-            self.result.context_started(self.fake_context)
-            print("erroring context")
-            self.result.assertion_started(self.fake_assertion)
-            print("assertion in erroring context")
-            self.result.assertion_passed(self.fake_assertion)
-            self.result.context_errored(self.fake_context, None, [])
+        self.result.context_started(self.fake_context)
+        print("failing context")
+        self.result.assertion_started(self.fake_assertion)
+        print("failing assertion")
+        self.result.assertion_failed(self.fake_assertion, None, [])
+        self.result.assertion_started(self.fake_assertion)
+        print("erroring assertion")
+        self.result.assertion_errored(self.fake_assertion, None, [])
+        self.result.context_ended(self.fake_context)
 
-            self.result.context_started(self.fake_context)
-            self.result.assertion_started(self.fake_assertion)
-            # don't print anything
-            self.result.assertion_failed(self.fake_assertion, None, [])
-            self.result.context_ended(self.fake_context)
+        self.result.context_started(self.fake_context)
+        print("erroring context")
+        self.result.assertion_started(self.fake_assertion)
+        print("assertion in erroring context")
+        self.result.assertion_passed(self.fake_assertion)
+        self.result.context_errored(self.fake_context, None, [])
 
-            self.result.stream = self.stringio
+        self.result.context_started(self.fake_context)
+        self.result.assertion_started(self.fake_assertion)
+        # don't print anything
+        self.result.assertion_failed(self.fake_assertion, None, [])
+        self.result.context_ended(self.fake_context)
+
+        self.result.stream = self.stringio
+        self.result.suite_ended(None)
 
     def it_should_not_print_anything_to_stdout(self):
         self.fake_stdout.getvalue().should.be.empty

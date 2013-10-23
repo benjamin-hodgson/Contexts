@@ -1,8 +1,42 @@
+import abc
 import datetime
 import sys
 import traceback
 from io import StringIO
-from .core import Result
+
+
+class Result(metaclass=abc.ABCMeta):
+    @property
+    @abc.abstractmethod
+    def failed(self):
+        return True
+
+    def suite_started(self, suite):
+        """Called at the beginning of a test run"""
+
+    def suite_ended(self, suite):
+        """Called at the end of a test run"""
+
+    def context_started(self, context):
+        """Called when a test context begins its run"""
+
+    def context_ended(self, context):
+        """Called when a test context completes its run"""
+
+    def context_errored(self, context, exception, extracted_traceback):
+        """Called when a test context (not an assertion) throws an exception"""
+
+    def assertion_started(self, assertion):
+        """Called when an assertion begins"""
+
+    def assertion_passed(self, assertion):
+        """Called when an assertion passes"""
+
+    def assertion_errored(self, assertion, exception, extracted_traceback):
+        """Called when an assertion throws an exception"""
+
+    def assertion_failed(self, assertion, exception, extracted_traceback):
+        """Called when an assertion throws an AssertionError"""
 
 
 class SimpleResult(Result):
@@ -12,6 +46,7 @@ class SimpleResult(Result):
         self.context_errors = []
         self.assertion_errors = []
         self.assertion_failures = []
+        super().__init__()
 
     @property
     def failed(self):

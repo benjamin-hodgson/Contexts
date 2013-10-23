@@ -1,6 +1,8 @@
+import os
 import sys
 from . import builders
 from . import reporting
+from . import core
 
 
 __all__ = ['run', 'main', 'catch']
@@ -19,10 +21,15 @@ def run(spec=None, result=None):
     if spec is None:
         spec = sys.modules['__main__']
 
-    suite = builders.build_suite(spec)
-    suite.run(result)
+    _run_impl(spec, result)
 
     return not result.failed
+
+
+def _run_impl(spec, result):
+    result_runner = core.ResultRunner(result)
+    suite = builders.build_suite(spec)
+    suite.run(result_runner)
 
 
 def catch(func, *args, **kwargs):
@@ -33,7 +40,7 @@ def catch(func, *args, **kwargs):
 
 
 def cmd():
-    result = run('.')
+    result = run(os.getcwd())
     if not result:
         sys.exit(1)
     sys.exit(0)
