@@ -61,17 +61,17 @@ class TextResult(SimpleResult):
     def assertion_failed(self, assertion, exception, extracted_tb):
         super().assertion_failed(assertion, exception, extracted_tb)
         self._print('F', end='')
-        self.summary.append(self.format_assertion_failure(assertion, exception, extracted_tb))
+        self.summary.extend(self.format_failure(assertion, exception, extracted_tb, "FAIL"))
 
     def assertion_errored(self, assertion, exception, extracted_tb):
         super().assertion_errored(assertion, exception, extracted_tb)
         self._print('E', end='')
-        self.summary.append(self.format_assertion_failure(assertion, exception, extracted_tb))
+        self.summary.extend(self.format_failure(assertion, exception, extracted_tb, "ERROR"))
 
     def context_errored(self, context, exception, extracted_tb):
         super().context_errored(context, exception, extracted_tb)
         self._print('E', end='')
-        self.summary.append(self.format_assertion_failure(context, exception, extracted_tb))
+        self.summary.extend(self.format_failure(context, exception, extracted_tb, "ERROR"))
 
     def summarise(self):
         self._print('')
@@ -85,16 +85,16 @@ class TextResult(SimpleResult):
             self._print('PASSED!')
             self._print(self.success_numbers())
 
-    def format_assertion_failure(self, assertion, exception, extracted_tb):
-        formatted_failure = ""
-        formatted_failure += self.equalses + '\n'
-        formatted_failure += ("FAIL: " if isinstance(exception, AssertionError) else "ERROR: ")
-        formatted_failure += assertion.name + '\n'
-        formatted_failure += self.dashes + '\n'
-        formatted_failure += "Traceback (most recent call last):" + '\n'
-        formatted_failure += ''.join(traceback.format_list(extracted_tb))
-        formatted_failure += ''.join(traceback.format_exception_only(exception.__class__, exception))
-        return formatted_failure[:-1]  # remove trailing \n
+    def format_failure(self, assertion, exception, extracted_tb, word):
+        formatted = [
+            self.equalses,
+            "{}: {}".format(word, assertion.name),
+            self.dashes,
+            "Traceback (most recent call last):"
+        ]
+        formatted.extend(s[:-1] for s in traceback.format_list(extracted_tb))
+        formatted.extend(s[:-1] for s in traceback.format_exception_only(exception.__class__, exception))
+        return formatted
 
     def success_numbers(self):
         num_ctx = len(self.contexts)

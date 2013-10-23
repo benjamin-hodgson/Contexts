@@ -195,7 +195,7 @@ class WhenCapturingStdOut(object):
             print("failing context")
             self.result.assertion_started(self.fake_assertion)
             print("failing assertion")
-            self.result.assertion_failed(self.fake_assertion, AssertionError(), [])
+            self.result.assertion_failed(self.fake_assertion, None, [])
             self.result.assertion_started(self.fake_assertion)
             print("erroring assertion")
             self.result.assertion_errored(self.fake_assertion, None, [])
@@ -228,7 +228,7 @@ class WhenCapturingStdOut(object):
 FAIL: assertion
 ----------------------------------------------------------------------
 Traceback (most recent call last):
-AssertionError
+NoneType
 -------------------- >> begin captured stdout << ---------------------
 failing context
 failing assertion
@@ -253,7 +253,7 @@ erroring context
 assertion in erroring context
 --------------------- >> end captured stdout << ----------------------
 ======================================================================
-ERROR: assertion
+FAIL: assertion
 ----------------------------------------------------------------------
 Traceback (most recent call last):
 NoneType
