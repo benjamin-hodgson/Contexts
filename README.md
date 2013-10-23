@@ -21,6 +21,8 @@ representing each step in the process.
 
 If certain words appear in the name of an object, Contexts will treat it in a certain way.
 
+### Command line usage
+`run-contexts` will run all test files and folders in the current directory.
 
 ### Test discovery
 If a _module_ contains the words 'test' or 'spec' in its name, Contexts will
