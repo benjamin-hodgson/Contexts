@@ -21,13 +21,14 @@ class ModuleFinder(object):
 
         for dirpath, dirnames, filenames in os.walk(self.directory):
             self.remove_non_test_folders(dirnames)
+
             if ispackage(dirpath):
                 package_spec = self.get_package_specification(dirpath)
                 module_specs.append(package_spec)
                 found_modules = self.get_modules(filenames, package_spec[0], package_spec[1] + '.')
             else:
                 found_modules = self.get_modules(filenames, dirpath)
-            
+
             module_specs.extend(found_modules)
 
         return module_specs
@@ -50,7 +51,7 @@ class ModuleFinder(object):
         while ispackage(parent):
             dirpath, parent = parent, os.path.dirname(parent)
             package_names.append(os.path.basename(dirpath))
-        
+
         full_package_name = '.'.join(reversed(package_names))
         return cls.ModuleSpecification(parent, full_package_name)
 

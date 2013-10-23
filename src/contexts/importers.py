@@ -23,6 +23,7 @@ def prune_sys_dot_modules(dir_path, module_name):
         same_file = os.path.realpath(sys.modules[module_name].__file__) == os.path.realpath(requested_file)
         if not same_file:
             del sys.modules[module_name]
+        importlib.invalidate_caches()
 
 
 @contextlib.contextmanager

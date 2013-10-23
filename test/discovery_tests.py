@@ -1,3 +1,4 @@
+import importlib
 import os
 import shutil
 import sys
@@ -67,6 +68,7 @@ class TestSpec(object):
     def cleanup_the_file_system_and_sys_dot_modules(self):
         shutil.rmtree(self.folder_path)
         del sys.modules[self.module_name]
+        importlib.invalidate_caches()
 
     def create_folder(self):
         this_file = os.path.realpath(__file__)
@@ -118,6 +120,7 @@ class TestSpec(object):
         shutil.rmtree(self.folder_path)
         del sys.modules[self.module_names[0]]
         del sys.modules[self.module_names[1]]
+        importlib.invalidate_caches()
 
     def create_folder(self):
         this_file = os.path.realpath(__file__)
@@ -162,6 +165,7 @@ class TestSpec(object):
     def cleanup_the_file_system_and_sys_dot_modules(self):
         shutil.rmtree(self.folder_path)
         del sys.modules[self.module_name]
+        importlib.invalidate_caches()
 
     def create_fake_module(self):
         class TestSpec(object):
@@ -217,6 +221,7 @@ class TestSpec(object):
     def cleanup_the_file_system_and_sys_dot_modules(self):
         shutil.rmtree(self.folder_path)
         del sys.modules[self.module_name]
+        importlib.invalidate_caches()
 
     def create_fake_module(self):
         test = types.ModuleType(self.module_name)
@@ -294,6 +299,7 @@ class TestSpec(object):
         del sys.modules[self.package_name + '.' + self.module_names[1]]
         del sys.modules[self.package_name + '.' + self.module_names[2]]
         del sys.modules[self.package_name]
+        importlib.invalidate_caches()
 
     def create_folder(self):
         this_file = os.path.realpath(__file__)
@@ -373,6 +379,7 @@ class TestSpec(object):
         del sys.modules["test_file1"]
         del sys.modules["test_subpackage"]
         del sys.modules["test_subpackage.test_file2"]
+        importlib.invalidate_caches()
 
     def create_tree(self):
         this_file = os.path.realpath(__file__)
@@ -405,6 +412,7 @@ class TestSpec(object):
             "another_subpackage": ["__init__", "test_file4"]
         }
         self.create_tree()
+
 
     def because_we_run_the_package(self):
         contexts.run(self.folder_path, contexts.reporting.SimpleResult())
@@ -466,6 +474,7 @@ class TestSpec(object):
         del sys.modules["test_file1"]
         del sys.modules["package4.test_subpackage"]
         del sys.modules["package4.test_subpackage.test_file2"]
+        importlib.invalidate_caches()
 
     def create_tree(self):
         this_file = os.path.realpath(__file__)
