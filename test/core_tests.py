@@ -5,6 +5,39 @@ core_file = repr(contexts.core.__file__)[1:-1]
 this_file = repr(__file__)[1:-1]
 
 
+class MockResult(object):
+    def __init__(self):
+        self.calls = []
+        self.failed = False
+
+    def suite_started(self, suite):
+        self.calls.append(('suite_started', suite))
+
+    def suite_ended(self, suite):
+        self.calls.append(('suite_ended', suite))
+
+    def context_started(self, context):
+        self.calls.append(('context_started', context))
+
+    def context_ended(self, context):
+        self.calls.append(('context_ended', context))
+
+    def context_errored(self, context, exception, extracted_traceback):
+        self.calls.append(('context_errored', context, exception, extracted_traceback))
+
+    def assertion_started(self, assertion):
+        self.calls.append(('assertion_started', assertion))
+
+    def assertion_passed(self, assertion):
+        self.calls.append(('assertion_passed', assertion))
+
+    def assertion_errored(self, assertion, exception, extracted_traceback):
+        self.calls.append(('assertion_errored', assertion, exception, extracted_traceback))
+
+    def assertion_failed(self, assertion, exception, extracted_traceback):
+        self.calls.append(('assertion_failed', assertion, exception, extracted_traceback))
+
+
 class WhenRunningASpec(object):
     def context(self):
         self.assertion_err = AssertionError()
@@ -29,7 +62,7 @@ class WhenRunningASpec(object):
                 s.log += "teardown "
 
         self.spec = TestSpec()
-        self.result = contexts.reporting.SimpleResult()
+        self.result = MockResult()
 
     def because_we_run_the_spec(self):
         contexts.run(self.spec, self.result)
@@ -37,51 +70,60 @@ class WhenRunningASpec(object):
     def it_should_run_the_methods_in_the_correct_order(self):
         self.spec.log.should.equal("arrange act assert assert assert teardown ")
 
-    def the_result_should_report_failure(self):
-        self.result.failed.should.be.true
+    def it_should_call_suite_started_first(self):
+        self.result.calls[0][0].should.equal('suite_started')
 
-    def the_result_should_have_one_spec(self):
-        self.result.contexts.should.have.length_of(1)
+    def it_should_call_ctx_started_second(self):
+        self.result.calls[1][0].should.equal('context_started')
 
-    def the_spec_should_have_the_right_name(self):
-        self.result.contexts[0].name.should.equal("TestSpec")
+    def it_should_pass_in_the_ctx(self):
+        self.result.calls[1][1].name.should.equal('TestSpec')
 
-    def the_result_should_have_two_assertions(self):
-        self.result.assertions.should.have.length_of(3)
+    def it_should_call_assertion_started_three_times(self):
+        self.result.calls[2][0].should.equal('assertion_started')
+        self.result.calls[4][0].should.equal('assertion_started')
+        self.result.calls[6][0].should.equal('assertion_started')
+
+    def it_should_call_assertion_passed_and_failed_and_errored(self):
+        calls = [self.result.calls[i][0] for i in (3,5,7)]
+        calls.should.contain('assertion_passed')
+        calls.should.contain('assertion_failed')
+        calls.should.contain('assertion_errored')
 
     def the_assertions_should_have_the_right_names(self):
-        names = [a.name for a in self.result.assertions]
+        names = [self.result.calls[i][1].name for i in (3,5,7)]
         names.should.contain(__name__ + '.WhenRunningASpec.context.<locals>.TestSpec.method_with_should_in_the_name')
         names.should.contain(__name__ + '.WhenRunningASpec.context.<locals>.TestSpec.failing_method_with_should_in_the_name')
         names.should.contain(__name__ + '.WhenRunningASpec.context.<locals>.TestSpec.erroring_method_with_should_in_the_name')
 
-    def the_result_should_have_one_failure(self):
-        self.result.assertion_failures.should.have.length_of(1)
+    def it_should_pass_in_the_exceptions_and_tracebacks(self):
+        error_infos = {}
+        for i in (3,5,7):
+            call_name = self.result.calls[i][0]
+            if call_name == 'assertion_failed':
+                error_infos['fail'] = (self.result.calls[i][2], self.result.calls[i][3])
+            if call_name == 'assertion_errored':
+                error_infos['error'] = (self.result.calls[i][2], self.result.calls[i][3])
 
-    def the_failure_should_have_the_right_name(self):
-        self.result.assertion_failures[0][0].name.should.equal(
-            __name__ + '.WhenRunningASpec.context.<locals>.TestSpec.failing_method_with_should_in_the_name'
-        )
+        error_infos['fail'][0].should.equal(self.assertion_err)
+        error_infos['fail'][1].should_not.be.empty
+        error_infos['error'][0].should.equal(self.value_err)
+        error_infos['error'][1].should_not.be.empty
 
-    def the_failure_should_have_the_exception(self):
-        self.result.assertion_failures[0][1].should.equal(self.assertion_err)
+    def it_should_call_ctx_ended_next(self):
+        self.result.calls[8][0].should.equal('context_ended')
 
-    def the_failure_should_have_the_traceback(self):
-        self.result.assertion_failures[0][2].should_not.be.empty
+    def it_should_pass_in_the_ctx_again(self):
+        self.result.calls[8][1].should.equal(self.result.calls[1][1])
 
-    def the_result_should_have_one_error(self):
-        self.result.assertion_errors.should.have.length_of(1)
+    def it_should_call_suite_ended_last(self):
+        self.result.calls[9][0].should.equal('suite_ended')
 
-    def the_error_should_have_the_right_name(self):
-        self.result.assertion_errors[0][0].name.should.equal(
-            __name__ + '.WhenRunningASpec.context.<locals>.TestSpec.erroring_method_with_should_in_the_name'
-        )
+    def it_should_pass_in_the_same_suite_as_at_the_start(self):
+        self.result.calls[9][1].should.equal(self.result.calls[0][1])
 
-    def the_error_should_have_the_exception(self):
-        self.result.assertion_errors[0][1].should.equal(self.value_err)
-
-    def the_error_should_have_the_traceback(self):
-        self.result.assertion_errors[0][2].should_not.be.empty
+    def it_should_not_make_any_more_calls(self):
+        self.result.calls.should.have.length_of(10)
 
 class WhenASpecPasses(object):
     def context(self):
