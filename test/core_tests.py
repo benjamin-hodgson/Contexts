@@ -125,20 +125,6 @@ class WhenRunningASpec(object):
     def it_should_not_make_any_more_calls(self):
         self.result.calls.should.have.length_of(10)
 
-class WhenASpecPasses(object):
-    def context(self):
-        class TestSpec(object):
-            def it(self):
-                pass
-        self.spec = TestSpec()
-        self.result = contexts.reporting.SimpleResult()
-
-    def because_we_run_the_spec(self):
-        contexts.run(self.spec, self.result)
-
-    def the_result_should_report_success(self):
-        self.result.failed.should.be.false
-
 class WhenAContextErrors(object):
     def context(self):
         class ErrorInSetup(object):
