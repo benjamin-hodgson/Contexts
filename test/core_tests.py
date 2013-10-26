@@ -296,7 +296,7 @@ class WhenRunningMultipleSpecs(object):
                 self.was_run = True
 
         self.suite = [Spec1(), Spec2()]
-        self.result = contexts.reporting.SimpleResult()
+        self.result = MockResult()
 
     def because_we_run_the_suite(self):
         contexts.run(self.suite, self.result)
@@ -305,11 +305,13 @@ class WhenRunningMultipleSpecs(object):
         self.suite[0].was_run.should.be.true
         self.suite[1].was_run.should.be.true
 
-    def the_result_should_have_two_ctxs(self):
-        self.result.contexts.should.have.length_of(2)
+    def it_should_call_ctx_started_twice(self):
+        calls = [call for call in self.result.calls if call[0] == "context_started"]
+        calls.should.have.length_of(2)
 
-    def the_result_should_have_two_assertions(self):
-        self.result.assertions.should.have.length_of(2)
+    def it_should_call_ctx_ended_twice(self):
+        calls = [call for call in self.result.calls if call[0] == "context_ended"]
+        calls.should.have.length_of(2)
 
 class WhenWeRunSpecsWithAlternatelyNamedMethods(object):
     def context(self):
