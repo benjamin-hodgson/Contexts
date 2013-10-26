@@ -5,39 +5,6 @@ core_file = repr(contexts.core.__file__)[1:-1]
 this_file = repr(__file__)[1:-1]
 
 
-class MockResult(object):
-    def __init__(self):
-        self.calls = []
-        self.failed = False
-
-    def suite_started(self, suite):
-        self.calls.append(('suite_started', suite))
-
-    def suite_ended(self, suite):
-        self.calls.append(('suite_ended', suite))
-
-    def context_started(self, context):
-        self.calls.append(('context_started', context))
-
-    def context_ended(self, context):
-        self.calls.append(('context_ended', context))
-
-    def context_errored(self, context, exception, extracted_traceback):
-        self.calls.append(('context_errored', context, exception, extracted_traceback))
-
-    def assertion_started(self, assertion):
-        self.calls.append(('assertion_started', assertion))
-
-    def assertion_passed(self, assertion):
-        self.calls.append(('assertion_passed', assertion))
-
-    def assertion_errored(self, assertion, exception, extracted_traceback):
-        self.calls.append(('assertion_errored', assertion, exception, extracted_traceback))
-
-    def assertion_failed(self, assertion, exception, extracted_traceback):
-        self.calls.append(('assertion_failed', assertion, exception, extracted_traceback))
-
-
 class WhenRunningASpec(object):
     def context(self):
         self.assertion_err = AssertionError()
@@ -127,53 +94,72 @@ class WhenRunningASpec(object):
 
 class WhenAContextErrors(object):
     def context(self):
+        self.value_err = ValueError("explode")
+        self.type_err = TypeError("oh no")
+        self.assertion_err = AssertionError("shut up")
         class ErrorInSetup(object):
-            def __init__(self):
-                self.ran_cleanup = False
-            def context(self):
-                raise ValueError("explode")
-            def it(self):
-                pass
-            def cleanup(self):
-                self.ran_cleanup = True
+            def __init__(s):
+                s.ran_cleanup = False
+                s.ran_because = False
+                s.ran_assertion = False
+            def context(s):
+                raise self.value_err
+            def because(s):
+                s.ran_because = True
+            def it(s):
+                s.ran_assertion = True
+            def cleanup(s):
+                s.ran_cleanup = True
         class ErrorInAction(object):
-            def __init__(self):
-                self.ran_cleanup = False
-            def because(self):
-                raise TypeError("oh no")
-            def it(self):
-                pass
-            def cleanup(self):
-                self.ran_cleanup = True
+            def __init__(s):
+                s.ran_cleanup = False
+                s.ran_assertion = False
+            def because(s):
+                raise self.type_err
+            def it(s):
+                s.ran_assertion = True
+            def cleanup(s):
+                s.ran_cleanup = True
         class ErrorInTeardown(object):
-            def it(self):
+            def it(s):
                 pass
-            def cleanup(self):
-                raise AttributeError("got it wrong")
+            def cleanup(s):
+                # assertion errors that get raised outside of a
+                # 'should' method should be considered context errors
+                raise self.assertion_err
 
         self.specs = [ErrorInSetup(), ErrorInAction(), ErrorInTeardown()]
 
     def because_we_run_the_specs(self):
         self.results = []
         for spec in self.specs:
-            result = contexts.reporting.SimpleResult()
+            result = MockResult()
             self.results.append(result)
             contexts.run(spec, result)
 
-    def the_result_should_contain_the_setup_error(self):
-        self.results[0].context_errors.should.have.length_of(1)
+    def it_should_call_ctx_errored_for_the_first_error(self):
+        self.results[0].calls[2][0].should.equal("context_errored")
 
-    def the_result_should_contain_the_action_error(self):
-        self.results[1].context_errors.should.have.length_of(1)
+    def it_should_not_run_the_first_action(self):
+        self.specs[0].ran_because.should.be.false
 
-    def the_result_should_contain_the_teardown_error(self):
-        self.results[2].context_errors.should.have.length_of(1)
+    def it_should_not_run_the_first_assertion(self):
+        self.specs[0].ran_assertion.should.be.false
 
     def it_should_still_run_the_teardown_despite_the_setup_error(self):
         self.specs[0].ran_cleanup.should.be.true
 
+    def it_should_call_ctx_errored_for_the_second_error(self):
+        self.results[1].calls[2][0].should.equal("context_errored")
+
+    def it_should_not_run_the_second_assertion(self):
+        self.specs[1].ran_assertion.should.be.false
+
     def it_should_still_run_the_teardown_despite_the_action_error(self):
         self.specs[1].ran_cleanup.should.be.true
+
+    def it_should_call_ctx_errored_for_the_third_error(self):
+        self.results[2].calls[4][0].should.equal("context_errored")
 
 class WhenWeRunSpecsWithAlternatelyNamedMethods(object):
     def context(self):
@@ -424,6 +410,45 @@ class WhenRunningMultipleSpecs(object):
 
     def the_result_should_have_two_assertions(self):
         self.result.assertions.should.have.length_of(2)
+
+
+###########################################################
+# Test doubles
+###########################################################
+
+class MockResult(object):
+    # unittest.mock doesn't make it particularly easy to get hold of the
+    # object a mock was called with. It was quicker just to write this myself.
+    def __init__(self):
+        self.calls = []
+        self.failed = False
+
+    def suite_started(self, suite):
+        self.calls.append(('suite_started', suite))
+
+    def suite_ended(self, suite):
+        self.calls.append(('suite_ended', suite))
+
+    def context_started(self, context):
+        self.calls.append(('context_started', context))
+
+    def context_ended(self, context):
+        self.calls.append(('context_ended', context))
+
+    def context_errored(self, context, exception, extracted_traceback):
+        self.calls.append(('context_errored', context, exception, extracted_traceback))
+
+    def assertion_started(self, assertion):
+        self.calls.append(('assertion_started', assertion))
+
+    def assertion_passed(self, assertion):
+        self.calls.append(('assertion_passed', assertion))
+
+    def assertion_errored(self, assertion, exception, extracted_traceback):
+        self.calls.append(('assertion_errored', assertion, exception, extracted_traceback))
+
+    def assertion_failed(self, assertion, exception, extracted_traceback):
+        self.calls.append(('assertion_failed', assertion, exception, extracted_traceback))
 
 if __name__ == "__main__":
     contexts.main()
