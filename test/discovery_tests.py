@@ -5,6 +5,11 @@ import sys
 import types
 import sure
 import contexts
+from .test_doubles import MockResult
+
+
+this_file = os.path.realpath(__file__)
+test_data_dir = os.path.join(os.path.dirname(this_file), "test_data")
 
 
 class WhenRunningAModule(object):
@@ -27,7 +32,7 @@ class WhenRunningAModule(object):
         self.module.NormalClass = NormalClass
 
     def because_we_run_the_module(self):
-        contexts.run(self.module, contexts.reporting.SimpleResult())
+        contexts.run(self.module, MockResult())
 
     def it_should_run_the_spec(self):
         self.module.HasSpecInTheName.was_run.should.be.true
@@ -50,11 +55,10 @@ class TestSpec(object):
 """
         self.old_sys_dot_path = sys.path[:]
         self.module_name = "test_file"
-        self.create_folder()
         self.write_file()
 
     def because_we_run_the_file(self):
-        contexts.run(self.filename, contexts.reporting.SimpleResult())
+        contexts.run(self.filename, MockResult())
 
     def it_should_import_the_file(self):
         sys.modules.should.contain(self.module_name)
@@ -66,17 +70,12 @@ class TestSpec(object):
         sys.path.should.equal(self.old_sys_dot_path)
 
     def cleanup_the_file_system_and_sys_dot_modules(self):
-        shutil.rmtree(self.folder_path)
+        os.remove(self.filename)
         del sys.modules[self.module_name]
         importlib.invalidate_caches()
 
-    def create_folder(self):
-        this_file = os.path.realpath(__file__)
-        self.folder_path = os.path.join(os.path.dirname(this_file), 'data')
-        os.mkdir(self.folder_path)
-
     def write_file(self):
-        self.filename = os.path.join(self.folder_path, self.module_name+".py")
+        self.filename = os.path.join(test_data_dir, self.module_name+".py")
         with open(self.filename, 'w+') as f:
             f.write(self.code)
 
@@ -96,7 +95,7 @@ class TestSpec(object):
         self.write_files()
 
     def because_we_run_the_folder(self):
-        contexts.run(self.folder_path, contexts.reporting.SimpleResult())
+        contexts.run(self.folder_path, MockResult())
 
     def it_should_import_the_first_module(self):
         sys.modules.should.contain(self.module_names[0])
@@ -123,8 +122,7 @@ class TestSpec(object):
         importlib.invalidate_caches()
 
     def create_folder(self):
-        this_file = os.path.realpath(__file__)
-        self.folder_path = os.path.join(os.path.dirname(this_file), 'non_package_folder')
+        self.folder_path = os.path.join(test_data_dir, 'non_package_folder')
         os.mkdir(self.folder_path)
 
     def write_files(self):
@@ -151,7 +149,7 @@ class TestSpec(object):
         self.create_fake_module()
 
     def because_we_run_the_folder(self):
-        contexts.run(self.folder_path, contexts.reporting.SimpleResult())
+        contexts.run(self.folder_path, MockResult())
 
     def it_should_not_re_import_the_module(self):
         sys.modules[self.module_name].is_fake.should.be.true
@@ -180,8 +178,7 @@ class TestSpec(object):
         sys.modules[self.module_name] = test
 
     def create_folder(self):
-        this_file = os.path.realpath(__file__)
-        self.folder_path = os.path.join(os.path.dirname(this_file), 'non_package_folder2')
+        self.folder_path = os.path.join(test_data_dir, 'non_package_folder2')
         os.mkdir(self.folder_path)
 
     def write_files(self):
@@ -207,7 +204,7 @@ class TestSpec(object):
         self.create_fake_module()
 
     def because_we_run_the_folder(self):
-        contexts.run(self.folder_path, contexts.reporting.SimpleResult())
+        contexts.run(self.folder_path, MockResult())
 
     def it_should_import_the_new_module_and_overwrite_the_old_one(self):
         sys.modules[self.module_name].is_fake.should.be.false
@@ -231,8 +228,7 @@ class TestSpec(object):
         sys.modules[self.module_name] = test
 
     def create_folder(self):
-        this_file = os.path.realpath(__file__)
-        self.folder_path = os.path.join(os.path.dirname(this_file), 'non_package_folder2')
+        self.folder_path = os.path.join(test_data_dir, 'non_package_folder2')
         os.mkdir(self.folder_path)
 
     def write_files(self):
@@ -257,7 +253,7 @@ class TestSpec(object):
         self.write_files()
 
     def because_we_run_the_folder(self):
-        contexts.run(self.folder_path, contexts.reporting.SimpleResult())
+        contexts.run(self.folder_path, MockResult())
 
     def it_should_import_the_package(self):
         sys.modules.should.contain(self.package_name)
@@ -302,8 +298,7 @@ class TestSpec(object):
         importlib.invalidate_caches()
 
     def create_folder(self):
-        this_file = os.path.realpath(__file__)
-        self.folder_path = os.path.join(os.path.dirname(this_file), self.package_name)
+        self.folder_path = os.path.join(test_data_dir, self.package_name)
         os.mkdir(self.folder_path)
 
     def write_files(self):
@@ -333,7 +328,7 @@ class TestSpec(object):
         self.create_tree()
 
     def because_we_run_the_folder(self):
-        contexts.run(self.folder_path, contexts.reporting.SimpleResult())
+        contexts.run(self.folder_path, MockResult())
 
     def it_should_import_the_file_in_the_test_folder(self):
         sys.modules.should.contain("test_file1")
@@ -382,8 +377,7 @@ class TestSpec(object):
         importlib.invalidate_caches()
 
     def create_tree(self):
-        this_file = os.path.realpath(__file__)
-        self.folder_path = os.path.join(os.path.dirname(this_file), self.folder_name)
+        self.folder_path = os.path.join(test_data_dir, self.folder_name)
         os.mkdir(self.folder_path)
 
         for subfolder in self.tree:
@@ -415,7 +409,7 @@ class TestSpec(object):
 
 
     def because_we_run_the_package(self):
-        contexts.run(self.folder_path, contexts.reporting.SimpleResult())
+        contexts.run(self.folder_path, MockResult())
 
     def it_should_import_the_file_in_the_test_folder(self):
         sys.modules.should.contain("test_file1")
@@ -477,8 +471,7 @@ class TestSpec(object):
         importlib.invalidate_caches()
 
     def create_tree(self):
-        this_file = os.path.realpath(__file__)
-        self.folder_path = os.path.join(os.path.dirname(this_file), self.folder_name)
+        self.folder_path = os.path.join(test_data_dir, self.folder_name)
         os.mkdir(self.folder_path)
 
         with open(os.path.join(self.folder_path, "__init__.py"), 'w+') as f:
