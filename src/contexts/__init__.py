@@ -1,3 +1,4 @@
+import argparse
 import os
 import sys
 from . import builders
@@ -40,7 +41,11 @@ def catch(func, *args, **kwargs):
 
 
 def cmd():
-    result = run(os.getcwd())
+    parser = argparse.ArgumentParser()
+    parser.add_argument('-s', '--no-capture', action='store_const', dest='result', const=reporting.TimedTextResult(), default=reporting.TimedCapturingTextResult())
+    args = parser.parse_args()
+
+    result = run(os.getcwd(), args.result)
     if not result:
         sys.exit(1)
     sys.exit(0)
