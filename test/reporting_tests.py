@@ -89,6 +89,8 @@ class WhenPrintingAFailureResult(object):
         self.result = reporting.SummarisingResult(StringIO())
         self.stringio = StringIO()
 
+        self.context1 = contexts.core.Context([],[],[],[], "made.up_context_1")
+
         self.assertion1 = contexts.core.Assertion(None, "made.up.assertion_1")
         tb1 = [('made_up_file.py', 3, 'made_up_function', 'frame1'),
                ('another_made_up_file.py', 2, 'another_made_up_function', 'frame2')]
@@ -99,7 +101,7 @@ class WhenPrintingAFailureResult(object):
                ('made_up_file_4.py', 2, 'made_up_function_4', 'frame4')]
         self.exception2 = test_doubles.build_fake_exception(tb2, "you fail")
 
-        self.context3 = contexts.core.Context([],[],[],[],"made.up_context")
+        self.context2 = contexts.core.Context([],[],[],[],"made.up_context_2")
         tb3 = [('made_up_file_5.py', 1, 'made_up_function_5', 'frame5'),
                ('made_up_file_6.py', 2, 'made_up_function_6', 'frame6')]
         self.exception3 = test_doubles.build_fake_exception(tb3, "oh dear")
@@ -107,15 +109,15 @@ class WhenPrintingAFailureResult(object):
     def because_we_run_some_tests(self):
         self.result.suite_started(None)
 
-        self.result.context_started(None)
+        self.result.context_started(self.context1)
         self.result.assertion_started(self.assertion1)
         self.result.assertion_errored(self.assertion1, self.exception1)
         self.result.assertion_started(self.assertion2)
         self.result.assertion_failed(self.assertion2, self.exception2)
-        self.result.context_ended(None)
+        self.result.context_ended(self.context1)
 
-        self.result.context_started(self.context3)
-        self.result.context_errored(self.context3, self.exception3)
+        self.result.context_started(self.context2)
+        self.result.context_errored(self.context2, self.exception3)
 
         self.result.stream = self.stringio
         self.result.suite_ended(None)
@@ -141,7 +143,7 @@ Traceback (most recent call last):
     frame4
 test.test_doubles.FakeException: you fail
 ======================================================================
-ERROR: made.up_context
+ERROR: made.up_context_2
 ----------------------------------------------------------------------
 Traceback (most recent call last):
   File "made_up_file_5.py", line 1, in made_up_function_5
@@ -149,6 +151,74 @@ Traceback (most recent call last):
   File "made_up_file_6.py", line 2, in made_up_function_6
     frame6
 test.test_doubles.FakeException: oh dear
+----------------------------------------------------------------------
+FAILED!
+2 contexts, 2 assertions: 1 failed, 2 errors
+""")
+
+class WhenPrintingHierarchically(object):
+    def in_the_context_of_a_failed_run(self):
+        self.result = reporting.HierarchicalResult(StringIO())
+        self.stringio = StringIO()
+
+        self.context1 = contexts.core.Context([],[],[],[], "made.up_context_1")
+
+        self.assertion1 = contexts.core.Assertion(None, "made.up.assertion_1")
+        tb1 = [('made_up_file.py', 3, 'made_up_function', 'frame1'),
+               ('another_made_up_file.py', 2, 'another_made_up_function', 'frame2')]
+        self.exception1 = test_doubles.build_fake_exception(tb1, "Gotcha")
+
+        self.assertion2 = contexts.core.Assertion(None, "made.up.assertion_2")
+        tb2 = [('made_up_file_3.py', 1, 'made_up_function_3', 'frame3'),
+               ('made_up_file_4.py', 2, 'made_up_function_4', 'frame4')]
+        self.exception2 = test_doubles.build_fake_exception(tb2, "you fail")
+
+        self.context2 = contexts.core.Context([],[],[],[],"made.up_context_2")
+        tb3 = [('made_up_file_5.py', 1, 'made_up_function_5', 'frame5'),
+               ('made_up_file_6.py', 2, 'made_up_function_6', 'frame6')]
+        self.exception3 = test_doubles.build_fake_exception(tb3, "oh dear")
+
+    def because_we_run_some_tests(self):
+        self.result.suite_started(None)
+
+        self.result.context_started(self.context1)
+        self.result.assertion_started(self.assertion1)
+        self.result.assertion_errored(self.assertion1, self.exception1)
+        self.result.assertion_started(self.assertion2)
+        self.result.assertion_failed(self.assertion2, self.exception2)
+        self.result.context_ended(self.context1)
+
+        self.result.context_started(self.context2)
+        self.result.context_errored(self.context2, self.exception3)
+
+        self.result.stream = self.stringio
+        self.result.suite_ended(None)
+
+    def it_should_print_a_traceback_for_each_failure(self):
+        self.stringio.getvalue().should.equal("""
+----------------------------------------------------------------------
+made.up_context_1
+  ERROR: made.up.assertion_1
+    Traceback (most recent call last):
+      File "made_up_file.py", line 3, in made_up_function
+        frame1
+      File "another_made_up_file.py", line 2, in another_made_up_function
+        frame2
+    test.test_doubles.FakeException: Gotcha
+  FAIL: made.up.assertion_2
+    Traceback (most recent call last):
+      File "made_up_file_3.py", line 1, in made_up_function_3
+        frame3
+      File "made_up_file_4.py", line 2, in made_up_function_4
+        frame4
+    test.test_doubles.FakeException: you fail
+made.up_context_2
+  Traceback (most recent call last):
+    File "made_up_file_5.py", line 1, in made_up_function_5
+      frame5
+    File "made_up_file_6.py", line 2, in made_up_function_6
+      frame6
+  test.test_doubles.FakeException: oh dear
 ----------------------------------------------------------------------
 FAILED!
 2 contexts, 2 assertions: 1 failed, 2 errors

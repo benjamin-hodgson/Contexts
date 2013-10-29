@@ -52,25 +52,28 @@ class SimpleResult(Result):
     def failed(self):
         return self.context_errors or self.assertion_errors or self.assertion_failures
 
+    def assertion_started(self, assertion):
+        self.assertions.append(assertion)
+        super().assertion_started(assertion)
+
+    def assertion_failed(self, assertion, exception):
+        self.assertion_failures.append((assertion, exception))
+        exception.__traceback__ = None
+        super().assertion_failed(assertion, exception)
+
+    def assertion_errored(self, assertion, exception):
+        self.assertion_errors.append((assertion, exception))
+        exception.__traceback__ = None
+        super().assertion_errored(assertion, exception)
+
     def context_started(self, context):
         self.contexts.append(context)
         super().context_started(context)
 
     def context_errored(self, context, exception):
         self.context_errors.append((context, exception))
+        exception.__traceback__ = None
         super().context_errored(context, exception)
-
-    def assertion_started(self, assertion):
-        self.assertions.append(assertion)
-        super().assertion_started(assertion)
-
-    def assertion_errored(self, assertion, exception):
-        self.assertion_errors.append((assertion, exception))
-        super().assertion_errored(assertion, exception)
-
-    def assertion_failed(self, assertion, exception):
-        self.assertion_failures.append((assertion, exception))
-        super().assertion_failed(assertion, exception)
 
 
 class StreamResult(SimpleResult):
@@ -114,17 +117,14 @@ class SummarisingResult(StreamResult):
 
     def assertion_failed(self, assertion, exception):
         self.summary.extend(self.format_failure(assertion, exception, "FAIL"))
-        exception.__traceback__ == None
         super().assertion_failed(assertion, exception)
 
     def assertion_errored(self, assertion, exception):
         self.summary.extend(self.format_failure(assertion, exception, "ERROR"))
-        exception.__traceback__ == None
         super().assertion_errored(assertion, exception)
 
     def context_errored(self, context, exception):
         self.summary.extend(self.format_failure(context, exception, "ERROR"))
-        exception.__traceback__ == None
         super().context_errored(context, exception)
 
     def summarise(self):
@@ -172,6 +172,110 @@ def pluralise(noun, num):
     if num != 1:
         string += 's'
     return string
+
+
+class ContextViewModel(object):
+    def __init__(self, context):
+        self.name = context.name
+        self.assertion_failures = []
+        self.assertion_errors = []
+        self._exception = None
+        self.error_summary = None
+
+    @property
+    def exception(self):
+        return self._exception
+    @exception.setter
+    def exception(self, value):
+        self._exception = value
+        self.error_summary = traceback.format_exception(type(value), value, value.__traceback__)
+
+class AssertionViewModel(object):
+    def __init__(self, assertion, exception):
+        self.name = assertion.name
+        self.error_summary = traceback.format_exception(type(exception), exception, exception.__traceback__)
+
+
+class HierarchicalResult(StreamResult):
+    dashes = '-' * 70
+
+    def __init__(self, *args, **kwargs):
+        self.summary = []
+        self.view_models = []
+        super().__init__(*args, **kwargs)
+
+    def suite_ended(self, suite):
+        super().suite_ended(suite)
+        self.summarise()
+
+    def context_started(self, context):
+        self.view_models.append(ContextViewModel(context))
+        super().context_started(context)
+
+    def context_ended(self, context):
+        super().context_ended(context)
+        self.current_context = None
+
+    def assertion_failed(self, assertion, exception):
+        context_vm = self.view_models[-1]
+        assertion_vm = AssertionViewModel(assertion, exception)
+        context_vm.assertion_failures.append(assertion_vm)
+        super().assertion_failed(assertion, exception)
+
+    def assertion_errored(self, assertion, exception):
+        context_vm = self.view_models[-1]
+        assertion_vm = AssertionViewModel(assertion, exception)
+        context_vm.assertion_errors.append(assertion_vm)
+        super().assertion_errored(assertion, exception)
+
+    def context_errored(self, context, exception):
+        context_vm = self.view_models[-1]
+        context_vm.exception = exception
+        super().context_errored(context, exception)
+
+    def summarise(self):
+        for context_vm in self.view_models:
+            self.summary.append(context_vm.name)
+            for assertion_vm in context_vm.assertion_errors:
+                formatted_exc = ''.join(assertion_vm.error_summary).split('\n')[:-1]
+                self.summary.append('  ERROR: ' + assertion_vm.name)
+                self.summary.extend('    ' + s for s in formatted_exc)
+            for assertion_vm in context_vm.assertion_failures:
+                formatted_exc = ''.join(assertion_vm.error_summary).split('\n')[:-1]
+                self.summary.append('  FAIL: ' + assertion_vm.name)
+                self.summary.extend('    ' + s for s in formatted_exc)
+            if context_vm.error_summary:
+                formatted_exc = ''.join(context_vm.error_summary).split('\n')[:-1]
+                self.summary.extend('  ' + s for s in formatted_exc)
+
+        self._print('')
+        self._print(self.dashes)
+        if self.failed:
+            self._print('\n'.join(self.summary))
+            self._print(self.dashes)
+            self._print('FAILED!')
+            self._print(self.failure_numbers())
+        else:
+            self._print('PASSED!')
+            self._print(self.success_numbers())
+
+    def success_numbers(self):
+        num_ctx = len(self.contexts)
+        num_ass = len(self.assertions)
+        msg = "{}, {}".format(pluralise("context", num_ctx), pluralise("assertion", num_ass))
+        return msg
+
+    def failure_numbers(self):
+        num_ctx = len(self.contexts)
+        num_ass = len(self.assertions)
+        num_ctx_err = len(self.context_errors)
+        num_fail = len(self.assertion_failures)
+        num_err = len(self.assertion_errors)
+        msg =  "{}, {}: {} failed, {}".format(pluralise("context", num_ctx),
+           pluralise("assertion", num_ass),
+           num_fail,
+           pluralise("error", num_err + num_ctx_err))
+        return msg
 
 
 class TimedResult(StreamResult):
@@ -224,4 +328,3 @@ class NonCapturingCLIResult(DotsResult, TimedResult, SummarisingResult):
 
 class CLIResult(CapturingResult, NonCapturingCLIResult):
     pass
-

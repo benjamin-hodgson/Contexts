@@ -45,7 +45,8 @@ def cmd():
     parser.add_argument('-s', '--no-capture', action='store_const', dest='result', const=reporting.NonCapturingCLIResult(), default=reporting.CLIResult())
     args = parser.parse_args()
 
-    result = run(os.getcwd(), args.result)
-    if not result:
+    _run_impl(os.getcwd(), args.result)
+    
+    if args.result.failed:
         sys.exit(1)
     sys.exit(0)
