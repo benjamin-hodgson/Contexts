@@ -235,6 +235,8 @@ class HierarchicalResult(StreamResult):
 
     def summarise(self):
         for context_vm in self.view_models:
+            if not context_vm.error_summary and not context_vm.assertion_errors and not context_vm.assertion_failures:
+                continue
             self.summary.append(context_vm.name)
             for assertion_vm in context_vm.assertion_errors:
                 formatted_exc = ''.join(assertion_vm.error_summary).split('\n')[:-1]
@@ -327,4 +329,7 @@ class NonCapturingCLIResult(DotsResult, TimedResult, SummarisingResult):
 
 
 class CLIResult(CapturingResult, NonCapturingCLIResult):
+    pass
+
+class HierarchicalCLIResult(DotsResult, TimedResult, HierarchicalResult):
     pass

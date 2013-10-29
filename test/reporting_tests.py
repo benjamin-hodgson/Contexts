@@ -191,6 +191,9 @@ class WhenPrintingHierarchically(object):
         self.result.context_started(self.context2)
         self.result.context_errored(self.context2, self.exception3)
 
+        self.result.context_started(contexts.core.Context([],[],[],[], "made.up_context_3"))
+        self.result.context_ended(contexts.core.Context([],[],[],[], "made.up_context_3"))
+
         self.result.stream = self.stringio
         self.result.suite_ended(None)
 
@@ -221,7 +224,7 @@ made.up_context_2
   test.test_doubles.FakeException: oh dear
 ----------------------------------------------------------------------
 FAILED!
-2 contexts, 2 assertions: 1 failed, 2 errors
+3 contexts, 2 assertions: 1 failed, 2 errors
 """)
 
 
