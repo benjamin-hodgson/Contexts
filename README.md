@@ -14,6 +14,19 @@ observable behaviour of the code. Contexts is designed around this test-as-sente
 It makes it easier for you to give your tests fluent descriptions, because it runs methods
 in sequence based on their names.
 
+Installation
+------------
+The easy way:
+```
+pip install contexts
+```
+
+The geeky way:
+```
+git clone https://github.com/benjamin-hodgson/Contexts.git
+cd Contexts
+python setup.py install
+```
 
 Guide
 -----
