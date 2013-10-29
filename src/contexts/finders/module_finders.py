@@ -1,3 +1,4 @@
+import itertools
 import os
 import re
 from collections import namedtuple
@@ -11,18 +12,37 @@ folder_re = re.compile(r"([Ss]pec|[Tt]est)")
 
 
 def find_modules(directory):
-    module_specs = []
-    walker = Walker(directory)
-    for dirpath in walker.walk_folders():
-        finder = create_module_finder(dirpath)
-        module_specs.extend(finder.find_modules())
-    return module_specs
+    finders = generate_finders(directory)
+    return itertools.chain.from_iterable(finder.find_modules() for finder in finders)
 
 
-def create_module_finder(dirpath):
-    if ispackage(dirpath):
-        return PackageModuleFinder(dirpath)
-    return FolderModuleFinder(dirpath)
+def generate_finders(directory):
+    gen = FinderGenerator(directory)
+    return gen.generate_finders()
+
+
+class FinderGenerator(object):
+    """Like a factory class, but generates a sequence of them"""
+    def __init__(self, directory):
+        self.directory = directory
+
+    def generate_finders(self):
+        return (self.create_module_finder(dirpath) for dirpath in self.walk_folders())
+
+    def walk_folders(self):
+        for dirpath, dirnames, _ in os.walk(self.directory):
+            self.remove_non_test_folders(dirnames)
+            yield dirpath
+
+    @classmethod
+    def remove_non_test_folders(cls, dirnames):
+        dirnames[:] = [n for n in dirnames if folder_re.search(n)]
+
+
+    def create_module_finder(self, dirpath):
+        if ispackage(dirpath):
+            return PackageModuleFinder(dirpath)
+        return FolderModuleFinder(dirpath)
 
 
 class ModuleFinderBase(object):
@@ -63,20 +83,6 @@ class PackageModuleFinder(ModuleFinderBase):
 
         full_package_name = '.'.join(reversed(package_names))
         return PackageSpecification(parent, full_package_name)
-
-
-class Walker(object):
-    def __init__(self, directory):
-        self.directory = directory
-
-    def walk_folders(self):
-        for dirpath, dirnames, _ in os.walk(self.directory):
-            self.remove_non_test_folders(dirnames)
-            yield dirpath
-
-    @classmethod
-    def remove_non_test_folders(cls, dirnames):
-        dirnames[:] = [n for n in dirnames if folder_re.search(n)]
 
 
 def ispackage(directory):
