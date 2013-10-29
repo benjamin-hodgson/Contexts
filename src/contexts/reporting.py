@@ -73,40 +73,56 @@ class SimpleResult(Result):
         super().assertion_failed(assertion, exception)
 
 
-class TextResult(SimpleResult):
-    dashes = '-' * 70
-    equalses = '=' * 70
-
+class StreamResult(SimpleResult):
     def __init__(self, stream=sys.stderr):
         self.stream = stream
-        self.summary = []
         super().__init__()
 
     def _print(self, *args, sep=' ', end='\n', flush=True):
         print(*args, sep=sep, end=end, file=self.stream, flush=flush)
 
-    def suite_ended(self, suite):
-        self.summarise()
-        super().suite_ended(suite)
 
+class DotsResult(StreamResult):
     def assertion_passed(self, *args, **kwargs):
-        super().assertion_passed(*args, **kwargs)
         self._print('.', end='')
+        super().assertion_passed(*args, **kwargs)
+
+    def assertion_failed(self, *args, **kwargs):
+        self._print('F', end='')
+        super().assertion_failed(*args, **kwargs)
+
+    def assertion_errored(self, *args, **kwargs):
+        self._print('E', end='')
+        super().assertion_errored(*args, **kwargs)
+
+    def context_errored(self, *args, **kwargs):
+        self._print('E', end='')
+        super().context_errored(*args, **kwargs)
+
+
+class SummarisingResult(StreamResult):
+    dashes = '-' * 70
+    equalses = '=' * 70
+
+    def __init__(self, *args, **kwargs):
+        self.summary = []
+        super().__init__(*args, **kwargs)
+
+    def suite_ended(self, suite):
+        super().suite_ended(suite)
+        self.summarise()
 
     def assertion_failed(self, assertion, exception):
-        self._print('F', end='')
         self.summary.extend(self.format_failure(assertion, exception, "FAIL"))
         exception.__traceback__ == None
         super().assertion_failed(assertion, exception)
 
     def assertion_errored(self, assertion, exception):
-        self._print('E', end='')
         self.summary.extend(self.format_failure(assertion, exception, "ERROR"))
         exception.__traceback__ == None
         super().assertion_errored(assertion, exception)
 
     def context_errored(self, context, exception):
-        self._print('E', end='')
         self.summary.extend(self.format_failure(context, exception, "ERROR"))
         exception.__traceback__ == None
         super().context_errored(context, exception)
@@ -158,7 +174,7 @@ def pluralise(noun, num):
     return string
 
 
-class TimedTextResult(TextResult):
+class TimedResult(StreamResult):
     def suite_started(self, suite):
         self.start_time = datetime.datetime.now()
 
@@ -166,14 +182,12 @@ class TimedTextResult(TextResult):
         self.end_time = datetime.datetime.now()
         super().suite_ended(suite)
 
-    def summarise(self):
-        super().summarise()
         total_secs = (self.end_time - self.start_time).total_seconds()
         rounded = round(total_secs, 1)
         self._print("({} seconds)".format(rounded))
 
 
-class CapturingTextResult(TextResult):
+class CapturingResult(SummarisingResult):
     def context_started(self, context):
         super().context_started(context)
         self.real_stdout = sys.stdout
@@ -204,6 +218,10 @@ class CapturingTextResult(TextResult):
             self.summary.append("--------------------- >> end captured stdout << ----------------------")
 
 
-class TimedCapturingTextResult(TimedTextResult, CapturingTextResult):
+class NonCapturingCLIResult(DotsResult, TimedResult, SummarisingResult):
+    pass
+
+
+class CLIResult(CapturingResult, NonCapturingCLIResult):
     pass
 

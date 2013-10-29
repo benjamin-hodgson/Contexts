@@ -18,7 +18,7 @@ def main():
 
 def run(spec=None, result=None):
     if result is None:
-        result = reporting.TimedCapturingTextResult()
+        result = reporting.CapturingDefaultResult()
     if spec is None:
         spec = sys.modules['__main__']
 
@@ -42,7 +42,7 @@ def catch(func, *args, **kwargs):
 
 def cmd():
     parser = argparse.ArgumentParser()
-    parser.add_argument('-s', '--no-capture', action='store_const', dest='result', const=reporting.TimedTextResult(), default=reporting.TimedCapturingTextResult())
+    parser.add_argument('-s', '--no-capture', action='store_const', dest='result', const=reporting.NonCapturingCLIResult(), default=reporting.CLIResult())
     args = parser.parse_args()
 
     result = run(os.getcwd(), args.result)

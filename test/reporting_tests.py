@@ -11,7 +11,7 @@ from . import test_doubles
 class WhenWatchingForDots(object):
     def context(self):
         self.stringio = StringIO()
-        self.result = reporting.TextResult(self.stringio)
+        self.result = reporting.DotsResult(self.stringio)
         self.fake_context = contexts.core.Context([],[],[],[],"context")
         self.fake_assertion = contexts.core.Assertion(None, "assertion")
 
@@ -56,7 +56,7 @@ class WhenPrintingASuccessfulResult(object):
     def in_the_context_of_a_successful_run(self):
         # We don't want it to try and print anything while we set it up
         self.stringio = StringIO()
-        self.result = reporting.TextResult(StringIO())
+        self.result = reporting.SummarisingResult(StringIO())
 
     def because_we_run_some_tests(self):
         self.result.suite_started(None)
@@ -86,22 +86,22 @@ PASSED!
 
 class WhenPrintingAFailureResult(object):
     def in_the_context_of_a_failed_run(self):
-        self.result = reporting.TextResult(StringIO())
+        self.result = reporting.SummarisingResult(StringIO())
         self.stringio = StringIO()
 
         self.assertion1 = contexts.core.Assertion(None, "made.up.assertion_1")
         tb1 = [('made_up_file.py', 3, 'made_up_function', 'frame1'),
-                    ('another_made_up_file.py', 2, 'another_made_up_function', 'frame2')]
+               ('another_made_up_file.py', 2, 'another_made_up_function', 'frame2')]
         self.exception1 = test_doubles.build_fake_exception(tb1, "Gotcha")
 
         self.assertion2 = contexts.core.Assertion(None, "made.up.assertion_2")
         tb2 = [('made_up_file_3.py', 1, 'made_up_function_3', 'frame3'),
-                    ('made_up_file_4.py', 2, 'made_up_function_4', 'frame4')]
+               ('made_up_file_4.py', 2, 'made_up_function_4', 'frame4')]
         self.exception2 = test_doubles.build_fake_exception(tb2, "you fail")
 
         self.context3 = contexts.core.Context([],[],[],[],"made.up_context")
         tb3 = [('made_up_file_5.py', 1, 'made_up_function_5', 'frame5'),
-                    ('made_up_file_6.py', 2, 'made_up_function_6', 'frame6')]
+               ('made_up_file_6.py', 2, 'made_up_function_6', 'frame6')]
         self.exception3 = test_doubles.build_fake_exception(tb3, "oh dear")
 
     def because_we_run_some_tests(self):
@@ -165,7 +165,7 @@ class WhenTimingATestRun(object):
         self.FakeDateTime = FakeDateTime
 
         self.stringio = StringIO()
-        self.result = reporting.TimedTextResult(self.stringio)
+        self.result = reporting.TimedResult(self.stringio)
 
     def because_we_run_a_suite(self):
         with mock.patch('datetime.datetime', self.FakeDateTime):
@@ -174,12 +174,7 @@ class WhenTimingATestRun(object):
             self.result.suite_ended(None)
 
     def it_should_report_the_total_time_for_the_test_run(self):
-        self.stringio.getvalue().should.equal("""
-----------------------------------------------------------------------
-PASSED!
-0 contexts, 0 assertions
-(10.5 seconds)
-""")
+        self.stringio.getvalue().should.equal("(10.5 seconds)\n")
 
 class WhenCapturingStdOut(object):
     def context(self):
@@ -193,7 +188,7 @@ class WhenCapturingStdOut(object):
 
         self.stringio = StringIO()
         # we don't want the output to be cluttered up with dots
-        self.result = reporting.CapturingTextResult(StringIO())
+        self.result = reporting.CapturingResult(StringIO())
 
     def because_we_print_some_stuff(self):
         # It'd be nice if this could be done using the context managers
