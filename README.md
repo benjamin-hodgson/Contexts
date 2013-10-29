@@ -4,6 +4,8 @@ Contexts
 
 Trello board: https://trello.com/b/uPgp50AF/contexts-development
 
+Cheese Shop: https://pypi.python.org/pypi/Contexts/0.1.2
+
 Contexts is a 'Context-Specification'-style test runner for Python, inspired by C#'s
 [`Machine.Specifications`](https://github.com/machine/machine.specifications).
 
