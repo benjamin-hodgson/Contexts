@@ -282,6 +282,7 @@ class HierarchicalResult(StreamResult):
 
 class TimedResult(StreamResult):
     def suite_started(self, suite):
+        super().suite_started(suite)
         self.start_time = datetime.datetime.now()
 
     def suite_ended(self, suite):
