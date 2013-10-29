@@ -1,5 +1,3 @@
-import argparse
-import os
 import sys
 from . import builders
 from . import reporting
@@ -38,15 +36,3 @@ def catch(func, *args, **kwargs):
         func(*args, **kwargs)
     except Exception as e:
         return e
-
-
-def cmd():
-    parser = argparse.ArgumentParser()
-    parser.add_argument('-s', '--no-capture', action='store_const', dest='result', const=reporting.NonCapturingCLIResult(), default=reporting.CLIResult())
-    args = parser.parse_args()
-
-    _run_impl(os.getcwd(), args.result)
-    
-    if args.result.failed:
-        sys.exit(1)
-    sys.exit(0)

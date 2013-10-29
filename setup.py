@@ -4,7 +4,7 @@ from setuptools import setup, find_packages
 
 setup(
     name = "Contexts",
-    version = "0.1.1",
+    version = "0.1.2",
     author = "Benjamin Hodgson",
     author_email = "benjamin.hodgson@huddle.net",
     url = "https://github.com/benjamin-hodgson/Contexts",
@@ -13,6 +13,6 @@ setup(
     packages = find_packages('src'),
     tests_require = ["sure >= 1.2.2"],
     entry_points = {
-    	'console_scripts': ['run-contexts = contexts:cmd']
+    	'console_scripts': ['run-contexts = contexts.__main__:cmd']
     }
 )
