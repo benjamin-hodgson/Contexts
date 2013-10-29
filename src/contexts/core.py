@@ -1,4 +1,3 @@
-import traceback
 from contextlib import contextmanager
 
 
@@ -72,9 +71,7 @@ class ResultRunner(object):
         try:
             yield
         except Exception as e:
-            tb = traceback.extract_tb(e.__traceback__)
-            e.__traceback__ = None  # to prevent memory leaks caused by keeping tracebacks around
-            self.result.context_errored(context, e, tb)
+            self.result.context_errored(context, e)
         else:
             self.result.context_ended(context)
 
@@ -84,12 +81,8 @@ class ResultRunner(object):
         try:
             yield
         except AssertionError as e:
-            tb = traceback.extract_tb(e.__traceback__)
-            e.__traceback__ = None
-            self.result.assertion_failed(assertion, e, tb)
+            self.result.assertion_failed(assertion, e)
         except Exception as e:
-            tb = traceback.extract_tb(e.__traceback__)
-            e.__traceback__ = None
-            self.result.assertion_errored(assertion, e, tb)
+            self.result.assertion_errored(assertion, e)
         else:
             self.result.assertion_passed(assertion)

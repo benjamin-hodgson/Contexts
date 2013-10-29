@@ -5,6 +5,7 @@ from unittest import mock
 import sure
 import contexts
 from contexts import reporting
+from . import test_doubles
 
 
 class WhenWatchingForDots(object):
@@ -26,14 +27,14 @@ class WhenWatchingForDots(object):
         self.second = self.stringio.getvalue()
 
         self.result.assertion_started(self.fake_assertion)
-        self.result.assertion_failed(self.fake_assertion, None, [])
+        self.result.assertion_failed(self.fake_assertion, test_doubles.FakeException())
         self.third = self.stringio.getvalue()
 
         self.result.assertion_started(self.fake_assertion)
-        self.result.assertion_errored(self.fake_assertion, None, [])
+        self.result.assertion_errored(self.fake_assertion, test_doubles.FakeException())
         self.fourth = self.stringio.getvalue()
 
-        self.result.context_errored(self.fake_context, None, [])
+        self.result.context_errored(self.fake_context, test_doubles.FakeException())
         self.fifth = self.stringio.getvalue()
 
     def it_should_print_a_dot_for_the_first_pass(self):
@@ -88,33 +89,33 @@ class WhenPrintingAFailureResult(object):
         self.result = reporting.TextResult(StringIO())
         self.stringio = StringIO()
 
-        self.exception1 = TypeError("Gotcha")
-        self.tb1 = [('made_up_file.py', 3, 'made_up_function', 'frame1'),
-                    ('another_made_up_file.py', 2, 'another_made_up_function', 'frame2')]
         self.assertion1 = contexts.core.Assertion(None, "made.up.assertion_1")
+        tb1 = [('made_up_file.py', 3, 'made_up_function', 'frame1'),
+                    ('another_made_up_file.py', 2, 'another_made_up_function', 'frame2')]
+        self.exception1 = test_doubles.build_fake_exception(tb1, "Gotcha")
 
-        self.exception2 = AssertionError("you fail")
-        self.tb2 = [('made_up_file_3.py', 1, 'made_up_function_3', 'frame3'),
-                    ('made_up_file_4.py', 2, 'made_up_function_4', 'frame4')]
         self.assertion2 = contexts.core.Assertion(None, "made.up.assertion_2")
+        tb2 = [('made_up_file_3.py', 1, 'made_up_function_3', 'frame3'),
+                    ('made_up_file_4.py', 2, 'made_up_function_4', 'frame4')]
+        self.exception2 = test_doubles.build_fake_exception(tb2, "you fail")
 
-        self.exception3 = ZeroDivisionError("oh dear")
-        self.tb3 = [('made_up_file_4.py', 1, 'made_up_function_4', 'frame4'),
-                    ('made_up_file_5.py', 2, 'made_up_function_5', 'frame5')]
         self.context3 = contexts.core.Context([],[],[],[],"made.up_context")
+        tb3 = [('made_up_file_5.py', 1, 'made_up_function_5', 'frame5'),
+                    ('made_up_file_6.py', 2, 'made_up_function_6', 'frame6')]
+        self.exception3 = test_doubles.build_fake_exception(tb3, "oh dear")
 
     def because_we_run_some_tests(self):
         self.result.suite_started(None)
 
         self.result.context_started(None)
         self.result.assertion_started(self.assertion1)
-        self.result.assertion_errored(self.assertion1, self.exception1, self.tb1)
+        self.result.assertion_errored(self.assertion1, self.exception1)
         self.result.assertion_started(self.assertion2)
-        self.result.assertion_failed(self.assertion2, self.exception2, self.tb2)
+        self.result.assertion_failed(self.assertion2, self.exception2)
         self.result.context_ended(None)
 
         self.result.context_started(self.context3)
-        self.result.context_errored(self.context3, self.exception3, self.tb3)
+        self.result.context_errored(self.context3, self.exception3)
 
         self.result.stream = self.stringio
         self.result.suite_ended(None)
@@ -129,7 +130,7 @@ Traceback (most recent call last):
     frame1
   File "another_made_up_file.py", line 2, in another_made_up_function
     frame2
-TypeError: Gotcha
+test.test_doubles.FakeException: Gotcha
 ======================================================================
 FAIL: made.up.assertion_2
 ----------------------------------------------------------------------
@@ -138,16 +139,16 @@ Traceback (most recent call last):
     frame3
   File "made_up_file_4.py", line 2, in made_up_function_4
     frame4
-AssertionError: you fail
+test.test_doubles.FakeException: you fail
 ======================================================================
 ERROR: made.up_context
 ----------------------------------------------------------------------
 Traceback (most recent call last):
-  File "made_up_file_4.py", line 1, in made_up_function_4
-    frame4
-  File "made_up_file_5.py", line 2, in made_up_function_5
+  File "made_up_file_5.py", line 1, in made_up_function_5
     frame5
-ZeroDivisionError: oh dear
+  File "made_up_file_6.py", line 2, in made_up_function_6
+    frame6
+test.test_doubles.FakeException: oh dear
 ----------------------------------------------------------------------
 FAILED!
 2 contexts, 2 assertions: 1 failed, 2 errors
@@ -210,10 +211,10 @@ class WhenCapturingStdOut(object):
         print("failing context")
         self.result.assertion_started(self.fake_assertion)
         print("failing assertion")
-        self.result.assertion_failed(self.fake_assertion, None, [])
+        self.result.assertion_failed(self.fake_assertion, test_doubles.FakeException())
         self.result.assertion_started(self.fake_assertion)
         print("erroring assertion")
-        self.result.assertion_errored(self.fake_assertion, None, [])
+        self.result.assertion_errored(self.fake_assertion, test_doubles.FakeException())
         self.result.context_ended(self.fake_context)
 
         self.result.context_started(self.fake_context)
@@ -221,12 +222,12 @@ class WhenCapturingStdOut(object):
         self.result.assertion_started(self.fake_assertion)
         print("assertion in erroring context")
         self.result.assertion_passed(self.fake_assertion)
-        self.result.context_errored(self.fake_context, None, [])
+        self.result.context_errored(self.fake_context, test_doubles.FakeException())
 
         self.result.context_started(self.fake_context)
         self.result.assertion_started(self.fake_assertion)
         # don't print anything
-        self.result.assertion_failed(self.fake_assertion, None, [])
+        self.result.assertion_failed(self.fake_assertion, test_doubles.FakeException())
         self.result.context_ended(self.fake_context)
 
         self.result.stream = self.stringio
@@ -243,8 +244,7 @@ class WhenCapturingStdOut(object):
 ======================================================================
 FAIL: assertion
 ----------------------------------------------------------------------
-Traceback (most recent call last):
-NoneType
+test.test_doubles.FakeException
 -------------------- >> begin captured stdout << ---------------------
 failing context
 failing assertion
@@ -252,8 +252,7 @@ failing assertion
 ======================================================================
 ERROR: assertion
 ----------------------------------------------------------------------
-Traceback (most recent call last):
-NoneType
+test.test_doubles.FakeException
 -------------------- >> begin captured stdout << ---------------------
 failing context
 failing assertion
@@ -262,8 +261,7 @@ erroring assertion
 ======================================================================
 ERROR: context
 ----------------------------------------------------------------------
-Traceback (most recent call last):
-NoneType
+test.test_doubles.FakeException
 -------------------- >> begin captured stdout << ---------------------
 erroring context
 assertion in erroring context
@@ -271,8 +269,7 @@ assertion in erroring context
 ======================================================================
 FAIL: assertion
 ----------------------------------------------------------------------
-Traceback (most recent call last):
-NoneType
+test.test_doubles.FakeException
 ----------------------------------------------------------------------
 FAILED!
 4 contexts, 5 assertions: 2 failed, 2 errors

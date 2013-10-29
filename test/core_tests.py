@@ -64,19 +64,17 @@ class WhenRunningASpec(object):
         names.should.contain(__name__ + '.WhenRunningASpec.context.<locals>.TestSpec.failing_method_with_should_in_the_name')
         names.should.contain(__name__ + '.WhenRunningASpec.context.<locals>.TestSpec.erroring_method_with_should_in_the_name')
 
-    def it_should_pass_in_the_exceptions_and_tracebacks(self):
-        error_infos = {}
+    def it_should_pass_in_the_exceptions(self):
+        exceptions = {}
         for i in (3,5,7):
             call_name = self.result.calls[i][0]
             if call_name == 'assertion_failed':
-                error_infos['fail'] = (self.result.calls[i][2], self.result.calls[i][3])
+                exceptions['fail'] = self.result.calls[i][2]
             if call_name == 'assertion_errored':
-                error_infos['error'] = (self.result.calls[i][2], self.result.calls[i][3])
+                exceptions['error'] = self.result.calls[i][2]
 
-        error_infos['fail'][0].should.equal(self.assertion_err)
-        error_infos['fail'][1].should_not.be.empty
-        error_infos['error'][0].should.equal(self.value_err)
-        error_infos['error'][1].should_not.be.empty
+        exceptions['fail'].should.equal(self.assertion_err)
+        exceptions['error'].should.equal(self.value_err)
 
     def it_should_call_ctx_ended_next(self):
         self.result.calls[8][0].should.equal('context_ended')
@@ -144,9 +142,6 @@ class WhenAContextErrors(object):
     def it_should_pass_in_the_first_exception(self):
         self.results[0].calls[2][2].should.equal(self.value_err)
 
-    def it_should_pass_in_the_first_traceback(self):
-        self.results[0].calls[2][3].should_not.be.empty
-
     def it_should_not_run_the_first_action(self):
         self.specs[0].ran_because.should.be.false
 
@@ -162,9 +157,6 @@ class WhenAContextErrors(object):
     def it_should_pass_in_the_second_exception(self):
         self.results[1].calls[2][2].should.equal(self.type_err)
 
-    def it_should_pass_in_the_second_traceback(self):
-        self.results[1].calls[2][3].should_not.be.empty
-
     def it_should_not_run_the_second_assertion(self):
         self.specs[1].ran_assertion.should.be.false
 
@@ -176,9 +168,6 @@ class WhenAContextErrors(object):
 
     def it_should_pass_in_the_third_exception(self):
         self.results[2].calls[4][2].should.equal(self.assertion_err)
-
-    def it_should_pass_in_the_third_traceback(self):
-        self.results[2].calls[4][3].should_not.be.empty
 
 
 class WhenCatchingAnException(object):
