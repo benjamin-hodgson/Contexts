@@ -6,8 +6,7 @@ from . import finders
 
 
 def import_from_directory(dir_path):
-    finder = finders.ModuleFinder(dir_path)
-    module_specs = finder.find_modules()
+    module_specs = finders.find_modules(dir_path)
     return (load_module(*spec) for spec in module_specs)
 
 
