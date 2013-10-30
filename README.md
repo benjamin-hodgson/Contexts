@@ -31,7 +31,7 @@ python setup.py install
 Example
 -------
 Here's an example of a test case that the authors of [Requests](https://github.com/kennethreitz/requests)
-might have written, if they were using Contexts.
+might have written, if they were using Contexts. See the Guide below for details.
 
 ```python
 import requests
