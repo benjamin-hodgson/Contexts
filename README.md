@@ -28,6 +28,42 @@ cd Contexts
 python setup.py install
 ```
 
+Example
+-------
+Here's an example of a test case that the authors of [Requests](https://github.com/kennethreitz/requests)
+might have written, if they were using Contexts.
+
+```python
+import requests
+import contexts
+
+class WhenRequestingAResourceThatDoesNotExist(object):
+    def establish_that_we_are_asking_for_a_made_up_resource(self):
+        self.uri = "http://www.github.com/itdontexistman"
+        self.session = requests.Session()
+
+    def because_we_make_a_request(self):
+        self.response = self.session.get(self.uri)
+
+    def the_response_should_have_a_status_code_of_404(self):
+        assert self.response.status_code == 404
+
+    def the_response_should_have_an_HTML_content_type(self):
+        assert self.response.headers['content-type'] == 'text/html'
+
+    def it_should_raise_an_HTTPError_when_we_ask_it_to(self):
+        # In the real world, this assertion would be a whole test class of its own.
+        # I put it in because I wanted to demonstrate 'catch()'!
+        exception = contexts.catch(self.response.raise_for_status)
+        assert isinstance(exception, requests.exceptions.HTTPError)
+
+    def cleanup_the_session(self):
+        self.session.close()
+
+if __name__ == '__main__':
+    contexts.main()
+```
+
 Guide
 -----
 Contexts subscribes to a testing style wherein each class represents a single test case.
@@ -152,40 +188,3 @@ instance attribute, and assertions are made about (for example) its type in asse
 #### Other methods
 Other methods, which do not contain any of the keywords detailed above, are treated as normal
 instance methods. They can be called as usual by the other methods of the class.
-
-
-Example
--------
-Here's an example of a test case that the authors of [Requests](https://github.com/kennethreitz/requests)
-might have written, if they were using Contexts.
-
-```python
-import requests
-import contexts
-
-class WhenRequestingAResourceThatDoesNotExist(object):
-    def establish_that_we_are_asking_for_a_made_up_resource(self):
-        self.uri = "http://www.github.com/itdontexistman"
-        self.session = requests.Session()
-
-    def because_we_make_a_request(self):
-        self.response = self.session.get(self.uri)
-
-    def the_response_should_have_a_status_code_of_404(self):
-        assert self.response.status_code == 404
-
-    def the_response_should_have_an_HTML_content_type(self):
-        assert self.response.headers['content-type'] == 'text/html'
-
-    def it_should_raise_an_HTTPError_when_we_ask_it_to(self):
-        # In the real world, this assertion would be a whole test class of its own.
-        # I put it in because I wanted to demonstrate 'catch()'!
-        exception = contexts.catch(self.response.raise_for_status)
-        assert isinstance(exception, requests.exceptions.HTTPError)
-
-    def cleanup_the_session(self):
-        self.session.close()
-
-if __name__ == '__main__':
-    contexts.main()
-```
