@@ -22,60 +22,60 @@ def generate_finders(directory):
 
 
 class FinderGenerator(object):
-    """Like a factory class, but generates a sequence of them"""
+    """Like a finder factory, but generates a sequence of them"""
+    def __init__(self, starting_directory):
+        self.walker = Walker(starting_directory)
+
+    def generate_finders(self):
+        while True:
+            self.current_directory = next(self.walker)
+            yield self.create_finder()
+
+    def create_finder(self):
+        if ispackage(self.current_directory):
+            return PackageModuleFinder(self.current_directory)
+        return FolderModuleFinder(self.current_directory)
+
+
+def Walker(starting_directory):
+    for dirpath, dirnames, _ in os.walk(starting_directory):
+        remove_non_test_folders(dirnames)
+        yield dirpath
+
+
+class FolderModuleFinder(object):
     def __init__(self, directory):
         self.directory = directory
 
-    def generate_finders(self):
-        return (self.create_module_finder(dirpath) for dirpath in self.walk_folders())
-
-    def walk_folders(self):
-        for dirpath, dirnames, _ in os.walk(self.directory):
-            self.remove_non_test_folders(dirnames)
-            yield dirpath
-
-    @classmethod
-    def remove_non_test_folders(cls, dirnames):
-        dirnames[:] = [n for n in dirnames if folder_re.search(n)]
-
-
-    def create_module_finder(self, dirpath):
-        if ispackage(dirpath):
-            return PackageModuleFinder(dirpath)
-        return FolderModuleFinder(dirpath)
-
-
-class ModuleFinderBase(object):
-    def __init__(self, folder_path):
-        self.folder_path = folder_path
-
-    def get_module_names(self, filenames, directory, package_prefix=''):
-        module_names = (remove_extension(f) for f in filenames if file_re.search(f))
-        full_names = (package_prefix + m for m in module_names)
-        return (ModuleSpecification(directory, n) for n in full_names)
-
-
-class FolderModuleFinder(ModuleFinderBase):
     def find_modules(self):
-        names = os.listdir(self.folder_path)
-        return self.get_module_names(names, self.folder_path)
+        found_modules = self.get_module_names()
+        return (ModuleSpecification(self.directory, mod) for mod in found_modules)
+
+    def get_module_names(self):
+        for name in os.listdir(self.directory):
+            if file_re.search(name):
+                yield remove_extension(name)
 
 
-class PackageModuleFinder(ModuleFinderBase):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+class PackageModuleFinder(object):
+    def __init__(self, directory):
+        self.directory = directory
         self.package_spec = self.get_package_specification()
-        self.specs = [self.package_spec]
 
     def find_modules(self):
-        names = os.listdir(self.folder_path)
-        found_modules = self.get_module_names(names, self.package_spec[0], self.package_spec[1] + '.')
-        self.specs.extend(found_modules)
-        return self.specs
+        found_modules = self.get_module_names()
+        specs = (ModuleSpecification(self.package_spec[0], mod) for mod in found_modules)
+        return itertools.chain([self.package_spec], specs)
+
+    def get_module_names(self):
+        for filename in os.listdir(self.directory):
+            if file_re.search(filename):
+                module_name = remove_extension(filename)
+                yield self.package_spec[1] + '.' + module_name
 
     def get_package_specification(self):
-        parent = os.path.dirname(self.folder_path)
-        package_names = [os.path.basename(self.folder_path)]
+        parent = os.path.dirname(self.directory)
+        package_names = [os.path.basename(self.directory)]
 
         while ispackage(parent):
             dirpath, parent = parent, os.path.dirname(parent)
@@ -89,7 +89,10 @@ def ispackage(directory):
     return "__init__.py" in os.listdir(directory)
 
 
+def remove_non_test_folders(dirnames):
+    dirnames[:] = [n for n in dirnames if folder_re.search(n)]
+
+
 def remove_extension(filename):
-    basename = os.path.basename(filename)
-    name, extension = os.path.splitext(basename)
+    name, extension = os.path.splitext(filename)
     return name
