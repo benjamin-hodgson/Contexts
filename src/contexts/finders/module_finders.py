@@ -12,22 +12,24 @@ folder_re = re.compile(r"([Ss]pec|[Tt]est)")
 
 
 def find_modules(directory):
-    finders = generate_finders(directory)
+    finders = FinderGenerator.walk_and_generate(directory)
     return itertools.chain.from_iterable(finder.find_modules() for finder in finders)
-
-
-def generate_finders(directory):
-    gen = FinderGenerator(directory)
-    return gen.generate_finders()
 
 
 class FinderGenerator(object):
     """Like a finder factory, but generates a sequence of them"""
+    @classmethod
+    def walk_and_generate(cls, directory):
+        gen = cls(directory)
+        return gen.generate_finders()
+
     def __init__(self, starting_directory):
         self.walker = Walker(starting_directory)
 
     def generate_finders(self):
         while True:
+            # let StopIteration bubble up from
+            # self.walker to whoever's iterating
             self.current_directory = next(self.walker)
             yield self.create_finder()
 
@@ -52,15 +54,14 @@ class FolderModuleFinder(object):
         return (ModuleSpecification(self.directory, mod) for mod in found_modules)
 
     def get_module_names(self):
-        for name in os.listdir(self.directory):
-            if file_re.search(name):
-                yield remove_extension(name)
+        for filename in matching_filenames(self.directory):
+            yield remove_extension(filename)
 
 
 class PackageModuleFinder(object):
     def __init__(self, directory):
         self.directory = directory
-        self.package_spec = self.get_package_specification()
+        self.package_spec = PackageSpecificationFactory(self.directory).create()
 
     def find_modules(self):
         found_modules = self.get_module_names()
@@ -68,25 +69,36 @@ class PackageModuleFinder(object):
         return itertools.chain([self.package_spec], specs)
 
     def get_module_names(self):
-        for filename in os.listdir(self.directory):
-            if file_re.search(filename):
-                module_name = remove_extension(filename)
-                yield self.package_spec[1] + '.' + module_name
+        for filename in matching_filenames(self.directory):
+            module_name = remove_extension(filename)
+            yield self.package_spec[1] + '.' + module_name
 
-    def get_package_specification(self):
-        parent = os.path.dirname(self.directory)
-        package_names = [os.path.basename(self.directory)]
 
-        while ispackage(parent):
-            dirpath, parent = parent, os.path.dirname(parent)
-            package_names.append(os.path.basename(dirpath))
+class PackageSpecificationFactory(object):
+    def __init__(self, directory):
+        self.directory = directory
+        self.current_parent = os.path.dirname(directory)
+        self.package_names = [os.path.basename(directory)]
 
-        full_package_name = '.'.join(reversed(package_names))
-        return PackageSpecification(parent, full_package_name)
+    def create(self):
+        self.traverse_filesystem()
+        full_package_name = '.'.join(reversed(self.package_names))
+        return PackageSpecification(self.current_parent, full_package_name)
+
+    def traverse_filesystem(self):
+        while ispackage(self.current_parent):
+            dirpath, self.current_parent = self.current_parent, os.path.dirname(self.current_parent)
+            self.package_names.append(os.path.basename(dirpath))
 
 
 def ispackage(directory):
     return "__init__.py" in os.listdir(directory)
+
+
+def matching_filenames(directory):
+    for filename in os.listdir(directory):
+        if file_re.search(filename):
+            yield filename
 
 
 def remove_non_test_folders(dirnames):
