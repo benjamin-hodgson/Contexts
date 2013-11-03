@@ -169,7 +169,6 @@ class WhenAContextErrors(object):
     def it_should_pass_in_the_third_exception(self):
         self.results[2].calls[4][2].should.equal(self.assertion_err)
 
-
 class WhenCatchingAnException(object):
     def context(self):
         self.exception = ValueError("test exception")
@@ -305,13 +304,20 @@ class WhenRunningMultipleSpecs(object):
 
 class WhenWeRunSpecsWithAlternatelyNamedMethods(object):
     def context(self):
+        class GivenWhenThen(object):
+            def __init__(self):
+                self.log = ""
+            def has_given_in_the_name(self):
+                self.log += "arrange "
+            def has_when_in_the_name(self):
+                self.log += "act "
+            def has_then_in_the_name(self):
+                self.log += "assert "
         class AlternatelyNamedMethods(object):
             def __init__(self):
                 self.log = ""
             def has_context_in_the_name(self):
                 self.log += "arrange "
-            def has_when_in_the_name(self):
-                self.log += "act "
             def has_it_in_the_name(self):
                 self.log += "assert "
         class MoreAlternativeNames(object):
@@ -324,26 +330,27 @@ class WhenWeRunSpecsWithAlternatelyNamedMethods(object):
         class EvenMoreAlternativeNames(object):
             def __init__(self):
                 self.log = ""
-            def has_given_in_the_name(self):
-                self.log += "arrange "
             def has_after_in_the_name(self):
                 self.log += "act "
             def has_will_in_the_name(self):
                 self.log += "assert "
 
-        self.spec1 = AlternatelyNamedMethods()
-        self.spec2 = MoreAlternativeNames()
-        self.spec3 = EvenMoreAlternativeNames()
+        self.spec1 = GivenWhenThen()
+        self.spec2 = AlternatelyNamedMethods()
+        self.spec3 = MoreAlternativeNames()
+        self.spec4 = EvenMoreAlternativeNames()
 
     def because_we_run_the_specs(self):
         contexts.run(self.spec1, MockResult())
         contexts.run(self.spec2, MockResult())
         contexts.run(self.spec3, MockResult())
+        contexts.run(self.spec4, MockResult())
 
     def it_should_run_the_methods_in_the_correct_order(self):
         self.spec1.log.should.equal("arrange act assert ")
-        self.spec2.log.should.equal("act assert ")
-        self.spec3.log.should.equal("arrange act assert ")
+        self.spec2.log.should.equal("arrange assert ")
+        self.spec3.log.should.equal("act assert ")
+        self.spec4.log.should.equal("act assert ")
 
 class WhenRunningAmbiguouslyNamedMethods(object):
     def context(self):

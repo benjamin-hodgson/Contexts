@@ -10,7 +10,7 @@ SpecialMethods = namedtuple("SpecialMethods", ['setups', 'actions', 'assertions'
 
 establish_re = re.compile(r"(^|_)([Ee]stablish|[Cc]ontext|[Gg]iven)")
 because_re = re.compile(r"(^|_)([Bb]ecause|[Ww]hen|[Ss]ince|[Aa]fter)")
-should_re = re.compile(r"(^|_)([Ss]hould|[Ii]t|[Mm]ust|[Ww]ill)")
+should_re = re.compile(r"(^|_)([Ss]hould|[Ii]t|[Mm]ust|[Ww]ill|[Tt]hen)")
 cleanup_re = re.compile(r"(^|_)[Cc]leanup")
 class_re = re.compile(r"([Ss]pec|[Ww]hen)")
 
