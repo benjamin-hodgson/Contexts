@@ -1,11 +1,18 @@
 language: python
 python:
-  - "3.3"
+- '3.3'
 install:
-  - pip install sure --use-mirrors
-  - python setup.py install
+- pip install sure --use-mirrors
+- python setup.py install
 script:
-  - run-contexts
+- run-contexts
 branches:
   only:
-    - master
+  - master
+deploy:
+  provider: pypi
+  user: benjamin.hodgson
+  password:
+    secure: IVce1Zk1404EFIA0Ss7q5vXyh5bLyxpiwZA8kyVqT9IBVDuf4d7ZLImS48rRMtmyB4uSwyExY+S5r+W1r3wLA506Htooqd7HLSgPx1OdPzge6dempBespghosm/ZTPt2Z41uoptojZd11Ex9szMNMIhm3jQ7AlkX/skxIqpJhJ8=
+  on:
+    tags: true
