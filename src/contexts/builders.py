@@ -71,8 +71,8 @@ def build_context(spec):
 
 
 def build_assertion_name(func):
-    module_name = func.__self__.__class__.__module__
-    method_name = func.__func__.__qualname__
+    module_name = func.__module__
+    method_name = func.__qualname__
     return '{}.{}'.format(module_name, method_name)
 
 

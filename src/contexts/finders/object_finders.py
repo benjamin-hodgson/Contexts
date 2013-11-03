@@ -61,9 +61,17 @@ class MethodFinder(object):
 
     def find_methods_on_class_matching(self, cls, regex, one_per_class):
         found = []
-        for name, func in cls.__dict__.items():
-            if regex.search(name) and callable(func):
-                method = types.MethodType(func, self.spec)
+        for name, val in cls.__dict__.items():
+            if not regex.search(name):
+                continue
+            if callable(val):
+                method = types.MethodType(val, self.spec)
+                found.append(method)
+            elif isinstance(val, classmethod):
+                method = getattr(cls, name)
+                found.append(method)
+            elif isinstance(val, staticmethod):
+                method = getattr(cls, name)
                 found.append(method)
 
         if one_per_class:
