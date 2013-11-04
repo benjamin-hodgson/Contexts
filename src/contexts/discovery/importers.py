@@ -2,12 +2,6 @@ import contextlib
 import importlib
 import os
 import sys
-from . import finders
-
-
-def import_from_directory(dir_path):
-    module_specs = finders.find_modules(dir_path)
-    return (load_module(*spec) for spec in module_specs)
 
 
 def load_module(dir_path, module_name):
@@ -19,10 +13,10 @@ def load_module(dir_path, module_name):
 def prune_sys_dot_modules(dir_path, module_name):
     requested_file = os.path.join(dir_path, module_name + '.py')
     if module_name in sys.modules:
-        same_file = os.path.realpath(sys.modules[module_name].__file__) == os.path.realpath(requested_file)
-        if not same_file:
+        existing_module = sys.modules[module_name]
+        if not same_file(existing_module.__file__, requested_file):
             del sys.modules[module_name]
-        importlib.invalidate_caches()
+            importlib.invalidate_caches()
 
 
 @contextlib.contextmanager
@@ -32,3 +26,7 @@ def prepend_folder_to_sys_dot_path(folder_path):
         yield
     finally:
         sys.path.pop(0)
+
+
+def same_file(path1, path2):
+    return os.path.realpath(path1) == os.path.realpath(path2)

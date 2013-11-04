@@ -1,9 +1,8 @@
 import inspect
-import os
 import re
 import types
 from collections import namedtuple
-from .. import errors
+from . import errors
 
 
 SpecialMethods = namedtuple("SpecialMethods", ['setups', 'actions', 'assertions', 'teardowns'])

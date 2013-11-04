@@ -12,25 +12,18 @@ folder_re = re.compile(r"([Ss]pec|[Tt]est)")
 
 
 def find_modules(directory):
-    finders = FinderGenerator.walk_and_generate(directory)
+    finders = FinderGenerator(directory).generate_finders()
     return itertools.chain.from_iterable(finder.find_modules() for finder in finders)
 
 
 class FinderGenerator(object):
     """Like a finder factory, but generates a sequence of them"""
-    @classmethod
-    def walk_and_generate(cls, directory):
-        gen = cls(directory)
-        return gen.generate_finders()
-
     def __init__(self, starting_directory):
         self.walker = Walker(starting_directory)
 
     def generate_finders(self):
-        while True:
-            # let StopIteration bubble up from
-            # self.walker to whoever's iterating
-            self.current_directory = next(self.walker)
+        for directory in self.walker:
+            self.current_directory = directory
             yield self.create_finder()
 
     def create_finder(self):
@@ -50,8 +43,7 @@ class FolderModuleFinder(object):
         self.directory = directory
 
     def find_modules(self):
-        found_modules = self.get_module_names()
-        return (ModuleSpecification(self.directory, mod) for mod in found_modules)
+        return (ModuleSpecification(self.directory, mod) for mod in self.get_module_names())
 
     def get_module_names(self):
         for filename in matching_filenames(self.directory):

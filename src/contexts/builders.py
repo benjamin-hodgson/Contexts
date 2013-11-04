@@ -5,7 +5,7 @@ import types
 from .core import Suite, Context, Assertion
 from . import errors
 from . import finders
-from . import importers
+from . import discovery
 
 
 def build_suite(spec):
@@ -24,7 +24,7 @@ def build_suite(spec):
 
 
 def build_suite_from_directory_path(dir_path):
-    modules = importers.import_from_directory(dir_path)
+    modules = discovery.import_from_directory(dir_path)
 
     finder = finders.ClassFinder()
     specs = finder.find_specs_in_modules(modules)
@@ -32,10 +32,7 @@ def build_suite_from_directory_path(dir_path):
 
 
 def build_suite_from_file_path(filepath):
-    folder = os.path.dirname(filepath)
-    filename = os.path.basename(filepath)
-    module_name = os.path.splitext(filename)[0]
-    module = importers.load_module(folder, module_name)
+    module = discovery.import_from_file(filepath)
     return build_suite_from_module(module)
 
 
