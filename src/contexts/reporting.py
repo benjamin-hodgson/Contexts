@@ -38,8 +38,6 @@ class Result(object):
         """Called when an assertion throws an AssertionError"""
 
 
-
-
 class SimpleResult(Result):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -146,7 +144,7 @@ class SummarisingResult(SimpleResult, StreamResult):
             "{}: {}".format(word, assertion.name),
             self.dashes
         ]
-        formatted.extend(s[:-1] for s in traceback.format_exception(type(exception), exception, exception.__traceback__))
+        formatted.extend(s[:-1] for s in format_exception(exception))
         return formatted
 
     def success_numbers(self):
@@ -178,8 +176,6 @@ def pluralise(noun, num):
 class ContextViewModel(object):
     def __init__(self, context):
         self.name = context.name
-        self.assertion_failures = []
-        self.assertion_errors = []
         self.assertions = []
         self._exception = None
         self.error_summary = None
@@ -190,27 +186,42 @@ class ContextViewModel(object):
     @exception.setter
     def exception(self, value):
         self._exception = value
-        self.error_summary = traceback.format_exception(type(value), value, value.__traceback__)
+        self.error_summary = format_exception(value)
+
+    @property
+    def assertion_failures(self):
+        return [a for a in self.assertions if a.status == "failed"]
+    @property
+    def assertion_errors(self):
+        return [a for a in self.assertions if a.status == "errored"]
 
 
 class AssertionViewModel(object):
-    def __init__(self, assertion, exception=None):
+    def __init__(self, assertion, status="passed", exception=None):
         self.name = assertion.name
-        if exception is None:
-            self.status = "passed"
-            self.error_summary = None
-        elif isinstance(exception, AssertionError):
-            self.status = "failed"
-            self.error_summary = traceback.format_exception(type(exception), exception, exception.__traceback__)
-        elif isinstance(exception, Exception):
-            self.status = "errored"
-            self.error_summary = traceback.format_exception(type(exception), exception, exception.__traceback__)
+        self.status = status
+        self.error_summary = None
+        if exception is not None:
+            self.error_summary = format_exception(exception)
 
 
 class SimpleHierarchicalResult(Result):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.view_models = []
+
+    @property
+    def assertions(self):
+        return [a for vm in self.view_models for a in vm.assertions]
+    @property
+    def assertion_failures(self):
+        return [a for a in self.assertions if a.status == "failed"]
+    @property
+    def assertion_errors(self):
+        return [a for a in self.assertions if a.status == "errored"]
+    @property
+    def context_errors(self):
+        return [vm for vm in self.view_models if vm.error_summary is not None]
 
     def context_started(self, context):
         super().context_started(context)
@@ -229,19 +240,18 @@ class SimpleHierarchicalResult(Result):
 
     def assertion_failed(self, assertion, exception):
         context_vm = self.view_models[-1]
-        assertion_vm = AssertionViewModel(assertion, exception)
-        context_vm.assertion_failures.append(assertion_vm)
+        assertion_vm = AssertionViewModel(assertion, "failed", exception)
+        context_vm.assertions.append(assertion_vm)
         super().assertion_failed(assertion, exception)
 
     def assertion_errored(self, assertion, exception):
         context_vm = self.view_models[-1]
-        assertion_vm = AssertionViewModel(assertion, exception)
-        context_vm.assertion_errors.append(assertion_vm)
+        assertion_vm = AssertionViewModel(assertion, "errored", exception)
+        context_vm.assertions.append(assertion_vm)
         super().assertion_errored(assertion, exception)
 
 
-
-class HierarchicalResult(SimpleHierarchicalResult, SimpleResult, StreamResult):
+class HierarchicalResult(SimpleHierarchicalResult, StreamResult):
     dashes = '-' * 70
 
     def __init__(self, *args, **kwargs):
@@ -351,5 +361,10 @@ class NonCapturingCLIResult(DotsResult, TimedResult, SummarisingResult):
 class CLIResult(CapturingResult, NonCapturingCLIResult):
     pass
 
+
 class HierarchicalCLIResult(DotsResult, TimedResult, HierarchicalResult):
     pass
+
+
+def format_exception(exception):
+    return traceback.format_exception(type(exception), exception, exception.__traceback__)
