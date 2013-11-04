@@ -5,9 +5,8 @@ import traceback
 from io import StringIO
 
 
-class Result(metaclass=abc.ABCMeta):
+class Result(object):
     @property
-    @abc.abstractmethod
     def failed(self):
         return True
 
@@ -39,47 +38,49 @@ class Result(metaclass=abc.ABCMeta):
         """Called when an assertion throws an AssertionError"""
 
 
+
+
 class SimpleResult(Result):
-    def __init__(self):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
         self.contexts = []
         self.assertions = []
         self.context_errors = []
         self.assertion_errors = []
         self.assertion_failures = []
-        super().__init__()
 
     @property
     def failed(self):
         return self.context_errors or self.assertion_errors or self.assertion_failures
 
     def assertion_started(self, assertion):
-        self.assertions.append(assertion)
         super().assertion_started(assertion)
+        self.assertions.append(assertion)
 
     def assertion_failed(self, assertion, exception):
+        super().assertion_failed(assertion, exception)
         self.assertion_failures.append((assertion, exception))
         exception.__traceback__ = None
-        super().assertion_failed(assertion, exception)
 
     def assertion_errored(self, assertion, exception):
+        super().assertion_errored(assertion, exception)
         self.assertion_errors.append((assertion, exception))
         exception.__traceback__ = None
-        super().assertion_errored(assertion, exception)
 
     def context_started(self, context):
-        self.contexts.append(context)
         super().context_started(context)
+        self.contexts.append(context)
 
     def context_errored(self, context, exception):
+        super().context_errored(context, exception)
         self.context_errors.append((context, exception))
         exception.__traceback__ = None
-        super().context_errored(context, exception)
 
 
-class StreamResult(SimpleResult):
+class StreamResult(Result):
     def __init__(self, stream=sys.stderr):
-        self.stream = stream
         super().__init__()
+        self.stream = stream
 
     def _print(self, *args, sep=' ', end='\n', flush=True):
         print(*args, sep=sep, end=end, file=self.stream, flush=flush)
@@ -87,29 +88,29 @@ class StreamResult(SimpleResult):
 
 class DotsResult(StreamResult):
     def assertion_passed(self, *args, **kwargs):
-        self._print('.', end='')
         super().assertion_passed(*args, **kwargs)
+        self._print('.', end='')
 
     def assertion_failed(self, *args, **kwargs):
-        self._print('F', end='')
         super().assertion_failed(*args, **kwargs)
+        self._print('F', end='')
 
     def assertion_errored(self, *args, **kwargs):
-        self._print('E', end='')
         super().assertion_errored(*args, **kwargs)
+        self._print('E', end='')
 
     def context_errored(self, *args, **kwargs):
-        self._print('E', end='')
         super().context_errored(*args, **kwargs)
+        self._print('E', end='')
 
 
-class SummarisingResult(StreamResult):
+class SummarisingResult(SimpleResult, StreamResult):
     dashes = '-' * 70
     equalses = '=' * 70
 
     def __init__(self, *args, **kwargs):
-        self.summary = []
         super().__init__(*args, **kwargs)
+        self.summary = []
 
     def suite_ended(self, suite):
         super().suite_ended(suite)
@@ -179,6 +180,7 @@ class ContextViewModel(object):
         self.name = context.name
         self.assertion_failures = []
         self.assertion_errors = []
+        self.assertions = []
         self._exception = None
         self.error_summary = None
 
@@ -190,31 +192,40 @@ class ContextViewModel(object):
         self._exception = value
         self.error_summary = traceback.format_exception(type(value), value, value.__traceback__)
 
+
 class AssertionViewModel(object):
-    def __init__(self, assertion, exception):
+    def __init__(self, assertion, exception=None):
         self.name = assertion.name
-        self.error_summary = traceback.format_exception(type(exception), exception, exception.__traceback__)
+        if exception is None:
+            self.status = "passed"
+            self.error_summary = None
+        elif isinstance(exception, AssertionError):
+            self.status = "failed"
+            self.error_summary = traceback.format_exception(type(exception), exception, exception.__traceback__)
+        elif isinstance(exception, Exception):
+            self.status = "errored"
+            self.error_summary = traceback.format_exception(type(exception), exception, exception.__traceback__)
 
 
-class HierarchicalResult(StreamResult):
-    dashes = '-' * 70
-
+class SimpleHierarchicalResult(Result):
     def __init__(self, *args, **kwargs):
-        self.summary = []
-        self.view_models = []
         super().__init__(*args, **kwargs)
-
-    def suite_ended(self, suite):
-        super().suite_ended(suite)
-        self.summarise()
+        self.view_models = []
 
     def context_started(self, context):
-        self.view_models.append(ContextViewModel(context))
         super().context_started(context)
+        self.view_models.append(ContextViewModel(context))
 
-    def context_ended(self, context):
-        super().context_ended(context)
-        self.current_context = None
+    def context_errored(self, context, exception):
+        context_vm = self.view_models[-1]
+        context_vm.exception = exception
+        super().context_errored(context, exception)
+
+    def assertion_passed(self, assertion):
+        context_vm = self.view_models[-1]
+        assertion_vm = AssertionViewModel(assertion)
+        context_vm.assertions.append(assertion_vm)
+        super().assertion_passed(assertion)
 
     def assertion_failed(self, assertion, exception):
         context_vm = self.view_models[-1]
@@ -228,10 +239,18 @@ class HierarchicalResult(StreamResult):
         context_vm.assertion_errors.append(assertion_vm)
         super().assertion_errored(assertion, exception)
 
-    def context_errored(self, context, exception):
-        context_vm = self.view_models[-1]
-        context_vm.exception = exception
-        super().context_errored(context, exception)
+
+
+class HierarchicalResult(SimpleHierarchicalResult, SimpleResult, StreamResult):
+    dashes = '-' * 70
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.summary = []
+
+    def suite_ended(self, suite):
+        super().suite_ended(suite)
+        self.summarise()
 
     def summarise(self):
         for context_vm in self.view_models:
@@ -262,13 +281,13 @@ class HierarchicalResult(StreamResult):
             self._print(self.success_numbers())
 
     def success_numbers(self):
-        num_ctx = len(self.contexts)
+        num_ctx = len(self.view_models)
         num_ass = len(self.assertions)
         msg = "{}, {}".format(pluralise("context", num_ctx), pluralise("assertion", num_ass))
         return msg
 
     def failure_numbers(self):
-        num_ctx = len(self.contexts)
+        num_ctx = len(self.view_models)
         num_ass = len(self.assertions)
         num_ctx_err = len(self.context_errors)
         num_fail = len(self.assertion_failures)

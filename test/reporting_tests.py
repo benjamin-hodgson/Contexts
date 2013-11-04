@@ -173,6 +173,8 @@ class WhenPrintingHierarchically(object):
                ('made_up_file_4.py', 2, 'made_up_function_4', 'frame4')]
         self.exception2 = test_doubles.build_fake_exception(tb2, "you fail")
 
+        self.assertion3 = contexts.core.Assertion(None, "made.up.assertion_3")
+
         self.context2 = contexts.core.Context([],[],[],[],"made.up_context_2")
         tb3 = [('made_up_file_5.py', 1, 'made_up_function_5', 'frame5'),
                ('made_up_file_6.py', 2, 'made_up_function_6', 'frame6')]
@@ -186,6 +188,8 @@ class WhenPrintingHierarchically(object):
         self.result.assertion_errored(self.assertion1, self.exception1)
         self.result.assertion_started(self.assertion2)
         self.result.assertion_failed(self.assertion2, self.exception2)
+        self.result.assertion_started(self.assertion3)
+        self.result.assertion_passed(self.assertion3)
         self.result.context_ended(self.context1)
 
         self.result.context_started(self.context2)
@@ -224,7 +228,7 @@ made.up_context_2
   test.test_doubles.FakeException: oh dear
 ----------------------------------------------------------------------
 FAILED!
-3 contexts, 2 assertions: 1 failed, 2 errors
+3 contexts, 3 assertions: 1 failed, 2 errors
 """)
 
 
