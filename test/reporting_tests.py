@@ -231,98 +231,93 @@ FAILED!
 3 contexts, 3 assertions: 1 failed, 2 errors
 """)
 
-# class WhenCapturingStdOutAndReportingHierarchically(object):
-#     def context(self):
-#         self.real_stdout = sys.stdout
-#         self.real_stderr = sys.stderr
-#         sys.stdout = self.fake_stdout = StringIO()
-#         sys.stderr = self.fake_stderr = StringIO()
+class WhenCapturingStdOutAndReportingHierarchically(object):
+    def context(self):
+        self.real_stdout = sys.stdout
+        self.real_stderr = sys.stderr
+        sys.stdout = self.fake_stdout = StringIO()
+        sys.stderr = self.fake_stderr = StringIO()
 
-#         self.fake_context = contexts.core.Context([],[],[],[],"context")
-#         self.fake_assertion = contexts.core.Assertion(None, "assertion")
+        self.fake_context = contexts.core.Context([],[],[],[],"context")
+        self.fake_assertion = contexts.core.Assertion(None, "assertion")
 
-#         self.stringio = StringIO()
-#         # we don't want the output to be cluttered up with dots
-#         self.result = reporting.HierarchicalCapturingResult(StringIO())
+        self.stringio = StringIO()
+        # we don't want the output to be cluttered up with dots
+        self.result = reporting.HierarchicalCapturingResult(StringIO())
 
-#     def because_we_print_some_stuff(self):
-#         self.result.suite_started(None)
+    def because_we_print_some_stuff(self):
+        self.result.suite_started(None)
 
-#         self.result.context_started(self.fake_context)
-#         print("passing context")
-#         self.result.assertion_started(self.fake_assertion)
-#         print("passing assertion")
-#         print("to stderr", file=sys.stderr)
-#         self.result.assertion_passed(self.fake_assertion)
-#         self.result.context_ended(self.fake_context)
+        self.result.context_started(self.fake_context)
+        print("passing context")
+        self.result.assertion_started(self.fake_assertion)
+        print("passing assertion")
+        print("to stderr", file=sys.stderr)
+        self.result.assertion_passed(self.fake_assertion)
+        self.result.context_ended(self.fake_context)
 
-#         self.result.context_started(self.fake_context)
-#         print("failing context")
-#         self.result.assertion_started(self.fake_assertion)
-#         print("failing assertion")
-#         self.result.assertion_failed(self.fake_assertion, test_doubles.FakeException())
-#         self.result.assertion_started(self.fake_assertion)
-#         print("erroring assertion")
-#         self.result.assertion_errored(self.fake_assertion, test_doubles.FakeException())
-#         self.result.context_ended(self.fake_context)
+        self.result.context_started(self.fake_context)
+        print("failing context")
+        self.result.assertion_started(self.fake_assertion)
+        print("failing assertion")
+        self.result.assertion_failed(self.fake_assertion, test_doubles.FakeException())
+        self.result.assertion_started(self.fake_assertion)
+        print("erroring assertion")
+        self.result.assertion_errored(self.fake_assertion, test_doubles.FakeException())
+        self.result.context_ended(self.fake_context)
 
-#         self.result.context_started(self.fake_context)
-#         print("erroring context")
-#         self.result.assertion_started(self.fake_assertion)
-#         print("assertion in erroring context")
-#         self.result.assertion_passed(self.fake_assertion)
-#         self.result.context_errored(self.fake_context, test_doubles.FakeException())
+        self.result.context_started(self.fake_context)
+        print("erroring context")
+        self.result.assertion_started(self.fake_assertion)
+        print("assertion in erroring context")
+        self.result.assertion_passed(self.fake_assertion)
+        self.result.context_errored(self.fake_context, test_doubles.FakeException())
 
-#         self.result.context_started(self.fake_context)
-#         self.result.assertion_started(self.fake_assertion)
-#         # don't print anything
-#         self.result.assertion_failed(self.fake_assertion, test_doubles.FakeException())
-#         self.result.context_ended(self.fake_context)
+        self.result.context_started(self.fake_context)
+        self.result.assertion_started(self.fake_assertion)
+        # don't print anything
+        self.result.assertion_failed(self.fake_assertion, test_doubles.FakeException())
+        self.result.context_ended(self.fake_context)
 
-#         self.result.stream = self.stringio
-#         self.result.suite_ended(None)
+        self.result.stream = self.stringio
+        self.result.suite_ended(None)
 
-#     def it_should_not_print_anything_to_stdout(self):
-#         self.fake_stdout.getvalue().should.be.empty
+    def it_should_not_print_anything_to_stdout(self):
+        self.fake_stdout.getvalue().should.be.empty
 
-#     def it_should_let_stderr_through(self):
-#         self.fake_stderr.getvalue().should.equal("to stderr\n")
+    def it_should_let_stderr_through(self):
+        self.fake_stderr.getvalue().should.equal("to stderr\n")
 
-#     def it_should_output_the_captured_stdout_for_the_failures(self):
-#         self.stringio.getvalue().should.equal("""
-# ======================================================================
-# FAIL: assertion
-# ----------------------------------------------------------------------
-# test.test_doubles.FakeException
-# -------------------- >> begin captured stdout << ---------------------
-# failing context
-# failing assertion
-# --------------------- >> end captured stdout << ----------------------
-# ======================================================================
-# ERROR: assertion
-# ----------------------------------------------------------------------
-# test.test_doubles.FakeException
-# -------------------- >> begin captured stdout << ---------------------
-# failing context
-# failing assertion
-# erroring assertion
-# --------------------- >> end captured stdout << ----------------------
-# ======================================================================
-# ERROR: context
-# ----------------------------------------------------------------------
-# test.test_doubles.FakeException
-# -------------------- >> begin captured stdout << ---------------------
-# erroring context
-# assertion in erroring context
-# --------------------- >> end captured stdout << ----------------------
-# ======================================================================
-# FAIL: assertion
-# ----------------------------------------------------------------------
-# test.test_doubles.FakeException
-# ----------------------------------------------------------------------
-# FAILED!
-# 4 contexts, 5 assertions: 2 failed, 2 errors
-# """)
+    def it_should_output_the_captured_stdout_for_the_failures(self):
+        self.stringio.getvalue().should.equal("""
+----------------------------------------------------------------------
+context
+  FAIL: assertion
+    test.test_doubles.FakeException
+    ------------------- >> begin captured stdout << ------------------
+    failing context
+    failing assertion
+    -------------------- >> end captured stdout << -------------------
+  ERROR: assertion
+    test.test_doubles.FakeException
+    ------------------- >> begin captured stdout << ------------------
+    failing context
+    failing assertion
+    erroring assertion
+    -------------------- >> end captured stdout << -------------------
+context
+  test.test_doubles.FakeException
+  -------------------- >> begin captured stdout << -------------------
+  erroring context
+  assertion in erroring context
+  --------------------- >> end captured stdout << --------------------
+context
+  FAIL: assertion
+    test.test_doubles.FakeException
+----------------------------------------------------------------------
+FAILED!
+4 contexts, 5 assertions: 2 failed, 2 errors
+""")
 
 class WhenTimingATestRun(object):
     def context(self):

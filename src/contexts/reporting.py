@@ -340,35 +340,41 @@ class CapturingResult(SummarisingResult):
             self.summary.append("--------------------- >> end captured stdout << ----------------------")
 
 
-# class HierarchicalCapturingResult(HierarchicalResult):
-#     def context_started(self, context):
-#         super().context_started(context)
-#         self.real_stdout = sys.stdout
-#         self.buffer = StringIO()
-#         sys.stdout = self.buffer
+class HierarchicalCapturingResult(HierarchicalResult):
+    def context_started(self, context):
+        super().context_started(context)
+        self.real_stdout = sys.stdout
+        self.buffer = StringIO()
+        sys.stdout = self.buffer
 
-#     def context_ended(self, context):
-#         sys.stdout = self.real_stdout
-#         super().context_ended(context)
+    def context_ended(self, context):
+        sys.stdout = self.real_stdout
+        super().context_ended(context)
 
-#     def context_errored(self, context, exception):
-#         sys.stdout = self.real_stdout
-#         super().context_errored(context, exception)
-#         self.append_buffer_to_summary()
+    def context_errored(self, context, exception):
+        sys.stdout = self.real_stdout
+        super().context_errored(context, exception)
+        if self.buffer.getvalue():
+            self.summary.append("  -------------------- >> begin captured stdout << -------------------")
+            lines = self.buffer.getvalue()[:-1].split('\n')
+            self.summary.extend('  ' + line for line in lines)
+            self.summary.append("  --------------------- >> end captured stdout << --------------------")
 
-#     def assertion_failed(self, assertion, exception):
-#         super().assertion_failed(assertion, exception)
-#         self.append_buffer_to_summary()
+    def assertion_failed(self, assertion, exception):
+        super().assertion_failed(assertion, exception)
+        if self.buffer.getvalue():
+            self.current_summary.append("    ------------------- >> begin captured stdout << ------------------")
+            lines = self.buffer.getvalue()[:-1].split('\n')
+            self.current_summary.extend('    ' + line for line in lines)
+            self.current_summary.append("    -------------------- >> end captured stdout << -------------------")
 
-#     def assertion_errored(self, assertion, exception):
-#         super().assertion_errored(assertion, exception)
-#         self.append_buffer_to_summary()
-
-#     def append_buffer_to_summary(self):
-#         if self.buffer.getvalue():
-#             self.summary.append("-------------------- >> begin captured stdout << ---------------------")
-#             self.summary.append(self.buffer.getvalue()[:-1])
-#             self.summary.append("--------------------- >> end captured stdout << ----------------------")
+    def assertion_errored(self, assertion, exception):
+        super().assertion_errored(assertion, exception)
+        if self.buffer.getvalue():
+            self.current_summary.append("    ------------------- >> begin captured stdout << ------------------")
+            lines = self.buffer.getvalue()[:-1].split('\n')
+            self.current_summary.extend('    ' + line for line in lines)
+            self.current_summary.append("    -------------------- >> end captured stdout << -------------------")
 
 
 class NonCapturingCLIResult(DotsResult, TimedResult, SummarisingResult):
