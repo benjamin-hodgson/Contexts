@@ -85,10 +85,14 @@ def find_examples_method(cls):
     for name, val in cls.__dict__.items():
         if not example_re.search(name):
             continue
-        if isinstance(val, classmethod):
-            method = getattr(cls, name)
-            found.append(method)
-    # assert_single_method_of_given_type(cls, found)
+        if establish_re.search(name) or because_re.search(name) or should_re.search(name) or cleanup_re.search(name):
+            msg = "The method {} is ambiguously named".format(name)
+            raise errors.MethodNamingError(msg)
+        if not isinstance(val, classmethod):
+            raise TypeError("The examples method {} must be a classmethod")
+        method = getattr(cls, name)
+        found.append(method)
+    assert_single_method_of_given_type(cls, found)
     return found[0] if found else None
 
 

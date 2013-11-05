@@ -482,6 +482,36 @@ class WhenRunningAModuleWithParametrisedSpecs(object):
     def it_should_run_the_teardown_twice(self):
         self.ParametrisedSpec.teardowns.should.equal([1,2])
 
+class WhenUserFailsToMakeExamplesAClassmethod(object):
+    def context(self):
+        class Naughty(object):
+            def examples(self):
+                pass
+        self.spec = Naughty
+
+    def because_we_run_the_spec(self):
+        self.exception = contexts.catch(contexts.run, self.spec, MockResult())
+
+    def it_should_raise_type_error(self):
+        self.exception.should.be.a(TypeError)
+
+class WhenUserSpecifiesMultipleExamplesMethods(object):
+    def context(self):
+        class Naughty(object):
+            @classmethod
+            def examples(self):
+                pass
+            @classmethod
+            def test_data(self):
+                pass
+        self.spec = Naughty
+
+    def because_we_run_the_spec(self):
+        self.exception = contexts.catch(contexts.run, self.spec, MockResult())
+
+    def it_should_raise_TooManySpecialMethodsError(self):
+        self.exception.should.be.a(contexts.errors.TooManySpecialMethodsError)
+
 class WhenRunningMultipleSpecs(object):
     def context(self):
         class Spec1(object):
@@ -576,8 +606,11 @@ class WhenRunningAmbiguouslyNamedMethods(object):
         class AmbiguousMethods4(object):
             def this_has_both_cleanup_and_establish_in_the_name(self):
                 pass
+        class AmbiguousMethods5(object):
+            def this_has_both_examples_and_it_in_the_name(self):
+                pass
 
-        self.specs = [AmbiguousMethods1(), AmbiguousMethods2(), AmbiguousMethods3(), AmbiguousMethods4()]
+        self.specs = [AmbiguousMethods1(), AmbiguousMethods2(), AmbiguousMethods3(), AmbiguousMethods4(), AmbiguousMethods5]
         self.exceptions = []
 
     def because_we_try_to_run_the_specs(self):
@@ -589,6 +622,7 @@ class WhenRunningAmbiguouslyNamedMethods(object):
         self.exceptions[1].should.be.a(contexts.errors.MethodNamingError)
         self.exceptions[2].should.be.a(contexts.errors.MethodNamingError)
         self.exceptions[3].should.be.a(contexts.errors.MethodNamingError)
+        self.exceptions[4].should.be.a(contexts.errors.MethodNamingError)
 
 class WhenRunningNotSoAmbiguouslyNamedMethods(object):
     def context(self):
@@ -601,8 +635,11 @@ class WhenRunningNotSoAmbiguouslyNamedMethods(object):
         class NotAmbiguousMethods3(object):
             def this_has_both_should_and_it_in_the_name(self):
                 pass
+        class NotAmbiguousMethods4(object):
+            def this_has_both_examples_and_data_in_the_name(self):
+                pass
 
-        self.specs = [NotAmbiguousMethods1(), NotAmbiguousMethods2(), NotAmbiguousMethods3()]
+        self.specs = [NotAmbiguousMethods1(), NotAmbiguousMethods2(), NotAmbiguousMethods3(), NotAmbiguousMethods4()]
         self.exceptions = []
 
     def because_we_try_to_run_the_specs(self):
@@ -613,6 +650,7 @@ class WhenRunningNotSoAmbiguouslyNamedMethods(object):
         self.exceptions[0].should.be.none
         self.exceptions[1].should.be.none
         self.exceptions[2].should.be.none
+        self.exceptions[3].should.be.none
 
 class WhenRunningSpecsWithTooManySpecialMethods(object):
     def context(self):
