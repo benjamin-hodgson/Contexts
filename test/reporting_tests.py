@@ -159,7 +159,7 @@ FAILED!
 3 contexts, 3 assertions: 1 failed, 2 errors
 """)
 
-class WhenCapturingStdOutAndReportingHierarchically(object):
+class WhenCapturingStdOut(object):
     def context(self):
         self.real_stdout = sys.stdout
         self.real_stderr = sys.stderr
@@ -271,6 +271,121 @@ class WhenTimingATestRun(object):
 
     def it_should_report_the_total_time_for_the_test_run(self):
         self.stringio.getvalue().should.equal("(10.5 seconds)\n")
+
+
+class WhenRunningInTeamCity(object):
+    def context(self):
+        self.stringio = StringIO()
+        self.result = reporting.TeamCityResult(self.stringio)
+
+        tb1 = [('made_up_file.py', 3, 'made_up_function', 'frame1'),
+               ('another_made_up_file.py', 2, 'another_made_up_function', 'frame2')]
+        self.exception1 = test_doubles.build_fake_exception(tb1, "Gotcha")
+        self.formatted_tb1 = (
+'Traceback (most recent call last):|n'
+'  File "made_up_file.py", line 3, in made_up_function|n'
+'    frame1|n'
+'  File "another_made_up_file.py", line 2, in another_made_up_function|n'
+'    frame2|n'
+'test.test_doubles.FakeException: Gotcha|n')
+
+        tb2 = [('made_up_file_3.py', 1, 'made_up_function_3', 'frame3'),
+               ('made_up_file_4.py', 2, 'made_up_function_4', 'frame4')]
+        self.exception2 = test_doubles.build_fake_exception(tb2, "you fail")
+        self.formatted_tb2 = (
+'Traceback (most recent call last):|n'
+'  File "made_up_file_3.py", line 1, in made_up_function_3|n'
+'    frame3|n'
+'  File "made_up_file_4.py", line 2, in made_up_function_4|n'
+'    frame4|n'
+'test.test_doubles.FakeException: you fail|n')
+
+        tb3 = [('made_up_file_5.py', 1, 'made_up_function_5', 'frame5'),
+               ('made_up_file_6.py', 2, 'made_up_function_6', 'frame6')]
+        self.exception3 = test_doubles.build_fake_exception(tb3, "oh dear")
+        self.formatted_tb3 = (
+'Traceback (most recent call last):|n'
+'  File "made_up_file_5.py", line 1, in made_up_function_5|n'
+'    frame5|n'
+'  File "made_up_file_6.py", line 2, in made_up_function_6|n'
+'    frame6|n'
+'test.test_doubles.FakeException: oh dear|n')
+
+        self.outputs = []
+
+    def because_we_run_some_assertions(self):
+        self.result.suite_started(None)
+        self.outputs.append(self.stringio.getvalue())
+
+        self.result.context_started(contexts.core.Context([],[],[],[],None,"context"))
+
+        self.result.assertion_started(contexts.core.Assertion(None, "assertion1"))
+        self.outputs.append(self.stringio.getvalue())
+        self.result.assertion_passed(contexts.core.Assertion(None, "assertion1"))
+        self.outputs.append(self.stringio.getvalue())
+
+        self.result.assertion_started(contexts.core.Assertion(None, "assertion2"))
+        self.outputs.append(self.stringio.getvalue())
+        self.result.assertion_passed(contexts.core.Assertion(None, "assertion2"))
+        self.outputs.append(self.stringio.getvalue())
+
+        self.result.assertion_started(contexts.core.Assertion(None, "assertion3"))
+        self.outputs.append(self.stringio.getvalue())
+        self.result.assertion_failed(contexts.core.Assertion(None, "assertion3"), self.exception1)
+        self.outputs.append(self.stringio.getvalue())
+
+        self.result.assertion_started(contexts.core.Assertion(None, "assertion4"))
+        self.outputs.append(self.stringio.getvalue())
+        self.result.assertion_errored(contexts.core.Assertion(None, "assertion4"), self.exception2)
+        self.outputs.append(self.stringio.getvalue())
+
+        self.result.context_errored(contexts.core.Context([],[],[],[],None,"context"), self.exception3)
+        self.outputs.append(self.stringio.getvalue())
+
+        self.result.suite_ended(None)
+        self.outputs.append(self.stringio.getvalue())
+
+    # TODO: use the full __qualname__ for the names
+    def it_should_tell_team_city_it_started(self):
+        self.get_output(0,0).should.equal("##teamcity[testSuiteStarted name='contexts']")
+
+    def it_should_tell_team_city_the_first_assertion_started(self):
+        self.get_output(1,1).should.equal("##teamcity[testStarted name='assertion1']")
+    def it_should_tell_team_city_the_first_assertion_passed(self):
+        self.get_output(2,2).should.equal("##teamcity[testFinished name='assertion1']")
+
+    def it_should_tell_team_city_the_second_assertion_started(self):
+        self.get_output(3,3).should.equal("##teamcity[testStarted name='assertion2']")
+    def it_should_tell_team_city_the_second_assertion_passed(self):
+        self.get_output(4,4).should.equal("##teamcity[testFinished name='assertion2']")
+
+    def it_should_tell_team_city_the_third_assertion_started(self):
+        self.get_output(5,5).should.equal("##teamcity[testStarted name='assertion3']")
+    def it_should_output_a_stack_trace_for_the_third_assertion(self):
+        self.get_output(6,6).should.equal("##teamcity[testFailed name='assertion3' message='Gotcha' details='{}']".format(self.formatted_tb1))
+        self.get_output(6,7).should.equal("##teamcity[testFinished name='assertion3']")
+
+    def it_should_tell_team_city_the_fourth_assertion_started(self):
+        self.get_output(7,8).should.equal("##teamcity[testStarted name='assertion4']")
+    def it_should_output_a_stack_trace_for_the_fourth_assertion(self):
+        self.get_output(8,9).should.equal("##teamcity[testFailed name='assertion4' message='you fail' details='{}']".format(self.formatted_tb2))
+        self.get_output(8,10).should.equal("##teamcity[testFinished name='assertion4']")
+
+    def it_should_tell_team_city_another_test_started_and_failed_for_the_ctx_error(self):
+        self.get_output(9,11).should.equal("##teamcity[testStarted name='context']")
+        self.get_output(9,12).should.equal("##teamcity[testFailed name='context' message='oh dear' details='{}']".format(self.formatted_tb3))
+        self.get_output(9,13).should.equal("##teamcity[testFinished name='context']")
+
+    def get_output(self, n, m):
+        return self.outputs[n].split('\n')[m]
+
+class WhenEscapingForTeamCity(object):
+    def because_we_escape_a_string(self):
+        # unicode replacement not supported yet
+        self.result = reporting.TeamCityResult.teamcity_escape("'\n\r|[]")
+    def it_should_escape_the_chars_correctly(self):
+        self.result.should.equal("|'|n|r|||[|]")
+
 
 
 if __name__ == "__main__":

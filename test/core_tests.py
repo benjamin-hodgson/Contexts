@@ -49,6 +49,7 @@ class WhenRunningASpec(object):
         self.result.calls[1][1].name.should.equal('TestSpec')
 
     def it_should_call_assertion_started_three_times(self):
+        assert self.result.calls[2][0] == "assertion_started"
         self.result.calls[2][0].should.equal('assertion_started')
         self.result.calls[4][0].should.equal('assertion_started')
         self.result.calls[6][0].should.equal('assertion_started')

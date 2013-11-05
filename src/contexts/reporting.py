@@ -253,6 +253,40 @@ class SummarisingResult(SimpleResult, StreamResult):
         self.dedent()
 
 
+class TeamCityResult(StreamResult, SimpleResult):
+    def suite_started(self, suite):
+        super().suite_started(suite)
+        self._print("##teamcity[testSuiteStarted name='contexts']")
+
+    def assertion_started(self, assertion):
+        super().assertion_started(assertion)
+        self._print("##teamcity[testStarted name='{}']".format(assertion.name))
+    def assertion_passed(self, assertion):
+        super().assertion_passed(assertion)
+        self._print("##teamcity[testFinished name='{}']".format(assertion.name))
+    def assertion_failed(self, assertion, exception):
+        formatted_exception = ''.join(format_exception(exception))
+        self._print("##teamcity[testFailed name='{}' message='{}' details='{}']".format(assertion.name, exception, self.teamcity_escape(formatted_exception)))
+        self._print("##teamcity[testFinished name='{}']".format(assertion.name))
+        super().assertion_failed(assertion, exception)
+    def assertion_errored(self, assertion, exception):
+        formatted_exception = ''.join(format_exception(exception))
+        self._print("##teamcity[testFailed name='{}' message='{}' details='{}']".format(assertion.name, exception, self.teamcity_escape(formatted_exception)))
+        self._print("##teamcity[testFinished name='{}']".format(assertion.name))
+        super().assertion_errored(assertion, exception)
+
+    def context_errored(self, context, exception):
+        formatted_exception = ''.join(format_exception(exception))
+        self._print("##teamcity[testStarted name='{}']".format(context.name))
+        self._print("##teamcity[testFailed name='{}' message='{}' details='{}']".format(context.name, exception, self.teamcity_escape(formatted_exception)))
+        self._print("##teamcity[testFinished name='{}']".format(context.name))
+
+
+    @staticmethod
+    def teamcity_escape(string):
+        return string.replace("|", "||").replace('\n', '|n').replace("'", "|'").replace("\r", "|r").replace("[", "|[").replace("]", "|]")
+
+
 class CapturingResult(SummarisingResult):
     def context_started(self, context):
         super().context_started(context)
