@@ -17,13 +17,13 @@ class_re = re.compile(r"([Ss]pec|[Ww]hen)")
 class ClassFinder(object):
     def find_specs_in_modules(self, modules):
         for module in modules:
-            for context in self.find_specs_in_module(module):
-                yield context
+            for cls in self.find_specs_in_module(module):
+                yield cls
 
     def find_specs_in_module(self, module):
         for name, cls in inspect.getmembers(module, inspect.isclass):
             if class_re.search(name):
-                yield cls()
+                yield cls
 
 
 class MethodFinder(object):

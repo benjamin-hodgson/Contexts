@@ -27,7 +27,8 @@ def build_suite_from_directory_path(dir_path):
     modules = discovery.import_from_directory(dir_path)
 
     finder = finders.ClassFinder()
-    specs = finder.find_specs_in_modules(modules)
+    classes = finder.find_specs_in_modules(modules)
+    specs = itertools.chain.from_iterable(build_iterable_from_class(cls) for cls in classes)
     return build_suite_from_iterable(specs)
 
 
@@ -38,13 +39,25 @@ def build_suite_from_file_path(filepath):
 
 def build_suite_from_module(module):
     finder = finders.ClassFinder()
-    specs = finder.find_specs_in_module(module)
+    classes = finder.find_specs_in_module(module)
+    specs = itertools.chain.from_iterable(build_iterable_from_class(cls) for cls in classes)
     return build_suite_from_iterable(specs)
 
 
 def build_suite_from_iterable(specs):
     contexts = [build_context(x) for x in specs]
     return Suite(contexts)
+
+
+def build_iterable_from_class(cls):
+    if hasattr(cls, 'examples'):
+        specs = []
+        for test_data in cls.examples():
+            inst = cls()
+            inst._contexts_test_data = test_data
+            specs.append(inst)
+        return specs
+    return [cls()]
 
 
 def build_suite_from_class(cls):

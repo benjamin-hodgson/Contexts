@@ -1,3 +1,4 @@
+import inspect
 from contextlib import contextmanager
 
 
@@ -89,7 +90,8 @@ class ResultRunner(object):
             self.result.assertion_passed(assertion)
 
 def run_with_test_data(func, test_data):
-    if test_data is not None:
+    sig = inspect.signature(func)
+    if test_data is not None and sig.parameters:
         func(test_data)
     else:
         func()
