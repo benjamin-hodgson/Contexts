@@ -149,70 +149,6 @@ class DotsResult(StreamResult):
         self._print('E', end='')
 
 
-class SummarisingResult(SimpleResult, StreamResult):
-    dashes = '-' * 70
-    equalses = '=' * 70
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.summary = []
-
-    def suite_ended(self, suite):
-        super().suite_ended(suite)
-        self.summarise()
-
-    def assertion_failed(self, assertion, exception):
-        self.summary.extend(self.format_failure(assertion, exception, "FAIL"))
-        super().assertion_failed(assertion, exception)
-
-    def assertion_errored(self, assertion, exception):
-        self.summary.extend(self.format_failure(assertion, exception, "ERROR"))
-        super().assertion_errored(assertion, exception)
-
-    def context_errored(self, context, exception):
-        self.summary.extend(self.format_failure(context, exception, "ERROR"))
-        super().context_errored(context, exception)
-
-    def summarise(self):
-        self._print('')
-        if self.failed:
-            self._print('\n'.join(self.summary))
-        self._print(self.dashes)
-        if self.failed:
-            self._print('FAILED!')
-            self._print(self.failure_numbers())
-        else:
-            self._print('PASSED!')
-            self._print(self.success_numbers())
-
-    def format_failure(self, assertion, exception, word):
-        formatted = [
-            self.equalses,
-            "{}: {}".format(word, assertion.name),
-            self.dashes
-        ]
-        formatted.extend(s[:-1] for s in format_exception(exception))
-        return formatted
-
-    def success_numbers(self):
-        num_ctx = len(self.contexts)
-        num_ass = len(self.assertions)
-        msg = "{}, {}".format(pluralise("context", num_ctx), pluralise("assertion", num_ass))
-        return msg
-
-    def failure_numbers(self):
-        num_ctx = len(self.contexts)
-        num_ass = len(self.assertions)
-        num_ctx_err = len(self.context_errors)
-        num_fail = len(self.assertion_failures)
-        num_err = len(self.assertion_errors)
-        msg =  "{}, {}: {} failed, {}".format(pluralise("context", num_ctx),
-           pluralise("assertion", num_ass),
-           num_fail,
-           pluralise("error", num_err + num_ctx_err))
-        return msg
-
-
 def pluralise(noun, num):
     string = str(num) + ' ' + noun
     if num != 1:
@@ -220,7 +156,7 @@ def pluralise(noun, num):
     return string
 
 
-class HierarchicalResult(SimpleResult, StreamResult):
+class SummarisingResult(SimpleResult, StreamResult):
     dashes = '-' * 70
 
     def __init__(self, *args, **kwargs):
@@ -323,37 +259,6 @@ class CapturingResult(SummarisingResult):
     def context_errored(self, context, exception):
         sys.stdout = self.real_stdout
         super().context_errored(context, exception)
-        self.append_buffer_to_summary()
-
-    def assertion_failed(self, assertion, exception):
-        super().assertion_failed(assertion, exception)
-        self.append_buffer_to_summary()
-
-    def assertion_errored(self, assertion, exception):
-        super().assertion_errored(assertion, exception)
-        self.append_buffer_to_summary()
-
-    def append_buffer_to_summary(self):
-        if self.buffer.getvalue():
-            self.summary.append("-------------------- >> begin captured stdout << ---------------------")
-            self.summary.append(self.buffer.getvalue()[:-1])
-            self.summary.append("--------------------- >> end captured stdout << ----------------------")
-
-
-class HierarchicalCapturingResult(HierarchicalResult):
-    def context_started(self, context):
-        super().context_started(context)
-        self.real_stdout = sys.stdout
-        self.buffer = StringIO()
-        sys.stdout = self.buffer
-
-    def context_ended(self, context):
-        sys.stdout = self.real_stdout
-        super().context_ended(context)
-
-    def context_errored(self, context, exception):
-        sys.stdout = self.real_stdout
-        super().context_errored(context, exception)
         if self.buffer.getvalue():
             self.summary.append("  -------------------- >> begin captured stdout << -------------------")
             lines = self.buffer.getvalue()[:-1].split('\n')
@@ -381,11 +286,7 @@ class NonCapturingCLIResult(DotsResult, TimedResult, SummarisingResult):
     pass
 
 
-class CLIResult(CapturingResult, NonCapturingCLIResult):
-    pass
-
-
-class HierarchicalCLIResult(DotsResult, TimedResult, HierarchicalResult):
+class CapturingCLIResult(NonCapturingCLIResult, CapturingResult):
     pass
 
 

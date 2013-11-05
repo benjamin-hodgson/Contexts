@@ -7,7 +7,11 @@ from . import reporting
 
 def cmd():
     parser = argparse.ArgumentParser()
-    parser.add_argument('-s', '--no-capture', action='store_const', dest='result', const=reporting.NonCapturingCLIResult(), default=reporting.CLIResult())
+    parser.add_argument('-s', '--no-capture',
+    	action='store_const',
+    	dest='result',
+    	const=reporting.NonCapturingCLIResult(),
+    	default=reporting.CapturingCLIResult())
     args = parser.parse_args()
 
     _run_impl(os.getcwd(), args.result)
