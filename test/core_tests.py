@@ -495,23 +495,6 @@ class WhenUserFailsToMakeExamplesAClassmethod(object):
     def it_should_raise_type_error(self):
         self.exception.should.be.a(TypeError)
 
-class WhenUserSpecifiesMultipleExamplesMethods(object):
-    def context(self):
-        class Naughty(object):
-            @classmethod
-            def examples(self):
-                pass
-            @classmethod
-            def test_data(self):
-                pass
-        self.spec = Naughty
-
-    def because_we_run_the_spec(self):
-        self.exception = contexts.catch(contexts.run, self.spec, MockResult())
-
-    def it_should_raise_TooManySpecialMethodsError(self):
-        self.exception.should.be.a(contexts.errors.TooManySpecialMethodsError)
-
 class WhenRunningMultipleSpecs(object):
     def context(self):
         class Spec1(object):
@@ -669,8 +652,15 @@ class WhenRunningSpecsWithTooManySpecialMethods(object):
                 pass
             def cleanup2(self):
                 pass
+        class TooManyExamples(object):
+            @classmethod
+            def examples(self):
+                pass
+            @classmethod
+            def test_data(self):
+                pass
 
-        self.specs = [TooManyContexts(), TooManyActions(), TooManyTeardowns()]
+        self.specs = [TooManyContexts(), TooManyActions(), TooManyTeardowns(), TooManyExamples]
         self.exceptions = []
 
     def because_we_try_to_run_the_specs(self):
@@ -681,6 +671,7 @@ class WhenRunningSpecsWithTooManySpecialMethods(object):
         self.exceptions[0].should.be.a(contexts.errors.TooManySpecialMethodsError)
         self.exceptions[1].should.be.a(contexts.errors.TooManySpecialMethodsError)
         self.exceptions[2].should.be.a(contexts.errors.TooManySpecialMethodsError)
+        self.exceptions[3].should.be.a(contexts.errors.TooManySpecialMethodsError)
 
 
 if __name__ == "__main__":
