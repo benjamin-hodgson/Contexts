@@ -333,7 +333,7 @@ class WhenRunningAParametrisedSpec(object):
             assertions = []
             teardowns = []
             @classmethod
-            def examples(cls):
+            def has_examples_in_the_name(cls):
                 yield 1
                 yield 2
             def __init__(self):
@@ -385,7 +385,7 @@ class WhenRunningAParametrisedSpecWithNonParametrisedMethods(object):
             assertions = 0
             teardowns = 0
             @classmethod
-            def examples(cls):
+            def has_examples_in_the_name(cls):
                 yield 1
                 yield 2
             def __init__(self):
@@ -437,7 +437,7 @@ class WhenRunningAModuleWithParametrisedSpecs(object):
             assertions = []
             teardowns = []
             @classmethod
-            def examples(cls):
+            def has_examples_in_the_name(cls):
                 yield 1
                 yield 2
             def __init__(self):
@@ -521,12 +521,15 @@ class WhenWeRunSpecsWithAlternatelyNamedMethods(object):
             def has_then_in_the_name(self):
                 self.log += "assert "
         class AlternatelyNamedMethods(object):
-            def __init__(self):
-                self.log = ""
+            log = ""
+            @classmethod
+            def has_data_in_the_name(cls):
+                cls.log += "test_data "
+                yield 1
             def has_context_in_the_name(self):
-                self.log += "arrange "
+                self.__class__.log += "arrange "
             def has_it_in_the_name(self):
-                self.log += "assert "
+                self.__class__.log += "assert "
         class MoreAlternativeNames(object):
             def __init__(self):
                 self.log = ""
@@ -543,7 +546,7 @@ class WhenWeRunSpecsWithAlternatelyNamedMethods(object):
                 self.log += "assert "
 
         self.spec1 = GivenWhenThen()
-        self.spec2 = AlternatelyNamedMethods()
+        self.spec2 = AlternatelyNamedMethods
         self.spec3 = MoreAlternativeNames()
         self.spec4 = EvenMoreAlternativeNames()
 
@@ -555,7 +558,7 @@ class WhenWeRunSpecsWithAlternatelyNamedMethods(object):
 
     def it_should_run_the_methods_in_the_correct_order(self):
         self.spec1.log.should.equal("arrange act assert ")
-        self.spec2.log.should.equal("arrange assert ")
+        self.spec2.log.should.equal("test_data arrange assert ")
         self.spec3.log.should.equal("act assert ")
         self.spec4.log.should.equal("act assert ")
 

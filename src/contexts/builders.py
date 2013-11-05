@@ -50,9 +50,10 @@ def build_suite_from_iterable(specs):
 
 
 def build_iterable_from_class(cls):
-    if hasattr(cls, 'examples'):
+    examples_method = finders.find_examples_method(cls)
+    if examples_method is not None:
         specs = []
-        for test_data in cls.examples():
+        for test_data in examples_method():
             inst = cls()
             inst._contexts_test_data = test_data
             specs.append(inst)
@@ -61,14 +62,8 @@ def build_iterable_from_class(cls):
 
 
 def build_suite_from_class(cls):
-    if hasattr(cls, 'examples'):
-        specs = []
-        for test_data in cls.examples():
-            inst = cls()
-            inst._contexts_test_data = test_data
-            specs.append(inst)
-        return build_suite_from_iterable(specs)
-    return build_suite_from_instance(cls())
+    specs = build_iterable_from_class(cls)
+    return build_suite_from_iterable(specs)
 
 
 def build_suite_from_instance(spec):

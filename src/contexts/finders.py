@@ -11,6 +11,7 @@ establish_re = re.compile(r"(^|_)([Ee]stablish|[Cc]ontext|[Gg]iven)")
 because_re = re.compile(r"(^|_)([Bb]ecause|[Ww]hen|[Ss]ince|[Aa]fter)")
 should_re = re.compile(r"(^|_)([Ss]hould|[Ii]t|[Mm]ust|[Ww]ill|[Tt]hen)")
 cleanup_re = re.compile(r"(^|_)[Cc]leanup")
+example_re = re.compile(r"(^|_)([Ee]xample|[Dd]ata)")
 class_re = re.compile(r"([Ss]pec|[Ww]hen)")
 
 
@@ -77,6 +78,18 @@ class MethodFinder(object):
             assert_single_method_of_given_type(cls, found)
 
         return found
+
+
+def find_examples_method(cls):
+    found = []
+    for name, val in cls.__dict__.items():
+        if not example_re.search(name):
+            continue
+        if isinstance(val, classmethod):
+            method = getattr(cls, name)
+            found.append(method)
+    # assert_single_method_of_given_type(cls, found)
+    return found[0] if found else None
 
 
 def assert_single_method_of_given_type(cls, found):
