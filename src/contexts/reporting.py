@@ -149,56 +149,63 @@ class DotsResult(StreamResult):
         self._print('E', end='')
 
 
-def pluralise(noun, num):
-    string = str(num) + ' ' + noun
-    if num != 1:
-        string += 's'
-    return string
-
-
 class SummarisingResult(SimpleResult, StreamResult):
     dashes = '-' * 70
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.summary = []
+        self.current_indent = ''
 
     def context_started(self, context):
         super().context_started(context)
         self.current_summary = [context.name]
+        self.indent()
 
     def context_ended(self, context):
         super().context_ended(context)
         context_vm = self.view_models[-1]
         if context_vm.assertion_failures or context_vm.assertion_errors:
-            self.summary.extend(self.current_summary)
+            self.add_current_context_to_summary()
+        self.dedent()
 
     def context_errored(self, context, exception):
         super().context_errored(context, exception)
         context_vm = self.view_models[-1]
-        formatted_exc = ''.join(context_vm.error_summary).split('\n')[:-1]
-        self.current_summary.extend('  ' + s for s in formatted_exc)
-        self.summary.extend(self.current_summary)
+        formatted_exc = ''.join(context_vm.error_summary).strip().split('\n')
+        self.extend_summary(formatted_exc)
+        self.add_current_context_to_summary()
+        self.dedent()
+
+    def assertion_started(self, assertion):
+        super().assertion_started(assertion)
 
     def assertion_failed(self, assertion, exception):
         super().assertion_failed(assertion, exception)
-        context_vm = self.view_models[-1]
-        assertion_vm = context_vm.assertions[-1]
-        formatted_exc = ''.join(assertion_vm.error_summary).split('\n')[:-1]
-        self.current_summary.append('  FAIL: ' + assertion_vm.name)
-        self.current_summary.extend('    ' + s for s in formatted_exc)
+        self.add_current_assertion_to_summary()
 
     def assertion_errored(self, assertion, exception):
         super().assertion_errored(assertion, exception)
-        context_vm = self.view_models[-1]
-        assertion_vm = context_vm.assertions[-1]
-        formatted_exc = ''.join(assertion_vm.error_summary).split('\n')[:-1]
-        self.current_summary.append('  ERROR: ' + assertion_vm.name)
-        self.current_summary.extend('    ' + s for s in formatted_exc)
+        self.add_current_assertion_to_summary()
 
     def suite_ended(self, suite):
         super().suite_ended(suite)
         self.summarise()
+
+    def indent(self):
+        self.current_indent += '  '
+
+    def dedent(self):
+        self.current_indent = self.current_indent[:-2]
+
+    def append_to_summary(self, string):
+        self.current_summary.append(self.current_indent + string)
+
+    def extend_summary(self, iterable):
+        self.current_summary.extend(self.current_indent + s for s in iterable)
+
+    def add_current_context_to_summary(self):
+        self.summary.extend(self.current_summary)
 
     def summarise(self):
         self._print('')
@@ -224,25 +231,26 @@ class SummarisingResult(SimpleResult, StreamResult):
         num_ctx_err = len(self.context_errors)
         num_fail = len(self.assertion_failures)
         num_err = len(self.assertion_errors)
-        msg =  "{}, {}: {} failed, {}".format(pluralise("context", num_ctx),
-           pluralise("assertion", num_ass),
-           num_fail,
-           pluralise("error", num_err + num_ctx_err))
+        msg =  "{}, {}: {} failed, {}".format(
+            pluralise("context", num_ctx),
+            pluralise("assertion", num_ass),
+            num_fail,
+            pluralise("error", num_err + num_ctx_err))
         return msg
 
+    def add_current_assertion_to_summary(self):
+        context_vm = self.view_models[-1]
+        assertion_vm = context_vm.assertions[-1]
+        formatted_exc = ''.join(assertion_vm.error_summary).strip().split('\n')
+        
+        if assertion_vm.status == "errored":
+            self.append_to_summary('ERROR: ' + assertion_vm.name)
+        elif assertion_vm.status == "failed":
+            self.append_to_summary('FAIL: ' + assertion_vm.name)
 
-class TimedResult(StreamResult):
-    def suite_started(self, suite):
-        super().suite_started(suite)
-        self.start_time = datetime.datetime.now()
-
-    def suite_ended(self, suite):
-        self.end_time = datetime.datetime.now()
-        super().suite_ended(suite)
-
-        total_secs = (self.end_time - self.start_time).total_seconds()
-        rounded = round(total_secs, 1)
-        self._print("({} seconds)".format(rounded))
+        self.indent()
+        self.extend_summary(formatted_exc)
+        self.dedent()
 
 
 class CapturingResult(SummarisingResult):
@@ -261,7 +269,7 @@ class CapturingResult(SummarisingResult):
         super().context_errored(context, exception)
         if self.buffer.getvalue():
             self.summary.append("  -------------------- >> begin captured stdout << -------------------")
-            lines = self.buffer.getvalue()[:-1].split('\n')
+            lines = self.buffer.getvalue().strip().split('\n')
             self.summary.extend('  ' + line for line in lines)
             self.summary.append("  --------------------- >> end captured stdout << --------------------")
 
@@ -269,7 +277,7 @@ class CapturingResult(SummarisingResult):
         super().assertion_failed(assertion, exception)
         if self.buffer.getvalue():
             self.current_summary.append("    ------------------- >> begin captured stdout << ------------------")
-            lines = self.buffer.getvalue()[:-1].split('\n')
+            lines = self.buffer.getvalue().strip().split('\n')
             self.current_summary.extend('    ' + line for line in lines)
             self.current_summary.append("    -------------------- >> end captured stdout << -------------------")
 
@@ -277,9 +285,23 @@ class CapturingResult(SummarisingResult):
         super().assertion_errored(assertion, exception)
         if self.buffer.getvalue():
             self.current_summary.append("    ------------------- >> begin captured stdout << ------------------")
-            lines = self.buffer.getvalue()[:-1].split('\n')
+            lines = self.buffer.getvalue().strip().split('\n')
             self.current_summary.extend('    ' + line for line in lines)
             self.current_summary.append("    -------------------- >> end captured stdout << -------------------")
+
+
+class TimedResult(StreamResult):
+    def suite_started(self, suite):
+        super().suite_started(suite)
+        self.start_time = datetime.datetime.now()
+
+    def suite_ended(self, suite):
+        self.end_time = datetime.datetime.now()
+        super().suite_ended(suite)
+
+        total_secs = (self.end_time - self.start_time).total_seconds()
+        rounded = round(total_secs, 1)
+        self._print("({} seconds)".format(rounded))
 
 
 class NonCapturingCLIResult(DotsResult, TimedResult, SummarisingResult):
@@ -294,3 +316,10 @@ def format_exception(exception):
     ret = traceback.format_exception(type(exception), exception, exception.__traceback__)
     exception.__traceback__ = None
     return ret
+
+
+def pluralise(noun, num):
+    string = str(num) + ' ' + noun
+    if num != 1:
+        string += 's'
+    return string
