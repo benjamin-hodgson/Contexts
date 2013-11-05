@@ -192,7 +192,6 @@ Here's a brief example. We're asserting that the various different types of numb
 can all be multiplied by 0 to produce the expected result.
 
 ```python
-import decimal
 class SpecWithExamples(object):
     @classmethod
     def examples(cls):
