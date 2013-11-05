@@ -51,3 +51,9 @@ def catch(func, *args, **kwargs):
         func(*args, **kwargs)
     except Exception as e:
         return e
+
+def set_trace():
+    import pdb
+    import sys
+    pdb.Pdb(stdout=sys.__stdout__).set_trace()
+
