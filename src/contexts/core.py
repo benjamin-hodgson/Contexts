@@ -6,34 +6,35 @@ class Assertion(object):
         self.func = func
         self.name = name
 
-    def run(self, result_runner):
+    def run(self, test_data, result_runner):
         with result_runner.run_assertion(self):
-            self.func()
+            run_with_test_data(self.func, test_data)
 
 
 class Context(object):
-    def __init__(self, setups, actions, assertions, teardowns, name):
+    def __init__(self, setups, actions, assertions, teardowns, test_data, name):
         self.setups = setups
         self.actions = actions
         self.assertions = assertions
         self.teardowns = teardowns
+        self.test_data = test_data
         self.name = name
 
     def run_setup(self):
         for setup in self.setups:
-            setup()
+            run_with_test_data(setup, self.test_data)
 
     def run_action(self):
         for action in self.actions:
-            action()
+            run_with_test_data(action, self.test_data)
 
     def run_assertions(self, result_runner):
         for assertion in self.assertions:
-            assertion.run(result_runner)
+            assertion.run(self.test_data, result_runner)
 
     def run_teardown(self):
         for teardown in self.teardowns:
-            teardown()
+            run_with_test_data(teardown, self.test_data)
 
     def run(self, result_runner):
         with result_runner.run_context(self):
@@ -86,3 +87,9 @@ class ResultRunner(object):
             self.result.assertion_errored(assertion, e)
         else:
             self.result.assertion_passed(assertion)
+
+def run_with_test_data(func, test_data):
+    if test_data is not None:
+        func(test_data)
+    else:
+        func()

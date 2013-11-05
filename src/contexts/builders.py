@@ -48,6 +48,13 @@ def build_suite_from_iterable(specs):
 
 
 def build_suite_from_class(cls):
+    if hasattr(cls, 'examples'):
+        specs = []
+        for test_data in cls.examples():
+            inst = cls()
+            inst._contexts_test_data = test_data
+            specs.append(inst)
+        return build_suite_from_iterable(specs)
     return build_suite_from_instance(cls())
 
 
@@ -63,8 +70,13 @@ def build_context(spec):
     assert_no_ambiguous_methods(setups, actions, assertions, teardowns)
 
     wrapped_assertions = [Assertion(f, build_assertion_name(f)) for f in assertions]
-
-    return Context(setups, actions, wrapped_assertions, teardowns, spec.__class__.__name__)
+    
+    return Context(setups,
+                   actions,
+                   wrapped_assertions,
+                   teardowns,
+                   spec._contexts_test_data if hasattr(spec, '_contexts_test_data') else None,
+                   spec.__class__.__name__)
 
 
 def build_assertion_name(func):

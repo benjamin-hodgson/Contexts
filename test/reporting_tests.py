@@ -12,7 +12,7 @@ class WhenWatchingForDots(object):
     def context(self):
         self.stringio = StringIO()
         self.result = reporting.DotsResult(self.stringio)
-        self.fake_context = contexts.core.Context([],[],[],[],"context")
+        self.fake_context = contexts.core.Context([],[],[],[],None,"context")
         self.fake_assertion = contexts.core.Assertion(None, "assertion")
 
     def because_we_run_some_assertions(self):
@@ -61,17 +61,17 @@ class WhenPrintingASuccessfulResult(object):
     def because_we_run_some_tests(self):
         self.result.suite_started(None)
 
-        self.result.context_started(contexts.core.Context([],[],[],[],""))
+        self.result.context_started(contexts.core.Context([],[],[],[],None,""))
         self.result.assertion_started(contexts.core.Assertion(None, ""))
         self.result.assertion_passed(contexts.core.Assertion(None, ""))
         self.result.assertion_started(contexts.core.Assertion(None, ""))
         self.result.assertion_passed(contexts.core.Assertion(None, ""))
-        self.result.context_ended(contexts.core.Context([],[],[],[],""))
+        self.result.context_ended(contexts.core.Context([],[],[],[],None,""))
 
-        self.result.context_started(contexts.core.Context([],[],[],[],""))
+        self.result.context_started(contexts.core.Context([],[],[],[],None,""))
         self.result.assertion_started(contexts.core.Assertion(None, ""))
         self.result.assertion_passed(contexts.core.Assertion(None, ""))
-        self.result.context_ended(contexts.core.Context([],[],[],[],""))
+        self.result.context_ended(contexts.core.Context([],[],[],[],None,""))
 
         self.result.stream = self.stringio
         self.result.suite_ended(None)
@@ -89,7 +89,7 @@ class WhenPrintingAFailureResult(object):
         self.result = reporting.SummarisingResult(StringIO())
         self.stringio = StringIO()
 
-        self.context1 = contexts.core.Context([],[],[],[], "made.up_context_1")
+        self.context1 = contexts.core.Context([],[],[],[],None, "made.up_context_1")
 
         self.assertion1 = contexts.core.Assertion(None, "made.up.assertion_1")
         tb1 = [('made_up_file.py', 3, 'made_up_function', 'frame1'),
@@ -103,7 +103,7 @@ class WhenPrintingAFailureResult(object):
 
         self.assertion3 = contexts.core.Assertion(None, "made.up.assertion_3")
 
-        self.context2 = contexts.core.Context([],[],[],[],"made.up_context_2")
+        self.context2 = contexts.core.Context([],[],[],[],None,"made.up_context_2")
         tb3 = [('made_up_file_5.py', 1, 'made_up_function_5', 'frame5'),
                ('made_up_file_6.py', 2, 'made_up_function_6', 'frame6')]
         self.exception3 = test_doubles.build_fake_exception(tb3, "oh dear")
@@ -123,8 +123,8 @@ class WhenPrintingAFailureResult(object):
         self.result.context_started(self.context2)
         self.result.context_errored(self.context2, self.exception3)
 
-        self.result.context_started(contexts.core.Context([],[],[],[], "made.up_context_3"))
-        self.result.context_ended(contexts.core.Context([],[],[],[], "made.up_context_3"))
+        self.result.context_started(contexts.core.Context([],[],[],[],None, "made.up_context_3"))
+        self.result.context_ended(contexts.core.Context([],[],[],[],None, "made.up_context_3"))
 
         self.result.stream = self.stringio
         self.result.suite_ended(None)
@@ -166,7 +166,7 @@ class WhenCapturingStdOutAndReportingHierarchically(object):
         sys.stdout = self.fake_stdout = StringIO()
         sys.stderr = self.fake_stderr = StringIO()
 
-        self.fake_context = contexts.core.Context([],[],[],[],"context")
+        self.fake_context = contexts.core.Context([],[],[],[],None,"context")
         self.fake_assertion = contexts.core.Assertion(None, "assertion")
 
         self.stringio = StringIO()

@@ -323,6 +323,58 @@ class WhenRunningAClass(object):
     def it_should_run_the_test(self):
         self.spec.was_run.should.be.true
 
+class WhenRunningAParametrisedSpec(object):
+    def given_a_parametrised_test(self):
+        class ParametrisedSpec(object):
+            initialised = 0
+            setups = []
+            actions = []
+            assertions = []
+            teardowns = []
+            @classmethod
+            def examples(cls):
+                yield 1
+                yield 2
+            def __init__(self):
+                self.__class__.initialised += 1
+            def context(self, example):
+                self.__class__.setups.append(example)
+            def because(self, example):
+                self.__class__.actions.append(example)
+            def it(self, example):
+                self.__class__.assertions.append(example)
+            def cleanup(self, example):
+                self.__class__.teardowns.append(example)
+        self.ParametrisedSpec = ParametrisedSpec
+        self.result = MockResult()
+
+    def because_we_run_the_class(self):
+        contexts.run(self.ParametrisedSpec, self.result)
+
+    def the_ctx_should_not_error(self):
+        call_names = [call[0] for call in self.result.calls]
+        call_names.should_not.contain("context_errored")
+
+    def the_assertions_should_not_error(self):
+        call_names = [call[0] for call in self.result.calls]
+        call_names.should_not.contain("assertion_errored")
+
+    def the_assertions_should_not_fail(self):
+        call_names = [call[0] for call in self.result.calls]
+        call_names.should_not.contain("assertion_failed")
+
+    def it_should_instantiate_the_class_twice(self):
+        self.ParametrisedSpec.initialised.should.equal(2)
+
+    def it_should_run_the_setup_twice(self):
+        self.ParametrisedSpec.setups.should.equal([1,2])
+
+    def it_should_run_the_action_twice(self):
+        self.ParametrisedSpec.actions.should.equal([1,2])
+
+    def it_should_run_the_teardown_twice(self):
+        self.ParametrisedSpec.teardowns.should.equal([1,2])
+
 class WhenRunningMultipleSpecs(object):
     def context(self):
         class Spec1(object):
