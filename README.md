@@ -173,6 +173,40 @@ If a test class has a superclass, the parent's 'cleanup' method will be run afte
 This allows you to share cleanup code between test classes. The superclass's cleanup will be run
 _even if it has the same name_ as the subclass's setup method.
 
+#### Triangulating
+Contexts has support for 'examples' - sets of test data for which the whole test is expected to pass.
+Examples allow you to triangulate your tests very easily - if you need more test data, simply add a line
+to the 'examples' method.
+
+If you define a `classmethod` with the words 'examples' or 'data' in its name, it is treated as a
+test-data-generating method. This method must return an iterable (you can use a generator if you like),
+and it will be called before testing begins.
+
+For each example returned by the 'examples' method, the test class will be instantiated and run once.
+Test methods which accept one argument will have the current example passed into them.
+A method which accepts no arguments will be run normally. This allows you to take one of two approaches
+to testing using examples. You can accept the example once in the setup and set it as an attribute on `self`,
+or you can accept it into every test method.
+
+Here's a brief example. We're asserting that the various different types of numbers in Python
+can all be multiplied by 0 to produce the expected result.
+
+```python
+import decimal
+class SpecWithExamples(object):
+    @classmethod
+    def examples(cls):
+        yield 0
+        yield -6
+        yield 3
+        yield 1.6
+        yield 6 + 2j
+    def because_we_multiply_by_0(self, example):
+        self.result = example * 0
+    def it_should_return_0(self):
+        assert self.result == 0
+```
+
 #### Catching exceptions
 Sometimes you need to assert that a given function call will raise a certain type of exception.
 You can catch and store an exception -  to make assertions about it later - using Contexts's `catch`
