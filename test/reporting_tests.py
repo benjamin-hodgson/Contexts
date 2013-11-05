@@ -222,23 +222,23 @@ class WhenCapturingStdOutAndReportingHierarchically(object):
 context
   FAIL: assertion
     test.test_doubles.FakeException
-    ------------------- >> begin captured stdout << ------------------
+    ------------------ >> begin captured stdout << -------------------
     failing context
     failing assertion
-    -------------------- >> end captured stdout << -------------------
+    ------------------- >> end captured stdout << --------------------
   ERROR: assertion
     test.test_doubles.FakeException
-    ------------------- >> begin captured stdout << ------------------
+    ------------------ >> begin captured stdout << -------------------
     failing context
     failing assertion
     erroring assertion
-    -------------------- >> end captured stdout << -------------------
+    ------------------- >> end captured stdout << --------------------
 context
   test.test_doubles.FakeException
-  -------------------- >> begin captured stdout << -------------------
+  ------------------- >> begin captured stdout << --------------------
   erroring context
   assertion in erroring context
-  --------------------- >> end captured stdout << --------------------
+  -------------------- >> end captured stdout << ---------------------
 context
   FAIL: assertion
     test.test_doubles.FakeException
