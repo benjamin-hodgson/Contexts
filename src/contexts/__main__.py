@@ -12,9 +12,13 @@ def cmd():
     	dest='result',
     	const=reporting.NonCapturingCLIResult(),
     	default=reporting.CapturingCLIResult())
+    parser.add_argument('path',
+        action='store',
+        nargs='?',
+        default=os.getcwd())
     args = parser.parse_args()
 
-    _run_impl(os.getcwd(), args.result)
+    _run_impl(os.path.realpath(args.path), args.result)
     
     if args.result.failed:
         sys.exit(1)
