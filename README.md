@@ -2,11 +2,14 @@ Contexts
 ========
 [![Build Status](https://travis-ci.org/benjamin-hodgson/Contexts.png?branch=master)](https://travis-ci.org/benjamin-hodgson/Contexts)
 
+Dead simple BDD for Python. No custom decorators, no context managers,
+no `.feature` files, no fuss.
+
 Trello board: https://trello.com/b/uPgp50AF/contexts-development
 
 Cheese Shop: https://pypi.python.org/pypi/Contexts
 
-Contexts is a 'Context-Specification'-style test runner for Python, inspired by C#'s
+Contexts is a 'Context-Specification'-style test framework for Python, inspired by C#'s
 [`Machine.Specifications`](https://github.com/machine/machine.specifications).
 
 Writing tests which read like sentences can encourage you to focus your testing efforts on the externally
@@ -117,7 +120,7 @@ _even if it has the same name_ as the subclass's setup method.
 
 #### Acting on the system under test
 If the words 'because', 'when', 'since' or 'after' appear in the name of a method, it is treated
-as an 'action' method. Typically, this method will do nothing except call the function under test - 
+as an 'action' method. Typically, this method will do nothing except call the function under test -
 after all, you've set up all your test data in the 'context' method.
 
 The action method is run _once for each test class_, to encourage you to ensure your assertions don't
