@@ -8,7 +8,7 @@ setup(
     author = "Benjamin Hodgson",
     author_email = "benjamin.hodgson@huddle.net",
     url = "https://github.com/benjamin-hodgson/Contexts",
-    description = """Dead simple BDD for Python. No custom decorators, no context managers, no `.feature` files, no fuss.""",
+    description = """Dead simple descriptive testing for Python. No custom decorators, no context managers, no `.feature` files, no fuss.""",
     long_description = """See the Github project page (https://github.com/benjamin-hodgson/Contexts) for more information.""",
     package_dir = {'':'src'},
     packages = find_packages('src'),
