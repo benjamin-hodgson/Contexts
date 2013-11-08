@@ -174,6 +174,26 @@ class WhenUserFailsToMakeExamplesAClassmethod(object):
     def it_should_raise_type_error(self):
         self.exception.should.be.a(TypeError)
 
+class WhenExamplesReturnsNone(object):
+    def context(self):
+        class Spec(object):
+            times_run = 0
+            @classmethod
+            def examples(cls):
+                pass
+            def it(self):
+                self.__class__.times_run += 1
+        self.spec = Spec
+
+    def because_we_run_the_spec(self):
+        self.exception = contexts.catch(contexts.run, self.spec, MockResult())
+
+    def it_should_not_throw_an_exception(self):
+        self.exception.should.be.none
+
+    def it_should_run_the_spec_once(self):
+        self.spec.times_run.should.equal(1)
+
 
 if __name__ == "__main__":
     contexts.run()

@@ -51,9 +51,10 @@ def build_suite_from_iterable(specs):
 
 def build_iterable_from_class(cls):
     examples_method = finders.find_examples_method(cls)
-    if examples_method is not None:
-        specs = []
-        for test_data in examples_method():
+    test_data_iterable = examples_method()
+    specs = []
+    if test_data_iterable is not None:
+        for test_data in test_data_iterable:
             inst = cls()
             inst._contexts_test_data = test_data
             specs.append(inst)
@@ -78,7 +79,7 @@ def build_context(spec):
     assert_no_ambiguous_methods(setups, actions, assertions, teardowns)
 
     wrapped_assertions = [Assertion(f, build_assertion_name(f)) for f in assertions]
-    
+
     return Context(setups,
                    actions,
                    wrapped_assertions,
