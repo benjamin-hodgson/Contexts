@@ -263,30 +263,14 @@ class TeamCityResult(StreamResult, SimpleResult):
         msg = self.teamcity_format("##teamcity[testSuiteFinished name='{}']", "contexts")
         self._print(msg)
 
-    def assertion_started(self, assertion):
-        super().assertion_started(assertion)
-        msg = self.teamcity_format("##teamcity[testStarted name='{}']", assertion.name)
-        self._print(msg)
-    def assertion_passed(self, assertion):
-        super().assertion_passed(assertion)
-        msg = self.teamcity_format("##teamcity[testFinished name='{}']", assertion.name)
-        self._print(msg)
-    def assertion_failed(self, assertion, exception):
-        formatted_exception = ''.join(traceback.format_exception(type(exception), exception, exception.__traceback__))
-        msg1 = self.teamcity_format("##teamcity[testFailed name='{}' message='{}' details='{}']", assertion.name, str(exception), formatted_exception)
-        self._print(msg1)
-        msg2 = self.teamcity_format("##teamcity[testFinished name='{}']", assertion.name)
-        self._print(msg2)
-        super().assertion_failed(assertion, exception)
-    def assertion_errored(self, assertion, exception):
-        formatted_exception = ''.join(traceback.format_exception(type(exception), exception, exception.__traceback__))
-        msg1 = self.teamcity_format("##teamcity[testFailed name='{}' message='{}' details='{}']", assertion.name, str(exception), formatted_exception)
-        self._print(msg1)
-        msg2 = self.teamcity_format("##teamcity[testFinished name='{}']", assertion.name)
-        self._print(msg2)
-        super().assertion_errored(assertion, exception)
-
+    def context_started(self, context):
+        super().context_started(context)
+        self.context_name_prefix = context.name + '.'
+    def context_ended(self, context):
+        super().context_ended(context)
+        self.context_name_prefix = ''
     def context_errored(self, context, exception):
+        self.context_name_prefix = ''
         formatted_exception = ''.join(traceback.format_exception(type(exception), exception, exception.__traceback__))
         msg1 = self.teamcity_format("##teamcity[testStarted name='{}']", context.name)
         self._print(msg1)
@@ -295,6 +279,29 @@ class TeamCityResult(StreamResult, SimpleResult):
         msg3 = self.teamcity_format("##teamcity[testFinished name='{}']", context.name)
         self._print(msg3)
         super().context_errored(context, exception)
+
+    def assertion_started(self, assertion):
+        super().assertion_started(assertion)
+        msg = self.teamcity_format("##teamcity[testStarted name='{}']", self.context_name_prefix + assertion.name)
+        self._print(msg)
+    def assertion_passed(self, assertion):
+        super().assertion_passed(assertion)
+        msg = self.teamcity_format("##teamcity[testFinished name='{}']", self.context_name_prefix + assertion.name)
+        self._print(msg)
+    def assertion_failed(self, assertion, exception):
+        formatted_exception = ''.join(traceback.format_exception(type(exception), exception, exception.__traceback__))
+        msg1 = self.teamcity_format("##teamcity[testFailed name='{}' message='{}' details='{}']", self.context_name_prefix + assertion.name, str(exception), formatted_exception)
+        self._print(msg1)
+        msg2 = self.teamcity_format("##teamcity[testFinished name='{}']", self.context_name_prefix + assertion.name)
+        self._print(msg2)
+        super().assertion_failed(assertion, exception)
+    def assertion_errored(self, assertion, exception):
+        formatted_exception = ''.join(traceback.format_exception(type(exception), exception, exception.__traceback__))
+        msg1 = self.teamcity_format("##teamcity[testFailed name='{}' message='{}' details='{}']", self.context_name_prefix + assertion.name, str(exception), formatted_exception)
+        self._print(msg1)
+        msg2 = self.teamcity_format("##teamcity[testFinished name='{}']", self.context_name_prefix + assertion.name)
+        self._print(msg2)
+        super().assertion_errored(assertion, exception)
 
     @classmethod
     def teamcity_format(cls, format_string, *args):

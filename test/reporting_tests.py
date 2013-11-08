@@ -359,40 +359,40 @@ class WhenRunningInTeamCity(object):
         self.get_output.when.called_with(0,1).should.throw(IndexError)
 
     def it_should_tell_team_city_the_first_assertion_started(self):
-        self.get_output(1,1).should.equal("##teamcity[testStarted name='assertion1']")
+        self.get_output(1,1).should.equal("##teamcity[testStarted name='context.assertion1']")
     def it_should_not_report_anything_else_at_first_assertion_start(self):
         self.get_output.when.called_with(1,2).should.throw(IndexError)
     def it_should_tell_team_city_the_first_assertion_passed(self):
-        self.get_output(2,2).should.equal("##teamcity[testFinished name='assertion1']")
+        self.get_output(2,2).should.equal("##teamcity[testFinished name='context.assertion1']")
     def it_should_not_report_anything_else_at_first_assertion_end(self):
         self.get_output.when.called_with(2,3).should.throw(IndexError)
 
     def it_should_tell_team_city_the_second_assertion_started(self):
-        self.get_output(3,3).should.equal("##teamcity[testStarted name='assertion2']")
+        self.get_output(3,3).should.equal("##teamcity[testStarted name='context.assertion2']")
     def it_should_not_report_anything_else_at_second_assertion_start(self):
         self.get_output.when.called_with(3,4).should.throw(IndexError)
     def it_should_tell_team_city_the_second_assertion_passed(self):
-        self.get_output(4,4).should.equal("##teamcity[testFinished name='assertion2']")
+        self.get_output(4,4).should.equal("##teamcity[testFinished name='context.assertion2']")
     def it_should_not_report_anything_else_at_second_assertion_end(self):
         self.get_output.when.called_with(4,5).should.throw(IndexError)
 
     def it_should_tell_team_city_the_third_assertion_started(self):
-        self.get_output(5,5).should.equal("##teamcity[testStarted name='assertion3']")
+        self.get_output(5,5).should.equal("##teamcity[testStarted name='context.assertion3']")
     def it_should_not_report_anything_else_at_third_assertion_start(self):
         self.get_output.when.called_with(5,6).should.throw(IndexError)
     def it_should_output_a_stack_trace_for_the_third_assertion(self):
-        self.get_output(6,6).should.equal("##teamcity[testFailed name='assertion3' message='Gotcha' details='{}']".format(self.formatted_tb1))
-        self.get_output(6,7).should.equal("##teamcity[testFinished name='assertion3']")
+        self.get_output(6,6).should.equal("##teamcity[testFailed name='context.assertion3' message='Gotcha' details='{}']".format(self.formatted_tb1))
+        self.get_output(6,7).should.equal("##teamcity[testFinished name='context.assertion3']")
     def it_should_not_report_anything_else_at_third_assertion_end(self):
         self.get_output.when.called_with(6,8).should.throw(IndexError)
 
     def it_should_tell_team_city_the_fourth_assertion_started(self):
-        self.get_output(7,8).should.equal("##teamcity[testStarted name='assertion4']")
+        self.get_output(7,8).should.equal("##teamcity[testStarted name='context.assertion4']")
     def it_should_not_report_anything_else_at_fourth_assertion_start(self):
         self.get_output.when.called_with(7,9).should.throw(IndexError)
     def it_should_output_a_stack_trace_for_the_fourth_assertion(self):
-        self.get_output(8,9).should.equal("##teamcity[testFailed name='assertion4' message='you fail' details='{}']".format(self.formatted_tb2))
-        self.get_output(8,10).should.equal("##teamcity[testFinished name='assertion4']")
+        self.get_output(8,9).should.equal("##teamcity[testFailed name='context.assertion4' message='you fail' details='{}']".format(self.formatted_tb2))
+        self.get_output(8,10).should.equal("##teamcity[testFinished name='context.assertion4']")
     def it_should_not_report_anything_else_at_fourth_assertion_end(self):
         self.get_output.when.called_with(8,11).should.throw(IndexError)
 
