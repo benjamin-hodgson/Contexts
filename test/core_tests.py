@@ -524,7 +524,8 @@ class WhenRunningMultipleSpecs(object):
         calls.should.have.length_of(2)
 
 class WhenWeRunSpecsWithAlternatelyNamedMethods(object):
-    def context(self):
+    @classmethod
+    def examples(self):
         class GivenWhenThen(object):
             def __init__(self):
                 self.log = ""
@@ -534,6 +535,7 @@ class WhenWeRunSpecsWithAlternatelyNamedMethods(object):
                 self.log += "act "
             def has_then_in_the_name(self):
                 self.log += "assert "
+        yield GivenWhenThen(), "arrange act assert "
         class AlternatelyNamedMethods(object):
             log = ""
             @classmethod
@@ -544,6 +546,7 @@ class WhenWeRunSpecsWithAlternatelyNamedMethods(object):
                 self.__class__.log += "arrange "
             def has_it_in_the_name(self):
                 self.__class__.log += "assert "
+        yield AlternatelyNamedMethods, "test_data arrange assert "
         class MoreAlternativeNames(object):
             def __init__(self):
                 self.log = ""
@@ -551,6 +554,7 @@ class WhenWeRunSpecsWithAlternatelyNamedMethods(object):
                 self.log += "act "
             def has_must_in_the_name(self):
                 self.log += "assert "
+        yield MoreAlternativeNames(), "act assert "
         class EvenMoreAlternativeNames(object):
             def __init__(self):
                 self.log = ""
@@ -558,26 +562,20 @@ class WhenWeRunSpecsWithAlternatelyNamedMethods(object):
                 self.log += "act "
             def has_will_in_the_name(self):
                 self.log += "assert "
+        yield EvenMoreAlternativeNames(), "act assert "
 
-        self.spec1 = GivenWhenThen()
-        self.spec2 = AlternatelyNamedMethods
-        self.spec3 = MoreAlternativeNames()
-        self.spec4 = EvenMoreAlternativeNames()
+    def context(self, example):
+        self.spec, self.expected_log = example
 
-    def because_we_run_the_specs(self):
-        contexts.run(self.spec1, MockResult())
-        contexts.run(self.spec2, MockResult())
-        contexts.run(self.spec3, MockResult())
-        contexts.run(self.spec4, MockResult())
+    def because_we_run_the_spec(self, example):
+        contexts.run(self.spec, MockResult())
 
     def it_should_run_the_methods_in_the_correct_order(self):
-        self.spec1.log.should.equal("arrange act assert ")
-        self.spec2.log.should.equal("test_data arrange assert ")
-        self.spec3.log.should.equal("act assert ")
-        self.spec4.log.should.equal("act assert ")
+        self.spec.log.should.equal(self.expected_log)
 
 class WhenRunningAmbiguouslyNamedMethods(object):
-    def context(self):
+    @classmethod
+    def examples(cls):
         class AmbiguousMethods1(object):
             def this_has_both_context_and_because_in_the_name(self):
                 pass
@@ -593,23 +591,21 @@ class WhenRunningAmbiguouslyNamedMethods(object):
         class AmbiguousMethods5(object):
             def this_has_both_examples_and_it_in_the_name(self):
                 pass
+        yield AmbiguousMethods1
+        yield AmbiguousMethods2
+        yield AmbiguousMethods3
+        yield AmbiguousMethods4
+        yield AmbiguousMethods5
 
-        self.specs = [AmbiguousMethods1(), AmbiguousMethods2(), AmbiguousMethods3(), AmbiguousMethods4(), AmbiguousMethods5]
-        self.exceptions = []
-
-    def because_we_try_to_run_the_specs(self):
-        for spec in self.specs:
-            self.exceptions.append(contexts.catch(lambda: contexts.run(spec, MockResult())))
+    def because_we_try_to_run_the_spec(self, example):
+        self.exception = contexts.catch(contexts.run, example, MockResult())
 
     def it_should_raise_MethodNamingError(self):
-        self.exceptions[0].should.be.a(contexts.errors.MethodNamingError)
-        self.exceptions[1].should.be.a(contexts.errors.MethodNamingError)
-        self.exceptions[2].should.be.a(contexts.errors.MethodNamingError)
-        self.exceptions[3].should.be.a(contexts.errors.MethodNamingError)
-        self.exceptions[4].should.be.a(contexts.errors.MethodNamingError)
+        self.exception.should.be.a(contexts.errors.MethodNamingError)
 
 class WhenRunningNotSoAmbiguouslyNamedMethods(object):
-    def context(self):
+    @classmethod
+    def examples(self):
         class NotAmbiguousMethods1(object):
             def this_has_both_context_and_establish_in_the_name(self):
                 pass
@@ -620,24 +616,23 @@ class WhenRunningNotSoAmbiguouslyNamedMethods(object):
             def this_has_both_should_and_it_in_the_name(self):
                 pass
         class NotAmbiguousMethods4(object):
+            @classmethod
             def this_has_both_examples_and_data_in_the_name(self):
-                pass
+                yield []
+        yield NotAmbiguousMethods1
+        yield NotAmbiguousMethods2
+        yield NotAmbiguousMethods3
+        yield NotAmbiguousMethods4
 
-        self.specs = [NotAmbiguousMethods1(), NotAmbiguousMethods2(), NotAmbiguousMethods3(), NotAmbiguousMethods4()]
-        self.exceptions = []
-
-    def because_we_try_to_run_the_specs(self):
-        for spec in self.specs:
-            self.exceptions.append(contexts.catch(lambda: contexts.run(spec, MockResult())))
+    def because_we_try_to_run_the_spec(self, example):
+        self.exception = contexts.catch(contexts.run, example, MockResult())
 
     def it_should_not_raise_any_exceptions(self):
-        self.exceptions[0].should.be.none
-        self.exceptions[1].should.be.none
-        self.exceptions[2].should.be.none
-        self.exceptions[3].should.be.none
+        self.exception.should.be.none
 
 class WhenRunningSpecsWithTooManySpecialMethods(object):
-    def context(self):
+    @classmethod
+    def examples(cls):
         class TooManyContexts(object):
             def context(self):
                 pass
@@ -660,19 +655,16 @@ class WhenRunningSpecsWithTooManySpecialMethods(object):
             @classmethod
             def test_data(self):
                 pass
+        yield TooManyContexts
+        yield TooManyActions
+        yield TooManyTeardowns
+        yield TooManyExamples
 
-        self.specs = [TooManyContexts(), TooManyActions(), TooManyTeardowns(), TooManyExamples]
-        self.exceptions = []
-
-    def because_we_try_to_run_the_specs(self):
-        for spec in self.specs:
-            self.exceptions.append(contexts.catch(lambda: contexts.run(spec, MockResult())))
+    def because_we_try_to_run_the_spec(self, example):
+        self.exception = contexts.catch(contexts.run, example, MockResult())
 
     def it_should_raise_TooManySpecialMethodsError(self):
-        self.exceptions[0].should.be.a(contexts.errors.TooManySpecialMethodsError)
-        self.exceptions[1].should.be.a(contexts.errors.TooManySpecialMethodsError)
-        self.exceptions[2].should.be.a(contexts.errors.TooManySpecialMethodsError)
-        self.exceptions[3].should.be.a(contexts.errors.TooManySpecialMethodsError)
+        self.exception.should.be.a(contexts.errors.TooManySpecialMethodsError)
 
 
 if __name__ == "__main__":
