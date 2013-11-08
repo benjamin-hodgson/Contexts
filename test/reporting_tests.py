@@ -276,6 +276,10 @@ class WhenTimingATestRun(object):
 class WhenRunningInTeamCity(object):
     def context(self):
         self.stringio = StringIO()
+
+        self.mock_escape = mock.Mock(side_effect=reporting.TeamCityResult.teamcity_escape)
+        reporting.TeamCityResult.teamcity_escape = self.mock_escape
+
         self.result = reporting.TeamCityResult(self.stringio)
 
         tb1 = [('made_up_file.py', 3, 'made_up_function', 'frame1'),
@@ -345,39 +349,70 @@ class WhenRunningInTeamCity(object):
         self.result.suite_ended(None)
         self.outputs.append(self.stringio.getvalue())
 
+    def it_should_call_escape_for_every_object_it_formats(self):
+        self.mock_escape.mock_calls.should.have.length_of(21)
+
     # TODO: use the full __qualname__ for the names
     def it_should_tell_team_city_it_started(self):
         self.get_output(0,0).should.equal("##teamcity[testSuiteStarted name='contexts']")
+    def it_should_not_report_anything_else_at_start(self):
+        self.get_output.when.called_with(0,1).should.throw(IndexError)
 
     def it_should_tell_team_city_the_first_assertion_started(self):
         self.get_output(1,1).should.equal("##teamcity[testStarted name='assertion1']")
+    def it_should_not_report_anything_else_at_first_assertion_start(self):
+        self.get_output.when.called_with(1,2).should.throw(IndexError)
     def it_should_tell_team_city_the_first_assertion_passed(self):
         self.get_output(2,2).should.equal("##teamcity[testFinished name='assertion1']")
+    def it_should_not_report_anything_else_at_first_assertion_end(self):
+        self.get_output.when.called_with(2,3).should.throw(IndexError)
 
     def it_should_tell_team_city_the_second_assertion_started(self):
         self.get_output(3,3).should.equal("##teamcity[testStarted name='assertion2']")
+    def it_should_not_report_anything_else_at_second_assertion_start(self):
+        self.get_output.when.called_with(3,4).should.throw(IndexError)
     def it_should_tell_team_city_the_second_assertion_passed(self):
         self.get_output(4,4).should.equal("##teamcity[testFinished name='assertion2']")
+    def it_should_not_report_anything_else_at_second_assertion_end(self):
+        self.get_output.when.called_with(4,5).should.throw(IndexError)
 
     def it_should_tell_team_city_the_third_assertion_started(self):
         self.get_output(5,5).should.equal("##teamcity[testStarted name='assertion3']")
+    def it_should_not_report_anything_else_at_third_assertion_start(self):
+        self.get_output.when.called_with(5,6).should.throw(IndexError)
     def it_should_output_a_stack_trace_for_the_third_assertion(self):
         self.get_output(6,6).should.equal("##teamcity[testFailed name='assertion3' message='Gotcha' details='{}']".format(self.formatted_tb1))
         self.get_output(6,7).should.equal("##teamcity[testFinished name='assertion3']")
+    def it_should_not_report_anything_else_at_third_assertion_end(self):
+        self.get_output.when.called_with(6,8).should.throw(IndexError)
 
     def it_should_tell_team_city_the_fourth_assertion_started(self):
         self.get_output(7,8).should.equal("##teamcity[testStarted name='assertion4']")
+    def it_should_not_report_anything_else_at_fourth_assertion_start(self):
+        self.get_output.when.called_with(7,9).should.throw(IndexError)
     def it_should_output_a_stack_trace_for_the_fourth_assertion(self):
         self.get_output(8,9).should.equal("##teamcity[testFailed name='assertion4' message='you fail' details='{}']".format(self.formatted_tb2))
         self.get_output(8,10).should.equal("##teamcity[testFinished name='assertion4']")
+    def it_should_not_report_anything_else_at_fourth_assertion_end(self):
+        self.get_output.when.called_with(8,11).should.throw(IndexError)
 
     def it_should_tell_team_city_another_test_started_and_failed_for_the_ctx_error(self):
         self.get_output(9,11).should.equal("##teamcity[testStarted name='context']")
         self.get_output(9,12).should.equal("##teamcity[testFailed name='context' message='oh dear' details='{}']".format(self.formatted_tb3))
         self.get_output(9,13).should.equal("##teamcity[testFinished name='context']")
+    def it_should_not_report_anything_else_following_ctx_error(self):
+        self.get_output.when.called_with(9,14).should.throw(IndexError)
+
+    def it_should_tell_team_city_the_suite_ended(self):
+        self.get_output(10, 14).should.equal("##teamcity[testSuiteFinished name='contexts']")
+    def it_should_not_report_anything_else_at_suite_end(self):
+        self.get_output.when.called_with(10,15).should.throw(IndexError)
+
+    def cleanup_the_mock(self):
+        reporting.TeamCityResult.teamcity_escape = self.mock_escape.return_value
 
     def get_output(self, n, m):
-        return self.outputs[n].split('\n')[m]
+        return self.outputs[n].strip().split('\n')[m]
 
 class WhenEscapingForTeamCity(object):
     def because_we_escape_a_string(self):
@@ -385,7 +420,6 @@ class WhenEscapingForTeamCity(object):
         self.result = reporting.TeamCityResult.teamcity_escape("'\n\r|[]")
     def it_should_escape_the_chars_correctly(self):
         self.result.should.equal("|'|n|r|||[|]")
-
 
 
 if __name__ == "__main__":

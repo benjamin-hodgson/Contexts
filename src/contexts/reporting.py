@@ -242,7 +242,7 @@ class SummarisingResult(SimpleResult, StreamResult):
     def add_current_assertion_to_summary(self):
         assertion_vm = self.current_context.assertions[-1]
         formatted_exc = ''.join(assertion_vm.error_summary).strip().split('\n')
-        
+
         if assertion_vm.status == "errored":
             self.append_to_summary('ERROR: ' + assertion_vm.name)
         elif assertion_vm.status == "failed":
@@ -256,34 +256,53 @@ class SummarisingResult(SimpleResult, StreamResult):
 class TeamCityResult(StreamResult, SimpleResult):
     def suite_started(self, suite):
         super().suite_started(suite)
-        self._print("##teamcity[testSuiteStarted name='contexts']")
+        msg = self.teamcity_format("##teamcity[testSuiteStarted name='{}']", "contexts")
+        self._print(msg)
+    def suite_ended(self, suite):
+        super().suite_ended(suite)
+        msg = self.teamcity_format("##teamcity[testSuiteFinished name='{}']", "contexts")
+        self._print(msg)
 
     def assertion_started(self, assertion):
         super().assertion_started(assertion)
-        self._print("##teamcity[testStarted name='{}']".format(assertion.name))
+        msg = self.teamcity_format("##teamcity[testStarted name='{}']", assertion.name)
+        self._print(msg)
     def assertion_passed(self, assertion):
         super().assertion_passed(assertion)
-        self._print("##teamcity[testFinished name='{}']".format(assertion.name))
+        msg = self.teamcity_format("##teamcity[testFinished name='{}']", assertion.name)
+        self._print(msg)
     def assertion_failed(self, assertion, exception):
-        formatted_exception = ''.join(format_exception(exception))
-        self._print("##teamcity[testFailed name='{}' message='{}' details='{}']".format(assertion.name, exception, self.teamcity_escape(formatted_exception)))
-        self._print("##teamcity[testFinished name='{}']".format(assertion.name))
+        formatted_exception = ''.join(traceback.format_exception(type(exception), exception, exception.__traceback__))
+        msg1 = self.teamcity_format("##teamcity[testFailed name='{}' message='{}' details='{}']", assertion.name, str(exception), formatted_exception)
+        self._print(msg1)
+        msg2 = self.teamcity_format("##teamcity[testFinished name='{}']", assertion.name)
+        self._print(msg2)
         super().assertion_failed(assertion, exception)
     def assertion_errored(self, assertion, exception):
-        formatted_exception = ''.join(format_exception(exception))
-        self._print("##teamcity[testFailed name='{}' message='{}' details='{}']".format(assertion.name, exception, self.teamcity_escape(formatted_exception)))
-        self._print("##teamcity[testFinished name='{}']".format(assertion.name))
+        formatted_exception = ''.join(traceback.format_exception(type(exception), exception, exception.__traceback__))
+        msg1 = self.teamcity_format("##teamcity[testFailed name='{}' message='{}' details='{}']", assertion.name, str(exception), formatted_exception)
+        self._print(msg1)
+        msg2 = self.teamcity_format("##teamcity[testFinished name='{}']", assertion.name)
+        self._print(msg2)
         super().assertion_errored(assertion, exception)
 
     def context_errored(self, context, exception):
-        formatted_exception = ''.join(format_exception(exception))
-        self._print("##teamcity[testStarted name='{}']".format(context.name))
-        self._print("##teamcity[testFailed name='{}' message='{}' details='{}']".format(context.name, exception, self.teamcity_escape(formatted_exception)))
-        self._print("##teamcity[testFinished name='{}']".format(context.name))
+        formatted_exception = ''.join(traceback.format_exception(type(exception), exception, exception.__traceback__))
+        msg1 = self.teamcity_format("##teamcity[testStarted name='{}']", context.name)
+        self._print(msg1)
+        msg2 = self.teamcity_format("##teamcity[testFailed name='{}' message='{}' details='{}']", context.name, str(exception), formatted_exception)
+        self._print(msg2)
+        msg3 = self.teamcity_format("##teamcity[testFinished name='{}']", context.name)
+        self._print(msg3)
+        super().context_errored(context, exception)
 
+    @classmethod
+    def teamcity_format(cls, format_string, *args):
+        strings = [cls.teamcity_escape(arg) for arg in args]
+        return format_string.format(*strings)
 
-    @staticmethod
-    def teamcity_escape(string):
+    @classmethod
+    def teamcity_escape(cls, string):
         return string.replace("|", "||").replace('\n', '|n').replace("'", "|'").replace("\r", "|r").replace("[", "|[").replace("]", "|]")
 
 
