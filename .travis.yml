@@ -9,6 +9,7 @@ script:
 branches:
   only:
   - master
+  - builder_refactor
 deploy:
   provider: pypi
   user: benjamin.hodgson
