@@ -51,7 +51,7 @@ class MethodFinder(object):
 
     def find_methods_matching(self, regex, *, top_down=False, one_only=False, one_per_class=False):
         found = []
-        mro = self.spec.__class__.__mro__
+        mro = type(self.spec).__mro__
         classes = reversed(mro) if top_down else mro
         for cls in classes:
             found.extend(self.find_methods_on_class_matching(cls, regex, one_only or one_per_class))

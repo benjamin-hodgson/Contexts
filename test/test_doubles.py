@@ -11,14 +11,14 @@ class MockResult(object):
     def suite_ended(self, suite):
         self.calls.append(('suite_ended', suite))
 
-    def context_started(self, context):
-        self.calls.append(('context_started', context))
+    def test_case_started(self, context):
+        self.calls.append(('test_case_started', context))
 
-    def context_ended(self, context):
-        self.calls.append(('context_ended', context))
+    def test_case_ended(self, context):
+        self.calls.append(('test_case_ended', context))
 
-    def context_errored(self, context, exception):
-        self.calls.append(('context_errored', context, exception))
+    def test_case_errored(self, context, exception):
+        self.calls.append(('test_case_errored', context, exception))
 
     def assertion_started(self, assertion):
         self.calls.append(('assertion_started', assertion))

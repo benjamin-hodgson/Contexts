@@ -15,7 +15,7 @@ class Assertion(object):
             run_with_test_data(self.func, test_data)
 
 
-class Context(object):
+class TestCase(object):
     def __init__(self, setups, actions, assertions, teardowns, test_data, name):
         self.setups = setups
         self.actions = actions
@@ -50,29 +50,24 @@ class Context(object):
                 self.run_teardown()
 
 
+class Context(object):
+    def __init__(self, cls):
+        self.cls = cls
+
+    def run(self, result_runner):
+        for instance in instantiate(self.cls):
+            test_case = wrap_instance_in_test_case(instance)
+            test_case.run(result_runner)
+
+
 class Suite(object):
     def __init__(self, classes):
-        self.classes = classes
+        self.contexts = [Context(cls) for cls in classes]
 
     def run(self, result_runner):
         with result_runner.run_suite(self):
-            instances = itertools.chain.from_iterable(instantiate(cls) for cls in self.classes)
-            self.contexts = [wrap_instance_in_context(instance) for instance in instances]
-            for ctx in self.contexts:
-                ctx.run(result_runner)
-
-
-def wrap_instance_in_context(instance):
-    finder = finders.MethodFinder(instance)
-    setups, actions, assertions, teardowns = finder.find_special_methods()
-    assert_no_ambiguous_methods(setups, actions, assertions, teardowns)
-    wrapped_assertions = [Assertion(f, f.__name__) for f in assertions]
-    return Context(setups,
-                   actions,
-                   wrapped_assertions,
-                   teardowns,
-                   instance._contexts_test_data if hasattr(instance, '_contexts_test_data') else None,
-                   instance.__class__.__name__)
+            for context in self.contexts:
+                context.run(result_runner)
 
 
 def instantiate(cls):
@@ -93,6 +88,19 @@ def instantiate(cls):
     return [cls()]
 
 
+def wrap_instance_in_test_case(instance):
+    finder = finders.MethodFinder(instance)
+    setups, actions, assertions, teardowns = finder.find_special_methods()
+    assert_no_ambiguous_methods(setups, actions, assertions, teardowns)
+    wrapped_assertions = [Assertion(f, f.__name__) for f in assertions]
+    return TestCase(setups,
+                   actions,
+                   wrapped_assertions,
+                   teardowns,
+                   instance._contexts_test_data if hasattr(instance, '_contexts_test_data') else None,
+                   type(instance).__name__)
+
+
 class ResultRunner(object):
     def __init__(self, result):
         self.result = result
@@ -105,13 +113,13 @@ class ResultRunner(object):
 
     @contextmanager
     def run_context(self, context):
-        self.result.context_started(context)
+        self.result.test_case_started(context)
         try:
             yield
         except Exception as e:
-            self.result.context_errored(context, e)
+            self.result.test_case_errored(context, e)
         else:
-            self.result.context_ended(context)
+            self.result.test_case_ended(context)
 
     @contextmanager
     def run_assertion(self, assertion):
