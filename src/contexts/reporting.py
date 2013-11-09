@@ -40,7 +40,7 @@ class Result(object):
 
 class ContextViewModel(object):
     def __init__(self, context):
-        self.name = context.name
+        self.name = make_readable(context.name)
         self.assertions = []
         self._exception = None
         self.error_summary = None
@@ -63,7 +63,7 @@ class ContextViewModel(object):
 
 class AssertionViewModel(object):
     def __init__(self, assertion, status="passed", exception=None):
-        self.name = assertion.name
+        self.name = make_readable(assertion.name)
         self.status = status
         self.error_summary = None
         if exception is not None:
@@ -159,7 +159,7 @@ class SummarisingResult(SimpleResult, StreamResult):
 
     def context_started(self, context):
         super().context_started(context)
-        self.current_summary = [context.name]
+        self.current_summary = [self.current_context.name]
         self.indent()
 
     def context_ended(self, context):
@@ -213,6 +213,19 @@ class SummarisingResult(SimpleResult, StreamResult):
     def add_current_context_to_summary(self):
         self.summary.extend(self.current_summary)
 
+    def add_current_assertion_to_summary(self):
+        assertion_vm = self.current_context.assertions[-1]
+        formatted_exc = ''.join(assertion_vm.error_summary).strip().split('\n')
+
+        if assertion_vm.status == "errored":
+            self.append_to_summary('ERROR: ' + assertion_vm.name)
+        elif assertion_vm.status == "failed":
+            self.append_to_summary('FAIL: ' + assertion_vm.name)
+
+        self.indent()
+        self.extend_summary(formatted_exc)
+        self.dedent()
+
     def summarise(self):
         self._print('')
         self._print(self.dashes)
@@ -238,19 +251,6 @@ class SummarisingResult(SimpleResult, StreamResult):
             pluralise("assertion", len(self.assertions)),
             len(self.assertion_failures),
             pluralise("error", len(self.assertion_errors) + len(self.context_errors)))
-
-    def add_current_assertion_to_summary(self):
-        assertion_vm = self.current_context.assertions[-1]
-        formatted_exc = ''.join(assertion_vm.error_summary).strip().split('\n')
-
-        if assertion_vm.status == "errored":
-            self.append_to_summary('ERROR: ' + assertion_vm.name)
-        elif assertion_vm.status == "failed":
-            self.append_to_summary('FAIL: ' + assertion_vm.name)
-
-        self.indent()
-        self.extend_summary(formatted_exc)
-        self.dedent()
 
 
 class TeamCityResult(StreamResult, SimpleResult):
@@ -394,6 +394,7 @@ def make_readable(string):
 
     cased_words = [words[0]]
     for word in words[1:]:
-        cased_word = word.lower() if not word.isupper() else word
+        should_lowerise = (not word.isupper()) or (len(word) == 1)
+        cased_word = word.lower() if should_lowerise else word
         cased_words.append(cased_word)
     return ' '.join(cased_words)

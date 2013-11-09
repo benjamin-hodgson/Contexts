@@ -132,22 +132,22 @@ class WhenPrintingAFailureResult(object):
     def it_should_print_a_traceback_for_each_failure(self):
         self.stringio.getvalue().should.equal("""
 ----------------------------------------------------------------------
-made.up_context_1
-  ERROR: made.up.assertion_1
+made up context 1
+  ERROR: made up assertion 1
     Traceback (most recent call last):
       File "made_up_file.py", line 3, in made_up_function
         frame1
       File "another_made_up_file.py", line 2, in another_made_up_function
         frame2
     test.test_doubles.FakeException: Gotcha
-  FAIL: made.up.assertion_2
+  FAIL: made up assertion 2
     Traceback (most recent call last):
       File "made_up_file_3.py", line 1, in made_up_function_3
         frame3
       File "made_up_file_4.py", line 2, in made_up_function_4
         frame4
     test.test_doubles.FakeException: you fail
-made.up_context_2
+made up context 2
   Traceback (most recent call last):
     File "made_up_file_5.py", line 1, in made_up_function_5
       frame5
@@ -437,7 +437,8 @@ class WhenMakingANameHumanReadable(object):
         yield "BMW4Series", "BMW 4 series"
         yield "lowerAtStart", "lower at start"
         yield "has.dots.in.the.name", "has dots in the name"
-        yield "does.EverythingAT_once100Percent_Certain", "does everything AT once 100 percent certain"
+        yield "Does.EverythingAT_once.TOBe100Percent_Certain", "Does everything AT once TO be 100 percent certain"
+        yield "CamelCaseWithASingleLetterWord", "Camel case with a single letter word"
 
     def because_we_make_the_string_readable(self, example):
         self.result = reporting.make_readable(example[0])
