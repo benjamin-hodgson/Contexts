@@ -60,9 +60,9 @@ class WhenRunningASpec(object):
 
     def the_assertions_should_have_the_right_names(self):
         names = [self.result.calls[i][1].name for i in (3,5,7)]
-        names.should.contain(__name__ + '.WhenRunningASpec.context.<locals>.TestSpec.method_with_should_in_the_name')
-        names.should.contain(__name__ + '.WhenRunningASpec.context.<locals>.TestSpec.failing_method_with_should_in_the_name')
-        names.should.contain(__name__ + '.WhenRunningASpec.context.<locals>.TestSpec.erroring_method_with_should_in_the_name')
+        names.should.contain('method_with_should_in_the_name')
+        names.should.contain('failing_method_with_should_in_the_name')
+        names.should.contain('erroring_method_with_should_in_the_name')
 
     def it_should_pass_in_the_exceptions(self):
         exceptions = {}

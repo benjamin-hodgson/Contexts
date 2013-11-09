@@ -1,8 +1,9 @@
 import inspect
 import itertools
 from contextlib import contextmanager
+from . import errors
 from . import finders
-from .util import assert_no_ambiguous_methods, build_assertion_name
+
 
 class Assertion(object):
     def __init__(self, func, name):
@@ -65,7 +66,7 @@ def wrap_instance_in_context(instance):
     finder = finders.MethodFinder(instance)
     setups, actions, assertions, teardowns = finder.find_special_methods()
     assert_no_ambiguous_methods(setups, actions, assertions, teardowns)
-    wrapped_assertions = [Assertion(f, build_assertion_name(f)) for f in assertions]
+    wrapped_assertions = [Assertion(f, f.__name__) for f in assertions]
     return Context(setups,
                    actions,
                    wrapped_assertions,
@@ -131,3 +132,12 @@ def run_with_test_data(func, test_data):
         func(test_data)
     else:
         func()
+
+
+def assert_no_ambiguous_methods(*iterables):
+    for a, b in itertools.combinations((set(i) for i in iterables), 2):
+        overlap = a & b
+        if overlap:
+            msg = "The following methods are ambiguously named:\n"
+            msg += '\n'.join([func.__qualname__ for func in overlap])
+            raise errors.MethodNamingError(msg)
