@@ -4,7 +4,7 @@ from . import reporting
 from . import core
 
 
-__all__ = ['run', 'main', 'catch']
+__all__ = ['run', 'main', 'catch', 'set_trace']
 
 
 def main():
@@ -52,8 +52,10 @@ def catch(func, *args, **kwargs):
     except Exception as e:
         return e
 
+
 def set_trace():
+    # https://github.com/nose-devs/nose/blob/master/nose/tools/nontrivial.py
     import pdb
     import sys
-    pdb.Pdb(stdout=sys.__stdout__).set_trace()
+    pdb.Pdb(stdout=sys.__stdout__).set_trace(sys._getframe().f_back)
 
