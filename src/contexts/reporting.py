@@ -52,6 +52,9 @@ class ContextViewModel(object):
     def exception(self, value):
         self._exception = value
         self.error_summary = format_exception(value)
+    @property
+    def last_assertion(self):
+        return self.assertions[-1]
 
     @property
     def assertion_failures(self):
@@ -171,7 +174,7 @@ class SummarisingResult(SimpleResult, StreamResult):
 
     def context_errored(self, context, exception):
         super().context_errored(context, exception)
-        formatted_exc = ''.join(self.current_context.error_summary).strip().split('\n')
+        formatted_exc = self.current_context.error_summary
         self.extend_summary(formatted_exc)
         self.add_current_context_to_summary()
         self.dedent()
@@ -215,7 +218,7 @@ class SummarisingResult(SimpleResult, StreamResult):
 
     def add_current_assertion_to_summary(self):
         assertion_vm = self.current_context.assertions[-1]
-        formatted_exc = ''.join(assertion_vm.error_summary).strip().split('\n')
+        formatted_exc = assertion_vm.error_summary
 
         if assertion_vm.status == "errored":
             self.append_to_summary('ERROR: ' + assertion_vm.name)
@@ -265,43 +268,45 @@ class TeamCityResult(StreamResult, SimpleResult):
 
     def context_started(self, context):
         super().context_started(context)
-        self.context_name_prefix = context.name + '.'
+        self.context_name_prefix = self.current_context.name + ' -> '
     def context_ended(self, context):
         super().context_ended(context)
         self.context_name_prefix = ''
     def context_errored(self, context, exception):
-        self.context_name_prefix = ''
-        formatted_exception = ''.join(traceback.format_exception(type(exception), exception, exception.__traceback__))
-        msg1 = self.teamcity_format("##teamcity[testStarted name='{}']", context.name)
-        self._print(msg1)
-        msg2 = self.teamcity_format("##teamcity[testFailed name='{}' message='{}' details='{}']", context.name, str(exception), formatted_exception)
-        self._print(msg2)
-        msg3 = self.teamcity_format("##teamcity[testFinished name='{}']", context.name)
-        self._print(msg3)
         super().context_errored(context, exception)
+        self.context_name_prefix = ''
+        context_vm = self.current_context
+        msg1 = self.teamcity_format("##teamcity[testStarted name='{}']", context_vm.name)
+        self._print(msg1)
+        msg2 = self.teamcity_format("##teamcity[testFailed name='{}' message='{}' details='{}']", self.current_context.name, str(exception), '\n'.join(context_vm.error_summary))
+        self._print(msg2)
+        msg3 = self.teamcity_format("##teamcity[testFinished name='{}']", context_vm.name)
+        self._print(msg3)
 
     def assertion_started(self, assertion):
         super().assertion_started(assertion)
-        msg = self.teamcity_format("##teamcity[testStarted name='{}']", self.context_name_prefix + assertion.name)
+        assertion_name = make_readable(assertion.name)
+        msg = self.teamcity_format("##teamcity[testStarted name='{}']", self.context_name_prefix + assertion_name)
         self._print(msg)
     def assertion_passed(self, assertion):
         super().assertion_passed(assertion)
-        msg = self.teamcity_format("##teamcity[testFinished name='{}']", self.context_name_prefix + assertion.name)
+        assertion_vm = self.current_context.last_assertion
+        msg = self.teamcity_format("##teamcity[testFinished name='{}']", self.context_name_prefix + assertion_vm.name)
         self._print(msg)
     def assertion_failed(self, assertion, exception):
-        formatted_exception = ''.join(traceback.format_exception(type(exception), exception, exception.__traceback__))
-        msg1 = self.teamcity_format("##teamcity[testFailed name='{}' message='{}' details='{}']", self.context_name_prefix + assertion.name, str(exception), formatted_exception)
-        self._print(msg1)
-        msg2 = self.teamcity_format("##teamcity[testFinished name='{}']", self.context_name_prefix + assertion.name)
-        self._print(msg2)
         super().assertion_failed(assertion, exception)
-    def assertion_errored(self, assertion, exception):
-        formatted_exception = ''.join(traceback.format_exception(type(exception), exception, exception.__traceback__))
-        msg1 = self.teamcity_format("##teamcity[testFailed name='{}' message='{}' details='{}']", self.context_name_prefix + assertion.name, str(exception), formatted_exception)
+        assertion_vm = self.current_context.last_assertion
+        msg1 = self.teamcity_format("##teamcity[testFailed name='{}' message='{}' details='{}']", self.context_name_prefix + assertion_vm.name, str(exception), '\n'.join(assertion_vm.error_summary))
         self._print(msg1)
-        msg2 = self.teamcity_format("##teamcity[testFinished name='{}']", self.context_name_prefix + assertion.name)
+        msg2 = self.teamcity_format("##teamcity[testFinished name='{}']", self.context_name_prefix + assertion_vm.name)
         self._print(msg2)
+    def assertion_errored(self, assertion, exception):
         super().assertion_errored(assertion, exception)
+        assertion_vm = self.current_context.last_assertion
+        msg1 = self.teamcity_format("##teamcity[testFailed name='{}' message='{}' details='{}']", self.context_name_prefix + assertion_vm.name, str(exception), '\n'.join(assertion_vm.error_summary))
+        self._print(msg1)
+        msg2 = self.teamcity_format("##teamcity[testFinished name='{}']", self.context_name_prefix + assertion_vm.name)
+        self._print(msg2)
 
     @classmethod
     def teamcity_format(cls, format_string, *args):
@@ -375,7 +380,7 @@ class CapturingCLIResult(NonCapturingCLIResult, CapturingResult):
 def format_exception(exception):
     ret = traceback.format_exception(type(exception), exception, exception.__traceback__)
     exception.__traceback__ = None
-    return ret
+    return ''.join(ret).strip().split('\n')
 
 
 def pluralise(noun, num):

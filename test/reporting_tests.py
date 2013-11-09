@@ -291,7 +291,7 @@ class WhenRunningInTeamCity(object):
 '    frame1|n'
 '  File "another_made_up_file.py", line 2, in another_made_up_function|n'
 '    frame2|n'
-'test.test_doubles.FakeException: Gotcha|n')
+'test.test_doubles.FakeException: Gotcha')
 
         tb2 = [('made_up_file_3.py', 1, 'made_up_function_3', 'frame3'),
                ('made_up_file_4.py', 2, 'made_up_function_4', 'frame4')]
@@ -302,7 +302,7 @@ class WhenRunningInTeamCity(object):
 '    frame3|n'
 '  File "made_up_file_4.py", line 2, in made_up_function_4|n'
 '    frame4|n'
-'test.test_doubles.FakeException: you fail|n')
+'test.test_doubles.FakeException: you fail')
 
         tb3 = [('made_up_file_5.py', 1, 'made_up_function_5', 'frame5'),
                ('made_up_file_6.py', 2, 'made_up_function_6', 'frame6')]
@@ -313,7 +313,7 @@ class WhenRunningInTeamCity(object):
 '    frame5|n'
 '  File "made_up_file_6.py", line 2, in made_up_function_6|n'
 '    frame6|n'
-'test.test_doubles.FakeException: oh dear|n')
+'test.test_doubles.FakeException: oh dear')
 
         self.outputs = []
 
@@ -321,29 +321,29 @@ class WhenRunningInTeamCity(object):
         self.result.suite_started(None)
         self.outputs.append(self.stringio.getvalue())
 
-        self.result.context_started(contexts.core.Context([],[],[],[],None,"context"))
+        self.result.context_started(contexts.core.Context([],[],[],[],None,"FakeContext"))
 
-        self.result.assertion_started(contexts.core.Assertion(None, "assertion1"))
+        self.result.assertion_started(contexts.core.Assertion(None, "FakeAssertion1"))
         self.outputs.append(self.stringio.getvalue())
-        self.result.assertion_passed(contexts.core.Assertion(None, "assertion1"))
-        self.outputs.append(self.stringio.getvalue())
-
-        self.result.assertion_started(contexts.core.Assertion(None, "assertion2"))
-        self.outputs.append(self.stringio.getvalue())
-        self.result.assertion_passed(contexts.core.Assertion(None, "assertion2"))
+        self.result.assertion_passed(contexts.core.Assertion(None, "FakeAssertion1"))
         self.outputs.append(self.stringio.getvalue())
 
-        self.result.assertion_started(contexts.core.Assertion(None, "assertion3"))
+        self.result.assertion_started(contexts.core.Assertion(None, "FakeAssertion2"))
         self.outputs.append(self.stringio.getvalue())
-        self.result.assertion_failed(contexts.core.Assertion(None, "assertion3"), self.exception1)
-        self.outputs.append(self.stringio.getvalue())
-
-        self.result.assertion_started(contexts.core.Assertion(None, "assertion4"))
-        self.outputs.append(self.stringio.getvalue())
-        self.result.assertion_errored(contexts.core.Assertion(None, "assertion4"), self.exception2)
+        self.result.assertion_passed(contexts.core.Assertion(None, "FakeAssertion2"))
         self.outputs.append(self.stringio.getvalue())
 
-        self.result.context_errored(contexts.core.Context([],[],[],[],None,"context"), self.exception3)
+        self.result.assertion_started(contexts.core.Assertion(None, "FakeAssertion3"))
+        self.outputs.append(self.stringio.getvalue())
+        self.result.assertion_failed(contexts.core.Assertion(None, "FakeAssertion3"), self.exception1)
+        self.outputs.append(self.stringio.getvalue())
+
+        self.result.assertion_started(contexts.core.Assertion(None, "FakeAssertion4"))
+        self.outputs.append(self.stringio.getvalue())
+        self.result.assertion_errored(contexts.core.Assertion(None, "FakeAssertion4"), self.exception2)
+        self.outputs.append(self.stringio.getvalue())
+
+        self.result.context_errored(contexts.core.Context([],[],[],[],None,"FakeContext"), self.exception3)
         self.outputs.append(self.stringio.getvalue())
 
         self.result.suite_ended(None)
@@ -359,47 +359,47 @@ class WhenRunningInTeamCity(object):
         self.get_output.when.called_with(0,1).should.throw(IndexError)
 
     def it_should_tell_team_city_the_first_assertion_started(self):
-        self.get_output(1,1).should.equal("##teamcity[testStarted name='context.assertion1']")
+        self.get_output(1,1).should.equal("##teamcity[testStarted name='Fake context -> Fake assertion 1']")
     def it_should_not_report_anything_else_at_first_assertion_start(self):
         self.get_output.when.called_with(1,2).should.throw(IndexError)
     def it_should_tell_team_city_the_first_assertion_passed(self):
-        self.get_output(2,2).should.equal("##teamcity[testFinished name='context.assertion1']")
+        self.get_output(2,2).should.equal("##teamcity[testFinished name='Fake context -> Fake assertion 1']")
     def it_should_not_report_anything_else_at_first_assertion_end(self):
         self.get_output.when.called_with(2,3).should.throw(IndexError)
 
     def it_should_tell_team_city_the_second_assertion_started(self):
-        self.get_output(3,3).should.equal("##teamcity[testStarted name='context.assertion2']")
+        self.get_output(3,3).should.equal("##teamcity[testStarted name='Fake context -> Fake assertion 2']")
     def it_should_not_report_anything_else_at_second_assertion_start(self):
         self.get_output.when.called_with(3,4).should.throw(IndexError)
     def it_should_tell_team_city_the_second_assertion_passed(self):
-        self.get_output(4,4).should.equal("##teamcity[testFinished name='context.assertion2']")
+        self.get_output(4,4).should.equal("##teamcity[testFinished name='Fake context -> Fake assertion 2']")
     def it_should_not_report_anything_else_at_second_assertion_end(self):
         self.get_output.when.called_with(4,5).should.throw(IndexError)
 
     def it_should_tell_team_city_the_third_assertion_started(self):
-        self.get_output(5,5).should.equal("##teamcity[testStarted name='context.assertion3']")
+        self.get_output(5,5).should.equal("##teamcity[testStarted name='Fake context -> Fake assertion 3']")
     def it_should_not_report_anything_else_at_third_assertion_start(self):
         self.get_output.when.called_with(5,6).should.throw(IndexError)
     def it_should_output_a_stack_trace_for_the_third_assertion(self):
-        self.get_output(6,6).should.equal("##teamcity[testFailed name='context.assertion3' message='Gotcha' details='{}']".format(self.formatted_tb1))
-        self.get_output(6,7).should.equal("##teamcity[testFinished name='context.assertion3']")
+        self.get_output(6,6).should.equal("##teamcity[testFailed name='Fake context -> Fake assertion 3' message='Gotcha' details='{}']".format(self.formatted_tb1))
+        self.get_output(6,7).should.equal("##teamcity[testFinished name='Fake context -> Fake assertion 3']")
     def it_should_not_report_anything_else_at_third_assertion_end(self):
         self.get_output.when.called_with(6,8).should.throw(IndexError)
 
     def it_should_tell_team_city_the_fourth_assertion_started(self):
-        self.get_output(7,8).should.equal("##teamcity[testStarted name='context.assertion4']")
+        self.get_output(7,8).should.equal("##teamcity[testStarted name='Fake context -> Fake assertion 4']")
     def it_should_not_report_anything_else_at_fourth_assertion_start(self):
         self.get_output.when.called_with(7,9).should.throw(IndexError)
     def it_should_output_a_stack_trace_for_the_fourth_assertion(self):
-        self.get_output(8,9).should.equal("##teamcity[testFailed name='context.assertion4' message='you fail' details='{}']".format(self.formatted_tb2))
-        self.get_output(8,10).should.equal("##teamcity[testFinished name='context.assertion4']")
+        self.get_output(8,9).should.equal("##teamcity[testFailed name='Fake context -> Fake assertion 4' message='you fail' details='{}']".format(self.formatted_tb2))
+        self.get_output(8,10).should.equal("##teamcity[testFinished name='Fake context -> Fake assertion 4']")
     def it_should_not_report_anything_else_at_fourth_assertion_end(self):
         self.get_output.when.called_with(8,11).should.throw(IndexError)
 
     def it_should_tell_team_city_another_test_started_and_failed_for_the_ctx_error(self):
-        self.get_output(9,11).should.equal("##teamcity[testStarted name='context']")
-        self.get_output(9,12).should.equal("##teamcity[testFailed name='context' message='oh dear' details='{}']".format(self.formatted_tb3))
-        self.get_output(9,13).should.equal("##teamcity[testFinished name='context']")
+        self.get_output(9,11).should.equal("##teamcity[testStarted name='Fake context']")
+        self.get_output(9,12).should.equal("##teamcity[testFailed name='Fake context' message='oh dear' details='{}']".format(self.formatted_tb3))
+        self.get_output(9,13).should.equal("##teamcity[testFinished name='Fake context']")
     def it_should_not_report_anything_else_following_ctx_error(self):
         self.get_output.when.called_with(9,14).should.throw(IndexError)
 
