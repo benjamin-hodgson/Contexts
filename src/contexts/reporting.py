@@ -1,5 +1,5 @@
-import abc
 import datetime
+import re
 import sys
 import traceback
 from io import StringIO
@@ -383,3 +383,17 @@ def pluralise(noun, num):
     if num != 1:
         string += 's'
     return string
+
+def make_readable(string):
+    regex = re.compile(r'(_|\.|{}|{}|{})'.format(
+        r'(?<=[^A-Z])(?=[A-Z])',
+        r'(?<=[A-Z])(?=[A-Z][a-z])',
+        r'(?<=[A-Za-z])(?=[^A-Za-z])'
+    ))
+    words = regex.sub(' ', string).split(' ')
+
+    cased_words = [words[0]]
+    for word in words[1:]:
+        cased_word = word.lower() if not word.isupper() else word
+        cased_words.append(cased_word)
+    return ' '.join(cased_words)

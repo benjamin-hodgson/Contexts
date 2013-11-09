@@ -421,6 +421,29 @@ class WhenEscapingForTeamCity(object):
     def it_should_escape_the_chars_correctly(self):
         self.result.should.equal("|'|n|r|||[|]")
 
+class WhenMakingANameHumanReadable(object):
+    @classmethod
+    def examples(self):
+        yield "lowercase", "lowercase"
+        yield "Capitalised", "Capitalised"
+        yield "snake_case_name", "snake case name"
+        yield "Camel_Snake_Case", "Camel snake case"
+        yield "CamelCase", "Camel case"
+        yield "HTML", "HTML"
+        yield "HTMLParser", "HTML parser"
+        yield "SimpleHTTPServer", "Simple HTTP server"
+        yield "November2013", "November 2013"
+        yield "ABC123", "ABC 123"
+        yield "BMW4Series", "BMW 4 series"
+        yield "lowerAtStart", "lower at start"
+        yield "has.dots.in.the.name", "has dots in the name"
+        yield "does.EverythingAT_once100Percent_Certain", "does everything AT once 100 percent certain"
+
+    def because_we_make_the_string_readable(self, example):
+        self.result = reporting.make_readable(example[0])
+
+    def it_should_return_a_string_with_appropriate_spaces(self, example):
+        self.result.should.equal(example[1])
 
 if __name__ == "__main__":
     contexts.main()
