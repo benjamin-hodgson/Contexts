@@ -16,11 +16,9 @@ def build_suite(spec):
     elif isinstance(spec, str) and os.path.isdir(spec):
         return build_suite_from_directory_path(spec)
     elif isinstance(spec, collections.Iterable):
-        return build_suite_from_iterable(spec)
+        return build_suite_from_classes(spec)
     elif isinstance(spec, type):
         return build_suite_from_class(spec)
-    else:
-        return build_suite_from_instance(spec)
 
 
 def build_suite_from_directory_path(dir_path):
@@ -29,7 +27,7 @@ def build_suite_from_directory_path(dir_path):
     finder = finders.ClassFinder()
     classes = finder.find_specs_in_modules(modules)
     specs = itertools.chain.from_iterable(build_iterable_from_class(cls) for cls in classes)
-    return build_suite_from_iterable(specs)
+    return build_suite_from_instances(specs)
 
 
 def build_suite_from_file_path(filepath):
@@ -41,12 +39,12 @@ def build_suite_from_module(module):
     finder = finders.ClassFinder()
     classes = finder.find_specs_in_module(module)
     specs = itertools.chain.from_iterable(build_iterable_from_class(cls) for cls in classes)
-    return build_suite_from_iterable(specs)
+    return build_suite_from_instances(specs)
 
 
-def build_suite_from_iterable(specs):
-    contexts = [build_context(x) for x in specs]
-    return Suite(contexts)
+def build_suite_from_classes(classes):
+    contexts = itertools.chain.from_iterable(build_iterable_from_class(cls) for cls in classes)
+    return build_suite_from_instances(contexts)
 
 
 def build_iterable_from_class(cls):
@@ -64,12 +62,11 @@ def build_iterable_from_class(cls):
 
 def build_suite_from_class(cls):
     specs = build_iterable_from_class(cls)
-    return build_suite_from_iterable(specs)
+    return build_suite_from_instances(specs)
 
 
-def build_suite_from_instance(spec):
-    contexts = [build_context(spec)]
-    return Suite(contexts)
+def build_suite_from_instances(instances):
+    return Suite([build_context(x) for x in instances])
 
 
 def build_context(spec):

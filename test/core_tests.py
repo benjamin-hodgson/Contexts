@@ -12,24 +12,23 @@ class WhenRunningASpec(object):
         self.value_err = ValueError()
 
         class TestSpec(object):
-            def __init__(s):
-                s.log = ""
+            log = ""
             def method_with_establish_in_the_name(s):
-                s.log += "arrange "
+                s.__class__.log += "arrange "
             def method_with_because_in_the_name(s):
-                s.log += "act "
+                s.__class__.log += "act "
             def method_with_should_in_the_name(s):
-                s.log += "assert "
+                s.__class__.log += "assert "
             def failing_method_with_should_in_the_name(s):
-                s.log += "assert "
+                s.__class__.log += "assert "
                 raise self.assertion_err
             def erroring_method_with_should_in_the_name(s):
-                s.log += "assert "
+                s.__class__.log += "assert "
                 raise self.value_err
             def method_with_cleanup_in_the_name(s):
-                s.log += "teardown "
+                s.__class__.log += "teardown "
 
-        self.spec = TestSpec()
+        self.spec = TestSpec
         self.result = MockResult()
 
     def because_we_run_the_spec(self):
@@ -98,28 +97,26 @@ class WhenAContextErrors(object):
         self.type_err = TypeError("oh no")
         self.assertion_err = AssertionError("shut up")
         class ErrorInSetup(object):
-            def __init__(s):
-                s.ran_cleanup = False
-                s.ran_because = False
-                s.ran_assertion = False
+            ran_cleanup = False
+            ran_because = False
+            ran_assertion = False
             def context(s):
                 raise self.value_err
             def because(s):
-                s.ran_because = True
+                s.__class__.ran_because = True
             def it(s):
-                s.ran_assertion = True
+                s.__class__.ran_assertion = True
             def cleanup(s):
-                s.ran_cleanup = True
+                s.__class__.ran_cleanup = True
         class ErrorInAction(object):
-            def __init__(s):
-                s.ran_cleanup = False
-                s.ran_assertion = False
+            ran_cleanup = False
+            ran_assertion = False
             def because(s):
                 raise self.type_err
             def it(s):
-                s.ran_assertion = True
+                s.__class__.ran_assertion = True
             def cleanup(s):
-                s.ran_cleanup = True
+                s.__class__.ran_cleanup = True
         class ErrorInTeardown(object):
             def it(s):
                 pass
@@ -128,7 +125,7 @@ class WhenAContextErrors(object):
                 # 'should' method should be considered context errors
                 raise self.assertion_err
 
-        self.specs = [ErrorInSetup(), ErrorInAction(), ErrorInTeardown()]
+        self.specs = [ErrorInSetup, ErrorInAction, ErrorInTeardown]
 
     def because_we_run_the_specs(self):
         self.results = []
@@ -175,18 +172,16 @@ class WhenCatchingAnException(object):
         self.exception = ValueError("test exception")
 
         class TestSpec(object):
-            def __init__(s):
-                s.exception = None
+            exception = None
             def context(s):
                 def throwing_function(a, b, c, d=[]):
-                    s.call_args = (a,b,c,d)
-                    # Looks weird! Referencing 'self' from outer scope
+                    s.__class__.call_args = (a,b,c,d)
                     raise self.exception
                 s.throwing_function = throwing_function
             def should(s):
-                s.exception = contexts.catch(s.throwing_function, 3, c='yes', b=None)
+                s.__class__.exception = contexts.catch(s.throwing_function, 3, c='yes', b=None)
 
-        self.spec = TestSpec()
+        self.spec = TestSpec
         self.result = MockResult()
 
     def because_we_run_the_spec(self):
@@ -206,57 +201,56 @@ class WhenCatchingAnException(object):
 
 class WhenASpecHasASuperclass(object):
     def context(self):
+        self.log = ""
         class SharedContext(object):
-            def __init__(self):
-                self.log = ""
-            def context(self):
+            def context(s):
                 self.log += "superclass arrange "
-            def superclass_because(self):
+            def superclass_because(s):
                 self.log += "superclass action "
-            def it(self):
+            def it(s):
                 self.log += "superclass assertion "
-            def cleanup(self):
+            def cleanup(s):
                 self.log += "superclass cleanup "
         class Spec(SharedContext):
             # I want it to run the superclasses' specially-named methods
             # _even if_ they are masked by the subclass
-            def context(self):
+            def context(s):
                 self.log += "subclass arrange "
-            def because(self):
+            def because(s):
                 self.log += "subclass action "
-            def it(self):
+            def it(s):
                 self.log += "subclass assertion "
-            def cleanup(self):
+            def cleanup(s):
                 self.log += "subclass cleanup "
 
-        self.spec = Spec()
+        self.spec = Spec
         self.result = MockResult()
 
     def because_we_run_the_spec(self):
         contexts.run(self.spec, self.result)
 
     def it_should_run_the_superclass_setup_first(self):
-        self.spec.log[:19].should.equal("superclass arrange ")
+        self.log[:19].should.equal("superclass arrange ")
 
     def it_should_run_the_subclass_setup_next(self):
-        self.spec.log[19:36].should.equal("subclass arrange ")
+        self.log[19:36].should.equal("subclass arrange ")
 
     def it_should_run_the_subclass_action_next(self):
-        self.spec.log[36:52].should.equal("subclass action ")
+        self.log[36:52].should.equal("subclass action ")
 
     def it_should_not_run_the_superclass_action(self):
-        self.spec.log.should_not.contain("superclass action ")
+        self.log.should_not.contain("superclass action ")
 
     def it_should_run_both_assertions(self):
         # We don't care what order the two assertions get run in
-        self.spec.log[52:92].should.contain("superclass assertion ")
-        self.spec.log[52:92].should.contain("subclass assertion ")
+        self.log[52:92].should.contain("superclass assertion ")
+        self.log[52:92].should.contain("subclass assertion ")
 
     def it_should_run_the_subclass_teardown_first(self):
-        self.spec.log[92:109].should.equal("subclass cleanup ")
+        self.log[92:109].should.equal("subclass cleanup ")
 
     def it_should_run_the_superclass_teardown_second(self):
-        self.spec.log[109:238].should.equal("superclass cleanup ")
+        self.log[109:238].should.equal("superclass cleanup ")
 
     def it_should_only_call_ctx_started_on_the_result_once(self):
         calls = [call for call in self.result.calls if call[0] == "context_started"]
@@ -310,30 +304,18 @@ class WhenASpecHasStaticmethods(object):
     def it_should_run_the_staticmethods(self):
         self.log.should.equal("arrange act assert teardown ")
 
-class WhenRunningAClass(object):
-    def context(self):
-        class TestSpec(object):
-            was_run = False
-            def it(self):
-                self.__class__.was_run = True
-        self.spec = TestSpec
-
-    def because_we_run_the_class(self):
-        contexts.run(self.spec, contexts.reporting.SimpleResult())
-
-    def it_should_run_the_test(self):
-        self.spec.was_run.should.be.true
-
 class WhenRunningMultipleSpecs(object):
     def context(self):
         class Spec1(object):
+            was_run = False
             def it(self):
-                self.was_run = True
+                self.__class__.was_run = True
         class Spec2(object):
+            was_run = False
             def it(self):
-                self.was_run = True
+                self.__class__.was_run = True
 
-        self.suite = [Spec1(), Spec2()]
+        self.suite = [Spec1, Spec2]
         self.result = MockResult()
 
     def because_we_run_the_suite(self):
@@ -355,15 +337,14 @@ class WhenWeRunSpecsWithAlternatelyNamedMethods(object):
     @classmethod
     def examples(self):
         class GivenWhenThen(object):
-            def __init__(self):
-                self.log = ""
+            log = ""
             def has_given_in_the_name(self):
-                self.log += "arrange "
+                self.__class__.log += "arrange "
             def has_when_in_the_name(self):
-                self.log += "act "
+                self.__class__.log += "act "
             def has_then_in_the_name(self):
-                self.log += "assert "
-        yield GivenWhenThen(), "arrange act assert "
+                self.__class__.log += "assert "
+        yield GivenWhenThen, "arrange act assert "
         class AlternatelyNamedMethods(object):
             log = ""
             @classmethod
@@ -376,21 +357,19 @@ class WhenWeRunSpecsWithAlternatelyNamedMethods(object):
                 self.__class__.log += "assert "
         yield AlternatelyNamedMethods, "test_data arrange assert "
         class MoreAlternativeNames(object):
-            def __init__(self):
-                self.log = ""
+            log = ""
             def has_since_in_the_name(self):
-                self.log += "act "
+                self.__class__.log += "act "
             def has_must_in_the_name(self):
-                self.log += "assert "
-        yield MoreAlternativeNames(), "act assert "
+                self.__class__.log += "assert "
+        yield MoreAlternativeNames, "act assert "
         class EvenMoreAlternativeNames(object):
-            def __init__(self):
-                self.log = ""
+            log = ""
             def has_after_in_the_name(self):
-                self.log += "act "
+                self.__class__.log += "act "
             def has_will_in_the_name(self):
-                self.log += "assert "
-        yield EvenMoreAlternativeNames(), "act assert "
+                self.__class__.log += "assert "
+        yield EvenMoreAlternativeNames, "act assert "
 
     def context(self, example):
         self.spec, self.expected_log = example
