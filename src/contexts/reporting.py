@@ -5,7 +5,7 @@ import traceback
 from io import StringIO
 
 
-class Result(object):
+class Reporter(object):
     @property
     def failed(self):
         return True
@@ -76,7 +76,7 @@ class AssertionViewModel(object):
             self.error_summary = format_exception(exception)
 
 
-class SimpleResult(Result):
+class SimpleReporter(Reporter):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.view_models = []
@@ -127,7 +127,7 @@ class SimpleResult(Result):
         super().assertion_errored(assertion, exception)
 
 
-class StreamResult(Result):
+class StreamReporter(Reporter):
     def __init__(self, stream=sys.stderr):
         super().__init__()
         self.stream = stream
@@ -136,7 +136,7 @@ class StreamResult(Result):
         print(*args, sep=sep, end=end, file=self.stream, flush=flush)
 
 
-class DotsResult(StreamResult):
+class DotsReporter(StreamReporter):
     def assertion_passed(self, *args, **kwargs):
         super().assertion_passed(*args, **kwargs)
         self._print('.', end='')
@@ -154,7 +154,7 @@ class DotsResult(StreamResult):
         self._print('E', end='')
 
 
-class SummarisingResult(SimpleResult, StreamResult):
+class SummarisingReporter(SimpleReporter, StreamReporter):
     dashes = '-' * 70
 
     def __init__(self, *args, **kwargs):
@@ -259,7 +259,7 @@ class SummarisingResult(SimpleResult, StreamResult):
             pluralise("error", len(self.assertion_errors) + len(self.context_errors)))
 
 
-class TeamCityResult(StreamResult, SimpleResult):
+class TeamCityReporter(StreamReporter, SimpleReporter):
     def suite_started(self, suite):
         super().suite_started(suite)
         msg = self.teamcity_format("##teamcity[testSuiteStarted name='{}']", "contexts")
@@ -321,7 +321,7 @@ class TeamCityResult(StreamResult, SimpleResult):
         return string.replace("|", "||").replace('\n', '|n').replace("'", "|'").replace("\r", "|r").replace("[", "|[").replace("]", "|]")
 
 
-class CapturingResult(SummarisingResult):
+class StdOutCapturingReporter(SummarisingReporter):
     def context_started(self, context):
         super().context_started(context)
         self.real_stdout = sys.stdout
@@ -358,7 +358,7 @@ class CapturingResult(SummarisingResult):
             self.dedent()
 
 
-class TimedResult(StreamResult):
+class TimedReporter(StreamReporter):
     def suite_started(self, suite):
         super().suite_started(suite)
         self.start_time = datetime.datetime.now()
@@ -372,11 +372,11 @@ class TimedResult(StreamResult):
         self._print("({} seconds)".format(rounded))
 
 
-class NonCapturingCLIResult(DotsResult, TimedResult, SummarisingResult):
+class NonCapturingCLIReporter(DotsReporter, TimedReporter, SummarisingReporter):
     pass
 
 
-class CapturingCLIResult(NonCapturingCLIResult, CapturingResult):
+class CapturingCLIReporter(NonCapturingCLIReporter, StdOutCapturingReporter):
     pass
 
 

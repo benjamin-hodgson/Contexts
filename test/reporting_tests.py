@@ -11,30 +11,30 @@ from . import test_doubles
 class WhenWatchingForDots(object):
     def context(self):
         self.stringio = StringIO()
-        self.result = reporting.DotsResult(self.stringio)
+        self.reporter = reporting.DotsReporter(self.stringio)
         self.fake_context = contexts.core.Context([],[],[],[],None,"context")
         self.fake_assertion = contexts.core.Assertion(None, "assertion")
 
     def because_we_run_some_assertions(self):
-        self.result.context_started(self.fake_context)
+        self.reporter.context_started(self.fake_context)
 
-        self.result.assertion_started(self.fake_assertion)
-        self.result.assertion_passed(self.fake_assertion)
+        self.reporter.assertion_started(self.fake_assertion)
+        self.reporter.assertion_passed(self.fake_assertion)
         self.first = self.stringio.getvalue()
 
-        self.result.assertion_started(self.fake_assertion)
-        self.result.assertion_passed(self.fake_assertion)
+        self.reporter.assertion_started(self.fake_assertion)
+        self.reporter.assertion_passed(self.fake_assertion)
         self.second = self.stringio.getvalue()
 
-        self.result.assertion_started(self.fake_assertion)
-        self.result.assertion_failed(self.fake_assertion, test_doubles.FakeException())
+        self.reporter.assertion_started(self.fake_assertion)
+        self.reporter.assertion_failed(self.fake_assertion, test_doubles.FakeException())
         self.third = self.stringio.getvalue()
 
-        self.result.assertion_started(self.fake_assertion)
-        self.result.assertion_errored(self.fake_assertion, test_doubles.FakeException())
+        self.reporter.assertion_started(self.fake_assertion)
+        self.reporter.assertion_errored(self.fake_assertion, test_doubles.FakeException())
         self.fourth = self.stringio.getvalue()
 
-        self.result.context_errored(self.fake_context, test_doubles.FakeException())
+        self.reporter.context_errored(self.fake_context, test_doubles.FakeException())
         self.fifth = self.stringio.getvalue()
 
     def it_should_print_a_dot_for_the_first_pass(self):
@@ -52,29 +52,29 @@ class WhenWatchingForDots(object):
     def it_should_print_an_E_for_the_ctx_error(self):
         self.fifth.should.equal('..FEE')
 
-class WhenPrintingASuccessfulResult(object):
+class WhenPrintingASuccessfulReport(object):
     def in_the_context_of_a_successful_run(self):
         # We don't want it to try and print anything while we set it up
         self.stringio = StringIO()
-        self.result = reporting.SummarisingResult(StringIO())
+        self.reporter = reporting.SummarisingReporter(StringIO())
 
     def because_we_run_some_tests(self):
-        self.result.suite_started(None)
+        self.reporter.suite_started(None)
 
-        self.result.context_started(contexts.core.Context([],[],[],[],None,""))
-        self.result.assertion_started(contexts.core.Assertion(None, ""))
-        self.result.assertion_passed(contexts.core.Assertion(None, ""))
-        self.result.assertion_started(contexts.core.Assertion(None, ""))
-        self.result.assertion_passed(contexts.core.Assertion(None, ""))
-        self.result.context_ended(contexts.core.Context([],[],[],[],None,""))
+        self.reporter.context_started(contexts.core.Context([],[],[],[],None,""))
+        self.reporter.assertion_started(contexts.core.Assertion(None, ""))
+        self.reporter.assertion_passed(contexts.core.Assertion(None, ""))
+        self.reporter.assertion_started(contexts.core.Assertion(None, ""))
+        self.reporter.assertion_passed(contexts.core.Assertion(None, ""))
+        self.reporter.context_ended(contexts.core.Context([],[],[],[],None,""))
 
-        self.result.context_started(contexts.core.Context([],[],[],[],None,""))
-        self.result.assertion_started(contexts.core.Assertion(None, ""))
-        self.result.assertion_passed(contexts.core.Assertion(None, ""))
-        self.result.context_ended(contexts.core.Context([],[],[],[],None,""))
+        self.reporter.context_started(contexts.core.Context([],[],[],[],None,""))
+        self.reporter.assertion_started(contexts.core.Assertion(None, ""))
+        self.reporter.assertion_passed(contexts.core.Assertion(None, ""))
+        self.reporter.context_ended(contexts.core.Context([],[],[],[],None,""))
 
-        self.result.stream = self.stringio
-        self.result.suite_ended(None)
+        self.reporter.stream = self.stringio
+        self.reporter.suite_ended(None)
 
     def it_should_print_the_summary_to_the_stream(self):
         self.stringio.getvalue().should.equal(
@@ -84,9 +84,9 @@ PASSED!
 2 contexts, 3 assertions
 """)
 
-class WhenPrintingAFailureResult(object):
+class WhenPrintingAFailureReport(object):
     def in_the_context_of_a_failed_run(self):
-        self.result = reporting.SummarisingResult(StringIO())
+        self.reporter = reporting.SummarisingReporter(StringIO())
         self.stringio = StringIO()
 
         self.context1 = contexts.core.Context([],[],[],[],None, "made.up_context_1")
@@ -109,25 +109,25 @@ class WhenPrintingAFailureResult(object):
         self.exception3 = test_doubles.build_fake_exception(tb3, "oh dear")
 
     def because_we_run_some_tests(self):
-        self.result.suite_started(None)
+        self.reporter.suite_started(None)
 
-        self.result.context_started(self.context1)
-        self.result.assertion_started(self.assertion1)
-        self.result.assertion_errored(self.assertion1, self.exception1)
-        self.result.assertion_started(self.assertion2)
-        self.result.assertion_failed(self.assertion2, self.exception2)
-        self.result.assertion_started(self.assertion3)
-        self.result.assertion_passed(self.assertion3)
-        self.result.context_ended(self.context1)
+        self.reporter.context_started(self.context1)
+        self.reporter.assertion_started(self.assertion1)
+        self.reporter.assertion_errored(self.assertion1, self.exception1)
+        self.reporter.assertion_started(self.assertion2)
+        self.reporter.assertion_failed(self.assertion2, self.exception2)
+        self.reporter.assertion_started(self.assertion3)
+        self.reporter.assertion_passed(self.assertion3)
+        self.reporter.context_ended(self.context1)
 
-        self.result.context_started(self.context2)
-        self.result.context_errored(self.context2, self.exception3)
+        self.reporter.context_started(self.context2)
+        self.reporter.context_errored(self.context2, self.exception3)
 
-        self.result.context_started(contexts.core.Context([],[],[],[],None, "made.up_context_3"))
-        self.result.context_ended(contexts.core.Context([],[],[],[],None, "made.up_context_3"))
+        self.reporter.context_started(contexts.core.Context([],[],[],[],None, "made.up_context_3"))
+        self.reporter.context_ended(contexts.core.Context([],[],[],[],None, "made.up_context_3"))
 
-        self.result.stream = self.stringio
-        self.result.suite_ended(None)
+        self.reporter.stream = self.stringio
+        self.reporter.suite_ended(None)
 
     def it_should_print_a_traceback_for_each_failure(self):
         self.stringio.getvalue().should.equal("""
@@ -171,44 +171,44 @@ class WhenCapturingStdOut(object):
 
         self.stringio = StringIO()
         # we don't want the output to be cluttered up with dots
-        self.result = reporting.CapturingResult(StringIO())
+        self.reporter = reporting.StdOutCapturingReporter(StringIO())
 
     def because_we_print_some_stuff(self):
-        self.result.suite_started(None)
+        self.reporter.suite_started(None)
 
-        self.result.context_started(self.fake_context)
+        self.reporter.context_started(self.fake_context)
         print("passing context")
-        self.result.assertion_started(self.fake_assertion)
+        self.reporter.assertion_started(self.fake_assertion)
         print("passing assertion")
         print("to stderr", file=sys.stderr)
-        self.result.assertion_passed(self.fake_assertion)
-        self.result.context_ended(self.fake_context)
+        self.reporter.assertion_passed(self.fake_assertion)
+        self.reporter.context_ended(self.fake_context)
 
-        self.result.context_started(self.fake_context)
+        self.reporter.context_started(self.fake_context)
         print("failing context")
-        self.result.assertion_started(self.fake_assertion)
+        self.reporter.assertion_started(self.fake_assertion)
         print("failing assertion")
-        self.result.assertion_failed(self.fake_assertion, test_doubles.FakeException())
-        self.result.assertion_started(self.fake_assertion)
+        self.reporter.assertion_failed(self.fake_assertion, test_doubles.FakeException())
+        self.reporter.assertion_started(self.fake_assertion)
         print("erroring assertion")
-        self.result.assertion_errored(self.fake_assertion, test_doubles.FakeException())
-        self.result.context_ended(self.fake_context)
+        self.reporter.assertion_errored(self.fake_assertion, test_doubles.FakeException())
+        self.reporter.context_ended(self.fake_context)
 
-        self.result.context_started(self.fake_context)
+        self.reporter.context_started(self.fake_context)
         print("erroring context")
-        self.result.assertion_started(self.fake_assertion)
+        self.reporter.assertion_started(self.fake_assertion)
         print("assertion in erroring context")
-        self.result.assertion_passed(self.fake_assertion)
-        self.result.context_errored(self.fake_context, test_doubles.FakeException())
+        self.reporter.assertion_passed(self.fake_assertion)
+        self.reporter.context_errored(self.fake_context, test_doubles.FakeException())
 
-        self.result.context_started(self.fake_context)
-        self.result.assertion_started(self.fake_assertion)
+        self.reporter.context_started(self.fake_context)
+        self.reporter.assertion_started(self.fake_assertion)
         # don't print anything
-        self.result.assertion_failed(self.fake_assertion, test_doubles.FakeException())
-        self.result.context_ended(self.fake_context)
+        self.reporter.assertion_failed(self.fake_assertion, test_doubles.FakeException())
+        self.reporter.context_ended(self.fake_context)
 
-        self.result.stream = self.stringio
-        self.result.suite_ended(None)
+        self.reporter.stream = self.stringio
+        self.reporter.suite_ended(None)
 
     def it_should_not_print_anything_to_stdout(self):
         self.fake_stdout.getvalue().should.be.empty
@@ -261,13 +261,13 @@ class WhenTimingATestRun(object):
         self.FakeDateTime = FakeDateTime
 
         self.stringio = StringIO()
-        self.result = reporting.TimedResult(self.stringio)
+        self.reporter = reporting.TimedReporter(self.stringio)
 
     def because_we_run_a_suite(self):
         with mock.patch('datetime.datetime', self.FakeDateTime):
-            self.result.suite_started(None)
+            self.reporter.suite_started(None)
             datetime.datetime.now.return_value += self.fake_soon
-            self.result.suite_ended(None)
+            self.reporter.suite_ended(None)
 
     def it_should_report_the_total_time_for_the_test_run(self):
         self.stringio.getvalue().should.equal("(10.5 seconds)\n")
@@ -277,10 +277,10 @@ class WhenRunningInTeamCity(object):
     def context(self):
         self.stringio = StringIO()
 
-        self.mock_escape = mock.Mock(side_effect=reporting.TeamCityResult.teamcity_escape)
-        reporting.TeamCityResult.teamcity_escape = self.mock_escape
+        self.mock_escape = mock.Mock(side_effect=reporting.TeamCityReporter.teamcity_escape)
+        reporting.TeamCityReporter.teamcity_escape = self.mock_escape
 
-        self.result = reporting.TeamCityResult(self.stringio)
+        self.reporter = reporting.TeamCityReporter(self.stringio)
 
         tb1 = [('made_up_file.py', 3, 'made_up_function', 'frame1'),
                ('another_made_up_file.py', 2, 'another_made_up_function', 'frame2')]
@@ -318,35 +318,35 @@ class WhenRunningInTeamCity(object):
         self.outputs = []
 
     def because_we_run_some_assertions(self):
-        self.result.suite_started(None)
+        self.reporter.suite_started(None)
         self.outputs.append(self.stringio.getvalue())
 
-        self.result.context_started(contexts.core.Context([],[],[],[],None,"FakeContext"))
+        self.reporter.context_started(contexts.core.Context([],[],[],[],None,"FakeContext"))
 
-        self.result.assertion_started(contexts.core.Assertion(None, "FakeAssertion1"))
+        self.reporter.assertion_started(contexts.core.Assertion(None, "FakeAssertion1"))
         self.outputs.append(self.stringio.getvalue())
-        self.result.assertion_passed(contexts.core.Assertion(None, "FakeAssertion1"))
-        self.outputs.append(self.stringio.getvalue())
-
-        self.result.assertion_started(contexts.core.Assertion(None, "FakeAssertion2"))
-        self.outputs.append(self.stringio.getvalue())
-        self.result.assertion_passed(contexts.core.Assertion(None, "FakeAssertion2"))
+        self.reporter.assertion_passed(contexts.core.Assertion(None, "FakeAssertion1"))
         self.outputs.append(self.stringio.getvalue())
 
-        self.result.assertion_started(contexts.core.Assertion(None, "FakeAssertion3"))
+        self.reporter.assertion_started(contexts.core.Assertion(None, "FakeAssertion2"))
         self.outputs.append(self.stringio.getvalue())
-        self.result.assertion_failed(contexts.core.Assertion(None, "FakeAssertion3"), self.exception1)
-        self.outputs.append(self.stringio.getvalue())
-
-        self.result.assertion_started(contexts.core.Assertion(None, "FakeAssertion4"))
-        self.outputs.append(self.stringio.getvalue())
-        self.result.assertion_errored(contexts.core.Assertion(None, "FakeAssertion4"), self.exception2)
+        self.reporter.assertion_passed(contexts.core.Assertion(None, "FakeAssertion2"))
         self.outputs.append(self.stringio.getvalue())
 
-        self.result.context_errored(contexts.core.Context([],[],[],[],None,"FakeContext"), self.exception3)
+        self.reporter.assertion_started(contexts.core.Assertion(None, "FakeAssertion3"))
+        self.outputs.append(self.stringio.getvalue())
+        self.reporter.assertion_failed(contexts.core.Assertion(None, "FakeAssertion3"), self.exception1)
         self.outputs.append(self.stringio.getvalue())
 
-        self.result.suite_ended(None)
+        self.reporter.assertion_started(contexts.core.Assertion(None, "FakeAssertion4"))
+        self.outputs.append(self.stringio.getvalue())
+        self.reporter.assertion_errored(contexts.core.Assertion(None, "FakeAssertion4"), self.exception2)
+        self.outputs.append(self.stringio.getvalue())
+
+        self.reporter.context_errored(contexts.core.Context([],[],[],[],None,"FakeContext"), self.exception3)
+        self.outputs.append(self.stringio.getvalue())
+
+        self.reporter.suite_ended(None)
         self.outputs.append(self.stringio.getvalue())
 
     def it_should_call_escape_for_every_object_it_formats(self):
@@ -409,7 +409,7 @@ class WhenRunningInTeamCity(object):
         self.get_output.when.called_with(10,15).should.throw(IndexError)
 
     def cleanup_the_mock(self):
-        reporting.TeamCityResult.teamcity_escape = self.mock_escape.return_value
+        reporting.TeamCityReporter.teamcity_escape = self.mock_escape.return_value
 
     def get_output(self, n, m):
         return self.outputs[n].strip().split('\n')[m]
@@ -417,9 +417,9 @@ class WhenRunningInTeamCity(object):
 class WhenEscapingForTeamCity(object):
     def because_we_escape_a_string(self):
         # unicode replacement not supported yet
-        self.result = reporting.TeamCityResult.teamcity_escape("'\n\r|[]")
+        self.reporter = reporting.TeamCityReporter.teamcity_escape("'\n\r|[]")
     def it_should_escape_the_chars_correctly(self):
-        self.result.should.equal("|'|n|r|||[|]")
+        self.reporter.should.equal("|'|n|r|||[|]")
 
 class WhenMakingANameHumanReadable(object):
     @classmethod
@@ -444,10 +444,10 @@ class WhenMakingANameHumanReadable(object):
         self.input, self.expected = example
 
     def because_we_make_the_string_readable(self):
-        self.result = reporting.make_readable(self.input)
+        self.reporter = reporting.make_readable(self.input)
 
     def it_should_return_a_string_with_appropriate_spaces(self, example):
-        self.result.should.equal(self.expected)
+        self.reporter.should.equal(self.expected)
 
 if __name__ == "__main__":
     contexts.main()

@@ -1,7 +1,7 @@
 import types
 import sure
 import contexts
-from .test_doubles import MockResult
+from .test_doubles import MockReporter
 
 class WhenRunningAParametrisedSpec(object):
     def given_a_parametrised_test(self):
@@ -26,21 +26,21 @@ class WhenRunningAParametrisedSpec(object):
             def cleanup(self, example):
                 self.__class__.teardowns.append(example)
         self.ParametrisedSpec = ParametrisedSpec
-        self.result = MockResult()
+        self.reporter = MockReporter()
 
     def because_we_run_the_class(self):
-        contexts.run(self.ParametrisedSpec, self.result)
+        contexts.run(self.ParametrisedSpec, self.reporter)
 
     def the_ctx_should_not_error(self):
-        call_names = [call[0] for call in self.result.calls]
+        call_names = [call[0] for call in self.reporter.calls]
         call_names.should_not.contain("context_errored")
 
     def the_assertions_should_not_error(self):
-        call_names = [call[0] for call in self.result.calls]
+        call_names = [call[0] for call in self.reporter.calls]
         call_names.should_not.contain("assertion_errored")
 
     def the_assertions_should_not_fail(self):
-        call_names = [call[0] for call in self.result.calls]
+        call_names = [call[0] for call in self.reporter.calls]
         call_names.should_not.contain("assertion_failed")
 
     def it_should_instantiate_the_class_twice(self):
@@ -78,21 +78,21 @@ class WhenRunningAParametrisedSpecWithNonParametrisedMethods(object):
             def cleanup(self):
                 self.__class__.teardowns += 1
         self.ParametrisedSpec = ParametrisedSpec
-        self.result = MockResult()
+        self.reporter = MockReporter()
 
     def because_we_run_the_class(self):
-        contexts.run(self.ParametrisedSpec, self.result)
+        contexts.run(self.ParametrisedSpec, self.reporter)
 
     def the_ctx_should_not_error(self):
-        call_names = [call[0] for call in self.result.calls]
+        call_names = [call[0] for call in self.reporter.calls]
         call_names.should_not.contain("context_errored")
 
     def the_assertions_should_not_error(self):
-        call_names = [call[0] for call in self.result.calls]
+        call_names = [call[0] for call in self.reporter.calls]
         call_names.should_not.contain("assertion_errored")
 
     def the_assertions_should_not_fail(self):
-        call_names = [call[0] for call in self.result.calls]
+        call_names = [call[0] for call in self.reporter.calls]
         call_names.should_not.contain("assertion_failed")
 
     def it_should_instantiate_the_class_twice(self):
@@ -132,21 +132,21 @@ class WhenRunningAModuleWithParametrisedSpecs(object):
         self.module = types.ModuleType('fake_specs')
         self.ParametrisedSpec = ParametrisedSpec
         self.module.ParametrisedSpec = ParametrisedSpec
-        self.result = MockResult()
+        self.reporter = MockReporter()
 
     def because_we_run_the_module(self):
-        contexts.run(self.module, self.result)
+        contexts.run(self.module, self.reporter)
 
     def the_ctx_should_not_error(self):
-        call_names = [call[0] for call in self.result.calls]
+        call_names = [call[0] for call in self.reporter.calls]
         call_names.should_not.contain("context_errored")
 
     def the_assertions_should_not_error(self):
-        call_names = [call[0] for call in self.result.calls]
+        call_names = [call[0] for call in self.reporter.calls]
         call_names.should_not.contain("assertion_errored")
 
     def the_assertions_should_not_fail(self):
-        call_names = [call[0] for call in self.result.calls]
+        call_names = [call[0] for call in self.reporter.calls]
         call_names.should_not.contain("assertion_failed")
 
     def it_should_instantiate_the_class_twice(self):
@@ -167,22 +167,22 @@ class WhenUserFailsToMakeExamplesAClassmethod(object):
             def examples(self):
                 pass
         self.spec = Naughty
-        self.result = MockResult()
+        self.reporter = MockReporter()
 
     def because_we_run_the_spec(self):
-        self.exception = contexts.catch(contexts.run, self.spec, self.result)
+        self.exception = contexts.catch(contexts.run, self.spec, self.reporter)
 
     def it_should_not_throw_an_exception(self):
         self.exception.should.be.none
 
-    def it_should_call_unexpected_error_on_the_result(self):
-        self.result.calls[1][0].should.equal("unexpected_error")
+    def it_should_call_unexpected_error_on_the_reporter(self):
+        self.reporter.calls[1][0].should.equal("unexpected_error")
 
     def it_should_pass_in_a_TypeError(self):
-        self.result.calls[1][1].should.be.a(TypeError)
+        self.reporter.calls[1][1].should.be.a(TypeError)
 
     def it_should_finish_the_suite(self):
-        self.result.calls[-1][0].should.equal("suite_ended")
+        self.reporter.calls[-1][0].should.equal("suite_ended")
 
 class WhenExamplesReturnsNone(object):
     def context(self):
@@ -196,7 +196,7 @@ class WhenExamplesReturnsNone(object):
         self.spec = Spec
 
     def because_we_run_the_spec(self):
-        self.exception = contexts.catch(contexts.run, self.spec, MockResult())
+        self.exception = contexts.catch(contexts.run, self.spec, MockReporter())
 
     def it_should_not_throw_an_exception(self):
         self.exception.should.be.none

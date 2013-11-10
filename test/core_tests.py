@@ -1,6 +1,6 @@
 import sure
 import contexts
-from .test_doubles import MockResult
+from .test_doubles import MockReporter
 
 core_file = repr(contexts.core.__file__)[1:-1]
 this_file = repr(__file__)[1:-1]
@@ -29,37 +29,37 @@ class WhenRunningASpec(object):
                 s.__class__.log += "teardown "
 
         self.spec = TestSpec
-        self.result = MockResult()
+        self.reporter = MockReporter()
 
     def because_we_run_the_spec(self):
-        contexts.run(self.spec, self.result)
+        contexts.run(self.spec, self.reporter)
 
     def it_should_run_the_methods_in_the_correct_order(self):
         self.spec.log.should.equal("arrange act assert assert assert teardown ")
 
     def it_should_call_suite_started_first(self):
-        self.result.calls[0][0].should.equal('suite_started')
+        self.reporter.calls[0][0].should.equal('suite_started')
 
     def it_should_call_ctx_started_second(self):
-        self.result.calls[1][0].should.equal('context_started')
+        self.reporter.calls[1][0].should.equal('context_started')
 
     def it_should_pass_in_the_ctx(self):
-        self.result.calls[1][1].name.should.equal('TestSpec')
+        self.reporter.calls[1][1].name.should.equal('TestSpec')
 
     def it_should_call_assertion_started_three_times(self):
-        assert self.result.calls[2][0] == "assertion_started"
-        self.result.calls[2][0].should.equal('assertion_started')
-        self.result.calls[4][0].should.equal('assertion_started')
-        self.result.calls[6][0].should.equal('assertion_started')
+        assert self.reporter.calls[2][0] == "assertion_started"
+        self.reporter.calls[2][0].should.equal('assertion_started')
+        self.reporter.calls[4][0].should.equal('assertion_started')
+        self.reporter.calls[6][0].should.equal('assertion_started')
 
     def it_should_call_assertion_passed_and_failed_and_errored(self):
-        calls = [self.result.calls[i][0] for i in (3,5,7)]
+        calls = [self.reporter.calls[i][0] for i in (3,5,7)]
         calls.should.contain('assertion_passed')
         calls.should.contain('assertion_failed')
         calls.should.contain('assertion_errored')
 
     def the_assertions_should_have_the_right_names(self):
-        names = [self.result.calls[i][1].name for i in (3,5,7)]
+        names = [self.reporter.calls[i][1].name for i in (3,5,7)]
         names.should.contain('method_with_should_in_the_name')
         names.should.contain('failing_method_with_should_in_the_name')
         names.should.contain('erroring_method_with_should_in_the_name')
@@ -67,30 +67,31 @@ class WhenRunningASpec(object):
     def it_should_pass_in_the_exceptions(self):
         exceptions = {}
         for i in (3,5,7):
-            call_name = self.result.calls[i][0]
+            call_name = self.reporter.calls[i][0]
             if call_name == 'assertion_failed':
-                exceptions['fail'] = self.result.calls[i][2]
+                exceptions['fail'] = self.reporter.calls[i][2]
             if call_name == 'assertion_errored':
-                exceptions['error'] = self.result.calls[i][2]
+                exceptions['error'] = self.reporter.calls[i][2]
 
         exceptions['fail'].should.equal(self.assertion_err)
         exceptions['error'].should.equal(self.value_err)
 
     def it_should_call_ctx_ended_next(self):
-        self.result.calls[8][0].should.equal('context_ended')
+        self.reporter.calls[8][0].should.equal('context_ended')
 
     def it_should_pass_in_the_ctx_again(self):
-        self.result.calls[8][1].should.equal(self.result.calls[1][1])
+        self.reporter.calls[8][1].should.equal(self.reporter.calls[1][1])
 
     def it_should_call_suite_ended_last(self):
-        self.result.calls[9][0].should.equal('suite_ended')
+        self.reporter.calls[9][0].should.equal('suite_ended')
 
     def it_should_pass_in_the_same_suite_as_at_the_start(self):
-        self.result.calls[9][1].should.equal(self.result.calls[0][1])
+        self.reporter.calls[9][1].should.equal(self.reporter.calls[0][1])
 
     def it_should_not_make_any_more_calls(self):
-        self.result.calls.should.have.length_of(10)
+        self.reporter.calls.should.have.length_of(10)
 
+# TODO: figure out how to make this work with Examples
 class WhenAContextErrors(object):
     def context(self):
         self.value_err = ValueError("explode")
@@ -128,17 +129,17 @@ class WhenAContextErrors(object):
         self.specs = [ErrorInSetup, ErrorInAction, ErrorInTeardown]
 
     def because_we_run_the_specs(self):
-        self.results = []
+        self.reporters = []
         for spec in self.specs:
-            result = MockResult()
-            self.results.append(result)
-            contexts.run(spec, result)
+            reporter = MockReporter()
+            self.reporters.append(reporter)
+            contexts.run(spec, reporter)
 
     def it_should_call_ctx_errored_for_the_first_error(self):
-        self.results[0].calls[2][0].should.equal("context_errored")
+        self.reporters[0].calls[2][0].should.equal("context_errored")
 
     def it_should_pass_in_the_first_exception(self):
-        self.results[0].calls[2][2].should.equal(self.value_err)
+        self.reporters[0].calls[2][2].should.equal(self.value_err)
 
     def it_should_not_run_the_first_action(self):
         self.specs[0].ran_because.should.be.false
@@ -150,10 +151,10 @@ class WhenAContextErrors(object):
         self.specs[0].ran_cleanup.should.be.true
 
     def it_should_call_ctx_errored_for_the_second_error(self):
-        self.results[1].calls[2][0].should.equal("context_errored")
+        self.reporters[1].calls[2][0].should.equal("context_errored")
 
     def it_should_pass_in_the_second_exception(self):
-        self.results[1].calls[2][2].should.equal(self.type_err)
+        self.reporters[1].calls[2][2].should.equal(self.type_err)
 
     def it_should_not_run_the_second_assertion(self):
         self.specs[1].ran_assertion.should.be.false
@@ -162,10 +163,10 @@ class WhenAContextErrors(object):
         self.specs[1].ran_cleanup.should.be.true
 
     def it_should_call_ctx_errored_for_the_third_error(self):
-        self.results[2].calls[4][0].should.equal("context_errored")
+        self.reporters[2].calls[4][0].should.equal("context_errored")
 
     def it_should_pass_in_the_third_exception(self):
-        self.results[2].calls[4][2].should.equal(self.assertion_err)
+        self.reporters[2].calls[4][2].should.equal(self.assertion_err)
 
 class WhenCatchingAnException(object):
     def context(self):
@@ -182,10 +183,10 @@ class WhenCatchingAnException(object):
                 s.__class__.exception = contexts.catch(s.throwing_function, 3, c='yes', b=None)
 
         self.spec = TestSpec
-        self.result = MockResult()
+        self.reporter = MockReporter()
 
     def because_we_run_the_spec(self):
-        contexts.run(self.spec, self.result)
+        contexts.run(self.spec, self.reporter)
 
     def it_should_catch_and_return_the_exception(self):
         self.spec.exception.should.equal(self.exception)
@@ -193,8 +194,8 @@ class WhenCatchingAnException(object):
     def it_should_call_it_with_the_supplied_arguments(self):
         self.spec.call_args.should.equal((3, None, 'yes', []))
 
-    def it_should_not_call_failure_methods_on_the_result(self):
-        call_names = [call[0] for call in self.result.calls]
+    def it_should_not_call_failure_methods_on_the_reporter(self):
+        call_names = [call[0] for call in self.reporter.calls]
         call_names.should_not.contain("context_errored")
         call_names.should_not.contain("assertion_errored")
         call_names.should_not.contain("assertion_failed")
@@ -224,10 +225,10 @@ class WhenASpecHasASuperclass(object):
                 self.log += "subclass cleanup "
 
         self.spec = Spec
-        self.result = MockResult()
+        self.reporter = MockReporter()
 
     def because_we_run_the_spec(self):
-        contexts.run(self.spec, self.result)
+        contexts.run(self.spec, self.reporter)
 
     def it_should_run_the_superclass_setup_first(self):
         self.log[:19].should.equal("superclass arrange ")
@@ -252,8 +253,8 @@ class WhenASpecHasASuperclass(object):
     def it_should_run_the_superclass_teardown_second(self):
         self.log[109:238].should.equal("superclass cleanup ")
 
-    def it_should_only_call_ctx_started_on_the_result_once(self):
-        calls = [call for call in self.result.calls if call[0] == "context_started"]
+    def it_should_only_call_ctx_started_on_the_reporter_once(self):
+        calls = [call for call in self.reporter.calls if call[0] == "context_started"]
         calls.should.have.length_of(1)
 
 class WhenASpecHasClassmethods(object):
@@ -275,7 +276,7 @@ class WhenASpecHasClassmethods(object):
         self.spec = ClassmethodsSpec
 
     def because_we_run_the_spec(self):
-        contexts.run(self.spec, MockResult())
+        contexts.run(self.spec, MockReporter())
 
     def it_should_run_the_classmethods(self):
         self.spec.log.should.equal("arrange act assert teardown ")
@@ -299,7 +300,7 @@ class WhenASpecHasStaticmethods(object):
         self.spec = StaticmethodsSpec
 
     def because_we_run_the_spec(self):
-        contexts.run(self.spec, MockResult())
+        contexts.run(self.spec, MockReporter())
 
     def it_should_run_the_staticmethods(self):
         self.log.should.equal("arrange act assert teardown ")
@@ -316,21 +317,21 @@ class WhenRunningMultipleSpecs(object):
                 self.__class__.was_run = True
 
         self.suite = [Spec1, Spec2]
-        self.result = MockResult()
+        self.reporter = MockReporter()
 
     def because_we_run_the_suite(self):
-        contexts.run(self.suite, self.result)
+        contexts.run(self.suite, self.reporter)
 
     def it_should_run_both_tests(self):
         self.suite[0].was_run.should.be.true
         self.suite[1].was_run.should.be.true
 
     def it_should_call_ctx_started_twice(self):
-        calls = [call for call in self.result.calls if call[0] == "context_started"]
+        calls = [call for call in self.reporter.calls if call[0] == "context_started"]
         calls.should.have.length_of(2)
 
     def it_should_call_ctx_ended_twice(self):
-        calls = [call for call in self.result.calls if call[0] == "context_ended"]
+        calls = [call for call in self.reporter.calls if call[0] == "context_ended"]
         calls.should.have.length_of(2)
 
 class WhenWeRunSpecsWithAlternatelyNamedMethods(object):
@@ -375,7 +376,7 @@ class WhenWeRunSpecsWithAlternatelyNamedMethods(object):
         self.spec, self.expected_log = example
 
     def because_we_run_the_spec(self, example):
-        contexts.run(self.spec, MockResult())
+        contexts.run(self.spec, MockReporter())
 
     def it_should_run_the_methods_in_the_correct_order(self):
         self.spec.log.should.equal(self.expected_log)
@@ -406,22 +407,22 @@ class WhenRunningAmbiguouslyNamedMethods(object):
         yield AmbiguousMethods5
 
     def context(self):
-        self.result = MockResult()
+        self.reporter = MockReporter()
 
     def because_we_try_to_run_the_spec(self, example):
-        self.exception = contexts.catch(contexts.run, example, self.result)
+        self.exception = contexts.catch(contexts.run, example, self.reporter)
 
     def it_should_not_throw_an_exception(self):
         self.exception.should.be.none
 
-    def it_should_call_unexpected_error_on_the_result(self):
-        self.result.calls[1][0].should.equal("unexpected_error")
+    def it_should_call_unexpected_error_on_the_reporter(self):
+        self.reporter.calls[1][0].should.equal("unexpected_error")
 
     def it_should_pass_in_a_MethodNamingError(self):
-        self.result.calls[1][1].should.be.a(contexts.errors.MethodNamingError)
+        self.reporter.calls[1][1].should.be.a(contexts.errors.MethodNamingError)
 
     def it_should_finish_the_suite(self):
-        self.result.calls[-1][0].should.equal("suite_ended")
+        self.reporter.calls[-1][0].should.equal("suite_ended")
 
 class WhenRunningNotSoAmbiguouslyNamedMethods(object):
     @classmethod
@@ -445,7 +446,7 @@ class WhenRunningNotSoAmbiguouslyNamedMethods(object):
         yield NotAmbiguousMethods4
 
     def because_we_try_to_run_the_spec(self, example):
-        self.exception = contexts.catch(contexts.run, example, MockResult())
+        self.exception = contexts.catch(contexts.run, example, MockReporter())
 
     def it_should_not_raise_any_exceptions(self):
         self.exception.should.be.none
@@ -481,22 +482,22 @@ class WhenRunningSpecsWithTooManySpecialMethods(object):
         yield TooManyExamples
 
     def context(self):
-        self.result = MockResult()
+        self.reporter = MockReporter()
 
     def because_we_try_to_run_the_spec(self, example):
-        self.exception = contexts.catch(contexts.run, example, self.result)
+        self.exception = contexts.catch(contexts.run, example, self.reporter)
 
     def it_should_not_raise_an_exception(self):
         self.exception.should.be.none
 
-    def it_should_call_unexpected_error_on_the_result(self):
-        self.result.calls[1][0].should.equal("unexpected_error")
+    def it_should_call_unexpected_error_on_the_reporter(self):
+        self.reporter.calls[1][0].should.equal("unexpected_error")
 
     def it_should_pass_in_a_TooManySpecialMethodsError(self):
-        self.result.calls[1][1].should.be.a(contexts.errors.TooManySpecialMethodsError)
+        self.reporter.calls[1][1].should.be.a(contexts.errors.TooManySpecialMethodsError)
 
     def it_should_finish_the_suite(self):
-        self.result.calls[-1][0].should.equal("suite_ended")
+        self.reporter.calls[-1][0].should.equal("suite_ended")
 
 
 if __name__ == "__main__":

@@ -10,8 +10,8 @@ class Assertion(object):
         self.func = func
         self.name = name
 
-    def run(self, test_data, result_runner):
-        with result_runner.run_assertion(self):
+    def run(self, test_data, reporter_runner):
+        with reporter_runner.run_assertion(self):
             run_with_test_data(self.func, test_data)
 
 
@@ -32,20 +32,20 @@ class Context(object):
         for action in self.actions:
             run_with_test_data(action, self.test_data)
 
-    def run_assertions(self, result_runner):
+    def run_assertions(self, reporter_runner):
         for assertion in self.assertions:
-            assertion.run(self.test_data, result_runner)
+            assertion.run(self.test_data, reporter_runner)
 
     def run_teardown(self):
         for teardown in self.teardowns:
             run_with_test_data(teardown, self.test_data)
 
-    def run(self, result_runner):
-        with result_runner.run_context(self):
+    def run(self, reporter_runner):
+        with reporter_runner.run_context(self):
             try:
                 self.run_setup()
                 self.run_action()
-                self.run_assertions(result_runner)
+                self.run_assertions(reporter_runner)
             finally:
                 self.run_teardown()
 
@@ -54,8 +54,8 @@ class Suite(object):
     def __init__(self, classes):
         self.classes = list(classes)
 
-    def run(self, result_runner):
-        with result_runner.run_suite(self):
+    def run(self, reporter_runner):
+        with reporter_runner.run_suite(self):
             for cls in self.classes:
                 try:
                     examples_method = finders.find_examples_method(cls)
@@ -71,9 +71,9 @@ class Suite(object):
                         instances = [cls()]
                     for instance in instances:
                         context = wrap_instance_in_context(instance)
-                        context.run(result_runner)
+                        context.run(reporter_runner)
                 except Exception as e:
-                    result_runner.result.unexpected_error(e)
+                    reporter_runner.reporter.unexpected_error(e)
                     continue
 
 
@@ -90,37 +90,37 @@ def wrap_instance_in_context(instance):
                    instance.__class__.__name__)
 
 
-class ResultRunner(object):
-    def __init__(self, result):
-        self.result = result
+class ReporterRunner(object):
+    def __init__(self, reporter):
+        self.reporter = reporter
 
     @contextmanager
     def run_suite(self, suite):
-        self.result.suite_started(suite)
+        self.reporter.suite_started(suite)
         yield
-        self.result.suite_ended(suite)
+        self.reporter.suite_ended(suite)
 
     @contextmanager
     def run_context(self, context):
-        self.result.context_started(context)
+        self.reporter.context_started(context)
         try:
             yield
         except Exception as e:
-            self.result.context_errored(context, e)
+            self.reporter.context_errored(context, e)
         else:
-            self.result.context_ended(context)
+            self.reporter.context_ended(context)
 
     @contextmanager
     def run_assertion(self, assertion):
-        self.result.assertion_started(assertion)
+        self.reporter.assertion_started(assertion)
         try:
             yield
         except AssertionError as e:
-            self.result.assertion_failed(assertion, e)
+            self.reporter.assertion_failed(assertion, e)
         except Exception as e:
-            self.result.assertion_errored(assertion, e)
+            self.reporter.assertion_errored(assertion, e)
         else:
-            self.result.assertion_passed(assertion)
+            self.reporter.assertion_passed(assertion)
 
 
 def run_with_test_data(func, test_data):

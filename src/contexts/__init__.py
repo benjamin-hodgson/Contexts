@@ -17,21 +17,21 @@ def main():
     sys.exit(0)
 
 
-def run(spec=None, result=None):
-    if result is None:
-        result = reporting.CapturingCLIResult()
+def run(spec=None, reporter=None):
+    if reporter is None:
+        reporter = reporting.CapturingCLIReporter()
     if spec is None:
         spec = sys.modules['__main__']
 
-    _run_impl(spec, result)
+    _run_impl(spec, reporter)
 
-    return not result.failed
+    return not reporter.failed
 
 
-def _run_impl(spec, result):
-    result_runner = core.ResultRunner(result)
+def _run_impl(spec, reporter):
+    reporter_runner = core.ReporterRunner(reporter)
     suite = builders.build_suite(spec)
-    suite.run(result_runner)
+    suite.run(reporter_runner)
 
 
 def catch(func, *args, **kwargs):

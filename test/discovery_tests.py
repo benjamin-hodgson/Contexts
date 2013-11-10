@@ -5,7 +5,7 @@ import sys
 import types
 import sure
 import contexts
-from .test_doubles import MockResult
+from .test_doubles import MockReporter
 
 
 this_file = os.path.realpath(__file__)
@@ -32,7 +32,7 @@ class WhenRunningAModule(object):
         self.module.NormalClass = NormalClass
 
     def because_we_run_the_module(self):
-        contexts.run(self.module, MockResult())
+        contexts.run(self.module, MockReporter())
 
     def it_should_run_the_spec(self):
         self.module.HasSpecInTheName.was_run.should.be.true
@@ -58,7 +58,7 @@ class TestSpec(object):
         self.write_file()
 
     def because_we_run_the_file(self):
-        contexts.run(self.filename, MockResult())
+        contexts.run(self.filename, MockReporter())
 
     def it_should_import_the_file(self):
         sys.modules.should.contain(self.module_name)
@@ -95,7 +95,7 @@ class TestSpec(object):
         self.write_files()
 
     def because_we_run_the_folder(self):
-        contexts.run(self.folder_path, MockResult())
+        contexts.run(self.folder_path, MockReporter())
 
     def it_should_import_the_first_module(self):
         sys.modules.should.contain(self.module_names[0])
@@ -149,7 +149,7 @@ class TestSpec(object):
         self.create_fake_module()
 
     def because_we_run_the_folder(self):
-        contexts.run(self.folder_path, MockResult())
+        contexts.run(self.folder_path, MockReporter())
 
     def it_should_not_re_import_the_module(self):
         sys.modules[self.module_name].is_fake.should.be.true
@@ -204,7 +204,7 @@ class TestSpec(object):
         self.create_fake_module()
 
     def because_we_run_the_folder(self):
-        contexts.run(self.folder_path, MockResult())
+        contexts.run(self.folder_path, MockReporter())
 
     def it_should_import_the_new_module_and_overwrite_the_old_one(self):
         sys.modules[self.module_name].is_fake.should.be.false
@@ -253,7 +253,7 @@ class TestSpec(object):
         self.write_files()
 
     def because_we_run_the_folder(self):
-        contexts.run(self.folder_path, MockResult())
+        contexts.run(self.folder_path, MockReporter())
 
     def it_should_import_the_package(self):
         sys.modules.should.contain(self.package_name)
@@ -328,7 +328,7 @@ class TestSpec(object):
         self.create_tree()
 
     def because_we_run_the_folder(self):
-        contexts.run(self.folder_path, MockResult())
+        contexts.run(self.folder_path, MockReporter())
 
     def it_should_import_the_file_in_the_test_folder(self):
         sys.modules.should.contain("test_file1")
@@ -409,7 +409,7 @@ class TestSpec(object):
 
 
     def because_we_run_the_package(self):
-        contexts.run(self.folder_path, MockResult())
+        contexts.run(self.folder_path, MockReporter())
 
     def it_should_import_the_file_in_the_test_folder(self):
         sys.modules.should.contain("test_file1")
