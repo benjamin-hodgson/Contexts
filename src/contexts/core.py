@@ -57,24 +57,37 @@ class Suite(object):
     def run(self, reporter_runner):
         with reporter_runner.run_suite(self):
             for cls in self.classes:
-                try:
-                    examples_method = finders.find_examples_method(cls)
-                    test_data_iterable = examples_method()
-                    specs = []
-                    if test_data_iterable is not None:
-                        for test_data in test_data_iterable:
-                            inst = cls()
-                            inst._contexts_test_data = test_data
-                            specs.append(inst)
-                        instances = specs
-                    else:
-                        instances = [cls()]
-                    for instance in instances:
-                        context = wrap_instance_in_context(instance)
-                        context.run(reporter_runner)
-                except Exception as e:
-                    reporter_runner.reporter.unexpected_error(e)
-                    continue
+                self.run_class(cls, reporter_runner)
+
+    def run_class(self, cls, reporter_runner):
+        with reporter_runner.run_class(cls):
+            for context in build_contexts_for_class(cls):
+                context.run(reporter_runner)
+
+
+
+def build_contexts_for_class(cls):
+    instances = instantiate(cls)
+    contexts = []
+    for instance in instances:
+        context = wrap_instance_in_context(instance)
+        contexts.append(context)
+    return contexts
+
+
+def instantiate(cls):
+    examples_method = finders.find_examples_method(cls)
+    test_data_iterable = examples_method()
+    specs = []
+    if test_data_iterable is not None:
+        for test_data in test_data_iterable:
+            inst = cls()
+            inst._contexts_test_data = test_data
+            specs.append(inst)
+        instances = specs
+    else:
+        instances = [cls()]
+    return instances
 
 
 def wrap_instance_in_context(instance):
@@ -121,6 +134,13 @@ class ReporterRunner(object):
             self.reporter.assertion_errored(assertion, e)
         else:
             self.reporter.assertion_passed(assertion)
+
+    @contextmanager
+    def run_class(self, cls):
+        try:
+            yield
+        except Exception as e:
+            self.reporter.unexpected_error(e)
 
 
 def run_with_test_data(func, test_data):
