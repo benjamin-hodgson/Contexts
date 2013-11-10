@@ -41,7 +41,7 @@ class WhenRunningASpec(object):
         self.result.calls[0][0].should.equal('suite_started')
 
     def it_should_call_ctx_started_second(self):
-        self.result.calls[1][0].should.equal('test_case_started')
+        self.result.calls[1][0].should.equal('context_started')
 
     def it_should_pass_in_the_ctx(self):
         self.result.calls[1][1].name.should.equal('TestSpec')
@@ -77,7 +77,7 @@ class WhenRunningASpec(object):
         exceptions['error'].should.equal(self.value_err)
 
     def it_should_call_ctx_ended_next(self):
-        self.result.calls[8][0].should.equal('test_case_ended')
+        self.result.calls[8][0].should.equal('context_ended')
 
     def it_should_pass_in_the_ctx_again(self):
         self.result.calls[8][1].should.equal(self.result.calls[1][1])
@@ -135,7 +135,7 @@ class WhenAContextErrors(object):
             contexts.run(spec, result)
 
     def it_should_call_ctx_errored_for_the_first_error(self):
-        self.results[0].calls[2][0].should.equal("test_case_errored")
+        self.results[0].calls[2][0].should.equal("context_errored")
 
     def it_should_pass_in_the_first_exception(self):
         self.results[0].calls[2][2].should.equal(self.value_err)
@@ -150,7 +150,7 @@ class WhenAContextErrors(object):
         self.specs[0].ran_cleanup.should.be.true
 
     def it_should_call_ctx_errored_for_the_second_error(self):
-        self.results[1].calls[2][0].should.equal("test_case_errored")
+        self.results[1].calls[2][0].should.equal("context_errored")
 
     def it_should_pass_in_the_second_exception(self):
         self.results[1].calls[2][2].should.equal(self.type_err)
@@ -162,7 +162,7 @@ class WhenAContextErrors(object):
         self.specs[1].ran_cleanup.should.be.true
 
     def it_should_call_ctx_errored_for_the_third_error(self):
-        self.results[2].calls[4][0].should.equal("test_case_errored")
+        self.results[2].calls[4][0].should.equal("context_errored")
 
     def it_should_pass_in_the_third_exception(self):
         self.results[2].calls[4][2].should.equal(self.assertion_err)
@@ -195,7 +195,7 @@ class WhenCatchingAnException(object):
 
     def it_should_not_call_failure_methods_on_the_result(self):
         call_names = [call[0] for call in self.result.calls]
-        call_names.should_not.contain("test_case_errored")
+        call_names.should_not.contain("context_errored")
         call_names.should_not.contain("assertion_errored")
         call_names.should_not.contain("assertion_failed")
 
@@ -253,7 +253,7 @@ class WhenASpecHasASuperclass(object):
         self.log[109:238].should.equal("superclass cleanup ")
 
     def it_should_only_call_ctx_started_on_the_result_once(self):
-        calls = [call for call in self.result.calls if call[0] == "test_case_started"]
+        calls = [call for call in self.result.calls if call[0] == "context_started"]
         calls.should.have.length_of(1)
 
 class WhenASpecHasClassmethods(object):
@@ -326,11 +326,11 @@ class WhenRunningMultipleSpecs(object):
         self.suite[1].was_run.should.be.true
 
     def it_should_call_ctx_started_twice(self):
-        calls = [call for call in self.result.calls if call[0] == "test_case_started"]
+        calls = [call for call in self.result.calls if call[0] == "context_started"]
         calls.should.have.length_of(2)
 
     def it_should_call_ctx_ended_twice(self):
-        calls = [call for call in self.result.calls if call[0] == "test_case_ended"]
+        calls = [call for call in self.result.calls if call[0] == "context_ended"]
         calls.should.have.length_of(2)
 
 class WhenWeRunSpecsWithAlternatelyNamedMethods(object):

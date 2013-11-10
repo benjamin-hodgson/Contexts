@@ -33,7 +33,7 @@ class WhenRunningAParametrisedSpec(object):
 
     def the_ctx_should_not_error(self):
         call_names = [call[0] for call in self.result.calls]
-        call_names.should_not.contain("test_case_errored")
+        call_names.should_not.contain("context_errored")
 
     def the_assertions_should_not_error(self):
         call_names = [call[0] for call in self.result.calls]
@@ -85,7 +85,7 @@ class WhenRunningAParametrisedSpecWithNonParametrisedMethods(object):
 
     def the_ctx_should_not_error(self):
         call_names = [call[0] for call in self.result.calls]
-        call_names.should_not.contain("test_case_errored")
+        call_names.should_not.contain("context_errored")
 
     def the_assertions_should_not_error(self):
         call_names = [call[0] for call in self.result.calls]
@@ -139,7 +139,7 @@ class WhenRunningAModuleWithParametrisedSpecs(object):
 
     def the_ctx_should_not_error(self):
         call_names = [call[0] for call in self.result.calls]
-        call_names.should_not.contain("test_case_errored")
+        call_names.should_not.contain("context_errored")
 
     def the_assertions_should_not_error(self):
         call_names = [call[0] for call in self.result.calls]

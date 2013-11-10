@@ -16,13 +16,13 @@ class Result(object):
     def suite_ended(self, suite):
         """Called at the end of a test run"""
 
-    def test_case_started(self, context):
+    def context_started(self, context):
         """Called when a test context begins its run"""
 
-    def test_case_ended(self, context):
+    def context_ended(self, context):
         """Called when a test context completes its run"""
 
-    def test_case_errored(self, context, exception):
+    def context_errored(self, context, exception):
         """Called when a test context (not an assertion) throws an exception"""
 
     def assertion_started(self, assertion):
@@ -100,13 +100,13 @@ class SimpleResult(Result):
     def current_context(self):
         return self.view_models[-1]
 
-    def test_case_started(self, context):
-        super().test_case_started(context)
+    def context_started(self, context):
+        super().context_started(context)
         self.view_models.append(ContextViewModel(context))
 
-    def test_case_errored(self, context, exception):
+    def context_errored(self, context, exception):
         self.current_context.exception = exception
-        super().test_case_errored(context, exception)
+        super().context_errored(context, exception)
 
     def assertion_passed(self, assertion):
         assertion_vm = AssertionViewModel(assertion)
@@ -146,8 +146,8 @@ class DotsResult(StreamResult):
         super().assertion_errored(*args, **kwargs)
         self._print('E', end='')
 
-    def test_case_errored(self, *args, **kwargs):
-        super().test_case_errored(*args, **kwargs)
+    def context_errored(self, *args, **kwargs):
+        super().context_errored(*args, **kwargs)
         self._print('E', end='')
 
 
@@ -160,20 +160,20 @@ class SummarisingResult(SimpleResult, StreamResult):
         self.current_summary = None
         self.current_indent = ''
 
-    def test_case_started(self, context):
-        super().test_case_started(context)
+    def context_started(self, context):
+        super().context_started(context)
         self.current_summary = [self.current_context.name]
         self.indent()
 
-    def test_case_ended(self, context):
-        super().test_case_ended(context)
+    def context_ended(self, context):
+        super().context_ended(context)
         if self.current_context.assertion_failures or self.current_context.assertion_errors:
             self.add_current_context_to_summary()
         self.dedent()
         self.current_summary = None
 
-    def test_case_errored(self, context, exception):
-        super().test_case_errored(context, exception)
+    def context_errored(self, context, exception):
+        super().context_errored(context, exception)
         formatted_exc = self.current_context.error_summary
         self.extend_summary(formatted_exc)
         self.add_current_context_to_summary()
@@ -266,14 +266,14 @@ class TeamCityResult(StreamResult, SimpleResult):
         msg = self.teamcity_format("##teamcity[testSuiteFinished name='{}']", "contexts")
         self._print(msg)
 
-    def test_case_started(self, context):
-        super().test_case_started(context)
+    def context_started(self, context):
+        super().context_started(context)
         self.context_name_prefix = self.current_context.name + ' -> '
-    def test_case_ended(self, context):
-        super().test_case_ended(context)
+    def context_ended(self, context):
+        super().context_ended(context)
         self.context_name_prefix = ''
-    def test_case_errored(self, context, exception):
-        super().test_case_errored(context, exception)
+    def context_errored(self, context, exception):
+        super().context_errored(context, exception)
         self.context_name_prefix = ''
         context_vm = self.current_context
         msg1 = self.teamcity_format("##teamcity[testStarted name='{}']", context_vm.name)
@@ -319,8 +319,8 @@ class TeamCityResult(StreamResult, SimpleResult):
 
 
 class CapturingResult(SummarisingResult):
-    def test_case_started(self, context):
-        super().test_case_started(context)
+    def context_started(self, context):
+        super().context_started(context)
         self.real_stdout = sys.stdout
         self.buffer = StringIO()
         sys.stdout = self.buffer
@@ -329,13 +329,13 @@ class CapturingResult(SummarisingResult):
         num = str(70 - len(self.current_indent))
         return ("{:-^"+num+"}").format(string)
 
-    def test_case_ended(self, context):
+    def context_ended(self, context):
         sys.stdout = self.real_stdout
-        super().test_case_ended(context)
+        super().context_ended(context)
 
-    def test_case_errored(self, context, exception):
+    def context_errored(self, context, exception):
         sys.stdout = self.real_stdout
-        super().test_case_errored(context, exception)
+        super().context_errored(context, exception)
         self.add_buffer_to_summary()
 
     def assertion_failed(self, assertion, exception):

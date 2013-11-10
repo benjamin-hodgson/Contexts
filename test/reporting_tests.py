@@ -12,11 +12,11 @@ class WhenWatchingForDots(object):
     def context(self):
         self.stringio = StringIO()
         self.result = reporting.DotsResult(self.stringio)
-        self.fake_context = contexts.core.TestCase([],[],[],[],None,"context")
+        self.fake_context = contexts.core.Context([],[],[],[],None,"context")
         self.fake_assertion = contexts.core.Assertion(None, "assertion")
 
     def because_we_run_some_assertions(self):
-        self.result.test_case_started(self.fake_context)
+        self.result.context_started(self.fake_context)
 
         self.result.assertion_started(self.fake_assertion)
         self.result.assertion_passed(self.fake_assertion)
@@ -34,7 +34,7 @@ class WhenWatchingForDots(object):
         self.result.assertion_errored(self.fake_assertion, test_doubles.FakeException())
         self.fourth = self.stringio.getvalue()
 
-        self.result.test_case_errored(self.fake_context, test_doubles.FakeException())
+        self.result.context_errored(self.fake_context, test_doubles.FakeException())
         self.fifth = self.stringio.getvalue()
 
     def it_should_print_a_dot_for_the_first_pass(self):
@@ -61,17 +61,17 @@ class WhenPrintingASuccessfulResult(object):
     def because_we_run_some_tests(self):
         self.result.suite_started(None)
 
-        self.result.test_case_started(contexts.core.TestCase([],[],[],[],None,""))
+        self.result.context_started(contexts.core.Context([],[],[],[],None,""))
         self.result.assertion_started(contexts.core.Assertion(None, ""))
         self.result.assertion_passed(contexts.core.Assertion(None, ""))
         self.result.assertion_started(contexts.core.Assertion(None, ""))
         self.result.assertion_passed(contexts.core.Assertion(None, ""))
-        self.result.test_case_ended(contexts.core.TestCase([],[],[],[],None,""))
+        self.result.context_ended(contexts.core.Context([],[],[],[],None,""))
 
-        self.result.test_case_started(contexts.core.TestCase([],[],[],[],None,""))
+        self.result.context_started(contexts.core.Context([],[],[],[],None,""))
         self.result.assertion_started(contexts.core.Assertion(None, ""))
         self.result.assertion_passed(contexts.core.Assertion(None, ""))
-        self.result.test_case_ended(contexts.core.TestCase([],[],[],[],None,""))
+        self.result.context_ended(contexts.core.Context([],[],[],[],None,""))
 
         self.result.stream = self.stringio
         self.result.suite_ended(None)
@@ -89,7 +89,7 @@ class WhenPrintingAFailureResult(object):
         self.result = reporting.SummarisingResult(StringIO())
         self.stringio = StringIO()
 
-        self.context1 = contexts.core.TestCase([],[],[],[],None, "made.up_context_1")
+        self.context1 = contexts.core.Context([],[],[],[],None, "made.up_context_1")
 
         self.assertion1 = contexts.core.Assertion(None, "made.up.assertion_1")
         tb1 = [('made_up_file.py', 3, 'made_up_function', 'frame1'),
@@ -103,7 +103,7 @@ class WhenPrintingAFailureResult(object):
 
         self.assertion3 = contexts.core.Assertion(None, "made.up.assertion_3")
 
-        self.context2 = contexts.core.TestCase([],[],[],[],None,"made.up_context_2")
+        self.context2 = contexts.core.Context([],[],[],[],None,"made.up_context_2")
         tb3 = [('made_up_file_5.py', 1, 'made_up_function_5', 'frame5'),
                ('made_up_file_6.py', 2, 'made_up_function_6', 'frame6')]
         self.exception3 = test_doubles.build_fake_exception(tb3, "oh dear")
@@ -111,20 +111,20 @@ class WhenPrintingAFailureResult(object):
     def because_we_run_some_tests(self):
         self.result.suite_started(None)
 
-        self.result.test_case_started(self.context1)
+        self.result.context_started(self.context1)
         self.result.assertion_started(self.assertion1)
         self.result.assertion_errored(self.assertion1, self.exception1)
         self.result.assertion_started(self.assertion2)
         self.result.assertion_failed(self.assertion2, self.exception2)
         self.result.assertion_started(self.assertion3)
         self.result.assertion_passed(self.assertion3)
-        self.result.test_case_ended(self.context1)
+        self.result.context_ended(self.context1)
 
-        self.result.test_case_started(self.context2)
-        self.result.test_case_errored(self.context2, self.exception3)
+        self.result.context_started(self.context2)
+        self.result.context_errored(self.context2, self.exception3)
 
-        self.result.test_case_started(contexts.core.TestCase([],[],[],[],None, "made.up_context_3"))
-        self.result.test_case_ended(contexts.core.TestCase([],[],[],[],None, "made.up_context_3"))
+        self.result.context_started(contexts.core.Context([],[],[],[],None, "made.up_context_3"))
+        self.result.context_ended(contexts.core.Context([],[],[],[],None, "made.up_context_3"))
 
         self.result.stream = self.stringio
         self.result.suite_ended(None)
@@ -166,7 +166,7 @@ class WhenCapturingStdOut(object):
         sys.stdout = self.fake_stdout = StringIO()
         sys.stderr = self.fake_stderr = StringIO()
 
-        self.fake_context = contexts.core.TestCase([],[],[],[],None,"context")
+        self.fake_context = contexts.core.Context([],[],[],[],None,"context")
         self.fake_assertion = contexts.core.Assertion(None, "assertion")
 
         self.stringio = StringIO()
@@ -176,15 +176,15 @@ class WhenCapturingStdOut(object):
     def because_we_print_some_stuff(self):
         self.result.suite_started(None)
 
-        self.result.test_case_started(self.fake_context)
+        self.result.context_started(self.fake_context)
         print("passing context")
         self.result.assertion_started(self.fake_assertion)
         print("passing assertion")
         print("to stderr", file=sys.stderr)
         self.result.assertion_passed(self.fake_assertion)
-        self.result.test_case_ended(self.fake_context)
+        self.result.context_ended(self.fake_context)
 
-        self.result.test_case_started(self.fake_context)
+        self.result.context_started(self.fake_context)
         print("failing context")
         self.result.assertion_started(self.fake_assertion)
         print("failing assertion")
@@ -192,20 +192,20 @@ class WhenCapturingStdOut(object):
         self.result.assertion_started(self.fake_assertion)
         print("erroring assertion")
         self.result.assertion_errored(self.fake_assertion, test_doubles.FakeException())
-        self.result.test_case_ended(self.fake_context)
+        self.result.context_ended(self.fake_context)
 
-        self.result.test_case_started(self.fake_context)
+        self.result.context_started(self.fake_context)
         print("erroring context")
         self.result.assertion_started(self.fake_assertion)
         print("assertion in erroring context")
         self.result.assertion_passed(self.fake_assertion)
-        self.result.test_case_errored(self.fake_context, test_doubles.FakeException())
+        self.result.context_errored(self.fake_context, test_doubles.FakeException())
 
-        self.result.test_case_started(self.fake_context)
+        self.result.context_started(self.fake_context)
         self.result.assertion_started(self.fake_assertion)
         # don't print anything
         self.result.assertion_failed(self.fake_assertion, test_doubles.FakeException())
-        self.result.test_case_ended(self.fake_context)
+        self.result.context_ended(self.fake_context)
 
         self.result.stream = self.stringio
         self.result.suite_ended(None)
@@ -321,7 +321,7 @@ class WhenRunningInTeamCity(object):
         self.result.suite_started(None)
         self.outputs.append(self.stringio.getvalue())
 
-        self.result.test_case_started(contexts.core.TestCase([],[],[],[],None,"FakeContext"))
+        self.result.context_started(contexts.core.Context([],[],[],[],None,"FakeContext"))
 
         self.result.assertion_started(contexts.core.Assertion(None, "FakeAssertion1"))
         self.outputs.append(self.stringio.getvalue())
@@ -343,7 +343,7 @@ class WhenRunningInTeamCity(object):
         self.result.assertion_errored(contexts.core.Assertion(None, "FakeAssertion4"), self.exception2)
         self.outputs.append(self.stringio.getvalue())
 
-        self.result.test_case_errored(contexts.core.TestCase([],[],[],[],None,"FakeContext"), self.exception3)
+        self.result.context_errored(contexts.core.Context([],[],[],[],None,"FakeContext"), self.exception3)
         self.outputs.append(self.stringio.getvalue())
 
         self.result.suite_ended(None)
