@@ -396,6 +396,7 @@ class WhenRunningAmbiguouslyNamedMethods(object):
             def this_has_both_cleanup_and_establish_in_the_name(self):
                 pass
         class AmbiguousMethods5(object):
+            @classmethod
             def this_has_both_examples_and_it_in_the_name(self):
                 pass
         yield AmbiguousMethods1
@@ -404,11 +405,23 @@ class WhenRunningAmbiguouslyNamedMethods(object):
         yield AmbiguousMethods4
         yield AmbiguousMethods5
 
-    def because_we_try_to_run_the_spec(self, example):
-        self.exception = contexts.catch(contexts.run, example, MockResult())
+    def context(self):
+        self.result = MockResult()
 
-    def it_should_raise_MethodNamingError(self):
-        self.exception.should.be.a(contexts.errors.MethodNamingError)
+    def because_we_try_to_run_the_spec(self, example):
+        self.exception = contexts.catch(contexts.run, example, self.result)
+
+    def it_should_not_throw_an_exception(self):
+        self.exception.should.be.none
+
+    def it_should_call_unexpected_error_on_the_result(self):
+        self.result.calls[1][0].should.equal("unexpected_error")
+
+    def it_should_pass_in_a_MethodNamingError(self):
+        self.result.calls[1][1].should.be.a(contexts.errors.MethodNamingError)
+
+    def it_should_finish_the_suite(self):
+        self.result.calls[-1][0].should.equal("suite_ended")
 
 class WhenRunningNotSoAmbiguouslyNamedMethods(object):
     @classmethod
@@ -467,11 +480,23 @@ class WhenRunningSpecsWithTooManySpecialMethods(object):
         yield TooManyTeardowns
         yield TooManyExamples
 
-    def because_we_try_to_run_the_spec(self, example):
-        self.exception = contexts.catch(contexts.run, example, MockResult())
+    def context(self):
+        self.result = MockResult()
 
-    def it_should_raise_TooManySpecialMethodsError(self):
-        self.exception.should.be.a(contexts.errors.TooManySpecialMethodsError)
+    def because_we_try_to_run_the_spec(self, example):
+        self.exception = contexts.catch(contexts.run, example, self.result)
+
+    def it_should_not_raise_an_exception(self):
+        self.exception.should.be.none
+
+    def it_should_call_unexpected_error_on_the_result(self):
+        self.result.calls[1][0].should.equal("unexpected_error")
+
+    def it_should_pass_in_a_TooManySpecialMethodsError(self):
+        self.result.calls[1][1].should.be.a(contexts.errors.TooManySpecialMethodsError)
+
+    def it_should_finish_the_suite(self):
+        self.result.calls[-1][0].should.equal("suite_ended")
 
 
 if __name__ == "__main__":

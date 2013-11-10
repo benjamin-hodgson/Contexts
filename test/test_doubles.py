@@ -5,6 +5,9 @@ class MockResult(object):
         self.calls = []
         self.failed = False
 
+    def unexpected_error(self, exception):
+        self.calls.append(('unexpected_error', exception))
+
     def suite_started(self, suite):
         self.calls.append(('suite_started', suite))
 

@@ -89,7 +89,7 @@ def find_examples_method(cls):
             msg = "The method {} is ambiguously named".format(name)
             raise errors.MethodNamingError(msg)
         if not isinstance(val, classmethod):
-            raise TypeError("The examples method {} must be a classmethod")
+            raise TypeError("The examples method '{}' must be a classmethod".format(name))
         method = getattr(cls, name)
         found.append(method)
     assert_single_method_of_given_type(cls, found)

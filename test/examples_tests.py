@@ -167,12 +167,22 @@ class WhenUserFailsToMakeExamplesAClassmethod(object):
             def examples(self):
                 pass
         self.spec = Naughty
+        self.result = MockResult()
 
     def because_we_run_the_spec(self):
-        self.exception = contexts.catch(contexts.run, self.spec, MockResult())
+        self.exception = contexts.catch(contexts.run, self.spec, self.result)
 
-    def it_should_raise_type_error(self):
-        self.exception.should.be.a(TypeError)
+    def it_should_not_throw_an_exception(self):
+        self.exception.should.be.none
+
+    def it_should_call_unexpected_error_on_the_result(self):
+        self.result.calls[1][0].should.equal("unexpected_error")
+
+    def it_should_pass_in_a_TypeError(self):
+        self.result.calls[1][1].should.be.a(TypeError)
+
+    def it_should_finish_the_suite(self):
+        self.result.calls[-1][0].should.equal("suite_ended")
 
 class WhenExamplesReturnsNone(object):
     def context(self):

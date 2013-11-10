@@ -52,14 +52,29 @@ class Context(object):
 
 class Suite(object):
     def __init__(self, classes):
-        self.classes = classes
+        self.classes = list(classes)
 
     def run(self, result_runner):
         with result_runner.run_suite(self):
-            instances = itertools.chain.from_iterable(instantiate(cls) for cls in self.classes)
-            self.contexts = [wrap_instance_in_context(instance) for instance in instances]
-            for ctx in self.contexts:
-                ctx.run(result_runner)
+            for cls in self.classes:
+                try:
+                    examples_method = finders.find_examples_method(cls)
+                    test_data_iterable = examples_method()
+                    specs = []
+                    if test_data_iterable is not None:
+                        for test_data in test_data_iterable:
+                            inst = cls()
+                            inst._contexts_test_data = test_data
+                            specs.append(inst)
+                        instances = specs
+                    else:
+                        instances = [cls()]
+                    for instance in instances:
+                        context = wrap_instance_in_context(instance)
+                        context.run(result_runner)
+                except Exception as e:
+                    result_runner.result.unexpected_error(e)
+                    continue
 
 
 def wrap_instance_in_context(instance):
@@ -73,24 +88,6 @@ def wrap_instance_in_context(instance):
                    teardowns,
                    instance._contexts_test_data if hasattr(instance, '_contexts_test_data') else None,
                    instance.__class__.__name__)
-
-
-def instantiate(cls):
-    """
-    Return a list of instances of cls.
-    If cls has an 'examples' method, run it and return an instance for each example.
-    Otherwise, return a list containing one instance of the class, plain.
-    """
-    examples_method = finders.find_examples_method(cls)
-    test_data_iterable = examples_method()
-    specs = []
-    if test_data_iterable is not None:
-        for test_data in test_data_iterable:
-            inst = cls()
-            inst._contexts_test_data = test_data
-            specs.append(inst)
-        return specs
-    return [cls()]
 
 
 class ResultRunner(object):

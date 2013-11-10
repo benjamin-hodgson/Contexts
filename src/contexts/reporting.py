@@ -16,6 +16,9 @@ class Result(object):
     def suite_ended(self, suite):
         """Called at the end of a test run"""
 
+    def unexpected_error(self, exception):
+        """Called when an error occurs outside of a Context or Assertion"""
+
     def context_started(self, context):
         """Called when a test context begins its run"""
 
