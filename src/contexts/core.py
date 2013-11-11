@@ -10,8 +10,8 @@ class Assertion(object):
         self.func = func
         self.name = name
 
-    def run(self, test_data, reporter_runner):
-        with reporter_runner.run_assertion(self):
+    def run(self, test_data, reporter_notifier):
+        with reporter_notifier.run_assertion(self):
             run_with_test_data(self.func, test_data)
 
 
@@ -32,20 +32,20 @@ class Context(object):
         for action in self.actions:
             run_with_test_data(action, self.test_data)
 
-    def run_assertions(self, reporter_runner):
+    def run_assertions(self, reporter_notifier):
         for assertion in self.assertions:
-            assertion.run(self.test_data, reporter_runner)
+            assertion.run(self.test_data, reporter_notifier)
 
     def run_teardown(self):
         for teardown in self.teardowns:
             run_with_test_data(teardown, self.test_data)
 
-    def run(self, reporter_runner):
-        with reporter_runner.run_context(self):
+    def run(self, reporter_notifier):
+        with reporter_notifier.run_context(self):
             try:
                 self.run_setup()
                 self.run_action()
-                self.run_assertions(reporter_runner)
+                self.run_assertions(reporter_notifier)
             finally:
                 self.run_teardown()
 
@@ -54,15 +54,15 @@ class Suite(object):
     def __init__(self, classes):
         self.classes = list(classes)
 
-    def run(self, reporter_runner):
-        with reporter_runner.run_suite(self):
+    def run(self, reporter_notifier):
+        with reporter_notifier.run_suite(self):
             for cls in self.classes:
-                self.run_class(cls, reporter_runner)
+                self.run_class(cls, reporter_notifier)
 
-    def run_class(self, cls, reporter_runner):
-        with reporter_runner.run_class(cls):
+    def run_class(self, cls, reporter_notifier):
+        with reporter_notifier.run_class(cls):
             for context in build_contexts_for_class(cls):
-                context.run(reporter_runner)
+                context.run(reporter_notifier)
 
 
 
@@ -103,7 +103,7 @@ def wrap_instance_in_context(instance):
                    instance.__class__.__name__)
 
 
-class ReporterRunner(object):
+class ReporterNotifier(object):
     def __init__(self, reporter):
         self.reporter = reporter
 

@@ -29,9 +29,9 @@ def run(spec=None, reporter=None):
 
 
 def _run_impl(spec, reporter):
-    reporter_runner = core.ReporterRunner(reporter)
+    notifier = core.ReporterNotifier(reporter)
     suite = builders.build_suite(spec)
-    suite.run(reporter_runner)
+    suite.run(notifier)
 
 
 def catch(func, *args, **kwargs):
