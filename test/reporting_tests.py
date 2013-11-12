@@ -37,6 +37,9 @@ class WhenWatchingForDots(object):
         self.reporter.context_errored(self.fake_context, test_doubles.FakeException())
         self.fifth = self.stringio.getvalue()
 
+        self.reporter.unexpected_error(test_doubles.FakeException())
+        self.sixth = self.stringio.getvalue()
+
     def it_should_print_a_dot_for_the_first_pass(self):
         self.first.should.equal('.')
 
@@ -51,6 +54,9 @@ class WhenWatchingForDots(object):
 
     def it_should_print_an_E_for_the_ctx_error(self):
         self.fifth.should.equal('..FEE')
+
+    def it_should_print_an_E_for_the_unexpected_error(self):
+        self.sixth.should.equal('..FEEE')
 
 class WhenPrintingASuccessfulReport(object):
     def in_the_context_of_a_successful_run(self):

@@ -153,6 +153,10 @@ class DotsReporter(StreamReporter):
         super().context_errored(*args, **kwargs)
         self._print('E', end='')
 
+    def unexpected_error(self, *args, **kwargs):
+        super().unexpected_error(*args, **kwargs)
+        self._print('E', end='')
+
 
 class SummarisingReporter(SimpleReporter, StreamReporter):
     dashes = '-' * 70
