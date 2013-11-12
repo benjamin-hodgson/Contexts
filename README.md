@@ -220,7 +220,11 @@ class SpecWithExamples(object):
         assert self.result == 0
 ```
 
-#### Catching exceptions
+#### Other methods
+Other methods, which do not contain any of the keywords detailed above, are treated as normal
+instance methods. They can be called as usual by the other methods of the class.
+
+### Catching exceptions
 Sometimes you need to assert that a given function call will raise a certain type of exception.
 You can catch and store an exception -  to make assertions about it later - using Contexts's `catch`
 function.
@@ -232,6 +236,16 @@ it returns `None`.
 You'll typically see `catch` in a 'because' method. The caught exception generally gets saved as an
 instance attribute, and assertions are made about (for example) its type in assertion methods.
 
-#### Other methods
-Other methods, which do not contain any of the keywords detailed above, are treated as normal
-instance methods. They can be called as usual by the other methods of the class.
+### Debugging
+It's often useful to be able to drop into a debugger at a set point in your test run. However, Contexts's
+default stdout-capturing behaviour can interfere with this. This can be disabled using `-s`/`--no-capture`
+at the command line. Also provided is a `set_trace()` convenience function - add the line
+`contexts.set_trace()` to your code to launch a debugger from that line connected to the _real_ stdout.
+
+### TeamCity
+Contexts has experimental support for running tests in [TeamCity](http://www.jetbrains.com/teamcity/).
+`run-contexts` _should_ automatically recognise when a build is being run by TeamCity.
+If you have problems, try invoking the script with a `--teamcity` flag.
+
+Each assertion will be reported to TeamCity as a separate test. Contexts reports failures to TeamCity along
+with any stack traces, and also captures and reports any activity on stdout and stderr.
