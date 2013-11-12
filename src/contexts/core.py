@@ -8,63 +8,6 @@ from . import errors
 from . import finders
 
 
-def run_with_test_data(func, test_data):
-    sig = inspect.signature(func)
-    if test_data is not None and sig.parameters:
-        func(test_data)
-    else:
-        func()
-
-
-class Assertion(object):
-    def __init__(self, func):
-        self.func = func
-        self.name = func.__name__
-
-    def run(self, test_data, reporter_notifier):
-        with reporter_notifier.run_assertion(self):
-            run_with_test_data(self.func, test_data)
-
-
-class Context(object):
-    def __init__(self, instance):
-        finder = finders.MethodFinder(instance)
-        setups, actions, assertions, teardowns = finder.find_special_methods()
-        assert_no_ambiguous_methods(setups, actions, assertions, teardowns)
-        self.instance = instance
-        self.setups = setups
-        self.actions = actions
-        self.assertions = [Assertion(f) for f in assertions]
-        self.teardowns = teardowns
-        self.test_data = instance._contexts_test_data
-        self.name = instance.__class__.__name__
-
-    def run_setup(self):
-        for setup in self.setups:
-            run_with_test_data(setup, self.test_data)
-
-    def run_action(self):
-        for action in self.actions:
-            run_with_test_data(action, self.test_data)
-
-    def run_assertions(self, reporter_notifier):
-        for assertion in self.assertions:
-            assertion.run(self.test_data, reporter_notifier)
-
-    def run_teardown(self):
-        for teardown in self.teardowns:
-            run_with_test_data(teardown, self.test_data)
-
-    def run(self, reporter_notifier):
-        with reporter_notifier.run_context(self):
-            try:
-                self.run_setup()
-                self.run_action()
-                self.run_assertions(reporter_notifier)
-            finally:
-                self.run_teardown()
-
-
 class Suite(object):
     def __init__(self, source):
         self.source = source
@@ -97,17 +40,77 @@ class Suite(object):
             classes = list(self.source)
         return classes
 
-
 def get_examples(cls):
     examples_method = finders.find_examples_method(cls)
     test_data_iterable = examples_method()
-    return test_data_iterable if test_data_iterable is not None else [None]
-
+    return test_data_iterable if test_data_iterable is not None else [_NullExample()]
 
 def build_context(cls, test_data):
     instance = cls()
-    instance._contexts_test_data = test_data
-    return Context(instance)
+    return Context(instance, test_data)
+
+class _NullExample(object):
+    def __str__(self):
+        return ""
+
+    def __repr__(self):
+        return "_NullExample()"
+
+
+class Context(object):
+    def __init__(self, instance, example):
+        finder = finders.MethodFinder(instance)
+        setups, actions, assertions, teardowns = finder.find_special_methods()
+        assert_no_ambiguous_methods(setups, actions, assertions, teardowns)
+        self.instance = instance
+        self.setups = setups
+        self.actions = actions
+        self.assertions = [Assertion(f) for f in assertions]
+        self.teardowns = teardowns
+        self.test_data = example
+        self.name = instance.__class__.__name__
+
+    def run_setup(self):
+        for setup in self.setups:
+            run_with_test_data(setup, self.test_data)
+
+    def run_action(self):
+        for action in self.actions:
+            run_with_test_data(action, self.test_data)
+
+    def run_assertions(self, reporter_notifier):
+        for assertion in self.assertions:
+            assertion.run(self.test_data, reporter_notifier)
+
+    def run_teardown(self):
+        for teardown in self.teardowns:
+            run_with_test_data(teardown, self.test_data)
+
+    def run(self, reporter_notifier):
+        with reporter_notifier.run_context(self):
+            try:
+                self.run_setup()
+                self.run_action()
+                self.run_assertions(reporter_notifier)
+            finally:
+                self.run_teardown()
+
+
+class Assertion(object):
+    def __init__(self, func):
+        self.func = func
+        self.name = func.__name__
+
+    def run(self, test_data, reporter_notifier):
+        with reporter_notifier.run_assertion(self):
+            run_with_test_data(self.func, test_data)
+
+def run_with_test_data(func, test_data):
+    sig = inspect.signature(func)
+    if not isinstance(test_data, _NullExample) and sig.parameters:
+        func(test_data)
+    else:
+        func()
 
 
 class ReporterNotifier(object):
