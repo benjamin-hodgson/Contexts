@@ -87,7 +87,7 @@ and any subdirectories (or packages).
   * `-s` or `--no-capture`: Don't capture stdout during tests. By default, Contexts will prevent stdout from
     being printed to the console unless a test fails. Use this option to disable this.
   * `--teamcity`: Use when the tests are being run in TeamCity. Contexts tries to detect this automatically,
-    but the flag is provided in case you have trouble
+    but the flag is provided in case you have trouble.
 
 ### Test discovery
 If a _module_ contains the words 'test' or 'spec' in its name, Contexts will
