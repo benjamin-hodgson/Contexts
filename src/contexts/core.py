@@ -87,7 +87,7 @@ class Suite(object):
         elif isinstance(self.source, types.ModuleType):
             classes = finders.find_specs_in_module(self.source)
         elif isinstance(self.source, str) and os.path.isdir(self.source):
-            module_specs = discovery.module_finders.find_modules(self.source)
+            module_specs = discovery.find_modules(self.source)
             classes = []
             for module_spec in module_specs:
                 try:
