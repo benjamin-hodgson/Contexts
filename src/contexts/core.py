@@ -90,16 +90,12 @@ class Suite(object):
             module_specs = discovery.find_modules(self.source)
             classes = []
             for module_spec in module_specs:
-                try:
+                with reporter_notifier.importing(module_spec):
                     module = discovery.load_module(*module_spec)
-                except Exception as e:
-                    reporter_notifier.reporter.unexpected_error(e)
-                else:
                     classes.extend(finders.find_specs_in_module(module))
         else:
             classes = list(self.source)
         return classes
-
 
 
 def get_examples(cls):
@@ -157,7 +153,7 @@ class ReporterNotifier(object):
             self.reporter.unexpected_error(e)
 
     @contextmanager
-    def importing(self, path):
+    def importing(self, module_spec):
         try:
             yield
         except Exception as e:
