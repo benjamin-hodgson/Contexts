@@ -71,19 +71,7 @@ class Suite(object):
 
     def run(self, reporter_notifier):
         with reporter_notifier.run_suite(self):
-            if isinstance(self.source, str) and os.path.isfile(self.source):
-                module = discovery.import_from_file(self.source)
-                classes = finders.find_specs_in_module(module)
-            elif isinstance(self.source, types.ModuleType):
-                classes = finders.find_specs_in_module(self.source)
-            elif isinstance(self.source, str) and os.path.isdir(self.source):
-                modules = discovery.import_from_directory(self.source)
-                classes = []
-                for module in modules:
-                    classes.extend(finders.find_specs_in_module(module))
-            else:
-                classes = list(self.source)
-            for cls in classes:
+            for cls in self.get_classes(reporter_notifier):
                 self.run_class(cls, reporter_notifier)
 
     def run_class(self, cls, reporter_notifier):
@@ -91,6 +79,27 @@ class Suite(object):
             for example in get_examples(cls):
                 context = build_context(cls, example)
                 context.run(reporter_notifier)
+
+    def get_classes(self, reporter_notifier):
+        if isinstance(self.source, str) and os.path.isfile(self.source):
+            module = discovery.import_from_file(self.source)
+            classes = finders.find_specs_in_module(module)
+        elif isinstance(self.source, types.ModuleType):
+            classes = finders.find_specs_in_module(self.source)
+        elif isinstance(self.source, str) and os.path.isdir(self.source):
+            module_specs = discovery.module_finders.find_modules(self.source)
+            classes = []
+            for module_spec in module_specs:
+                try:
+                    module = discovery.load_module(*module_spec)
+                except Exception as e:
+                    reporter_notifier.reporter.unexpected_error(e)
+                else:
+                    classes.extend(finders.find_specs_in_module(module))
+        else:
+            classes = list(self.source)
+        return classes
+
 
 
 def get_examples(cls):

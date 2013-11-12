@@ -526,6 +526,70 @@ class TestSpec(object):
                 with open(os.path.join(folder_path, module_name) + ".py", 'w+') as f:
                     f.write(self.code)
 
+class WhenRunningAFolderWithAFileThatFailsToImport(object):
+    def establish_that_there_is_a_folder_containing_modules(self):
+        self.bad_code = """
+module_ran = False
+
+class TestSpec(object):
+    def it(self):
+        global module_ran
+        module_ran = True
+
+raise TypeError("leave it aaaaht")
+"""
+        self.good_code = """
+module_ran = False
+
+class TestSpec(object):
+    def it(self):
+        global module_ran
+        module_ran = True
+"""
+        self.old_sys_dot_path = sys.path[:]
+        self.module_names = ["test_file1", "test_file2"]
+        self.create_folder()
+        self.write_files()
+        self.result = MockReporter()
+
+    def because_we_run_the_folder(self):
+        self.exception = contexts.catch(contexts.run, self.folder_path, self.result)
+
+    def it_should_not_throw_an_exception(self):
+        self.exception.should.be.none
+
+    def it_should_report_an_unexpected_error(self):
+        self.result.calls[1][0].should.equal("unexpected_error")
+
+    def it_should_pass_in_an_exception(self):
+        self.result.calls[1][1].should.be.a(TypeError)
+
+    def it_should_import_the_second_module(self):
+        sys.modules.should.contain(self.module_names[1])
+
+    def it_should_run_the_second_module(self):
+        sys.modules[self.module_names[1]].module_ran.should.be.true
+
+    def it_should_not_modify_sys_dot_path(self):
+        sys.path.should.equal(self.old_sys_dot_path)
+
+    def cleanup_the_file_system_and_sys_dot_modules(self):
+        shutil.rmtree(self.folder_path)
+        del sys.modules[self.module_names[1]]
+        importlib.invalidate_caches()
+
+    def create_folder(self):
+        self.folder_path = os.path.join(test_data_dir, 'problematic_folder')
+        os.mkdir(self.folder_path)
+
+    def write_files(self):
+        self.filenames = [os.path.join(self.folder_path, n+".py") for n in self.module_names]
+        with open(self.filenames[0], 'w+') as f:
+            f.write(self.bad_code)
+        with open(self.filenames[1], 'w+') as f:
+            f.write(self.good_code)
+
+
 
 if __name__ == "__main__":
     contexts.main()
