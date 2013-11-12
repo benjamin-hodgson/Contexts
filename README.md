@@ -146,7 +146,7 @@ Inheritance of action methods is not supported. The 'because' method will only b
 the concrete class of the test object.
 
 #### Making assertions about your action
-If a method contains the words 'it', 'should', 'must' or 'will' in its name, it is treated as an
+If a method contains the words 'it', 'should', 'then', 'must' or 'will' in its name, it is treated as an
 assertion. Good style suggests that assertion methods should be very granular - one assertion per method,
 if possible - and named to describe the _behaviour_ you're trying to test (rather than details such as
 function names).
