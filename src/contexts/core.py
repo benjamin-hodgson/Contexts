@@ -61,33 +61,11 @@ class Suite(object):
 
     def run_class(self, cls, reporter_notifier):
         with reporter_notifier.run_class(cls):
-            for context in build_contexts_for_class(cls):
+            for example in get_examples(cls):
+                instance = cls()
+                instance._contexts_test_data = example
+                context = wrap_instance_in_context(instance)
                 context.run(reporter_notifier)
-
-
-
-def build_contexts_for_class(cls):
-    instances = instantiate(cls)
-    contexts = []
-    for instance in instances:
-        context = wrap_instance_in_context(instance)
-        contexts.append(context)
-    return contexts
-
-
-def instantiate(cls):
-    examples_method = finders.find_examples_method(cls)
-    test_data_iterable = examples_method()
-    specs = []
-    if test_data_iterable is not None:
-        for test_data in test_data_iterable:
-            inst = cls()
-            inst._contexts_test_data = test_data
-            specs.append(inst)
-        instances = specs
-    else:
-        instances = [cls()]
-    return instances
 
 
 def wrap_instance_in_context(instance):
@@ -99,8 +77,15 @@ def wrap_instance_in_context(instance):
                    actions,
                    wrapped_assertions,
                    teardowns,
-                   instance._contexts_test_data if hasattr(instance, '_contexts_test_data') else None,
+                   instance._contexts_test_data,
                    instance.__class__.__name__)
+
+
+def get_examples(cls):
+    examples_method = finders.find_examples_method(cls)
+    test_data_iterable = examples_method()
+    return test_data_iterable if test_data_iterable is not None else [None]
+
 
 
 class ReporterNotifier(object):

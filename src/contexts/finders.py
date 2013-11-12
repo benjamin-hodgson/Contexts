@@ -93,7 +93,7 @@ def find_examples_method(cls):
         method = getattr(cls, name)
         found.append(method)
     assert_single_method_of_given_type(cls, found)
-    return found[0] if found else lambda: None  # null-object for functions
+    return found[0] if found else lambda: None
 
 
 def assert_single_method_of_given_type(cls, found):

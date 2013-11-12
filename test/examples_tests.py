@@ -161,6 +161,35 @@ class WhenRunningAModuleWithParametrisedSpecs(object):
     def it_should_run_the_teardown_twice(self):
         self.ParametrisedSpec.teardowns.should.equal([1,2])
 
+class WhenExamplesRaisesAnException(object):
+    def context(self):
+        self.raised = Exception()
+        class TestSpec(object):
+            total = 0
+            @classmethod
+            def examples(s):
+                yield 3
+                raise self.raised
+            def it(s, example):
+                s.__class__.total += example
+        self.spec = TestSpec
+        self.reporter = MockReporter()
+
+    def because_we_run_the_spec(self):
+        self.exception = contexts.catch(contexts.run, self.spec, self.reporter)
+
+    def it_should_not_throw_an_exception(self):
+        self.exception.should.be.none
+
+    def it_should_run_the_first_one(self):
+        self.spec.total.should.equal(3)
+
+    def it_should_call_unexpected_error_on_the_reporter(self):
+        self.reporter.calls[-2][0].should.equal("unexpected_error")
+
+    def it_should_pass_in_the_exception(self):
+        self.reporter.calls[-2][1].should.equal(self.raised)
+
 class WhenUserFailsToMakeExamplesAClassmethod(object):
     def context(self):
         class Naughty(object):
