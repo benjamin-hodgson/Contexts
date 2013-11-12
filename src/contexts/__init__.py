@@ -18,6 +18,15 @@ def main():
 
 
 def run(spec=None, reporter=None):
+    """
+    Polymorphic test-running function.
+
+    build_suite(class) - run the test class
+    build_suite(module) - run all the test classes in the module
+    build_suite(file_path:string) - run all the test classes found in the file
+    build_suite(folder_path:string) - run all the test classes found in the folder and subfolders
+    build_suite(package_path:string) - run all the test classes found in the package and subfolders
+    """
     if reporter is None:
         reporter = reporting.CapturingCLIReporter()
     if spec is None:

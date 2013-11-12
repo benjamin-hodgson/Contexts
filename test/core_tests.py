@@ -305,35 +305,6 @@ class WhenASpecHasStaticmethods(object):
     def it_should_run_the_staticmethods(self):
         self.log.should.equal("arrange act assert teardown ")
 
-class WhenRunningMultipleSpecs(object):
-    def context(self):
-        class Spec1(object):
-            was_run = False
-            def it(self):
-                self.__class__.was_run = True
-        class Spec2(object):
-            was_run = False
-            def it(self):
-                self.__class__.was_run = True
-
-        self.suite = [Spec1, Spec2]
-        self.reporter = MockReporter()
-
-    def because_we_run_the_suite(self):
-        contexts.run(self.suite, self.reporter)
-
-    def it_should_run_both_tests(self):
-        self.suite[0].was_run.should.be.true
-        self.suite[1].was_run.should.be.true
-
-    def it_should_call_ctx_started_twice(self):
-        calls = [call for call in self.reporter.calls if call[0] == "context_started"]
-        calls.should.have.length_of(2)
-
-    def it_should_call_ctx_ended_twice(self):
-        calls = [call for call in self.reporter.calls if call[0] == "context_ended"]
-        calls.should.have.length_of(2)
-
 class WhenWeRunSpecsWithAlternatelyNamedMethods(object):
     @classmethod
     def examples(self):
