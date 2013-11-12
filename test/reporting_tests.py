@@ -109,7 +109,7 @@ class WhenPrintingAFailureReport(object):
 
         self.assertion3 = tools.create_assertion("made.up.assertion_3")
 
-        self.context2 = tools.create_context("made.up_context_2")
+        self.context2 = tools.create_context("made.up_context_2", ["abc", 123, None])
         tb3 = [('made_up_file_5.py', 1, 'made_up_function_5', 'frame5'),
                ('made_up_file_6.py', 2, 'made_up_function_6', 'frame6')]
         self.exception3 = tools.build_fake_exception(tb3, "oh dear")
@@ -159,7 +159,7 @@ made up context 1
       File "made_up_file_4.py", line 2, in made_up_function_4
         frame4
     test.tools.FakeException: you fail
-made up context 2
+made up context 2 -> ['abc', 123, None]
   Traceback (most recent call last):
     File "made_up_file_5.py", line 1, in made_up_function_5
       frame5

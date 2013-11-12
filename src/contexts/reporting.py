@@ -43,7 +43,10 @@ class Reporter(object):
 
 class ContextViewModel(object):
     def __init__(self, context):
-        self.name = make_readable(context.name)
+        if hasattr(context.example, "null_example"):
+            self.name = make_readable(context.name)
+        else:
+            self.name = make_readable(context.name) + " -> " + str(context.example)
         self.assertions = []
         self._exception = None
         self.error_summary = None

@@ -42,19 +42,15 @@ class Suite(object):
 
 def get_examples(cls):
     examples_method = finders.find_examples_method(cls)
-    test_data_iterable = examples_method()
-    return test_data_iterable if test_data_iterable is not None else [_NullExample()]
+    examples = examples_method()
+    return examples if examples is not None else [_NullExample()]
 
-def build_context(cls, test_data):
+def build_context(cls, example):
     instance = cls()
-    return Context(instance, test_data)
+    return Context(instance, example)
 
 class _NullExample(object):
-    def __str__(self):
-        return ""
-
-    def __repr__(self):
-        return "_NullExample()"
+    null_example = True
 
 
 class Context(object):
@@ -67,24 +63,24 @@ class Context(object):
         self.actions = actions
         self.assertions = [Assertion(f) for f in assertions]
         self.teardowns = teardowns
-        self.test_data = example
+        self.example = example
         self.name = instance.__class__.__name__
 
     def run_setup(self):
         for setup in self.setups:
-            run_with_test_data(setup, self.test_data)
+            run_with_test_data(setup, self.example)
 
     def run_action(self):
         for action in self.actions:
-            run_with_test_data(action, self.test_data)
+            run_with_test_data(action, self.example)
 
     def run_assertions(self, reporter_notifier):
         for assertion in self.assertions:
-            assertion.run(self.test_data, reporter_notifier)
+            assertion.run(self.example, reporter_notifier)
 
     def run_teardown(self):
         for teardown in self.teardowns:
-            run_with_test_data(teardown, self.test_data)
+            run_with_test_data(teardown, self.example)
 
     def run(self, reporter_notifier):
         with reporter_notifier.run_context(self):
