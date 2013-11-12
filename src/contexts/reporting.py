@@ -279,12 +279,10 @@ class SummarisingReporter(SimpleReporter, StreamReporter):
 class TeamCityReporter(StreamReporter, SimpleReporter):
     def suite_started(self, suite):
         super().suite_started(suite)
-        msg = self.teamcity_format("##teamcity[testSuiteStarted name='{}']", "contexts")
-        self._print(msg)
+        self.teamcity_print("testSuiteStarted", name="contexts")
     def suite_ended(self, suite):
         super().suite_ended(suite)
-        msg = self.teamcity_format("##teamcity[testSuiteFinished name='{}']", "contexts")
-        self._print(msg)
+        self.teamcity_print("testSuiteFinished", name="contexts")
 
     def context_started(self, context):
         super().context_started(context)
@@ -296,48 +294,44 @@ class TeamCityReporter(StreamReporter, SimpleReporter):
         super().context_errored(context, exception)
         self.context_name_prefix = ''
         context_vm = self.current_context
-        msg1 = self.teamcity_format("##teamcity[testStarted name='{}']", context_vm.name)
-        self._print(msg1)
+        self.teamcity_print("testStarted", name=context_vm.name)
         msg2 = self.teamcity_format("##teamcity[testFailed name='{}' message='{}' details='{}']", self.current_context.name, str(exception), '\n'.join(context_vm.error_summary))
         self._print(msg2)
-        msg3 = self.teamcity_format("##teamcity[testFinished name='{}']", context_vm.name)
-        self._print(msg3)
+        self.teamcity_print("testFinished", name=context_vm.name)
 
     def assertion_started(self, assertion):
         super().assertion_started(assertion)
         assertion_name = make_readable(assertion.name)
-        msg = self.teamcity_format("##teamcity[testStarted name='{}']", self.context_name_prefix + assertion_name)
-        self._print(msg)
+        self.teamcity_print("testStarted", name=self.context_name_prefix+assertion_name)
     def assertion_passed(self, assertion):
         super().assertion_passed(assertion)
         assertion_vm = self.current_context.last_assertion
-        msg = self.teamcity_format("##teamcity[testFinished name='{}']", self.context_name_prefix + assertion_vm.name)
-        self._print(msg)
+        self.teamcity_print("testFinished", name=self.context_name_prefix+assertion_vm.name)
     def assertion_failed(self, assertion, exception):
         super().assertion_failed(assertion, exception)
         assertion_vm = self.current_context.last_assertion
         msg1 = self.teamcity_format("##teamcity[testFailed name='{}' message='{}' details='{}']", self.context_name_prefix + assertion_vm.name, str(exception), '\n'.join(assertion_vm.error_summary))
         self._print(msg1)
-        msg2 = self.teamcity_format("##teamcity[testFinished name='{}']", self.context_name_prefix + assertion_vm.name)
-        self._print(msg2)
+        self.teamcity_print("testFinished", name=self.context_name_prefix+assertion_vm.name)
     def assertion_errored(self, assertion, exception):
         super().assertion_errored(assertion, exception)
         assertion_vm = self.current_context.last_assertion
         msg1 = self.teamcity_format("##teamcity[testFailed name='{}' message='{}' details='{}']", self.context_name_prefix + assertion_vm.name, str(exception), '\n'.join(assertion_vm.error_summary))
         self._print(msg1)
-        msg2 = self.teamcity_format("##teamcity[testFinished name='{}']", self.context_name_prefix + assertion_vm.name)
-        self._print(msg2)
+        self.teamcity_print("testFinished", name=self.context_name_prefix+assertion_vm.name)
 
     def unexpected_error(self, exception):
         super().unexpected_error(exception)
         self.context_name_prefix = ''
         context_vm = self.current_context
-        msg1 = self.teamcity_format("##teamcity[testStarted name='Test error']")
-        self._print(msg1)
+        self.teamcity_print("testStarted", name='Test error')
         msg2 = self.teamcity_format("##teamcity[testFailed name='Test error' message='{}' details='{}']", str(exception), '\n'.join(self.unexpected_errors[-1]))
         self._print(msg2)
-        msg3 = self.teamcity_format("##teamcity[testFinished name='Test error']")
-        self._print(msg3)
+        self.teamcity_print("testFinished", name='Test error')
+
+    def teamcity_print(self, msgName, **kwargs):
+        msg = ' '.join(self.teamcity_format("{}='{}'", k, v) for k, v in kwargs.items())
+        self._print("##teamcity[{} {}]".format(self.teamcity_format(msgName), msg))
 
     @classmethod
     def teamcity_format(cls, format_string, *args):

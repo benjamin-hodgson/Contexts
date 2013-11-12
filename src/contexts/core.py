@@ -91,6 +91,14 @@ class Context(object):
             finally:
                 self.run_teardown()
 
+def assert_no_ambiguous_methods(*iterables):
+    for a, b in itertools.combinations((set(i) for i in iterables), 2):
+        overlap = a & b
+        if overlap:
+            msg = "The following methods are ambiguously named:\n"
+            msg += '\n'.join([func.__qualname__ for func in overlap])
+            raise errors.MethodNamingError(msg)
+
 
 class Assertion(object):
     def __init__(self, func):
@@ -157,12 +165,3 @@ class ReporterNotifier(object):
             yield
         except Exception as e:
             self.reporter.unexpected_error(e)
-
-
-def assert_no_ambiguous_methods(*iterables):
-    for a, b in itertools.combinations((set(i) for i in iterables), 2):
-        overlap = a & b
-        if overlap:
-            msg = "The following methods are ambiguously named:\n"
-            msg += '\n'.join([func.__qualname__ for func in overlap])
-            raise errors.MethodNamingError(msg)

@@ -10,15 +10,18 @@ def cmd():
     parser.add_argument('-s', '--no-capture',
     	action='store_false',
     	dest='capture',
-    	default=True)
+    	default=True,
+        help="Disable capturing of stdout during tests.")
     parser.add_argument('--teamcity',
         action='store_true',
         dest='teamcity',
-        default=False)
+        default=False,
+        help="Enable teamcity test reporting")
     parser.add_argument('path',
         action='store',
         nargs='?',
-        default=os.getcwd())
+        default=os.getcwd(),
+        help="Path to the test file or directory to run")
     args = parser.parse_args()
 
     if args.teamcity or "TEAMCITY_VERSION" in os.environ:

@@ -386,8 +386,8 @@ class WhenRunningInTeamCity(object):
         self.reporter.suite_ended(None)
         self.outputs.append(self.stringio.getvalue())
 
-    def it_should_call_escape_for_every_object_it_formats(self):
-        self.mock_escape.mock_calls.should.have.length_of(25)
+    def it_should_be_calling_escape(self):
+        self.mock_escape.called.should.be.true
 
     def it_should_tell_team_city_it_started(self):
         self.get_output(0,0).should.equal("##teamcity[testSuiteStarted name='contexts']")
