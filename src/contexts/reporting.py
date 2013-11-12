@@ -80,10 +80,11 @@ class SimpleReporter(Reporter):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.view_models = []
+        self.unexpected_errors = []
 
     @property
     def failed(self):
-        return self.context_errors or self.assertion_errors or self.assertion_failures
+        return self.context_errors or self.assertion_errors or self.assertion_failures or self.unexpected_errors
     @property
     def assertions(self):
         return [a for vm in self.view_models for a in vm.assertions]
@@ -125,6 +126,10 @@ class SimpleReporter(Reporter):
         assertion_vm = AssertionViewModel(assertion, "errored", exception)
         self.current_context.assertions.append(assertion_vm)
         super().assertion_errored(assertion, exception)
+
+    def unexpected_error(self, exception):
+        self.unexpected_errors.append(format_exception(exception))
+        super().unexpected_error(exception)
 
 
 class StreamReporter(Reporter):
@@ -202,6 +207,11 @@ class SummarisingReporter(SimpleReporter, StreamReporter):
         super().suite_ended(suite)
         self.summarise()
 
+    def unexpected_error(self, exception):
+        super().unexpected_error(exception)
+        formatted_exc = self.unexpected_errors[-1]
+        self.extend_summary(formatted_exc)
+
     def indent(self):
         self.current_indent += '  '
 
@@ -260,7 +270,7 @@ class SummarisingReporter(SimpleReporter, StreamReporter):
             pluralise("context", len(self.view_models)),
             pluralise("assertion", len(self.assertions)),
             len(self.assertion_failures),
-            pluralise("error", len(self.assertion_errors) + len(self.context_errors)))
+            pluralise("error", len(self.assertion_errors) + len(self.context_errors) + len(self.unexpected_errors)))
 
 
 class TeamCityReporter(StreamReporter, SimpleReporter):

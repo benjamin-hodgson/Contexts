@@ -113,6 +113,10 @@ class WhenPrintingAFailureReport(object):
         tb3 = [('made_up_file_5.py', 1, 'made_up_function_5', 'frame5'),
                ('made_up_file_6.py', 2, 'made_up_function_6', 'frame6')]
         self.exception3 = test_doubles.build_fake_exception(tb3, "oh dear")
+        
+        tb4 = [('made_up_file_7.py', 1, 'made_up_function_7', 'frame7'),
+               ('made_up_file_8.py', 2, 'made_up_function_8', 'frame8')]
+        self.exception4 = test_doubles.build_fake_exception(tb4, "oh dear")
 
     def because_we_run_some_tests(self):
         self.reporter.suite_started(None)
@@ -131,6 +135,8 @@ class WhenPrintingAFailureReport(object):
 
         self.reporter.context_started(contexts.core.Context([],[],[],[],None, "made.up_context_3"))
         self.reporter.context_ended(contexts.core.Context([],[],[],[],None, "made.up_context_3"))
+
+        self.reporter.unexpected_error(self.exception4)
 
         self.reporter.stream = self.stringio
         self.reporter.suite_ended(None)
@@ -160,9 +166,15 @@ made up context 2
     File "made_up_file_6.py", line 2, in made_up_function_6
       frame6
   test.test_doubles.FakeException: oh dear
+Traceback (most recent call last):
+  File "made_up_file_7.py", line 1, in made_up_function_7
+    frame7
+  File "made_up_file_8.py", line 2, in made_up_function_8
+    frame8
+test.test_doubles.FakeException: oh dear
 ----------------------------------------------------------------------
 FAILED!
-3 contexts, 3 assertions: 1 failed, 2 errors
+3 contexts, 3 assertions: 1 failed, 3 errors
 """)
 
 class WhenCapturingStdOut(object):
