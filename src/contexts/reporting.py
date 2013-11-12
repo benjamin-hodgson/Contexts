@@ -323,7 +323,6 @@ class TeamCityReporter(StreamReporter, SimpleReporter):
     def unexpected_error(self, exception):
         super().unexpected_error(exception)
         self.context_name_prefix = ''
-        context_vm = self.current_context
         self.teamcity_print("testStarted", name='Test error')
         msg2 = self.teamcity_format("##teamcity[testFailed name='Test error' message='{}' details='{}']", str(exception), '\n'.join(self.unexpected_errors[-1]))
         self._print(msg2)
