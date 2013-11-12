@@ -5,7 +5,7 @@ import sys
 import types
 import sure
 import contexts
-from .test_doubles import MockReporter
+from .tools import MockReporter
 
 
 this_file = os.path.realpath(__file__)
@@ -78,6 +78,48 @@ class TestSpec(object):
         self.filename = os.path.join(test_data_dir, self.module_name+".py")
         with open(self.filename, 'w+') as f:
             f.write(self.code)
+
+class WhenAFileFailsToImport(object):
+    def establish_that_there_is_a_broken_file_in_the_filesystem(self):
+        self.code = """
+module_ran = False
+
+class TestSpec(object):
+    def it(self):
+        global module_ran
+        module_ran = True
+
+raise ZeroDivisionError("bogus error message")
+"""
+        self.old_sys_dot_path = sys.path[:]
+        self.module_name = "broken_test_file"
+        self.write_file()
+        self.reporter = MockReporter()
+
+    def because_we_run_the_file(self):
+        self.exception = contexts.catch(contexts.run, self.filename, self.reporter)
+
+    def it_should_not_throw_an_exception(self):
+        self.exception.should.be.none
+
+    def it_should_call_unexpected_error_on_the_reporter(self):
+        self.reporter.calls[1][0].should.equal("unexpected_error")
+
+    def it_should_pass_in_the_exception(self):
+        self.reporter.calls[1][1].should.be.a(ZeroDivisionError)
+
+    def it_should_not_modify_sys_dot_path(self):
+        sys.path.should.equal(self.old_sys_dot_path)
+
+    def cleanup_the_file_system_and_sys_dot_modules(self):
+        os.remove(self.filename)
+        importlib.invalidate_caches()
+
+    def write_file(self):
+        self.filename = os.path.join(test_data_dir, self.module_name+".py")
+        with open(self.filename, 'w+') as f:
+            f.write(self.code)
+
 
 class WhenRunningAFolderWhichIsNotAPackage(object):
     def establish_that_there_is_a_folder_containing_modules(self):

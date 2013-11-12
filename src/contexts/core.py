@@ -1,14 +1,25 @@
 import inspect
 import itertools
+import os
+import types
 from contextlib import contextmanager
+from . import discovery
 from . import errors
 from . import finders
 
 
+def run_with_test_data(func, test_data):
+    sig = inspect.signature(func)
+    if test_data is not None and sig.parameters:
+        func(test_data)
+    else:
+        func()
+
+
 class Assertion(object):
-    def __init__(self, func, name):
+    def __init__(self, func):
         self.func = func
-        self.name = name
+        self.name = func.__name__
 
     def run(self, test_data, reporter_notifier):
         with reporter_notifier.run_assertion(self):
@@ -16,13 +27,17 @@ class Assertion(object):
 
 
 class Context(object):
-    def __init__(self, setups, actions, assertions, teardowns, test_data, name):
+    def __init__(self, instance):
+        finder = finders.MethodFinder(instance)
+        setups, actions, assertions, teardowns = finder.find_special_methods()
+        assert_no_ambiguous_methods(setups, actions, assertions, teardowns)
+        self.instance = instance
         self.setups = setups
         self.actions = actions
-        self.assertions = assertions
+        self.assertions = [Assertion(f) for f in assertions]
         self.teardowns = teardowns
-        self.test_data = test_data
-        self.name = name
+        self.test_data = instance._contexts_test_data
+        self.name = instance.__class__.__name__
 
     def run_setup(self):
         for setup in self.setups:
@@ -51,34 +66,26 @@ class Context(object):
 
 
 class Suite(object):
-    def __init__(self, classes):
-        self.classes = list(classes)
+    def __init__(self, source):
+        self.source = source
 
     def run(self, reporter_notifier):
         with reporter_notifier.run_suite(self):
-            for cls in self.classes:
+            if isinstance(self.source, str) and os.path.isfile(self.source):
+                module = discovery.import_from_file(self.source)
+                classes = finders.find_specs_in_module(module)
+            elif isinstance(self.source, types.ModuleType):
+                classes = finders.find_specs_in_module(self.source)
+            else:
+                classes = list(self.source)
+            for cls in classes:
                 self.run_class(cls, reporter_notifier)
 
     def run_class(self, cls, reporter_notifier):
         with reporter_notifier.run_class(cls):
             for example in get_examples(cls):
-                instance = cls()
-                instance._contexts_test_data = example
-                context = wrap_instance_in_context(instance)
+                context = build_context(cls, example)
                 context.run(reporter_notifier)
-
-
-def wrap_instance_in_context(instance):
-    finder = finders.MethodFinder(instance)
-    setups, actions, assertions, teardowns = finder.find_special_methods()
-    assert_no_ambiguous_methods(setups, actions, assertions, teardowns)
-    wrapped_assertions = [Assertion(f, f.__name__) for f in assertions]
-    return Context(setups,
-                   actions,
-                   wrapped_assertions,
-                   teardowns,
-                   instance._contexts_test_data,
-                   instance.__class__.__name__)
 
 
 def get_examples(cls):
@@ -86,6 +93,11 @@ def get_examples(cls):
     test_data_iterable = examples_method()
     return test_data_iterable if test_data_iterable is not None else [None]
 
+
+def build_context(cls, test_data):
+    instance = cls()
+    instance._contexts_test_data = test_data
+    return Context(instance)
 
 
 class ReporterNotifier(object):
@@ -95,7 +107,10 @@ class ReporterNotifier(object):
     @contextmanager
     def run_suite(self, suite):
         self.reporter.suite_started(suite)
-        yield
+        try:
+            yield
+        except Exception as e:
+            self.reporter.unexpected_error(e)
         self.reporter.suite_ended(suite)
 
     @contextmanager
@@ -127,13 +142,12 @@ class ReporterNotifier(object):
         except Exception as e:
             self.reporter.unexpected_error(e)
 
-
-def run_with_test_data(func, test_data):
-    sig = inspect.signature(func)
-    if test_data is not None and sig.parameters:
-        func(test_data)
-    else:
-        func()
+    @contextmanager
+    def importing(self, path):
+        try:
+            yield
+        except Exception as e:
+            self.reporter.unexpected_error(e)
 
 
 def assert_no_ambiguous_methods(*iterables):

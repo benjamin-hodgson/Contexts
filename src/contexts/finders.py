@@ -15,16 +15,10 @@ example_re = re.compile(r"(^|_)([Ee]xample|[Dd]ata)")
 class_re = re.compile(r"([Ss]pec|[Ww]hen)")
 
 
-class ClassFinder(object):
-    def find_specs_in_modules(self, modules):
-        for module in modules:
-            for cls in self.find_specs_in_module(module):
-                yield cls
-
-    def find_specs_in_module(self, module):
-        for name, cls in inspect.getmembers(module, inspect.isclass):
-            if class_re.search(name):
-                yield cls
+def find_specs_in_module(module):
+    for name, cls in inspect.getmembers(module, inspect.isclass):
+        if class_re.search(name):
+            yield cls
 
 
 class MethodFinder(object):

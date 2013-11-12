@@ -1,6 +1,6 @@
 import sure
 import contexts
-from .test_doubles import MockReporter
+from .tools import MockReporter
 
 core_file = repr(contexts.core.__file__)[1:-1]
 this_file = repr(__file__)[1:-1]

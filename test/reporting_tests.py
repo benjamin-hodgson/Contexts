@@ -5,15 +5,15 @@ from unittest import mock
 import sure
 import contexts
 from contexts import reporting
-from . import test_doubles
+from . import tools
 
 
 class WhenWatchingForDots(object):
     def context(self):
         self.stringio = StringIO()
         self.reporter = reporting.DotsReporter(self.stringio)
-        self.fake_context = contexts.core.Context([],[],[],[],None,"context")
-        self.fake_assertion = contexts.core.Assertion(None, "assertion")
+        self.fake_context = tools.create_context("context")
+        self.fake_assertion = tools.create_assertion("assertion")
 
     def because_we_run_some_assertions(self):
         self.reporter.context_started(self.fake_context)
@@ -27,17 +27,17 @@ class WhenWatchingForDots(object):
         self.second = self.stringio.getvalue()
 
         self.reporter.assertion_started(self.fake_assertion)
-        self.reporter.assertion_failed(self.fake_assertion, test_doubles.FakeException())
+        self.reporter.assertion_failed(self.fake_assertion, tools.FakeException())
         self.third = self.stringio.getvalue()
 
         self.reporter.assertion_started(self.fake_assertion)
-        self.reporter.assertion_errored(self.fake_assertion, test_doubles.FakeException())
+        self.reporter.assertion_errored(self.fake_assertion, tools.FakeException())
         self.fourth = self.stringio.getvalue()
 
-        self.reporter.context_errored(self.fake_context, test_doubles.FakeException())
+        self.reporter.context_errored(self.fake_context, tools.FakeException())
         self.fifth = self.stringio.getvalue()
 
-        self.reporter.unexpected_error(test_doubles.FakeException())
+        self.reporter.unexpected_error(tools.FakeException())
         self.sixth = self.stringio.getvalue()
 
     def it_should_print_a_dot_for_the_first_pass(self):
@@ -67,17 +67,17 @@ class WhenPrintingASuccessfulReport(object):
     def because_we_run_some_tests(self):
         self.reporter.suite_started(None)
 
-        self.reporter.context_started(contexts.core.Context([],[],[],[],None,""))
-        self.reporter.assertion_started(contexts.core.Assertion(None, ""))
-        self.reporter.assertion_passed(contexts.core.Assertion(None, ""))
-        self.reporter.assertion_started(contexts.core.Assertion(None, ""))
-        self.reporter.assertion_passed(contexts.core.Assertion(None, ""))
-        self.reporter.context_ended(contexts.core.Context([],[],[],[],None,""))
+        self.reporter.context_started(tools.create_context(""))
+        self.reporter.assertion_started(tools.create_assertion(""))
+        self.reporter.assertion_passed(tools.create_assertion(""))
+        self.reporter.assertion_started(tools.create_assertion(""))
+        self.reporter.assertion_passed(tools.create_assertion(""))
+        self.reporter.context_ended(tools.create_context(""))
 
-        self.reporter.context_started(contexts.core.Context([],[],[],[],None,""))
-        self.reporter.assertion_started(contexts.core.Assertion(None, ""))
-        self.reporter.assertion_passed(contexts.core.Assertion(None, ""))
-        self.reporter.context_ended(contexts.core.Context([],[],[],[],None,""))
+        self.reporter.context_started(tools.create_context(""))
+        self.reporter.assertion_started(tools.create_assertion(""))
+        self.reporter.assertion_passed(tools.create_assertion(""))
+        self.reporter.context_ended(tools.create_context(""))
 
         self.reporter.stream = self.stringio
         self.reporter.suite_ended(None)
@@ -95,28 +95,28 @@ class WhenPrintingAFailureReport(object):
         self.reporter = reporting.SummarisingReporter(StringIO())
         self.stringio = StringIO()
 
-        self.context1 = contexts.core.Context([],[],[],[],None, "made.up_context_1")
+        self.context1 = tools.create_context("made.up_context_1")
 
-        self.assertion1 = contexts.core.Assertion(None, "made.up.assertion_1")
+        self.assertion1 = tools.create_assertion("made.up.assertion_1")
         tb1 = [('made_up_file.py', 3, 'made_up_function', 'frame1'),
                ('another_made_up_file.py', 2, 'another_made_up_function', 'frame2')]
-        self.exception1 = test_doubles.build_fake_exception(tb1, "Gotcha")
+        self.exception1 = tools.build_fake_exception(tb1, "Gotcha")
 
-        self.assertion2 = contexts.core.Assertion(None, "made.up.assertion_2")
+        self.assertion2 = tools.create_assertion("made.up.assertion_2")
         tb2 = [('made_up_file_3.py', 1, 'made_up_function_3', 'frame3'),
                ('made_up_file_4.py', 2, 'made_up_function_4', 'frame4')]
-        self.exception2 = test_doubles.build_fake_exception(tb2, "you fail")
+        self.exception2 = tools.build_fake_exception(tb2, "you fail")
 
-        self.assertion3 = contexts.core.Assertion(None, "made.up.assertion_3")
+        self.assertion3 = tools.create_assertion("made.up.assertion_3")
 
-        self.context2 = contexts.core.Context([],[],[],[],None,"made.up_context_2")
+        self.context2 = tools.create_context("made.up_context_2")
         tb3 = [('made_up_file_5.py', 1, 'made_up_function_5', 'frame5'),
                ('made_up_file_6.py', 2, 'made_up_function_6', 'frame6')]
-        self.exception3 = test_doubles.build_fake_exception(tb3, "oh dear")
+        self.exception3 = tools.build_fake_exception(tb3, "oh dear")
         
         tb4 = [('made_up_file_7.py', 1, 'made_up_function_7', 'frame7'),
                ('made_up_file_8.py', 2, 'made_up_function_8', 'frame8')]
-        self.exception4 = test_doubles.build_fake_exception(tb4, "oh dear")
+        self.exception4 = tools.build_fake_exception(tb4, "oh dear")
 
     def because_we_run_some_tests(self):
         self.reporter.suite_started(None)
@@ -133,8 +133,8 @@ class WhenPrintingAFailureReport(object):
         self.reporter.context_started(self.context2)
         self.reporter.context_errored(self.context2, self.exception3)
 
-        self.reporter.context_started(contexts.core.Context([],[],[],[],None, "made.up_context_3"))
-        self.reporter.context_ended(contexts.core.Context([],[],[],[],None, "made.up_context_3"))
+        self.reporter.context_started(tools.create_context("made.up_context_3"))
+        self.reporter.context_ended(tools.create_context("made.up_context_3"))
 
         self.reporter.unexpected_error(self.exception4)
 
@@ -151,27 +151,27 @@ made up context 1
         frame1
       File "another_made_up_file.py", line 2, in another_made_up_function
         frame2
-    test.test_doubles.FakeException: Gotcha
+    test.tools.FakeException: Gotcha
   FAIL: made up assertion 2
     Traceback (most recent call last):
       File "made_up_file_3.py", line 1, in made_up_function_3
         frame3
       File "made_up_file_4.py", line 2, in made_up_function_4
         frame4
-    test.test_doubles.FakeException: you fail
+    test.tools.FakeException: you fail
 made up context 2
   Traceback (most recent call last):
     File "made_up_file_5.py", line 1, in made_up_function_5
       frame5
     File "made_up_file_6.py", line 2, in made_up_function_6
       frame6
-  test.test_doubles.FakeException: oh dear
+  test.tools.FakeException: oh dear
 Traceback (most recent call last):
   File "made_up_file_7.py", line 1, in made_up_function_7
     frame7
   File "made_up_file_8.py", line 2, in made_up_function_8
     frame8
-test.test_doubles.FakeException: oh dear
+test.tools.FakeException: oh dear
 ----------------------------------------------------------------------
 FAILED!
 3 contexts, 3 assertions: 1 failed, 3 errors
@@ -184,8 +184,8 @@ class WhenCapturingStdOut(object):
         sys.stdout = self.fake_stdout = StringIO()
         sys.stderr = self.fake_stderr = StringIO()
 
-        self.fake_context = contexts.core.Context([],[],[],[],None,"context")
-        self.fake_assertion = contexts.core.Assertion(None, "assertion")
+        self.fake_context = tools.create_context("context")
+        self.fake_assertion = tools.create_assertion("assertion")
 
         self.stringio = StringIO()
         # we don't want the output to be cluttered up with dots
@@ -206,10 +206,10 @@ class WhenCapturingStdOut(object):
         print("failing context")
         self.reporter.assertion_started(self.fake_assertion)
         print("failing assertion")
-        self.reporter.assertion_failed(self.fake_assertion, test_doubles.FakeException())
+        self.reporter.assertion_failed(self.fake_assertion, tools.FakeException())
         self.reporter.assertion_started(self.fake_assertion)
         print("erroring assertion")
-        self.reporter.assertion_errored(self.fake_assertion, test_doubles.FakeException())
+        self.reporter.assertion_errored(self.fake_assertion, tools.FakeException())
         self.reporter.context_ended(self.fake_context)
 
         self.reporter.context_started(self.fake_context)
@@ -217,12 +217,12 @@ class WhenCapturingStdOut(object):
         self.reporter.assertion_started(self.fake_assertion)
         print("assertion in erroring context")
         self.reporter.assertion_passed(self.fake_assertion)
-        self.reporter.context_errored(self.fake_context, test_doubles.FakeException())
+        self.reporter.context_errored(self.fake_context, tools.FakeException())
 
         self.reporter.context_started(self.fake_context)
         self.reporter.assertion_started(self.fake_assertion)
         # don't print anything
-        self.reporter.assertion_failed(self.fake_assertion, test_doubles.FakeException())
+        self.reporter.assertion_failed(self.fake_assertion, tools.FakeException())
         self.reporter.context_ended(self.fake_context)
 
         self.reporter.stream = self.stringio
@@ -239,27 +239,27 @@ class WhenCapturingStdOut(object):
 ----------------------------------------------------------------------
 context
   FAIL: assertion
-    test.test_doubles.FakeException
+    test.tools.FakeException
     ------------------ >> begin captured stdout << -------------------
     failing context
     failing assertion
     ------------------- >> end captured stdout << --------------------
   ERROR: assertion
-    test.test_doubles.FakeException
+    test.tools.FakeException
     ------------------ >> begin captured stdout << -------------------
     failing context
     failing assertion
     erroring assertion
     ------------------- >> end captured stdout << --------------------
 context
-  test.test_doubles.FakeException
+  test.tools.FakeException
   ------------------- >> begin captured stdout << --------------------
   erroring context
   assertion in erroring context
   -------------------- >> end captured stdout << ---------------------
 context
   FAIL: assertion
-    test.test_doubles.FakeException
+    test.tools.FakeException
 ----------------------------------------------------------------------
 FAILED!
 4 contexts, 5 assertions: 2 failed, 2 errors
@@ -302,46 +302,46 @@ class WhenRunningInTeamCity(object):
 
         tb1 = [('made_up_file.py', 3, 'made_up_function', 'frame1'),
                ('another_made_up_file.py', 2, 'another_made_up_function', 'frame2')]
-        self.exception1 = test_doubles.build_fake_exception(tb1, "Gotcha")
+        self.exception1 = tools.build_fake_exception(tb1, "Gotcha")
         self.formatted_tb1 = (
 'Traceback (most recent call last):|n'
 '  File "made_up_file.py", line 3, in made_up_function|n'
 '    frame1|n'
 '  File "another_made_up_file.py", line 2, in another_made_up_function|n'
 '    frame2|n'
-'test.test_doubles.FakeException: Gotcha')
+'test.tools.FakeException: Gotcha')
 
         tb2 = [('made_up_file_3.py', 1, 'made_up_function_3', 'frame3'),
                ('made_up_file_4.py', 2, 'made_up_function_4', 'frame4')]
-        self.exception2 = test_doubles.build_fake_exception(tb2, "you fail")
+        self.exception2 = tools.build_fake_exception(tb2, "you fail")
         self.formatted_tb2 = (
 'Traceback (most recent call last):|n'
 '  File "made_up_file_3.py", line 1, in made_up_function_3|n'
 '    frame3|n'
 '  File "made_up_file_4.py", line 2, in made_up_function_4|n'
 '    frame4|n'
-'test.test_doubles.FakeException: you fail')
+'test.tools.FakeException: you fail')
 
         tb3 = [('made_up_file_5.py', 1, 'made_up_function_5', 'frame5'),
                ('made_up_file_6.py', 2, 'made_up_function_6', 'frame6')]
-        self.exception3 = test_doubles.build_fake_exception(tb3, "oh dear")
+        self.exception3 = tools.build_fake_exception(tb3, "oh dear")
         self.formatted_tb3 = (
 'Traceback (most recent call last):|n'
 '  File "made_up_file_5.py", line 1, in made_up_function_5|n'
 '    frame5|n'
 '  File "made_up_file_6.py", line 2, in made_up_function_6|n'
 '    frame6|n'
-'test.test_doubles.FakeException: oh dear')
+'test.tools.FakeException: oh dear')
         tb4 = [('made_up_file_7.py', 1, 'made_up_function_7', 'frame7'),
                ('made_up_file_8.py', 2, 'made_up_function_8', 'frame8')]
-        self.exception4 = test_doubles.build_fake_exception(tb4, "oh dear")
+        self.exception4 = tools.build_fake_exception(tb4, "oh dear")
         self.formatted_tb4 = (
 'Traceback (most recent call last):|n'
 '  File "made_up_file_7.py", line 1, in made_up_function_7|n'
 '    frame7|n'
 '  File "made_up_file_8.py", line 2, in made_up_function_8|n'
 '    frame8|n'
-'test.test_doubles.FakeException: oh dear')
+'test.tools.FakeException: oh dear')
 
         self.outputs = []
 
@@ -349,29 +349,29 @@ class WhenRunningInTeamCity(object):
         self.reporter.suite_started(None)
         self.outputs.append(self.stringio.getvalue())
 
-        self.reporter.context_started(contexts.core.Context([],[],[],[],None,"FakeContext"))
+        self.reporter.context_started(tools.create_context("FakeContext"))
 
-        self.reporter.assertion_started(contexts.core.Assertion(None, "FakeAssertion1"))
+        self.reporter.assertion_started(tools.create_assertion("FakeAssertion1"))
         self.outputs.append(self.stringio.getvalue())
-        self.reporter.assertion_passed(contexts.core.Assertion(None, "FakeAssertion1"))
-        self.outputs.append(self.stringio.getvalue())
-
-        self.reporter.assertion_started(contexts.core.Assertion(None, "FakeAssertion2"))
-        self.outputs.append(self.stringio.getvalue())
-        self.reporter.assertion_passed(contexts.core.Assertion(None, "FakeAssertion2"))
+        self.reporter.assertion_passed(tools.create_assertion("FakeAssertion1"))
         self.outputs.append(self.stringio.getvalue())
 
-        self.reporter.assertion_started(contexts.core.Assertion(None, "FakeAssertion3"))
+        self.reporter.assertion_started(tools.create_assertion("FakeAssertion2"))
         self.outputs.append(self.stringio.getvalue())
-        self.reporter.assertion_failed(contexts.core.Assertion(None, "FakeAssertion3"), self.exception1)
-        self.outputs.append(self.stringio.getvalue())
-
-        self.reporter.assertion_started(contexts.core.Assertion(None, "FakeAssertion4"))
-        self.outputs.append(self.stringio.getvalue())
-        self.reporter.assertion_errored(contexts.core.Assertion(None, "FakeAssertion4"), self.exception2)
+        self.reporter.assertion_passed(tools.create_assertion("FakeAssertion2"))
         self.outputs.append(self.stringio.getvalue())
 
-        self.reporter.context_errored(contexts.core.Context([],[],[],[],None,"FakeContext"), self.exception3)
+        self.reporter.assertion_started(tools.create_assertion("FakeAssertion3"))
+        self.outputs.append(self.stringio.getvalue())
+        self.reporter.assertion_failed(tools.create_assertion("FakeAssertion3"), self.exception1)
+        self.outputs.append(self.stringio.getvalue())
+
+        self.reporter.assertion_started(tools.create_assertion("FakeAssertion4"))
+        self.outputs.append(self.stringio.getvalue())
+        self.reporter.assertion_errored(tools.create_assertion("FakeAssertion4"), self.exception2)
+        self.outputs.append(self.stringio.getvalue())
+
+        self.reporter.context_errored(tools.create_context("FakeContext"), self.exception3)
         self.outputs.append(self.stringio.getvalue())
 
         self.reporter.unexpected_error(self.exception4)
@@ -475,8 +475,8 @@ class WhenMakingANameHumanReadable(object):
         yield "BMW4Series", "BMW 4 series"
         yield "lowerAtStart", "lower at start"
         yield "has.dots.in.the.name", "has dots in the name"
-        yield "Does.EverythingAT_once.TOBe100Percent_Certain", "Does everything AT once TO be 100 percent certain"
         yield "CamelCaseWithASingleLetterWord", "Camel case with a single letter word"
+        yield "Does.EverythingAT_once.TOBe100Percent_Certain", "Does everything AT once TO be 100 percent certain"
 
     def context(self, example):
         self.input, self.expected = example

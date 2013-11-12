@@ -1,3 +1,5 @@
+import contexts
+
 class MockReporter(object):
     # unittest.mock doesn't make it particularly easy to get hold of the
     # object a mock was called with. It was quicker just to write this myself.
@@ -108,3 +110,15 @@ def build_fake_exception(tb_list, *args):
 
     tb = FakeTraceback(frames, line_nums)
     return exc.with_traceback(tb)
+
+
+def create_context(name):
+    instance = type(name, (), {})()
+    instance._contexts_test_data = None
+    return contexts.core.Context(instance)
+
+
+def create_assertion(name):
+    f = lambda: None
+    f.__name__ = name
+    return contexts.core.Assertion(f)

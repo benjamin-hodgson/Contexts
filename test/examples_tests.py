@@ -1,7 +1,7 @@
 import types
 import sure
 import contexts
-from .test_doubles import MockReporter
+from .tools import MockReporter
 
 class WhenRunningAParametrisedSpec(object):
     def given_a_parametrised_test(self):

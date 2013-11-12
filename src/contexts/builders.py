@@ -17,9 +17,9 @@ def build_suite(spec):
     build_suite(package_path:string) - return a suite composed of all the test files in the package
     """
     if isinstance(spec, types.ModuleType):
-        return build_suite_from_module(spec)
+        return Suite(spec)
     elif isinstance(spec, str) and os.path.isfile(spec):
-        return build_suite_from_file_path(spec)
+        return Suite(spec)
     elif isinstance(spec, str) and os.path.isdir(spec):
         return build_suite_from_directory_path(spec)
     elif isinstance(spec, type):
@@ -28,17 +28,7 @@ def build_suite(spec):
 
 def build_suite_from_directory_path(dir_path):
     modules = discovery.import_from_directory(dir_path)
-    finder = finders.ClassFinder()
-    classes = finder.find_specs_in_modules(modules)
-    return Suite(classes)
-
-
-def build_suite_from_file_path(filepath):
-    module = discovery.import_from_file(filepath)
-    return build_suite_from_module(module)
-
-
-def build_suite_from_module(module):
-    finder = finders.ClassFinder()
-    classes = finder.find_specs_in_module(module)
+    classes = []
+    for module in modules:
+        classes.extend(finders.find_specs_in_module(module))
     return Suite(classes)
