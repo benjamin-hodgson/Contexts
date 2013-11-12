@@ -8,19 +8,29 @@ from . import reporting
 def cmd():
     parser = argparse.ArgumentParser()
     parser.add_argument('-s', '--no-capture',
-    	action='store_const',
-    	dest='reporter',
-    	const=reporting.NonCapturingCLIReporter(),
-    	default=reporting.CapturingCLIReporter())
+    	action='store_false',
+    	dest='capture',
+    	default=True)
     parser.add_argument('path',
         action='store',
         nargs='?',
         default=os.getcwd())
+    parser.add_argument('--teamcity',
+        action='store_true',
+        dest='teamcity',
+        default=False)
     args = parser.parse_args()
 
-    _run_impl(os.path.realpath(args.path), args.reporter)
+    if args.teamcity:
+        reporter = reporting.TeamCityReporter()
+    elif args.capture:
+        reporter = reporting.CapturingCLIReporter()
+    else:
+        reporter = reporting.NonCapturingCLIReporter()
 
-    if args.reporter.failed:
+    _run_impl(os.path.realpath(args.path), reporter)
+
+    if reporter.failed:
         sys.exit(1)
     sys.exit(0)
 
