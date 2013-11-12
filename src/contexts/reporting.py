@@ -325,6 +325,17 @@ class TeamCityReporter(StreamReporter, SimpleReporter):
         msg2 = self.teamcity_format("##teamcity[testFinished name='{}']", self.context_name_prefix + assertion_vm.name)
         self._print(msg2)
 
+    def unexpected_error(self, exception):
+        super().unexpected_error(exception)
+        self.context_name_prefix = ''
+        context_vm = self.current_context
+        msg1 = self.teamcity_format("##teamcity[testStarted name='Test error']")
+        self._print(msg1)
+        msg2 = self.teamcity_format("##teamcity[testFailed name='Test error' message='{}' details='{}']", str(exception), '\n'.join(self.unexpected_errors[-1]))
+        self._print(msg2)
+        msg3 = self.teamcity_format("##teamcity[testFinished name='Test error']")
+        self._print(msg3)
+
     @classmethod
     def teamcity_format(cls, format_string, *args):
         strings = [cls.teamcity_escape(arg) for arg in args]

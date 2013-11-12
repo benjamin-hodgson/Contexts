@@ -332,6 +332,16 @@ class WhenRunningInTeamCity(object):
 '  File "made_up_file_6.py", line 2, in made_up_function_6|n'
 '    frame6|n'
 'test.test_doubles.FakeException: oh dear')
+        tb4 = [('made_up_file_7.py', 1, 'made_up_function_7', 'frame7'),
+               ('made_up_file_8.py', 2, 'made_up_function_8', 'frame8')]
+        self.exception4 = test_doubles.build_fake_exception(tb4, "oh dear")
+        self.formatted_tb4 = (
+'Traceback (most recent call last):|n'
+'  File "made_up_file_7.py", line 1, in made_up_function_7|n'
+'    frame7|n'
+'  File "made_up_file_8.py", line 2, in made_up_function_8|n'
+'    frame8|n'
+'test.test_doubles.FakeException: oh dear')
 
         self.outputs = []
 
@@ -364,11 +374,14 @@ class WhenRunningInTeamCity(object):
         self.reporter.context_errored(contexts.core.Context([],[],[],[],None,"FakeContext"), self.exception3)
         self.outputs.append(self.stringio.getvalue())
 
+        self.reporter.unexpected_error(self.exception4)
+        self.outputs.append(self.stringio.getvalue())
+
         self.reporter.suite_ended(None)
         self.outputs.append(self.stringio.getvalue())
 
     def it_should_call_escape_for_every_object_it_formats(self):
-        self.mock_escape.mock_calls.should.have.length_of(21)
+        self.mock_escape.mock_calls.should.have.length_of(23)
 
     # TODO: use the full __qualname__ for the names
     def it_should_tell_team_city_it_started(self):
@@ -421,10 +434,17 @@ class WhenRunningInTeamCity(object):
     def it_should_not_report_anything_else_following_ctx_error(self):
         self.get_output.when.called_with(9,14).should.throw(IndexError)
 
+    def it_should_tell_team_city_another_test_started_and_failed_for_the_unexpected_error(self):
+        self.get_output(10,14).should.equal("##teamcity[testStarted name='Test error']")
+        self.get_output(10,15).should.equal("##teamcity[testFailed name='Test error' message='oh dear' details='{}']".format(self.formatted_tb4))
+        self.get_output(10,16).should.equal("##teamcity[testFinished name='Test error']")
+    def it_should_not_report_anything_else_following_unexpected_error(self):
+        self.get_output.when.called_with(10,17).should.throw(IndexError)
+
     def it_should_tell_team_city_the_suite_ended(self):
-        self.get_output(10, 14).should.equal("##teamcity[testSuiteFinished name='contexts']")
+        self.get_output(11, 17).should.equal("##teamcity[testSuiteFinished name='contexts']")
     def it_should_not_report_anything_else_at_suite_end(self):
-        self.get_output.when.called_with(10,15).should.throw(IndexError)
+        self.get_output.when.called_with(11,18).should.throw(IndexError)
 
     def cleanup_the_mock(self):
         reporting.TeamCityReporter.teamcity_escape = self.mock_escape.return_value
