@@ -21,7 +21,7 @@ def cmd():
         default=False)
     args = parser.parse_args()
 
-    if args.teamcity:
+    if args.teamcity or "TEAMCITY_VERSION" in os.environ:
         reporter = reporting.TeamCityReporter()
     elif args.capture:
         reporter = reporting.CapturingCLIReporter()
