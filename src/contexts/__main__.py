@@ -11,14 +11,14 @@ def cmd():
     	action='store_false',
     	dest='capture',
     	default=True)
-    parser.add_argument('path',
-        action='store',
-        nargs='?',
-        default=os.getcwd())
     parser.add_argument('--teamcity',
         action='store_true',
         dest='teamcity',
         default=False)
+    parser.add_argument('path',
+        action='store',
+        nargs='?',
+        default=os.getcwd())
     args = parser.parse_args()
 
     if args.teamcity or "TEAMCITY_VERSION" in os.environ:
