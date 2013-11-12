@@ -76,6 +76,11 @@ class Suite(object):
                 classes = finders.find_specs_in_module(module)
             elif isinstance(self.source, types.ModuleType):
                 classes = finders.find_specs_in_module(self.source)
+            elif isinstance(self.source, str) and os.path.isdir(self.source):
+                modules = discovery.import_from_directory(self.source)
+                classes = []
+                for module in modules:
+                    classes.extend(finders.find_specs_in_module(module))
             else:
                 classes = list(self.source)
             for cls in classes:

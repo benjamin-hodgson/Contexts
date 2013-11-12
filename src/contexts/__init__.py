@@ -1,5 +1,4 @@
 import sys
-from . import builders
 from . import reporting
 from . import core
 
@@ -21,11 +20,11 @@ def run(spec=None, reporter=None):
     """
     Polymorphic test-running function.
 
-    build_suite(class) - run the test class
-    build_suite(module) - run all the test classes in the module
-    build_suite(file_path:string) - run all the test classes found in the file
-    build_suite(folder_path:string) - run all the test classes found in the folder and subfolders
-    build_suite(package_path:string) - run all the test classes found in the package and subfolders
+    run(class) - run the test class
+    run(module) - run all the test classes in the module
+    run(file_path:string) - run all the test classes found in the file
+    run(folder_path:string) - run all the test classes found in the folder and subfolders
+    run(package_path:string) - run all the test classes found in the package and subfolders
     """
     if reporter is None:
         reporter = reporting.CapturingCLIReporter()
@@ -39,7 +38,10 @@ def run(spec=None, reporter=None):
 
 def _run_impl(spec, reporter):
     notifier = core.ReporterNotifier(reporter)
-    suite = builders.build_suite(spec)
+    if isinstance(spec, type):
+        suite = core.Suite([spec])
+    else:
+        suite = core.Suite(spec)
     suite.run(notifier)
 
 
