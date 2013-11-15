@@ -1,4 +1,5 @@
 import datetime
+import random
 import sys
 from io import StringIO
 from unittest import mock
@@ -625,11 +626,28 @@ class WhenAnUnexpectedErrorOccursInTeamCity(TeamCitySharedContext):
         self.get_output(2).should.have.length_of(1)
 
 class WhenEscapingForTeamCity(object):
-    def because_we_escape_a_string(self):
+    @classmethod
+    def examples(self):
+        yield "'", "|'"
+        yield '\n', "|n"
+        yield '\r', "|r"
+        yield '|', "||"
+        yield '[', '|['
+        yield ']', '|]'
+        yield '\u0041', 'A'  # should not escape normal ascii
+        yield '\u007e', '~'
+        yield '\u00df', '|0x00df'  # ß
+        yield '\u2f08', '|0x2f08'  # ⼈
+
+    def context(self, example):
+        self.input, self.expected = example
+
+    def because_we_escape_the_char(self):
         # unicode replacement not supported yet
-        self.reporter = reporting.TeamCityReporter.teamcity_escape("'\n\r|[]")
+        self.reporter = reporting.TeamCityReporter.teamcity_escape(self.input)
+
     def it_should_escape_the_chars_correctly(self):
-        self.reporter.should.equal("|'|n|r|||[|]")
+        self.reporter.should.equal(self.expected)
 
 
 class WhenMakingANameHumanReadable(object):

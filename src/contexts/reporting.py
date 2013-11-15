@@ -355,7 +355,20 @@ class TeamCityReporter(StreamReporter, SimpleReporter):
 
     @classmethod
     def teamcity_escape(cls, string):
-        return string.replace("|", "||").replace('\n', '|n').replace("'", "|'").replace("\r", "|r").replace("[", "|[").replace("]", "|]")
+        return ''.join([cls.escape(char) for char in string])
+
+    @classmethod
+    def escape(cls, char):
+        if char == '\n':
+            return '|n'
+        if char == '\r':
+            return '|r'
+        if char in "'[]|":
+            return '|' + char
+        ordinal = ord(char)
+        if ordinal >= 128:
+            return '|0x{:04x}'.format(ordinal)
+        return char
 
     def output_buffers(self, name):
         if self.stdout_buffer.getvalue():
