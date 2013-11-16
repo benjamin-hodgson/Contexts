@@ -1,11 +1,10 @@
 Contexts
 ========
 [![Build Status](https://travis-ci.org/benjamin-hodgson/Contexts.png?branch=master)](https://travis-ci.org/benjamin-hodgson/Contexts)
+[![Trello board](http://misfitgeek.com/static/trello.png)](https://trello.com/b/uPgp50AF/contexts-development)
 
 Dead simple descriptive testing for Python. No custom decorators, no context managers,
 no `.feature` files, no fuss.
-
-Trello board: https://trello.com/b/uPgp50AF/contexts-development
 
 Cheese Shop: https://pypi.python.org/pypi/Contexts
 
