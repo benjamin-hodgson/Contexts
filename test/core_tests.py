@@ -470,6 +470,30 @@ class WhenRunningSpecsWithTooManySpecialMethods(object):
     def it_should_finish_the_suite(self):
         self.reporter.calls[-1][0].should.equal("suite_ended")
 
+class WhenRunningAClassContainingNoAssertions(object):
+    def context(self):
+        class NoAssertions(object):
+            log = []
+            def context(self):
+                self.__class__.log.append('arrange')
+            def because(self):
+                self.__class__.log.append('act')
+            def cleanup(self):
+                self.__class__.log.append('teardown')
+        self.spec = NoAssertions
+        self.reporter = MockReporter()
+
+    def because_we_run_the_spec(self):
+        contexts.run(self.spec, self.reporter)
+
+    def it_should_not_run_any_assertions(self):
+        self.spec.log.should.be.empty
+
+    def it_should_call_suite_started(self):
+        self.reporter.calls[0][0].should.equal('suite_started')
+
+    def then_it_should_call_suite_ended(self):
+        self.reporter.calls[1][0].should.equal('suite_ended')
 
 if __name__ == "__main__":
     contexts.main()

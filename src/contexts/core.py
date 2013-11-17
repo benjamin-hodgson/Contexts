@@ -83,6 +83,8 @@ class Context(object):
             run_with_test_data(teardown, self.example)
 
     def run(self, reporter_notifier):
+        if not self.assertions:
+            return
         with reporter_notifier.run_context(self):
             try:
                 self.run_setup()
