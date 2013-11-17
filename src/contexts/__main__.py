@@ -27,9 +27,15 @@ def cmd():
     if args.teamcity or "TEAMCITY_VERSION" in os.environ:
         reporter = reporting.TeamCityReporter()
     elif args.capture:
-        reporter = reporting.CapturingCLIReporter()
+        reporter = type(
+            "CapturingCLIReporter",
+            (reporting.DotsReporter, reporting.TimedReporter, reporting.StdOutCapturingReporter),
+            {})()
     else:
-        reporter = reporting.NonCapturingCLIReporter()
+        reporter = type(
+            "NonCapturingCLIReporter",
+            (reporting.DotsReporter, reporting.TimedReporter, reporting.SummarisingReporter),
+            {})()
 
     _run_impl(os.path.realpath(args.path), reporter)
 

@@ -390,14 +390,6 @@ class TimedReporter(StreamReporter):
         self._print("({} seconds)".format(rounded))
 
 
-class NonCapturingCLIReporter(DotsReporter, TimedReporter, SummarisingReporter):
-    pass
-
-
-class CapturingCLIReporter(NonCapturingCLIReporter, StdOutCapturingReporter):
-    pass
-
-
 def pluralise(noun, num):
     string = str(num) + ' ' + noun
     if num != 1:
