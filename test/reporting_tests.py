@@ -1,5 +1,4 @@
 import datetime
-import random
 import sys
 from io import StringIO
 from unittest import mock
@@ -673,7 +672,8 @@ class WhenMakingANameHumanReadable(object):
         self.input, self.expected = example
 
     def because_we_make_the_string_readable(self):
-        self.reporter = reporting.make_readable(self.input)
+                                  # FIXME
+        self.reporter = reporting.view_models.make_readable(self.input)
 
     def it_should_return_a_string_with_appropriate_spaces(self, example):
         self.reporter.should.equal(self.expected)
