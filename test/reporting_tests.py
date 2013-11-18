@@ -11,7 +11,7 @@ from . import tools
 class WhenWatchingForDots(object):
     def context(self):
         self.stringio = StringIO()
-        self.reporter = reporting.DotsReporter(self.stringio)
+        self.reporter = reporting.cli.DotsReporter(self.stringio)
         self.fake_context = tools.create_context("context")
         self.fake_assertion = tools.create_assertion("assertion")
 
@@ -58,11 +58,12 @@ class WhenWatchingForDots(object):
     def it_should_print_an_E_for_the_unexpected_error(self):
         self.sixth.should.equal('..FEEE')
 
+
 class WhenPrintingASuccessfulReport(object):
     def in_the_context_of_a_successful_run(self):
         # We don't want it to try and print anything while we set it up
         self.stringio = StringIO()
-        self.reporter = reporting.SummarisingReporter(StringIO())
+        self.reporter = reporting.cli.SummarisingReporter(StringIO())
 
     def because_we_run_some_tests(self):
         self.reporter.suite_started(None)
@@ -90,9 +91,10 @@ PASSED!
 2 contexts, 3 assertions
 """)
 
+
 class WhenPrintingAFailureReport(object):
     def in_the_context_of_a_failed_run(self):
-        self.reporter = reporting.SummarisingReporter(StringIO())
+        self.reporter = reporting.cli.SummarisingReporter(StringIO())
         self.stringio = StringIO()
 
         self.context1 = tools.create_context("made.up_context_1")
@@ -177,6 +179,7 @@ FAILED!
 3 contexts, 3 assertions: 1 failed, 3 errors
 """)
 
+
 class WhenCapturingStdOut(object):
     def context(self):
         self.real_stdout = sys.stdout
@@ -189,7 +192,7 @@ class WhenCapturingStdOut(object):
 
         self.stringio = StringIO()
         # we don't want the output to be cluttered up with dots
-        self.reporter = reporting.StdOutCapturingReporter(StringIO())
+        self.reporter = reporting.cli.StdOutCapturingReporter(StringIO())
 
     def because_we_print_some_stuff(self):
         self.reporter.suite_started(None)
@@ -269,6 +272,7 @@ FAILED!
         sys.stdout = self.real_stdout
         sys.stderr = self.real_stderr
 
+
 class WhenTimingATestRun(object):
     def context(self):
         self.fake_now = datetime.datetime(2013, 10, 22, 13, 41, 0)
@@ -279,7 +283,7 @@ class WhenTimingATestRun(object):
         self.FakeDateTime = FakeDateTime
 
         self.stringio = StringIO()
-        self.reporter = reporting.TimedReporter(self.stringio)
+        self.reporter = reporting.cli.TimedReporter(self.stringio)
 
     def because_we_run_a_suite(self):
         with mock.patch('datetime.datetime', self.FakeDateTime):
@@ -294,7 +298,7 @@ class WhenTimingATestRun(object):
 class TeamCitySharedContext(object):
     def shared_context(self):
         self.stringio = StringIO()
-        self.reporter = reporting.TeamCityReporter(self.stringio)
+        self.reporter = reporting.teamcity.TeamCityReporter(self.stringio)
         self.outputs = []
 
     def get_output(self, n):
@@ -390,6 +394,7 @@ class WhenATestRunPassesInTeamCity(TeamCitySharedContext):
     def cleanup_stdout_and_stderr(self):
         sys.stdout, sys.stderr = self.real_stdout, self.real_stderr
 
+
 class WhenAnAssertionFailsInTeamCity(TeamCitySharedContext):
     def establish_that_we_are_spying_on_stdout_and_stderr(self):
         self.real_stdout, self.real_stderr = sys.stdout, sys.stderr
@@ -455,6 +460,7 @@ class WhenAnAssertionFailsInTeamCity(TeamCitySharedContext):
 
     def cleanup_stdout_and_stderr(self):
         sys.stdout, sys.stderr = self.real_stdout, self.real_stderr
+
 
 class WhenAnAssertionErrorsInTeamCity(TeamCitySharedContext):
     def establish_that_we_are_spying_on_stdout_and_stderr(self):
@@ -522,6 +528,7 @@ class WhenAnAssertionErrorsInTeamCity(TeamCitySharedContext):
     def cleanup_stdout_and_stderr(self):
         sys.stdout, sys.stderr = self.real_stdout, self.real_stderr
 
+
 class WhenAContextErrorsInTeamCity(TeamCitySharedContext):
     def establish_that_we_are_spying_on_stdout_and_stderr(self):
         self.real_stdout, self.real_stderr = sys.stdout, sys.stderr
@@ -581,6 +588,7 @@ class WhenAContextErrorsInTeamCity(TeamCitySharedContext):
     def cleanup_stdout_and_stderr(self):
         sys.stdout, sys.stderr = self.real_stdout, self.real_stderr
 
+
 class WhenAnUnexpectedErrorOccursInTeamCity(TeamCitySharedContext):
     def establish_the_exception(self):
         tb = [('made_up_file_7.py', 1, 'made_up_function_7', 'frame7'),
@@ -624,6 +632,7 @@ class WhenAnUnexpectedErrorOccursInTeamCity(TeamCitySharedContext):
     def it_should_not_report_anything_else_at_suite_end(self):
         self.get_output(2).should.have.length_of(1)
 
+
 class WhenEscapingForTeamCity(object):
     @classmethod
     def examples(self):
@@ -643,7 +652,7 @@ class WhenEscapingForTeamCity(object):
 
     def because_we_escape_the_char(self):
         # unicode replacement not supported yet
-        self.reporter = reporting.TeamCityReporter.teamcity_escape(self.input)
+        self.reporter = reporting.teamcity.escape(self.input)
 
     def it_should_escape_the_chars_correctly(self):
         self.reporter.should.equal(self.expected)

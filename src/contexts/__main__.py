@@ -2,7 +2,7 @@ import argparse
 import os
 import sys
 from . import _run_impl
-from . import reporting
+from .reporting import cli, teamcity
 
 
 def cmd():
@@ -25,16 +25,16 @@ def cmd():
     args = parser.parse_args()
 
     if args.teamcity or "TEAMCITY_VERSION" in os.environ:
-        reporter = reporting.TeamCityReporter()
+        reporter = teamcity.TeamCityReporter()
     elif args.capture:
         reporter = type(
             "CapturingCLIReporter",
-            (reporting.DotsReporter, reporting.TimedReporter, reporting.StdOutCapturingReporter),
+            (cli.DotsReporter, cli.TimedReporter, cli.StdOutCapturingReporter),
             {})()
     else:
         reporter = type(
             "NonCapturingCLIReporter",
-            (reporting.DotsReporter, reporting.TimedReporter, reporting.SummarisingReporter),
+            (cli.DotsReporter, cli.TimedReporter, cli.SummarisingReporter),
             {})()
 
     _run_impl(os.path.realpath(args.path), reporter)

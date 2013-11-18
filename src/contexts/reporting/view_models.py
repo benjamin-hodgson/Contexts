@@ -19,6 +19,7 @@ class ContextViewModel(object):
     def exception(self, value):
         self._exception = value
         self.error_summary = format_exception(value)
+
     @property
     def last_assertion(self):
         return self.assertions[-1]
