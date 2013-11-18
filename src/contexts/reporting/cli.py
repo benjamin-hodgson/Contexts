@@ -122,11 +122,9 @@ class SummarisingReporter(shared.SimpleReporter, shared.StreamReporter):
             self._print(self.success_numbers())
 
     def success_numbers(self):
-        num_ctx = len(self.view_models)
-        num_ass = len(self.assertions)
         return "{}, {}".format(
-            pluralise("context", num_ctx),
-            pluralise("assertion", num_ass))
+            pluralise("context", len(self.view_models)),
+            pluralise("assertion", len(self.assertions)))
 
     def failure_numbers(self):
         return "{}, {}: {} failed, {}".format(
@@ -134,13 +132,6 @@ class SummarisingReporter(shared.SimpleReporter, shared.StreamReporter):
             pluralise("assertion", len(self.assertions)),
             len(self.assertion_failures),
             pluralise("error", len(self.assertion_errors) + len(self.context_errors) + len(self.unexpected_errors)))
-
-
-def pluralise(noun, num):
-    string = str(num) + ' ' + noun
-    if num != 1:
-        string += 's'
-    return string
 
 
 class StdOutCapturingReporter(SummarisingReporter):
@@ -192,3 +183,10 @@ class TimedReporter(shared.StreamReporter):
         total_secs = (self.end_time - self.start_time).total_seconds()
         rounded = round(total_secs, 1)
         self._print("({} seconds)".format(rounded))
+
+
+def pluralise(noun, num):
+    string = str(num) + ' ' + noun
+    if num != 1:
+        string += 's'
+    return string

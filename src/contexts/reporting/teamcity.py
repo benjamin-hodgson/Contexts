@@ -1,6 +1,7 @@
 import sys
 from io import StringIO
-from . import shared, view_models
+from . import shared
+
 
 class TeamCityReporter(shared.StreamReporter, shared.SimpleReporter):
     def suite_started(self, suite):
@@ -34,7 +35,7 @@ class TeamCityReporter(shared.StreamReporter, shared.SimpleReporter):
 
     def assertion_started(self, assertion):
         super().assertion_started(assertion)
-        assertion_name = view_models.make_readable(assertion.name)
+        assertion_name = shared.make_readable(assertion.name)
         self.teamcity_print("testStarted", name=self.context_name_prefix+assertion_name)
 
     def assertion_passed(self, assertion):
