@@ -6,7 +6,7 @@ Contexts
 Dead simple descriptive testing for Python. No custom decorators, no context managers,
 no `.feature` files, no fuss.
 
-Cheese Shop: https://pypi.python.org/pypi/Contexts
+-----------------------------
 
 Contexts is a 'Context-Specification'-style test framework for Python, inspired by C#'s
 [`Machine.Specifications`](https://github.com/machine/machine.specifications).
@@ -18,12 +18,12 @@ in sequence based on their names.
 
 Installation
 ------------
-The easy way:
+Contexts is on [the Cheese Shop](https://pypi.python.org/pypi/Contexts), so you can install it the easy way:
 ```
 pip install contexts
 ```
 
-The geeky way:
+If you want the bleeding-edge version, you can install it the geeky way:
 ```
 git clone https://github.com/benjamin-hodgson/Contexts.git
 cd Contexts
