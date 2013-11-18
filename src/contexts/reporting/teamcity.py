@@ -7,6 +7,7 @@ class TeamCityReporter(shared.StreamReporter, shared.SimpleReporter):
     def suite_started(self, suite):
         super().suite_started(suite)
         self.teamcity_print("testSuiteStarted", name="contexts")
+
     def suite_ended(self, suite):
         super().suite_ended(suite)
         self.teamcity_print("testSuiteFinished", name="contexts")

@@ -3,6 +3,7 @@ import sure
 import contexts
 from .tools import MockReporter
 
+
 class WhenRunningAParametrisedSpec(object):
     def given_a_parametrised_test(self):
         class ParametrisedSpec(object):
@@ -55,6 +56,7 @@ class WhenRunningAParametrisedSpec(object):
     def it_should_run_the_teardown_twice(self):
         self.ParametrisedSpec.teardowns.should.equal([1,2])
 
+
 class WhenRunningAParametrisedSpecWithNonParametrisedMethods(object):
     def context(self):
         class ParametrisedSpec(object):
@@ -106,6 +108,7 @@ class WhenRunningAParametrisedSpecWithNonParametrisedMethods(object):
 
     def it_should_run_the_teardown_twice(self):
         self.ParametrisedSpec.teardowns.should.equal(2)
+
 
 class WhenRunningAModuleWithParametrisedSpecs(object):
     def context(self):
@@ -161,6 +164,7 @@ class WhenRunningAModuleWithParametrisedSpecs(object):
     def it_should_run_the_teardown_twice(self):
         self.ParametrisedSpec.teardowns.should.equal([1,2])
 
+
 class WhenExamplesRaisesAnException(object):
     def context(self):
         self.raised = Exception()
@@ -190,6 +194,7 @@ class WhenExamplesRaisesAnException(object):
     def it_should_pass_in_the_exception(self):
         self.reporter.calls[-2][1].should.equal(self.raised)
 
+
 class WhenUserFailsToMakeExamplesAClassmethod(object):
     def context(self):
         class Naughty(object):
@@ -212,6 +217,7 @@ class WhenUserFailsToMakeExamplesAClassmethod(object):
 
     def it_should_finish_the_suite(self):
         self.reporter.calls[-1][0].should.equal("suite_ended")
+
 
 class WhenExamplesReturnsNone(object):
     def context(self):

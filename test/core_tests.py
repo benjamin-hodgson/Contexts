@@ -91,7 +91,7 @@ class WhenRunningASpec(object):
     def it_should_not_make_any_more_calls(self):
         self.reporter.calls.should.have.length_of(10)
 
-# TODO: figure out how to make this work with Examples
+
 class WhenAContextErrors(object):
     def context(self):
         self.value_err = ValueError("explode")
@@ -168,6 +168,7 @@ class WhenAContextErrors(object):
     def it_should_pass_in_the_third_exception(self):
         self.reporters[2].calls[4][2].should.equal(self.assertion_err)
 
+
 class WhenCatchingAnException(object):
     def context(self):
         self.exception = ValueError("test exception")
@@ -199,6 +200,7 @@ class WhenCatchingAnException(object):
         call_names.should_not.contain("context_errored")
         call_names.should_not.contain("assertion_errored")
         call_names.should_not.contain("assertion_failed")
+
 
 class WhenASpecHasASuperclass(object):
     def context(self):
@@ -257,6 +259,7 @@ class WhenASpecHasASuperclass(object):
         calls = [call for call in self.reporter.calls if call[0] == "context_started"]
         calls.should.have.length_of(1)
 
+
 class WhenASpecHasClassmethods(object):
     def given_a_spec_with_classmethods(self):
         class ClassmethodsSpec(object):
@@ -281,6 +284,7 @@ class WhenASpecHasClassmethods(object):
     def it_should_run_the_classmethods(self):
         self.spec.log.should.equal("arrange act assert teardown ")
 
+
 class WhenASpecHasStaticmethods(object):
     def given_a_spec_with_staticmethods(self):
         self.log = ""
@@ -304,6 +308,7 @@ class WhenASpecHasStaticmethods(object):
 
     def it_should_run_the_staticmethods(self):
         self.log.should.equal("arrange act assert teardown ")
+
 
 class WhenWeRunSpecsWithAlternatelyNamedMethods(object):
     @classmethod
@@ -352,6 +357,7 @@ class WhenWeRunSpecsWithAlternatelyNamedMethods(object):
     def it_should_run_the_methods_in_the_correct_order(self):
         self.spec.log.should.equal(self.expected_log)
 
+
 class WhenRunningAmbiguouslyNamedMethods(object):
     @classmethod
     def examples(cls):
@@ -395,6 +401,7 @@ class WhenRunningAmbiguouslyNamedMethods(object):
     def it_should_finish_the_suite(self):
         self.reporter.calls[-1][0].should.equal("suite_ended")
 
+
 class WhenRunningNotSoAmbiguouslyNamedMethods(object):
     @classmethod
     def examples(self):
@@ -421,6 +428,7 @@ class WhenRunningNotSoAmbiguouslyNamedMethods(object):
 
     def it_should_not_raise_any_exceptions(self):
         self.exception.should.be.none
+
 
 class WhenRunningSpecsWithTooManySpecialMethods(object):
     @classmethod
@@ -470,6 +478,7 @@ class WhenRunningSpecsWithTooManySpecialMethods(object):
     def it_should_finish_the_suite(self):
         self.reporter.calls[-1][0].should.equal("suite_ended")
 
+
 class WhenRunningAClassContainingNoAssertions(object):
     def context(self):
         class NoAssertions(object):
@@ -494,6 +503,7 @@ class WhenRunningAClassContainingNoAssertions(object):
 
     def then_it_should_call_suite_ended(self):
         self.reporter.calls[1][0].should.equal('suite_ended')
+
 
 if __name__ == "__main__":
     contexts.main()

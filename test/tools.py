@@ -1,5 +1,6 @@
 import contexts
 
+
 class MockReporter(object):
     # unittest.mock doesn't make it particularly easy to get hold of the
     # object a mock was called with. It was quicker just to write this myself.

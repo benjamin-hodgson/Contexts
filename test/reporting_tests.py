@@ -681,7 +681,6 @@ class WhenMakingANameHumanReadable(object):
         self.input, self.expected = example
 
     def because_we_make_the_string_readable(self):
-                                  # FIXME
         self.reporter = reporting.shared.make_readable(self.input)
 
     def it_should_return_a_string_with_appropriate_spaces(self, example):

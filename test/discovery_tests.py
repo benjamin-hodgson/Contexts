@@ -43,6 +43,7 @@ class WhenRunningAModule(object):
     def it_should_not_instantiate_the_normal_class(self):
         self.module.NormalClass.was_instantiated.should.be.false
 
+
 class WhenRunningAFile(object):
     def establish_that_there_is_a_file_in_the_filesystem(self):
         self.code = """
@@ -78,6 +79,7 @@ class TestSpec(object):
         self.filename = os.path.join(test_data_dir, self.module_name+".py")
         with open(self.filename, 'w+') as f:
             f.write(self.code)
+
 
 class WhenAFileFailsToImport(object):
     def establish_that_there_is_a_broken_file_in_the_filesystem(self):
@@ -173,6 +175,7 @@ class TestSpec(object):
             with open(fn, 'w+') as f:
                 f.write(self.code)
 
+
 class WhenAFolderContainsAnAlreadyImportedFile(object):
     def establish_that_we_have_already_imported_the_module(self):
         self.code = """
@@ -228,6 +231,7 @@ class TestSpec(object):
         with open(self.filename, 'w+') as f:
             f.write(self.code)
 
+
 class WhenAFolderContainsAFileWithTheSameNameAsAnAlreadyImportedModule(object):
     def establish_that_we_have_imported_a_module_with_the_same_name(self):
         self.code = """
@@ -277,6 +281,7 @@ class TestSpec(object):
         filename = os.path.join(self.folder_path, self.module_name + '.py')
         with open(filename, 'w+') as f:
             f.write(self.code)
+
 
 class WhenRunningAFolderWhichIsAPackage(object):
     def establish_that_there_is_a_folder_containing_modules(self):
@@ -348,6 +353,7 @@ class TestSpec(object):
         for fn in self.filenames:
             with open(fn, 'w+') as f:
                 f.write(self.code)
+
 
 class WhenRunningAFolderWithSubfolders(object):
     def establish_that_there_is_a_folder_containing_subfolders(self):
@@ -428,6 +434,7 @@ class TestSpec(object):
             for module_name in self.tree[subfolder]:
                 with open(os.path.join(folder_path, module_name) + ".py", 'w+') as f:
                     f.write(self.code)
+
 
 class WhenRunningAPackageWithSubfolders(object):
     def establish_that_there_is_a_package_containing_subfolders(self):
@@ -525,6 +532,7 @@ class TestSpec(object):
             for module_name in self.tree[subfolder]:
                 with open(os.path.join(folder_path, module_name) + ".py", 'w+') as f:
                     f.write(self.code)
+
 
 class WhenRunningAFolderWithAFileThatFailsToImport(object):
     def establish_that_there_is_a_folder_containing_modules(self):

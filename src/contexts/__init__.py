@@ -37,7 +37,7 @@ def run(spec=None, reporter=None):
 
 
 def _run_impl(spec, reporter):
-    notifier = core.ReporterNotifier(reporter)
+    notifier = reporting.ReporterNotifier(reporter)
     if isinstance(spec, type):
         suite = core.Suite([spec])
     else:
