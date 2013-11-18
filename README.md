@@ -8,7 +8,7 @@ no `.feature` files, no fuss.
 
 -----------------------------
 
-Contexts is a 'Context-Specification'-style test framework for Python, inspired by C#'s
+Contexts is a 'Context-Specification'-style test framework for Python 3.3 and above, inspired by C#'s
 [`Machine.Specifications`](https://github.com/machine/machine.specifications).
 
 Writing tests which read like sentences can encourage you to focus your testing efforts on the externally
