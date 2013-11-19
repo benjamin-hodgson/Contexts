@@ -37,12 +37,9 @@ def run(spec=None, reporter=None):
     return not reporter.failed
 
 
-def _run_impl(spec, reporter):
+def _run_impl(spec, reporter, shuffle=True):
     notifier = reporting.ReporterNotifier(reporter)
-    if isinstance(spec, type):
-        suite = core.Suite([spec])
-    else:
-        suite = core.Suite(spec)
+    suite = core.Suite(spec, shuffle)
     suite.run(notifier)
 
 

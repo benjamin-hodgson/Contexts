@@ -9,8 +9,9 @@ from . import finders
 
 
 class Suite(object):
-    def __init__(self, source):
+    def __init__(self, source, shuffle):
         self.source = source
+        self.shuffle = shuffle
 
     def run(self, reporter_notifier):
         with reporter_notifier.run_suite(self):
@@ -18,27 +19,34 @@ class Suite(object):
                 self.run_class(cls, reporter_notifier)
 
     def get_classes(self, reporter_notifier):
-        if isinstance(self.source, str) and os.path.isfile(self.source):
+        if isinstance(self.source, types.ModuleType):
+            list_of_lists = [list(finders.find_specs_in_module(self.source))]
+        elif isinstance(self.source, str) and os.path.isfile(self.source):
             module = discovery.import_from_file(self.source)
-            classes = list(finders.find_specs_in_module(module))
-        elif isinstance(self.source, types.ModuleType):
-            classes = list(finders.find_specs_in_module(self.source))
+            list_of_lists = [list(finders.find_specs_in_module(module))]
         elif isinstance(self.source, str) and os.path.isdir(self.source):
             module_specs = discovery.find_modules(self.source)
-            classes = []
+            list_of_lists = []
             for module_spec in module_specs:
                 with reporter_notifier.importing(module_spec):
                     module = discovery.load_module(*module_spec)
-                    classes.extend(finders.find_specs_in_module(module))
+                    module_classes = list(finders.find_specs_in_module(module))
+                    list_of_lists.append(module_classes)
         else:
-            classes = list(self.source)
-        random.shuffle(classes)
-        return classes
+            list_of_lists = [[self.source]]
+
+        ret = []
+        for l in list_of_lists:
+            if self.shuffle:
+                random.shuffle(l)
+            ret.extend(l)
+
+        return ret
 
     def run_class(self, cls, reporter_notifier):
         with reporter_notifier.run_class(cls):
             for example in get_examples(cls):
-                context = build_context(cls, example)
+                context = Context(cls(), example, self.shuffle)
                 context.run(reporter_notifier)
 
 def get_examples(cls):
@@ -46,16 +54,13 @@ def get_examples(cls):
     examples = examples_method()
     return examples if examples is not None else [_NullExample()]
 
-def build_context(cls, example):
-    instance = cls()
-    return Context(instance, example)
 
 class _NullExample(object):
     null_example = True
 
 
 class Context(object):
-    def __init__(self, instance, example):
+    def __init__(self, instance, example, shuffle):
         finder = finders.MethodFinder(instance)
         setups, actions, assertions, teardowns = finder.find_special_methods()
         assert_no_ambiguous_methods(setups, actions, assertions, teardowns)
@@ -67,7 +72,8 @@ class Context(object):
         self.example = example
         self.name = instance.__class__.__name__
 
-        random.shuffle(self.assertions)
+        if shuffle:
+            random.shuffle(self.assertions)
 
     def run_setup(self):
         for setup in self.setups:

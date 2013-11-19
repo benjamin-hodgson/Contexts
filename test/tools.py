@@ -116,7 +116,7 @@ def build_fake_exception(tb_list, *args):
 def create_context(name, example=contexts.core._NullExample()):
     instance = type(name, (), {})()
     instance._contexts_test_data = None
-    return contexts.core.Context(instance, example)
+    return contexts.core.Context(instance, example, False)
 
 
 def create_assertion(name):

@@ -22,6 +22,11 @@ def cmd():
         dest='teamcity',
         default=False,
         help="Enable teamcity test reporting.")
+    parser.add_argument('--no-random',
+        action='store_false',
+        dest='shuffle',
+        default=True,
+        help="Disable test order randomisation.")
     parser.add_argument('path',
         action='store',
         nargs='?',
@@ -44,7 +49,7 @@ def cmd():
             (cli.DotsReporter, cli.TimedReporter, cli.SummarisingReporter),
             {})()
 
-    _run_impl(os.path.realpath(args.path), reporter)
+    _run_impl(os.path.realpath(args.path), reporter, args.shuffle)
 
     if reporter.failed:
         sys.exit(1)

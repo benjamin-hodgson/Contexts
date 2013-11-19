@@ -87,7 +87,9 @@ and any subdirectories (or packages).
     being printed to the console unless a test fails. Use this option to disable this.
   * `--teamcity`: Use when the tests are being run in TeamCity. Contexts tries to detect this automatically,
     but the flag is provided in case you have trouble.
-  * `-v` or `--verbose`: report tests that pass as well as those that fail.
+  * `-v` or `--verbose`: Report tests that pass as well as those that fail.
+  * `--no-random`: Disable test order randomisation. Note that, even with randomisation disabled,
+    Contexts makes no promises about the order in which tests will be run.
 
 ### Test discovery
 If a _module_ contains the words 'test' or 'spec' in its name, Contexts will
@@ -107,8 +109,11 @@ Contexts will instantiate and run each test class once, following the
 If a method in a test class has an ambiguous name (its name would place it in more than one
 of the categories below), Contexts will raise an exception.
 
-Contexts makes no promises about the order in which test classes, modules, folders or packages
-will be run. It's therefore important to ensure that all your test cases are independent.
+By default, Contexts **randomises the order** in which test classes, modules, folders or packages
+will be run. It's therefore important to ensure that all your test cases are independent. Randomisation
+can be disabled by supplying the `--no-random` flag at the command line. This is not recommended (since you
+may inadvertently introduce coupling between your tests), and the order will still be arbitrary and liable
+to change between runs.
 
 #### Setting up
 If the words 'establish', 'when', or 'given' appear in a method,
