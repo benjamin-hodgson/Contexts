@@ -1,3 +1,4 @@
+from unittest import mock
 import sure
 import contexts
 from .tools import MockReporter
@@ -200,6 +201,26 @@ class WhenCatchingAnException(object):
         call_names.should_not.contain("context_errored")
         call_names.should_not.contain("assertion_errored")
         call_names.should_not.contain("assertion_failed")
+
+
+class WhenTimingSomething(object):
+    def context(self):
+        self.mock_clock = mock.Mock(return_value = 10)
+        self.time_diff = 100.7
+        def slow_function(a,b,c,d=[]):
+            self.call_args = (a,b,c,d)
+            self.mock_clock.return_value += self.time_diff
+        self.slow_function = slow_function
+
+    def because_we_run_a_slow_function(self):
+        with mock.patch("time.time", self.mock_clock):
+            self.result = contexts.time(self.slow_function, 3, c='yes', b=None)
+
+    def it_should_call_the_function_with_the_supplied_arguments(self):
+        self.call_args.should.equal((3, None, 'yes', []))
+
+    def it_should_return_the_time_difference_in_seconds(self):
+        self.result.should.equal(self.time_diff)
 
 
 class WhenASpecHasASuperclass(object):

@@ -1,4 +1,5 @@
 import sys
+import time as time_module
 from . import reporting
 from . import core
 
@@ -62,6 +63,13 @@ def catch(func, *args, **kwargs):
         func(*args, **kwargs)
     except Exception as e:
         return e
+
+
+def time(func, *args, **kwargs):
+    start_time = time_module.time()
+    func(*args, **kwargs)
+    end_time = time_module.time()
+    return end_time - start_time
 
 
 def set_trace():
