@@ -8,24 +8,31 @@ from .reporting import cli, teamcity
 def cmd():
     parser = argparse.ArgumentParser()
     parser.add_argument('-s', '--no-capture',
-    	action='store_false',
-    	dest='capture',
-    	default=True,
+        action='store_false',
+        dest='capture',
+        default=True,
         help="Disable capturing of stdout during tests.")
+    parser.add_argument('-v', '--verbose',
+        action='store_true',
+        dest='verbose',
+        default=False,
+        help="Enable verbose progress reporting.")
     parser.add_argument('--teamcity',
         action='store_true',
         dest='teamcity',
         default=False,
-        help="Enable teamcity test reporting")
+        help="Enable teamcity test reporting.")
     parser.add_argument('path',
         action='store',
         nargs='?',
         default=os.getcwd(),
-        help="Path to the test file or directory to run")
+        help="Path to the test file or directory to run.")
     args = parser.parse_args()
 
     if args.teamcity or "TEAMCITY_VERSION" in os.environ:
         reporter = teamcity.TeamCityReporter()
+    elif args.verbose:
+        reporter = cli.VerboseReporter()
     elif args.capture:
         reporter = type(
             "CapturingCLIReporter",
