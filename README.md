@@ -109,7 +109,7 @@ Contexts will instantiate and run each test class once, following the
 If a method in a test class has an ambiguous name (its name would place it in more than one
 of the categories below), Contexts will raise an exception.
 
-By default, Contexts **randomises the order** in which test classes, modules, folders or packages
+By default, Contexts **randomises the order** in which test classes, and assertions within each class,
 will be run. It's therefore important to ensure that all your test cases are independent. Randomisation
 can be disabled by supplying the `--no-random` flag at the command line. This is not recommended (since you
 may inadvertently introduce coupling between your tests), and the order will still be arbitrary and liable
