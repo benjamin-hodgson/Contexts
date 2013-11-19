@@ -229,9 +229,10 @@ Sometimes you need to assert that a given function call will raise a certain typ
 You can catch and store an exception -  to make assertions about it later - using Contexts's `catch`
 function.
 
-`contexts.catch()` accepts a function with no parameters and runs the function in a 'try' block.
+`contexts.catch()` accepts a function, and runs it inside a `try` block.
 If an exception gets raised by the function, `catch` returns the exception. If no exception was raised,
 it returns `None`.
+Any additional arguments or keyword arguments to `catch` are forwarded to the function under test.
 
 You'll typically see `catch` in a 'because' method. The caught exception generally gets saved as an
 instance attribute, and assertions are made about (for example) its type in assertion methods.
@@ -241,6 +242,14 @@ It's often useful to be able to drop into a debugger at a set point in your test
 default stdout-capturing behaviour can interfere with this. This can be disabled using `-s`/`--no-capture`
 at the command line. Also provided is a `set_trace()` convenience function - add the line
 `contexts.set_trace()` to your code to launch a debugger from that line connected to the _real_ stdout.
+
+### Timing things
+Sometimes you need to assert that an action is performant. Contexts provides a `time()` convenience function
+for this purpose.
+
+`contexts.time()` measures the execution time of a function and returns the execution time as a float in seconds,
+by calling `time.time()` before and after running the function. The precisio of `contexts.time()`
+on your platform therefore depends on [the precision of `time.time()`](http://docs.python.org/3.3/library/time.html#time.time).
 
 ### TeamCity
 Contexts has experimental support for running tests in [TeamCity](http://www.jetbrains.com/teamcity/).

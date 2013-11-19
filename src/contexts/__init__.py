@@ -66,6 +66,20 @@ def catch(func, *args, **kwargs):
 
 
 def time(func, *args, **kwargs):
+    """
+    Call the supplied function with the supplied arguments,
+    and return the total execution time as a float in seconds.
+
+    The precision of the returned value depends on the precision of
+    `time.time()` on your platform.
+
+    Arguments:
+        func: the function to run.
+        *args: positional arguments to pass into the function.
+        **kwargs: keyword arguments to pass into the function.
+    Returns:
+        Execution time of the function as a float in seconds.
+    """
     start_time = time_module.time()
     func(*args, **kwargs)
     end_time = time_module.time()
@@ -73,8 +87,8 @@ def time(func, *args, **kwargs):
 
 
 def set_trace():
+    """Start a Pdb instance at the calling frame, with stdout routed to sys.__stdout__."""
     # https://github.com/nose-devs/nose/blob/master/nose/tools/nontrivial.py
     import pdb
-    import sys
     pdb.Pdb(stdout=sys.__stdout__).set_trace(sys._getframe().f_back)
 
