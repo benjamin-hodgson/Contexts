@@ -180,6 +180,21 @@ FAILED!
 """)
 
 
+class WhenPrintingVerbosely(object):
+    def context(self):
+        self.stringio = StringIO()
+        self.reporter = reporting.cli.VerboseReporter(self.stringio)
+
+        self.context1 = tools.create_context("made.up_context_1")
+
+    def because_we_run_some_tests(self):
+        self.reporter.context_started(self.context1)
+        self.reporter.context_ended(self.context1)
+
+    def it_should_say_the_ctx_started(self):
+        self.stringio.getvalue().should.equal("made up context 1\n")
+
+
 class WhenCapturingStdOut(object):
     def context(self):
         self.real_stdout = sys.stdout

@@ -134,6 +134,12 @@ class SummarisingReporter(shared.SimpleReporter, shared.StreamReporter):
             pluralise("error", len(self.assertion_errors) + len(self.context_errors) + len(self.unexpected_errors)))
 
 
+class VerboseReporter(shared.SimpleReporter, shared.StreamReporter):
+    def context_started(self, context):
+        super().context_started(context)
+        self._print(self.current_context.name)
+
+
 class StdOutCapturingReporter(SummarisingReporter):
     def context_started(self, context):
         super().context_started(context)
