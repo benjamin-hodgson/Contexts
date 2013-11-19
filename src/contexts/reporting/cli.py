@@ -37,7 +37,7 @@ class SummarisingReporter(shared.SimpleReporter, shared.StreamReporter):
 
     def context_started(self, context):
         super().context_started(context)
-        self.current_summary = [self.current_context.name]
+        self.current_summary = [self.view_models[context].name]
         self.indent()
 
     def context_ended(self, context):
@@ -140,6 +140,26 @@ class VerboseReporter(shared.SimpleReporter, shared.StreamReporter):
     def context_started(self, context):
         super().context_started(context)
         self._print(self.view_models[context].name)
+
+    def assertion_passed(self, assertion):
+        super().assertion_started(assertion)
+        self._print('  PASS: ' + self.current_context.assertions[assertion].name)
+
+    def assertion_failed(self, assertion, exception):
+        super().assertion_failed(assertion, exception)
+        vm = self.current_context.assertions[assertion]
+        self._print('  FAIL: ' + vm.name)
+        self._print('    '+'\n    '.join(vm.error_summary))
+
+    def assertion_errored(self, assertion, exception):
+        super().assertion_errored(assertion, exception)
+        vm = self.current_context.assertions[assertion]
+        self._print('  ERROR: ' + vm.name)
+        self._print('    '+'\n    '.join(vm.error_summary))
+
+    def context_errored(self, context, exception):
+        super().context_errored(context, exception)
+        self._print('  ' + '\n  '.join(self.view_models[context].error_summary))
 
 
 class StdOutCapturingReporter(SummarisingReporter):

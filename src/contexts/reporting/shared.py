@@ -4,6 +4,15 @@ import traceback
 from . import Reporter
 
 
+class StreamReporter(Reporter):
+    def __init__(self, stream=sys.stderr):
+        super().__init__()
+        self.stream = stream
+
+    def _print(self, *args, sep=' ', end='\n', flush=True):
+        print(*args, sep=sep, end=end, file=self.stream, flush=flush)
+
+
 class SimpleReporter(Reporter):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -66,15 +75,6 @@ class SimpleReporter(Reporter):
     def unexpected_error(self, exception):
         self.unexpected_errors.append(format_exception(exception))
         super().unexpected_error(exception)
-
-
-class StreamReporter(Reporter):
-    def __init__(self, stream=sys.stderr):
-        super().__init__()
-        self.stream = stream
-
-    def _print(self, *args, sep=' ', end='\n', flush=True):
-        print(*args, sep=sep, end=end, file=self.stream, flush=flush)
 
 
 class ContextViewModel(object):
