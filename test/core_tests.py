@@ -170,6 +170,34 @@ class WhenAContextErrors(object):
         self.reporters[2].calls[4][2].should.equal(self.assertion_err)
 
 
+class WhenRunningTheSameClassMultipleTimes(object):
+    def context(self):
+        self.create_class()
+
+        self.reporter1 = MockReporter()
+        self.reporter2 = MockReporter()
+
+    def because_we_run_the_class_twice(self):
+        contexts.run(self.spec, self.reporter1)
+        contexts.run(self.spec, self.reporter2)
+
+    def it_should_run_the_assertions_in_a_different_order(self):
+        first_order = [call[1].name for call in self.reporter1.calls if call[0] == "assertion_started"]
+        second_order = [call[1].name for call in self.reporter2.calls if call[0] == "assertion_started"]
+        first_order.should_not.equal(second_order)
+
+    def create_class(self):
+        cls_dict = {}
+        for x in range(100):
+            method_name = 'it' + str(x)
+            def it(self):
+                pass
+            it.__name__ = method_name
+            cls_dict[method_name] = it
+
+        self.spec = type("Spec", (object,), cls_dict)
+
+
 class WhenCatchingAnException(object):
     def context(self):
         self.exception = ValueError("test exception")

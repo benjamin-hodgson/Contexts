@@ -44,6 +44,34 @@ class WhenRunningAModule(object):
         self.module.NormalClass.was_instantiated.should.be.false
 
 
+class WhenRunningTheSameModuleMultipleTimes(object):
+    # too hard to test that shuffling works for a whole filesystem of tests :(
+    def context(self):
+        self.create_module()
+
+        self.reporter1 = MockReporter()
+        self.reporter2 = MockReporter()
+
+    def because_we_run_the_module_twice(self):
+        contexts.run(self.module, self.reporter1)
+        contexts.run(self.module, self.reporter2)
+
+    def it_should_run_the_ctxs_in_a_different_order(self):
+        first_order = [call[1].name for call in self.reporter1.calls if call[0] == "context_started"]
+        second_order = [call[1].name for call in self.reporter2.calls if call[0] == "context_started"]
+        first_order.should_not.equal(second_order)
+
+    def create_module(self):
+        self.module = types.ModuleType("specs")
+
+        for x in range(100):
+            class_name = "Spec" + str(x)
+            def it(self):
+                pass
+            cls = type(class_name, (object,), {'it': it})
+            setattr(self.module, class_name, cls)
+
+
 class WhenRunningAFile(object):
     def establish_that_there_is_a_file_in_the_filesystem(self):
         self.code = """

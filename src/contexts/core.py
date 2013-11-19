@@ -1,6 +1,7 @@
 import inspect
 import itertools
 import os
+import random
 import types
 from . import discovery
 from . import errors
@@ -16,18 +17,12 @@ class Suite(object):
             for cls in self.get_classes(reporter_notifier):
                 self.run_class(cls, reporter_notifier)
 
-    def run_class(self, cls, reporter_notifier):
-        with reporter_notifier.run_class(cls):
-            for example in get_examples(cls):
-                context = build_context(cls, example)
-                context.run(reporter_notifier)
-
     def get_classes(self, reporter_notifier):
         if isinstance(self.source, str) and os.path.isfile(self.source):
             module = discovery.import_from_file(self.source)
-            classes = finders.find_specs_in_module(module)
+            classes = list(finders.find_specs_in_module(module))
         elif isinstance(self.source, types.ModuleType):
-            classes = finders.find_specs_in_module(self.source)
+            classes = list(finders.find_specs_in_module(self.source))
         elif isinstance(self.source, str) and os.path.isdir(self.source):
             module_specs = discovery.find_modules(self.source)
             classes = []
@@ -37,7 +32,14 @@ class Suite(object):
                     classes.extend(finders.find_specs_in_module(module))
         else:
             classes = list(self.source)
+        random.shuffle(classes)
         return classes
+
+    def run_class(self, cls, reporter_notifier):
+        with reporter_notifier.run_class(cls):
+            for example in get_examples(cls):
+                context = build_context(cls, example)
+                context.run(reporter_notifier)
 
 def get_examples(cls):
     examples_method = finders.find_examples_method(cls)
@@ -64,6 +66,8 @@ class Context(object):
         self.teardowns = teardowns
         self.example = example
         self.name = instance.__class__.__name__
+
+        random.shuffle(self.assertions)
 
     def run_setup(self):
         for setup in self.setups:
