@@ -5,7 +5,7 @@ from unittest import mock
 import sure
 import contexts
 from contexts import reporting
-from . import tools
+from .. import tools
 
 
 class WhenWatchingForDots(object):

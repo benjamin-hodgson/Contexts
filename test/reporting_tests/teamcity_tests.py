@@ -3,7 +3,7 @@ from io import StringIO
 import sure
 import contexts
 from contexts.reporting import teamcity
-from . import tools
+from .. import tools
 
 
 class TeamCitySharedContext(object):
