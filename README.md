@@ -87,6 +87,7 @@ and any subdirectories (or packages).
     being printed to the console unless a test fails. Use this option to disable this.
   * `--teamcity`: Use when the tests are being run in TeamCity. Contexts tries to detect this automatically,
     but the flag is provided in case you have trouble.
+  * `-v` or `--verbose`: report tests that pass as well as those that fail.
 
 ### Test discovery
 If a _module_ contains the words 'test' or 'spec' in its name, Contexts will
