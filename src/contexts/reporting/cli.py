@@ -137,6 +137,8 @@ class SummarisingReporter(shared.SimpleReporter, shared.StreamReporter):
 
 
 class VerboseReporter(shared.SimpleReporter, shared.StreamReporter):
+    dashes = '-' * 70
+    
     def context_started(self, context):
         super().context_started(context)
         self._print(self.view_models[context].name)
@@ -149,17 +151,42 @@ class VerboseReporter(shared.SimpleReporter, shared.StreamReporter):
         super().assertion_failed(assertion, exception)
         vm = self.current_context.assertions[assertion]
         self._print('  FAIL: ' + vm.name)
-        self._print('    '+'\n    '.join(vm.error_summary))
+        self._print('    ' + '\n    '.join(vm.error_summary))
 
     def assertion_errored(self, assertion, exception):
         super().assertion_errored(assertion, exception)
         vm = self.current_context.assertions[assertion]
         self._print('  ERROR: ' + vm.name)
-        self._print('    '+'\n    '.join(vm.error_summary))
+        self._print('    ' + '\n    '.join(vm.error_summary))
 
     def context_errored(self, context, exception):
         super().context_errored(context, exception)
         self._print('  ' + '\n  '.join(self.view_models[context].error_summary))
+
+    def suite_ended(self, suite):
+        super().suite_ended(suite)
+        self.summarise()
+
+    def summarise(self):
+        self._print(self.dashes)
+        if self.failed:
+            self._print('FAILED!')
+            self._print(self.failure_numbers())
+        else:
+            self._print('PASSED!')
+            self._print(self.success_numbers())
+
+    def success_numbers(self):
+        return "{}, {}".format(
+            pluralise("context", len(self.view_models)),
+            pluralise("assertion", len(self.assertions)))
+
+    def failure_numbers(self):
+        return "{}, {}: {} failed, {}".format(
+            pluralise("context", len(self.view_models)),
+            pluralise("assertion", len(self.assertions)),
+            len(self.assertion_failures),
+            pluralise("error", len(self.assertion_errors) + len(self.context_errors) + len(self.unexpected_errors)))
 
 
 class StdOutCapturingReporter(SummarisingReporter):

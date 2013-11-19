@@ -235,6 +235,7 @@ class WhenPrintingVerbosely(object):
         self.outputs.append(self.stringio.getvalue())
 
         self.reporter.suite_ended(None)
+        self.outputs.append(self.stringio.getvalue())
 
     def it_should_say_the_ctx_started(self):
         self.get_output(0).should.equal("made up context 1\n")
@@ -243,7 +244,8 @@ class WhenPrintingVerbosely(object):
         self.get_output(1).should.equal('  PASS: assertion 1\n')
 
     def it_should_output_a_stack_trace_for_the_failed_assertion(self):
-        self.get_output(2).should.equal("""  FAIL: assertion 2
+        self.get_output(2).should.equal(
+"""  FAIL: assertion 2
     Traceback (most recent call last):
       File "made_up_file_10.py", line 1, in made_up_function_1
         frame1
@@ -253,7 +255,8 @@ class WhenPrintingVerbosely(object):
 """)
 
     def it_should_output_a_stack_trace_for_the_errored_assertion(self):
-        self.get_output(3).should.equal("""  ERROR: assertion 3
+        self.get_output(3).should.equal(
+"""  ERROR: assertion 3
     Traceback (most recent call last):
       File "made_up_file_12.py", line 3, in made_up_function_3
         frame3
@@ -263,13 +266,21 @@ class WhenPrintingVerbosely(object):
 """)
 
     def it_should_output_a_stack_trace_for_the_errored_ctx(self):
-        self.get_output(4).should.equal("""made up context 2 -> ['abc', 123]
+        self.get_output(4).should.equal(
+"""made up context 2 -> ['abc', 123]
   Traceback (most recent call last):
     File "made_up_file_14.py", line 3, in made_up_function_3
       frame3
     File "made_up_file_15.py", line 4, in made_up_function_4
       frame4
   test.tools.FakeException: out
+""")
+
+    def it_should_output_a_summary(self):
+        self.get_output(5).should.equal(
+"""----------------------------------------------------------------------
+FAILED!
+2 contexts, 3 assertions: 1 failed, 2 errors
 """)
 
     def get_output(self, n):
