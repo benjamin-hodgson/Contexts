@@ -7,7 +7,7 @@ from . import Reporter
 class SimpleReporter(Reporter):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.view_models = []
+        self.view_models = {}
         self.unexpected_errors = []
 
     @property
@@ -15,7 +15,7 @@ class SimpleReporter(Reporter):
         return self.context_errors or self.assertion_errors or self.assertion_failures or self.unexpected_errors
     @property
     def assertions(self):
-        return [a for vm in self.view_models for a in vm.assertions]
+        return [a for vm in self.view_models.values() for a in vm.assertions.values()]
     @property
     def assertion_failures(self):
         return [a for a in self.assertions if a.status == "failed"]
@@ -23,36 +23,44 @@ class SimpleReporter(Reporter):
     def assertion_errors(self):
         return [a for a in self.assertions if a.status == "errored"]
     @property
-    def contexts(self):
-        return self.view_models
-    @property
     def context_errors(self):
-        return [vm for vm in self.view_models if vm.error_summary is not None]
-    @property
-    def current_context(self):
-        return self.view_models[-1]
+        return [vm for vm in self.view_models.values() if vm.status == "errored"]
 
     def context_started(self, context):
         super().context_started(context)
-        self.view_models.append(ContextViewModel(context))
+        self.current_context = ContextViewModel(context)
+        self.view_models[context] = self.current_context
+
+    def context_ended(self, context):
+        super().context_ended(context)
+        self.view_models[context].status = "ended"
+        self.current_context = None
 
     def context_errored(self, context, exception):
-        self.current_context.exception = exception
+        self.view_models[context].set_exception(exception)
+        self.view_models[context].status = "errored"
+        self.current_context = None
         super().context_errored(context, exception)
 
+    def assertion_started(self, assertion):
+        super().assertion_started(assertion)
+        self.current_context.add_assertion(assertion)
+
     def assertion_passed(self, assertion):
-        assertion_vm = AssertionViewModel(assertion)
-        self.current_context.assertions.append(assertion_vm)
+        assertion_vm = self.current_context.current_assertion
+        assertion_vm.status = "passed"
         super().assertion_passed(assertion)
 
     def assertion_failed(self, assertion, exception):
-        assertion_vm = AssertionViewModel(assertion, "failed", exception)
-        self.current_context.assertions.append(assertion_vm)
+        assertion_vm = self.current_context.current_assertion
+        assertion_vm.status = "failed"
+        assertion_vm.set_exception(exception)
         super().assertion_failed(assertion, exception)
 
     def assertion_errored(self, assertion, exception):
-        assertion_vm = AssertionViewModel(assertion, "errored", exception)
-        self.current_context.assertions.append(assertion_vm)
+        assertion_vm = self.current_context.current_assertion
+        assertion_vm.status = "errored"
+        assertion_vm.set_exception(exception)
         super().assertion_errored(assertion, exception)
 
     def unexpected_error(self, exception):
@@ -75,37 +83,34 @@ class ContextViewModel(object):
             self.name = make_readable(context.name)
         else:
             self.name = make_readable(context.name) + " -> " + str(context.example)
-        self.assertions = []
-        self._exception = None
-        self.error_summary = None
-
-    @property
-    def exception(self):
-        return self._exception
-    @exception.setter
-    def exception(self, value):
-        self._exception = value
-        self.error_summary = format_exception(value)
-
-    @property
-    def last_assertion(self):
-        return self.assertions[-1]
+        self.assertions = {}
+        self.error_summary = []
+        self.status = "running"
 
     @property
     def assertion_failures(self):
-        return [a for a in self.assertions if a.status == "failed"]
+        return [a for a in self.assertions.values() if a.status == "failed"]
     @property
     def assertion_errors(self):
-        return [a for a in self.assertions if a.status == "errored"]
+        return [a for a in self.assertions.values() if a.status == "errored"]
+
+    def add_assertion(self, assertion):
+        self.current_assertion = AssertionViewModel(assertion)
+        self.current_assertion.status = "running"
+        self.assertions[assertion] = self.current_assertion
+
+    def set_exception(self, exception):
+        self.error_summary = format_exception(exception)
 
 
 class AssertionViewModel(object):
-    def __init__(self, assertion, status="passed", exception=None):
+    def __init__(self, assertion):
         self.name = make_readable(assertion.name)
-        self.status = status
-        self.error_summary = None
-        if exception is not None:
-            self.error_summary = format_exception(exception)
+        self.status = "running"
+        self.error_summary = []
+
+    def set_exception(self, exception):
+        self.error_summary = format_exception(exception)
 
 
 def make_readable(string):

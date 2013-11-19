@@ -26,10 +26,10 @@ class TeamCityReporter(shared.StreamReporter, shared.SimpleReporter):
     def context_errored(self, context, exception):
         super().context_errored(context, exception)
         self.context_name_prefix = ''
-        context_vm = self.current_context
+        context_vm = self.view_models[context]
         self.teamcity_print("testStarted", name=context_vm.name)
         self.output_buffers(context_vm.name)
-        msg2 = teamcity_format("##teamcity[testFailed name='{}' message='{}' details='{}']", self.current_context.name, str(exception), '\n'.join(context_vm.error_summary))
+        msg2 = teamcity_format("##teamcity[testFailed name='{}' message='{}' details='{}']", context_vm.name, str(exception), '\n'.join(context_vm.error_summary))
         self._print(msg2)
         self.teamcity_print("testFinished", name=context_vm.name)
         sys.stdout, sys.stderr = self.real_stdout, self.real_stderr
@@ -41,14 +41,14 @@ class TeamCityReporter(shared.StreamReporter, shared.SimpleReporter):
 
     def assertion_passed(self, assertion):
         super().assertion_passed(assertion)
-        assertion_vm = self.current_context.last_assertion
+        assertion_vm = self.current_context.current_assertion
         name = self.context_name_prefix + assertion_vm.name
         self.output_buffers(name)
         self.teamcity_print("testFinished", name=name)
 
     def assertion_failed(self, assertion, exception):
         super().assertion_failed(assertion, exception)
-        assertion_vm = self.current_context.last_assertion
+        assertion_vm = self.current_context.current_assertion
         name = self.context_name_prefix + assertion_vm.name
         self.output_buffers(name)
         msg = teamcity_format("##teamcity[testFailed name='{}' message='{}' details='{}']", self.context_name_prefix + assertion_vm.name, str(exception), '\n'.join(assertion_vm.error_summary))
@@ -57,7 +57,7 @@ class TeamCityReporter(shared.StreamReporter, shared.SimpleReporter):
 
     def assertion_errored(self, assertion, exception):
         super().assertion_errored(assertion, exception)
-        assertion_vm = self.current_context.last_assertion
+        assertion_vm = self.current_context.current_assertion
         name = self.context_name_prefix + assertion_vm.name
         self.output_buffers(name)
         msg = teamcity_format("##teamcity[testFailed name='{}' message='{}' details='{}']", self.context_name_prefix + assertion_vm.name, str(exception), '\n'.join(assertion_vm.error_summary))

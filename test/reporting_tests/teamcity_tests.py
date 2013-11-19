@@ -27,28 +27,35 @@ class WhenATestRunPassesInTeamCity(TeamCitySharedContext):
         self.real_stdout, self.real_stderr = sys.stdout, sys.stderr
         sys.stdout, sys.stderr = self.fake_stdout, self.fake_stderr = StringIO(), StringIO()
 
+        self.ctx1 = tools.create_context("FakeContext")
+        self.ctx2 = tools.create_context("FakeContext2", ["abc", 123, None])
+        self.assertion1 = tools.create_assertion("FakeAssertion1")
+        self.assertion2 = tools.create_assertion("FakeAssertion2")
+        self.assertion3 = tools.create_assertion("FakeAssertion3")
+
     def because_we_run_some_assertions(self):
         self.reporter.suite_started(None)
         self.outputs.append(self.stringio.getvalue())
 
-        self.reporter.context_started(tools.create_context("FakeContext"))
+        self.reporter.context_started(self.ctx1)
 
         print("to stdout")
         print("to stderr", file=sys.stderr)
-        self.reporter.assertion_started(tools.create_assertion("FakeAssertion1"))
+        self.reporter.assertion_started(self.assertion1)
         self.outputs.append(self.stringio.getvalue())
-        self.reporter.assertion_passed(tools.create_assertion("FakeAssertion1"))
+        self.reporter.assertion_passed(self.assertion1)
         self.outputs.append(self.stringio.getvalue())
-        self.reporter.assertion_started(tools.create_assertion("FakeAssertion2"))
+        self.reporter.assertion_started(self.assertion2)
         self.outputs.append(self.stringio.getvalue())
         print("to stdout again")
-        self.reporter.assertion_passed(tools.create_assertion("FakeAssertion2"))
+        self.reporter.assertion_passed(self.assertion2)
         self.outputs.append(self.stringio.getvalue())
+        self.reporter.context_ended(self.ctx1)
 
-        self.reporter.context_started(tools.create_context("FakeContext2", ["abc", 123, None]))
-        self.reporter.assertion_started(tools.create_assertion("FakeAssertion5"))
-        self.reporter.assertion_passed(tools.create_assertion("FakeAssertion5"))
-        self.reporter.context_ended(tools.create_context("FakeContext2", ["abc", 123, None]))
+        self.reporter.context_started(self.ctx2)
+        self.reporter.assertion_started(self.assertion3)
+        self.reporter.assertion_passed(self.assertion3)
+        self.reporter.context_ended(self.ctx2)
         self.outputs.append(self.stringio.getvalue())
 
         self.reporter.suite_ended(None)
@@ -92,8 +99,8 @@ class WhenATestRunPassesInTeamCity(TeamCitySharedContext):
 
     def it_should_report_the_exmpl(self):
         # also asserting that nothing about stdout comes out here
-        self.get_output(5)[0].should.equal("##teamcity[testStarted name='Fake context 2 -> |[|'abc|', 123, None|] -> Fake assertion 5']")
-        self.get_output(5)[1].should.equal("##teamcity[testFinished name='Fake context 2 -> |[|'abc|', 123, None|] -> Fake assertion 5']")
+        self.get_output(5)[0].should.equal("##teamcity[testStarted name='Fake context 2 -> |[|'abc|', 123, None|] -> Fake assertion 3']")
+        self.get_output(5)[1].should.equal("##teamcity[testFinished name='Fake context 2 -> |[|'abc|', 123, None|] -> Fake assertion 3']")
     def it_should_not_report_anything_following_the_second_ctx(self):
         self.get_output(5).should.have.length_of(2)
 
@@ -121,21 +128,23 @@ class WhenAnAssertionFailsInTeamCity(TeamCitySharedContext):
 '  File "another_made_up_file.py", line 2, in another_made_up_function|n'
 '    frame2|n'
 'test.tools.FakeException: Gotcha')
+        self.assertion = tools.create_assertion("FakeAssertion3")
+        self.context = tools.create_context("FakeContext")
 
     def because_we_run_an_assertion(self):
         self.reporter.suite_started(None)
         self.outputs.append(self.stringio.getvalue())
 
-        self.reporter.context_started(tools.create_context("FakeContext"))
+        self.reporter.context_started(self.context)
 
         print("to stdout")
         print("to stderr", file=sys.stderr)
-        self.reporter.assertion_started(tools.create_assertion("FakeAssertion3"))
+        self.reporter.assertion_started(self.assertion)
         self.outputs.append(self.stringio.getvalue())
-        self.reporter.assertion_failed(tools.create_assertion("FakeAssertion3"), self.exception)
+        self.reporter.assertion_failed(self.assertion, self.exception)
         self.outputs.append(self.stringio.getvalue())
 
-        self.reporter.context_ended(tools.create_context("FakeContext"))
+        self.reporter.context_ended(self.context)
 
         self.reporter.suite_ended(None)
         self.outputs.append(self.stringio.getvalue())
@@ -188,21 +197,23 @@ class WhenAnAssertionErrorsInTeamCity(TeamCitySharedContext):
 '  File "made_up_file_4.py", line 2, in made_up_function_4|n'
 '    frame4|n'
 'test.tools.FakeException: you fail')
+        self.context = tools.create_context("FakeContext")
+        self.assertion = tools.create_assertion("FakeAssertion4")
 
     def because_we_run_an_assertion(self):
         self.reporter.suite_started(None)
         self.outputs.append(self.stringio.getvalue())
 
-        self.reporter.context_started(tools.create_context("FakeContext"))
+        self.reporter.context_started(self.context)
 
         print("to stdout")
         print("to stderr", file=sys.stderr)
-        self.reporter.assertion_started(tools.create_assertion("FakeAssertion4"))
+        self.reporter.assertion_started(self.assertion)
         self.outputs.append(self.stringio.getvalue())
-        self.reporter.assertion_errored(tools.create_assertion("FakeAssertion4"), self.exception)
+        self.reporter.assertion_errored(self.assertion, self.exception)
         self.outputs.append(self.stringio.getvalue())
 
-        self.reporter.context_ended(tools.create_context("FakeContext"))
+        self.reporter.context_ended(self.context)
 
         self.reporter.suite_ended(None)
         self.outputs.append(self.stringio.getvalue())
@@ -256,14 +267,16 @@ class WhenAContextErrorsInTeamCity(TeamCitySharedContext):
 '    frame6|n'
 'test.tools.FakeException: oh dear')
 
+        self.ctx = tools.create_context("FakeContext")
+
     def because_we_run_an_assertion(self):
         self.reporter.suite_started(None)
         self.outputs.append(self.stringio.getvalue())
 
-        self.reporter.context_started(tools.create_context("FakeContext"))
+        self.reporter.context_started(self.ctx)
         print("to stdout")
         print("to stderr", file=sys.stderr)
-        self.reporter.context_errored(tools.create_context("FakeContext"), self.exception)
+        self.reporter.context_errored(self.ctx, self.exception)
         self.outputs.append(self.stringio.getvalue())
 
         self.reporter.suite_ended(None)

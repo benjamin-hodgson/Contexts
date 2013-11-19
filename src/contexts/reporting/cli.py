@@ -42,14 +42,16 @@ class SummarisingReporter(shared.SimpleReporter, shared.StreamReporter):
 
     def context_ended(self, context):
         super().context_ended(context)
-        if self.current_context.assertion_failures or self.current_context.assertion_errors:
+        ctx = self.view_models[context]
+        if ctx.assertion_failures or ctx.assertion_errors:
             self.add_current_context_to_summary()
         self.dedent()
         self.current_summary = None
 
     def context_errored(self, context, exception):
         super().context_errored(context, exception)
-        formatted_exc = self.current_context.error_summary
+        ctx = self.view_models[context]
+        formatted_exc = ctx.error_summary
         self.extend_summary(formatted_exc)
         self.add_current_context_to_summary()
         self.dedent()
@@ -97,7 +99,7 @@ class SummarisingReporter(shared.SimpleReporter, shared.StreamReporter):
         self.summary.extend(self.current_summary)
 
     def add_current_assertion_to_summary(self):
-        assertion_vm = self.current_context.assertions[-1]
+        assertion_vm = self.current_context.current_assertion
         formatted_exc = assertion_vm.error_summary
 
         if assertion_vm.status == "errored":
@@ -137,7 +139,7 @@ class SummarisingReporter(shared.SimpleReporter, shared.StreamReporter):
 class VerboseReporter(shared.SimpleReporter, shared.StreamReporter):
     def context_started(self, context):
         super().context_started(context)
-        self._print(self.current_context.name)
+        self._print(self.view_models[context].name)
 
 
 class StdOutCapturingReporter(SummarisingReporter):
