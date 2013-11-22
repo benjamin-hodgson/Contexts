@@ -435,7 +435,7 @@ class WhenMakingANameHumanReadable(object):
     def because_we_make_the_string_readable(self):
         self.reporter = reporting.shared.make_readable(self.input)
 
-    def it_should_return_a_string_with_appropriate_spaces(self, example):
+    def it_should_return_a_string_with_appropriate_spaces(self):
         self.reporter.should.equal(self.expected)
 
 
