@@ -20,43 +20,34 @@ class SimpleReporter(Reporter):
 
     def context_started(self, context):
         super().context_started(context)
-        self.current_context = ContextViewModel(context)
-        self.suite_view_model.contexts[context] = self.current_context
+        self.suite_view_model.context_started(context)
 
     def context_ended(self, context):
         super().context_ended(context)
-        self.suite_view_model.contexts[context].status = "ended"
-        self.current_context = None
+        self.suite_view_model.context_ended(context)
 
     def context_errored(self, context, exception):
-        self.suite_view_model.contexts[context].set_exception(exception)
-        self.suite_view_model.contexts[context].status = "errored"
-        self.current_context = None
+        self.suite_view_model.context_errored(context, exception)
         super().context_errored(context, exception)
 
     def assertion_started(self, assertion):
         super().assertion_started(assertion)
-        self.current_context.add_assertion(assertion)
+        self.suite_view_model.assertion_started(assertion)
 
     def assertion_passed(self, assertion):
-        assertion_vm = self.current_context.current_assertion
-        assertion_vm.status = "passed"
+        self.suite_view_model.assertion_passed(assertion)
         super().assertion_passed(assertion)
 
     def assertion_failed(self, assertion, exception):
-        assertion_vm = self.current_context.current_assertion
-        assertion_vm.status = "failed"
-        assertion_vm.set_exception(exception)
+        self.suite_view_model.assertion_failed(assertion, exception)
         super().assertion_failed(assertion, exception)
 
     def assertion_errored(self, assertion, exception):
-        assertion_vm = self.current_context.current_assertion
-        assertion_vm.status = "errored"
-        assertion_vm.set_exception(exception)
+        self.suite_view_model.assertion_errored(assertion, exception)
         super().assertion_errored(assertion, exception)
 
     def unexpected_error(self, exception):
-        self.suite_view_model.unexpected_errors.append(format_exception(exception))
+        self.suite_view_model.unexpected_error(exception)
         super().unexpected_error(exception)
 
 
@@ -64,6 +55,7 @@ class SuiteViewModel(object):
     def __init__(self):
         self.unexpected_errors = []
         self.contexts = {}
+        self.current_context = None
 
     @property
     def failed(self):
@@ -80,6 +72,34 @@ class SuiteViewModel(object):
     @property
     def context_errors(self):
         return [vm for vm in self.contexts.values() if vm.status == "errored"]
+
+    def context_started(self, context):
+        self.current_context = ContextViewModel(context)
+        self.contexts[context] = self.current_context
+    def context_ended(self, context):
+        self.contexts[context].status = "ended"
+        self.current_context = None
+    def context_errored(self, context, exception):
+        self.contexts[context].set_exception(exception)
+        self.contexts[context].status = "errored"
+        self.current_context = None
+
+    def assertion_started(self, assertion):
+        self.current_context.add_assertion(assertion)
+    def assertion_passed(self, assertion):
+        self.current_context.current_assertion.status = "passed"
+    def assertion_failed(self, assertion, exception):
+        assertion_vm = self.current_context.current_assertion
+        assertion_vm.status = "failed"
+        assertion_vm.set_exception(exception)
+    def assertion_errored(self, assertion, exception):
+        assertion_vm = self.current_context.current_assertion
+        assertion_vm.status = "errored"
+        assertion_vm.set_exception(exception)
+
+    def unexpected_error(self, exception):
+        self.unexpected_errors.append(format_exception(exception))
+
 
 class ContextViewModel(object):
     def __init__(self, context):

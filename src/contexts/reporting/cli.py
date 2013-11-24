@@ -51,14 +51,10 @@ class SummarisingReporter(shared.SimpleReporter, shared.StreamReporter):
     def context_errored(self, context, exception):
         super().context_errored(context, exception)
         ctx = self.suite_view_model.contexts[context]
-        formatted_exc = ctx.error_summary
-        self.extend_summary(formatted_exc)
+        self.extend_summary(ctx.error_summary)
         self.add_current_context_to_summary()
         self.dedent()
         self.current_summary = None
-
-    def assertion_started(self, assertion):
-        super().assertion_started(assertion)
 
     def assertion_failed(self, assertion, exception):
         super().assertion_failed(assertion, exception)
@@ -99,7 +95,7 @@ class SummarisingReporter(shared.SimpleReporter, shared.StreamReporter):
         self.summary.extend(self.current_summary)
 
     def add_current_assertion_to_summary(self):
-        assertion_vm = self.current_context.current_assertion
+        assertion_vm = self.suite_view_model.current_context.current_assertion
         formatted_exc = assertion_vm.error_summary
 
         if assertion_vm.status == "errored":
@@ -145,17 +141,17 @@ class VerboseReporter(shared.SimpleReporter, shared.StreamReporter):
 
     def assertion_passed(self, assertion):
         super().assertion_started(assertion)
-        self._print('  PASS: ' + self.current_context.assertions[assertion].name)
+        self._print('  PASS: ' + self.suite_view_model.current_context.assertions[assertion].name)
 
     def assertion_failed(self, assertion, exception):
         super().assertion_failed(assertion, exception)
-        vm = self.current_context.assertions[assertion]
+        vm = self.suite_view_model.current_context.assertions[assertion]
         self._print('  FAIL: ' + vm.name)
         self._print('    ' + '\n    '.join(vm.error_summary))
 
     def assertion_errored(self, assertion, exception):
         super().assertion_errored(assertion, exception)
-        vm = self.current_context.assertions[assertion]
+        vm = self.suite_view_model.current_context.assertions[assertion]
         self._print('  ERROR: ' + vm.name)
         self._print('    ' + '\n    '.join(vm.error_summary))
 
@@ -201,12 +197,12 @@ class StdOutCapturingReporter(SummarisingReporter):
         return ("{:-^"+num+"}").format(string)
 
     def context_ended(self, context):
-        sys.stdout = self.real_stdout
         super().context_ended(context)
+        sys.stdout = self.real_stdout
 
     def context_errored(self, context, exception):
-        sys.stdout = self.real_stdout
         super().context_errored(context, exception)
+        sys.stdout = self.real_stdout
         self.add_buffer_to_summary()
 
     def assertion_failed(self, assertion, exception):
@@ -232,9 +228,11 @@ class TimedReporter(shared.StreamReporter):
         self.start_time = datetime.datetime.now()
 
     def suite_ended(self, suite):
-        self.end_time = datetime.datetime.now()
         super().suite_ended(suite)
+        self.end_time = datetime.datetime.now()
+        self.print_time()
 
+    def print_time(self):
         total_secs = (self.end_time - self.start_time).total_seconds()
         rounded = round(total_secs, 1)
         self._print("({} seconds)".format(rounded))
