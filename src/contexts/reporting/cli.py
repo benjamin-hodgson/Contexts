@@ -37,12 +37,12 @@ class SummarisingReporter(shared.SimpleReporter, shared.StreamReporter):
 
     def context_started(self, context):
         super().context_started(context)
-        self.current_summary = [self.view_models[context].name]
+        self.current_summary = [self.suite_view_model.contexts[context].name]
         self.indent()
 
     def context_ended(self, context):
         super().context_ended(context)
-        ctx = self.view_models[context]
+        ctx = self.suite_view_model.contexts[context]
         if ctx.assertion_failures or ctx.assertion_errors:
             self.add_current_context_to_summary()
         self.dedent()
@@ -50,7 +50,7 @@ class SummarisingReporter(shared.SimpleReporter, shared.StreamReporter):
 
     def context_errored(self, context, exception):
         super().context_errored(context, exception)
-        ctx = self.view_models[context]
+        ctx = self.suite_view_model.contexts[context]
         formatted_exc = ctx.error_summary
         self.extend_summary(formatted_exc)
         self.add_current_context_to_summary()
@@ -74,7 +74,7 @@ class SummarisingReporter(shared.SimpleReporter, shared.StreamReporter):
 
     def unexpected_error(self, exception):
         super().unexpected_error(exception)
-        formatted_exc = self.unexpected_errors[-1]
+        formatted_exc = self.suite_view_model.unexpected_errors[-1]
         self.extend_summary(formatted_exc)
 
     def indent(self):
@@ -114,7 +114,7 @@ class SummarisingReporter(shared.SimpleReporter, shared.StreamReporter):
     def summarise(self):
         self._print('')
         self._print(self.dashes)
-        if self.failed:
+        if self.suite_view_model.failed:
             self._print('\n'.join(self.summary))
             self._print(self.dashes)
             self._print('FAILED!')
@@ -125,23 +125,23 @@ class SummarisingReporter(shared.SimpleReporter, shared.StreamReporter):
 
     def success_numbers(self):
         return "{}, {}".format(
-            pluralise("context", len(self.view_models)),
-            pluralise("assertion", len(self.assertions)))
+            pluralise("context", len(self.suite_view_model.contexts)),
+            pluralise("assertion", len(self.suite_view_model.assertions)))
 
     def failure_numbers(self):
         return "{}, {}: {} failed, {}".format(
-            pluralise("context", len(self.view_models)),
-            pluralise("assertion", len(self.assertions)),
-            len(self.assertion_failures),
-            pluralise("error", len(self.assertion_errors) + len(self.context_errors) + len(self.unexpected_errors)))
+            pluralise("context", len(self.suite_view_model.contexts)),
+            pluralise("assertion", len(self.suite_view_model.assertions)),
+            len(self.suite_view_model.assertion_failures),
+            pluralise("error", len(self.suite_view_model.assertion_errors) + len(self.suite_view_model.context_errors) + len(self.suite_view_model.unexpected_errors)))
 
 
 class VerboseReporter(shared.SimpleReporter, shared.StreamReporter):
     dashes = '-' * 70
-    
+
     def context_started(self, context):
         super().context_started(context)
-        self._print(self.view_models[context].name)
+        self._print(self.suite_view_model.contexts[context].name)
 
     def assertion_passed(self, assertion):
         super().assertion_started(assertion)
@@ -161,7 +161,7 @@ class VerboseReporter(shared.SimpleReporter, shared.StreamReporter):
 
     def context_errored(self, context, exception):
         super().context_errored(context, exception)
-        self._print('  ' + '\n  '.join(self.view_models[context].error_summary))
+        self._print('  ' + '\n  '.join(self.suite_view_model.contexts[context].error_summary))
 
     def suite_ended(self, suite):
         super().suite_ended(suite)
@@ -169,7 +169,7 @@ class VerboseReporter(shared.SimpleReporter, shared.StreamReporter):
 
     def summarise(self):
         self._print(self.dashes)
-        if self.failed:
+        if self.suite_view_model.failed:
             self._print('FAILED!')
             self._print(self.failure_numbers())
         else:
@@ -178,15 +178,15 @@ class VerboseReporter(shared.SimpleReporter, shared.StreamReporter):
 
     def success_numbers(self):
         return "{}, {}".format(
-            pluralise("context", len(self.view_models)),
-            pluralise("assertion", len(self.assertions)))
+            pluralise("context", len(self.suite_view_model.contexts)),
+            pluralise("assertion", len(self.suite_view_model.assertions)))
 
     def failure_numbers(self):
         return "{}, {}: {} failed, {}".format(
-            pluralise("context", len(self.view_models)),
-            pluralise("assertion", len(self.assertions)),
-            len(self.assertion_failures),
-            pluralise("error", len(self.assertion_errors) + len(self.context_errors) + len(self.unexpected_errors)))
+            pluralise("context", len(self.suite_view_model.contexts)),
+            pluralise("assertion", len(self.suite_view_model.assertions)),
+            len(self.suite_view_model.assertion_failures),
+            pluralise("error", len(self.suite_view_model.assertion_errors) + len(self.suite_view_model.context_errors) + len(self.suite_view_model.unexpected_errors)))
 
 
 class StdOutCapturingReporter(SummarisingReporter):

@@ -51,7 +51,7 @@ def cmd():
 
     _run_impl(os.path.realpath(args.path), reporter, args.shuffle)
 
-    if reporter.failed:
+    if reporter.suite_view_model.failed:
         sys.exit(1)
     sys.exit(0)
 

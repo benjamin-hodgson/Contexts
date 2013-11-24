@@ -16,38 +16,21 @@ class StreamReporter(Reporter):
 class SimpleReporter(Reporter):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.view_models = {}
-        self.unexpected_errors = []
-
-    @property
-    def failed(self):
-        return self.context_errors or self.assertion_errors or self.assertion_failures or self.unexpected_errors
-    @property
-    def assertions(self):
-        return [a for vm in self.view_models.values() for a in vm.assertions.values()]
-    @property
-    def assertion_failures(self):
-        return [a for a in self.assertions if a.status == "failed"]
-    @property
-    def assertion_errors(self):
-        return [a for a in self.assertions if a.status == "errored"]
-    @property
-    def context_errors(self):
-        return [vm for vm in self.view_models.values() if vm.status == "errored"]
+        self.suite_view_model = SuiteViewModel()
 
     def context_started(self, context):
         super().context_started(context)
         self.current_context = ContextViewModel(context)
-        self.view_models[context] = self.current_context
+        self.suite_view_model.contexts[context] = self.current_context
 
     def context_ended(self, context):
         super().context_ended(context)
-        self.view_models[context].status = "ended"
+        self.suite_view_model.contexts[context].status = "ended"
         self.current_context = None
 
     def context_errored(self, context, exception):
-        self.view_models[context].set_exception(exception)
-        self.view_models[context].status = "errored"
+        self.suite_view_model.contexts[context].set_exception(exception)
+        self.suite_view_model.contexts[context].status = "errored"
         self.current_context = None
         super().context_errored(context, exception)
 
@@ -73,9 +56,30 @@ class SimpleReporter(Reporter):
         super().assertion_errored(assertion, exception)
 
     def unexpected_error(self, exception):
-        self.unexpected_errors.append(format_exception(exception))
+        self.suite_view_model.unexpected_errors.append(format_exception(exception))
         super().unexpected_error(exception)
 
+
+class SuiteViewModel(object):
+    def __init__(self):
+        self.unexpected_errors = []
+        self.contexts = {}
+
+    @property
+    def failed(self):
+        return self.context_errors or self.assertion_errors or self.assertion_failures or self.unexpected_errors
+    @property
+    def assertions(self):
+        return [a for vm in self.contexts.values() for a in vm.assertions.values()]
+    @property
+    def assertion_failures(self):
+        return [a for a in self.assertions if a.status == "failed"]
+    @property
+    def assertion_errors(self):
+        return [a for a in self.assertions if a.status == "errored"]
+    @property
+    def context_errors(self):
+        return [vm for vm in self.contexts.values() if vm.status == "errored"]
 
 class ContextViewModel(object):
     def __init__(self, context):

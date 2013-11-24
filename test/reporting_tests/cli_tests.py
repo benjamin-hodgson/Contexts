@@ -59,7 +59,7 @@ class WhenWatchingForDots(object):
         self.sixth.should.equal('..FEEE')
 
 
-class WhenPrintingASuccessfulReport(object):
+class WhenPrintingASuccessReport(object):
     def in_the_context_of_a_successful_run(self):
         # We don't want it to try and print anything while we set it up
         self.stringio = StringIO()

@@ -3,7 +3,7 @@ from io import StringIO
 from . import shared
 
 
-class TeamCityReporter(shared.StreamReporter, shared.SimpleReporter):
+class TeamCityReporter(shared.SimpleReporter, shared.StreamReporter):
     def suite_started(self, suite):
         super().suite_started(suite)
         self.teamcity_print("testSuiteStarted", name="contexts")
@@ -26,7 +26,7 @@ class TeamCityReporter(shared.StreamReporter, shared.SimpleReporter):
     def context_errored(self, context, exception):
         super().context_errored(context, exception)
         self.context_name_prefix = ''
-        context_vm = self.view_models[context]
+        context_vm = self.suite_view_model.contexts[context]
         self.teamcity_print("testStarted", name=context_vm.name)
         self.output_buffers(context_vm.name)
         msg2 = teamcity_format("##teamcity[testFailed name='{}' message='{}' details='{}']", context_vm.name, str(exception), '\n'.join(context_vm.error_summary))
@@ -68,7 +68,11 @@ class TeamCityReporter(shared.StreamReporter, shared.SimpleReporter):
         super().unexpected_error(exception)
         self.context_name_prefix = ''
         self.teamcity_print("testStarted", name='Test error')
-        msg2 = teamcity_format("##teamcity[testFailed name='Test error' message='{}' details='{}']", str(exception), '\n'.join(self.unexpected_errors[-1]))
+        msg2 = teamcity_format(
+            "##teamcity[testFailed name='Test error' message='{}' details='{}']",
+            str(exception),
+            '\n'.join(self.suite_view_model.unexpected_errors[-1])
+        )
         self._print(msg2)
         self.teamcity_print("testFinished", name='Test error')
 

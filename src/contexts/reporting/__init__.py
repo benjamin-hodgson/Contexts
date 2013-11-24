@@ -52,10 +52,6 @@ class ReporterNotifier(object):
 
 
 class Reporter(object):
-    @property
-    def failed(self):
-        return True
-
     def suite_started(self, suite):
         """Called at the beginning of a test run"""
 
