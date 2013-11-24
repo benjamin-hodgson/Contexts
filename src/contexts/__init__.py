@@ -1,6 +1,5 @@
 import sys
 import time as time_module
-from . import reporting
 from . import core
 from .reporting import cli
 
@@ -41,7 +40,7 @@ def run(spec=None, reporter=None):
 
 
 def _run_impl(spec, reporter, shuffle=True):
-    notifier = reporting.ReporterNotifier(reporter)
+    notifier = core.ReporterNotifier(reporter)
     suite = core.Suite(spec, shuffle)
     suite.run(notifier)
 

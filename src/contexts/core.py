@@ -1,3 +1,4 @@
+from contextlib import contextmanager
 import inspect
 import itertools
 import os
@@ -119,6 +120,56 @@ class Assertion(object):
     def run(self, test_data, reporter_notifier):
         with reporter_notifier.run_assertion(self):
             run_with_test_data(self.func, test_data)
+
+
+class ReporterNotifier(object):
+    def __init__(self, reporter):
+        self.reporter = reporter
+
+    @contextmanager
+    def run_suite(self, suite):
+        self.reporter.suite_started(suite)
+        try:
+            yield
+        except Exception as e:
+            self.reporter.unexpected_error(e)
+        self.reporter.suite_ended(suite)
+
+    @contextmanager
+    def run_context(self, context):
+        self.reporter.context_started(context)
+        try:
+            yield
+        except Exception as e:
+            self.reporter.context_errored(context, e)
+        else:
+            self.reporter.context_ended(context)
+
+    @contextmanager
+    def run_assertion(self, assertion):
+        self.reporter.assertion_started(assertion)
+        try:
+            yield
+        except AssertionError as e:
+            self.reporter.assertion_failed(assertion, e)
+        except Exception as e:
+            self.reporter.assertion_errored(assertion, e)
+        else:
+            self.reporter.assertion_passed(assertion)
+
+    @contextmanager
+    def run_class(self, cls):
+        try:
+            yield
+        except Exception as e:
+            self.reporter.unexpected_error(e)
+
+    @contextmanager
+    def importing(self, module_spec):
+        try:
+            yield
+        except Exception as e:
+            self.reporter.unexpected_error(e)
 
 
 def run_with_test_data(func, test_data):
