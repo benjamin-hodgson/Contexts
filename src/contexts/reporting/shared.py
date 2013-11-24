@@ -87,13 +87,13 @@ class SuiteViewModel(object):
     def assertion_started(self, assertion):
         self.current_context.add_assertion(assertion)
     def assertion_passed(self, assertion):
-        self.current_context.current_assertion.status = "passed"
+        self.current_context.assertions[assertion].status = "passed"
     def assertion_failed(self, assertion, exception):
-        assertion_vm = self.current_context.current_assertion
+        assertion_vm = self.current_context.assertions[assertion]
         assertion_vm.status = "failed"
         assertion_vm.set_exception(exception)
     def assertion_errored(self, assertion, exception):
-        assertion_vm = self.current_context.current_assertion
+        assertion_vm = self.current_context.assertions[assertion]
         assertion_vm.status = "errored"
         assertion_vm.set_exception(exception)
 
@@ -119,9 +119,9 @@ class ContextViewModel(object):
         return [a for a in self.assertions.values() if a.status == "errored"]
 
     def add_assertion(self, assertion):
-        self.current_assertion = AssertionViewModel(assertion)
-        self.current_assertion.status = "running"
-        self.assertions[assertion] = self.current_assertion
+        view_model = AssertionViewModel(assertion)
+        view_model.status = "running"
+        self.assertions[assertion] = view_model
 
     def set_exception(self, exception):
         self.error_summary = format_exception(exception)

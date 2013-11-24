@@ -58,11 +58,11 @@ class SummarisingReporter(shared.SimpleReporter, shared.StreamReporter):
 
     def assertion_failed(self, assertion, exception):
         super().assertion_failed(assertion, exception)
-        self.add_current_assertion_to_summary()
+        self.add_assertion_to_summary(assertion)
 
     def assertion_errored(self, assertion, exception):
         super().assertion_errored(assertion, exception)
-        self.add_current_assertion_to_summary()
+        self.add_assertion_to_summary(assertion)
 
     def suite_ended(self, suite):
         super().suite_ended(suite)
@@ -94,8 +94,8 @@ class SummarisingReporter(shared.SimpleReporter, shared.StreamReporter):
     def add_current_context_to_summary(self):
         self.summary.extend(self.current_summary)
 
-    def add_current_assertion_to_summary(self):
-        assertion_vm = self.suite_view_model.current_context.current_assertion
+    def add_assertion_to_summary(self, assertion):
+        assertion_vm = self.suite_view_model.current_context.assertions[assertion]
         formatted_exc = assertion_vm.error_summary
 
         if assertion_vm.status == "errored":

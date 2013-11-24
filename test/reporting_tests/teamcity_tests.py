@@ -168,7 +168,7 @@ class WhenAnAssertionFailsInTeamCity(TeamCitySharedContext):
     def it_should_tell_team_city_what_went_to_stderr(self):
         self.get_output(2)[1].should.equal("##teamcity[testStdErr name='Fake context -> Fake assertion 3' out='to stderr|n']")
     def it_should_tell_team_city_the_assertion_failed(self):
-        self.get_output(2)[2].should.equal("##teamcity[testFailed name='Fake context -> Fake assertion 3' message='Gotcha' details='{}']".format(self.formatted_tb))
+        self.get_output(2)[2].should.equal("##teamcity[testFailed name='Fake context -> Fake assertion 3' message='test.tools.FakeException: Gotcha' details='{}']".format(self.formatted_tb))
         self.get_output(2)[3].should.equal("##teamcity[testFinished name='Fake context -> Fake assertion 3']")
     def it_should_not_report_anything_else_at_assertion_end(self):
         self.get_output(2).should.have.length_of(4)
@@ -237,7 +237,7 @@ class WhenAnAssertionErrorsInTeamCity(TeamCitySharedContext):
     def it_should_tell_team_city_what_went_to_stderr(self):
         self.get_output(2)[1].should.equal("##teamcity[testStdErr name='Fake context -> Fake assertion 4' out='to stderr|n']")
     def it_should_output_a_stack_trace_for_the_assertion(self):
-        self.get_output(2)[2].should.equal("##teamcity[testFailed name='Fake context -> Fake assertion 4' message='you fail' details='{}']".format(self.formatted_tb))
+        self.get_output(2)[2].should.equal("##teamcity[testFailed name='Fake context -> Fake assertion 4' message='test.tools.FakeException: you fail' details='{}']".format(self.formatted_tb))
         self.get_output(2)[3].should.equal("##teamcity[testFinished name='Fake context -> Fake assertion 4']")
     def it_should_not_report_anything_else_at_assertion_end(self):
         self.get_output(2).should.have.length_of(4)
@@ -299,7 +299,7 @@ class WhenAContextErrorsInTeamCity(TeamCitySharedContext):
     def it_should_tell_team_city_what_went_to_stderr(self):
         self.get_output(1)[2].should.equal("##teamcity[testStdErr name='Fake context' out='to stderr|n']")
     def it_should_tell_team_city_the_test_failed(self):
-        self.get_output(1)[3].should.equal("##teamcity[testFailed name='Fake context' message='oh dear' details='{}']".format(self.formatted_tb))
+        self.get_output(1)[3].should.equal("##teamcity[testFailed name='Fake context' message='test.tools.FakeException: oh dear' details='{}']".format(self.formatted_tb))
         self.get_output(1)[4].should.equal("##teamcity[testFinished name='Fake context']")
     def it_should_not_report_anything_else_following_the_ctx_error(self):
         self.get_output(1).should.have.length_of(5)
@@ -346,7 +346,7 @@ class WhenAnUnexpectedErrorOccursInTeamCity(TeamCitySharedContext):
 
     def it_should_tell_team_city_a_test_started_and_failed_for_the_unexpected_error(self):
         self.get_output(1)[0].should.equal("##teamcity[testStarted name='Test error']")
-        self.get_output(1)[1].should.equal("##teamcity[testFailed name='Test error' message='another exception' details='{}']".format(self.formatted_tb))
+        self.get_output(1)[1].should.equal("##teamcity[testFailed name='Test error' message='test.tools.FakeException: another exception' details='{}']".format(self.formatted_tb))
         self.get_output(1)[2].should.equal("##teamcity[testFinished name='Test error']")
     def it_should_not_report_anything_else_following_unexpected_error(self):
         self.get_output(1).should.have.length_of(3)

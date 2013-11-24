@@ -66,20 +66,23 @@ class WhenPrintingASuccessReport(object):
         self.reporter = reporting.cli.SummarisingReporter(StringIO())
         self.ctx1 = tools.create_context("")
         self.ctx2 = tools.create_context("")
+        self.assertion1 = tools.create_assertion("")
+        self.assertion2 = tools.create_assertion("")
+        self.assertion3 = tools.create_assertion("")
 
     def because_we_run_some_tests(self):
         self.reporter.suite_started(None)
 
         self.reporter.context_started(self.ctx1)
-        self.reporter.assertion_started(tools.create_assertion(""))
-        self.reporter.assertion_passed(tools.create_assertion(""))
-        self.reporter.assertion_started(tools.create_assertion(""))
-        self.reporter.assertion_passed(tools.create_assertion(""))
+        self.reporter.assertion_started(self.assertion1)
+        self.reporter.assertion_passed(self.assertion1)
+        self.reporter.assertion_started(self.assertion2)
+        self.reporter.assertion_passed(self.assertion2)
         self.reporter.context_ended(self.ctx1)
 
         self.reporter.context_started(self.ctx2)
-        self.reporter.assertion_started(tools.create_assertion(""))
-        self.reporter.assertion_passed(tools.create_assertion(""))
+        self.reporter.assertion_started(self.assertion3)
+        self.reporter.assertion_passed(self.assertion3)
         self.reporter.context_ended(self.ctx2)
 
         self.reporter.stream = self.stringio
