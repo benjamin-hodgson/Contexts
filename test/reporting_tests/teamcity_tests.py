@@ -1,7 +1,7 @@
 import sys
 from io import StringIO
+import re
 import sure
-import contexts
 from contexts.reporting import teamcity
 from .. import tools
 
@@ -375,11 +375,48 @@ class WhenEscapingForTeamCity(object):
         self.input, self.expected = example
 
     def because_we_escape_the_char(self):
-        self.reporter = teamcity.escape(self.input)
+        self.result = teamcity.escape(self.input)
 
     def it_should_escape_the_chars_correctly(self):
-        self.reporter.should.equal(self.expected)
+        self.result.should.equal(self.expected)
+
+
+class WhenParsingATeamCityMessage(object):
+    # tests for the test helper method
+    @classmethod
+    def examples(self):
+        yield "##teamcity[hello]", ('hello', {})
+        yield "##teamcity[hello2 ]", ('hello2', {})
+        yield "##teamcity[msgName one='value one' two='value two']", ('msgName', {'one':'value one', 'two':'value two'})
+        yield "##teamcity[escaped1 name='|'']", ('escaped1', {'name': "|'"})
+        yield "##teamcity[escaped2 name='|]']", ('escaped2', {'name': "|]"})
+
+    def context(self, example):
+        self.msg, (self.expected_name, self.expected_values) = example
+
+    def because_we_parse_a_message(self):
+        self.name, self.values = teamcity_parse(self.msg)
+
+    def it_should_return_the_correct_name(self):
+        self.name.should.equal(self.expected_name)
+
+    def it_should_return_the_correct_values(self):
+        self.values.should.equal(self.expected_values)
+
+
+def teamcity_parse(string):
+    outer_match = re.match(r"##teamcity\[(\S+)( .*)?(?<!\|)\]", string)
+
+    assignments_string = outer_match.group(2)
+    if assignments_string is not None and assignments_string.strip():
+        assignment_matches = re.findall(r"(\w+)='(.*?)(?<!\|)'", assignments_string)
+        assignments = dict(assignment_matches)
+    else:
+        assignments = {}
+
+    return (outer_match.group(1), assignments)
 
 
 if __name__ == "__main__":
+    import contexts
     contexts.main()
