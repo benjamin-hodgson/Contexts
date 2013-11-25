@@ -18,8 +18,8 @@ class TeamCitySharedContext(object):
         if n != 0:
             full_output_n_minus_1 = self.outputs[n-1].strip()
             list_n_minus_1 = full_output_n_minus_1.split('\n')
-            return list_n[len(list_n_minus_1):]
-        return list_n
+            list_n = list_n[len(list_n_minus_1):]
+        return [teamcity_parse(s) for s in list_n]
 
 
 class WhenATestRunPassesInTeamCity(TeamCitySharedContext):
@@ -67,45 +67,45 @@ class WhenATestRunPassesInTeamCity(TeamCitySharedContext):
         self.fake_stdout.getvalue().should.be.empty
 
     def it_should_tell_team_city_it_started(self):
-        self.get_output(0)[0].should.equal("##teamcity[testSuiteStarted name='contexts']")
+        self.get_output(0)[0].should.equal(("testSuiteStarted", {'name':'contexts'}))
     def it_should_not_report_anything_else_at_start(self):
         self.get_output(0).should.have.length_of(1)
 
     def it_should_tell_team_city_the_first_assertion_started(self):
-        self.get_output(1)[0].should.equal("##teamcity[testStarted name='Fake context -> Fake assertion 1']")
+        self.get_output(1)[0].should.equal(("testStarted", {'name':'Fake context -> Fake assertion 1'}))
     def it_should_not_report_anything_else_at_first_assertion_start(self):
         self.get_output(1).should.have.length_of(1)
     def it_should_tell_team_city_what_went_to_stdout_the_first_time(self):
-        self.get_output(2)[0].should.equal("##teamcity[testStdOut name='Fake context -> Fake assertion 1' out='to stdout|n']")
+        self.get_output(2)[0].should.equal(("testStdOut", {'name':'Fake context -> Fake assertion 1', 'out':'to stdout|n'}))
     def it_should_tell_team_city_what_went_to_stderr_the_first_time(self):
-        self.get_output(2)[1].should.equal("##teamcity[testStdErr name='Fake context -> Fake assertion 1' out='to stderr|n']")
+        self.get_output(2)[1].should.equal(("testStdErr", {'name':'Fake context -> Fake assertion 1', 'out':'to stderr|n'}))
     def it_should_tell_team_city_the_first_assertion_passed(self):
-        self.get_output(2)[2].should.equal("##teamcity[testFinished name='Fake context -> Fake assertion 1']")
+        self.get_output(2)[2].should.equal(("testFinished", {'name':'Fake context -> Fake assertion 1'}))
     def it_should_not_report_anything_else_at_first_assertion_end(self):
         self.get_output(2).should.have.length_of(3)
 
     def it_should_tell_team_city_the_second_assertion_started(self):
-        self.get_output(3)[0].should.equal("##teamcity[testStarted name='Fake context -> Fake assertion 2']")
+        self.get_output(3)[0].should.equal(("testStarted", {'name':'Fake context -> Fake assertion 2'}))
     def it_should_not_report_anything_else_at_second_assertion_start(self):
         self.get_output(3).should.have.length_of(1)
     def it_should_tell_team_city_what_went_to_stdout_the_second_time(self):
-        self.get_output(4)[0].should.equal("##teamcity[testStdOut name='Fake context -> Fake assertion 2' out='to stdout|nto stdout again|n']")
+        self.get_output(4)[0].should.equal(("testStdOut", {'name':'Fake context -> Fake assertion 2', 'out':'to stdout|nto stdout again|n'}))
     def it_should_tell_team_city_what_went_to_stderr_the_second_time(self):
-        self.get_output(4)[1].should.equal("##teamcity[testStdErr name='Fake context -> Fake assertion 2' out='to stderr|n']")
+        self.get_output(4)[1].should.equal(("testStdErr", {'name':'Fake context -> Fake assertion 2', 'out':'to stderr|n'}))
     def it_should_tell_team_city_the_second_assertion_passed(self):
-        self.get_output(4)[2].should.equal("##teamcity[testFinished name='Fake context -> Fake assertion 2']")
+        self.get_output(4)[2].should.equal(("testFinished", {'name':'Fake context -> Fake assertion 2'}))
     def it_should_not_report_anything_else_at_second_assertion_end(self):
         self.get_output(4).should.have.length_of(3)
 
     def it_should_report_the_exmpl(self):
         # also asserting that nothing about stdout comes out here
-        self.get_output(5)[0].should.equal("##teamcity[testStarted name='Fake context 2 -> |[|'abc|', 123, None|] -> Fake assertion 3']")
-        self.get_output(5)[1].should.equal("##teamcity[testFinished name='Fake context 2 -> |[|'abc|', 123, None|] -> Fake assertion 3']")
+        self.get_output(5)[0].should.equal(("testStarted", {'name':"Fake context 2 -> |[|'abc|', 123, None|] -> Fake assertion 3"}))
+        self.get_output(5)[1].should.equal(("testFinished", {'name':"Fake context 2 -> |[|'abc|', 123, None|] -> Fake assertion 3"}))
     def it_should_not_report_anything_following_the_second_ctx(self):
         self.get_output(5).should.have.length_of(2)
 
     def it_should_tell_team_city_the_suite_ended(self):
-        self.get_output(6)[0].should.equal("##teamcity[testSuiteFinished name='contexts']")
+        self.get_output(6)[0].should.equal(("testSuiteFinished", {'name':'contexts'}))
     def it_should_not_report_anything_else_at_suite_end(self):
         self.get_output(6).should.have.length_of(1)
 
@@ -155,26 +155,26 @@ class WhenAnAssertionFailsInTeamCity(TeamCitySharedContext):
         self.fake_stdout.getvalue().should.be.empty
 
     def it_should_tell_team_city_it_started(self):
-        self.get_output(0)[0].should.equal("##teamcity[testSuiteStarted name='contexts']")
+        self.get_output(0)[0].should.equal(("testSuiteStarted", {'name':'contexts'}))
     def it_should_not_report_anything_else_at_start(self):
         self.get_output(0).should.have.length_of(1)
 
     def it_should_tell_team_city_the_assertion_started(self):
-        self.get_output(1)[0].should.equal("##teamcity[testStarted name='Fake context -> Fake assertion 3']")
+        self.get_output(1)[0].should.equal(("testStarted", {'name':'Fake context -> Fake assertion 3'}))
     def it_should_not_report_anything_else_at_assertion_start(self):
         self.get_output(1).should.have.length_of(1)
     def it_should_tell_team_city_what_went_to_stdout(self):
-        self.get_output(2)[0].should.equal("##teamcity[testStdOut name='Fake context -> Fake assertion 3' out='to stdout|n']")
+        self.get_output(2)[0].should.equal(("testStdOut", {'name':'Fake context -> Fake assertion 3', 'out':'to stdout|n'}))
     def it_should_tell_team_city_what_went_to_stderr(self):
-        self.get_output(2)[1].should.equal("##teamcity[testStdErr name='Fake context -> Fake assertion 3' out='to stderr|n']")
+        self.get_output(2)[1].should.equal(("testStdErr", {'name':'Fake context -> Fake assertion 3', 'out':'to stderr|n'}))
     def it_should_tell_team_city_the_assertion_failed(self):
-        self.get_output(2)[2].should.equal("##teamcity[testFailed name='Fake context -> Fake assertion 3' message='test.tools.FakeException: Gotcha' details='{}']".format(self.formatted_tb))
-        self.get_output(2)[3].should.equal("##teamcity[testFinished name='Fake context -> Fake assertion 3']")
+        self.get_output(2)[2].should.equal(("testFailed", {'name':'Fake context -> Fake assertion 3', 'message':'test.tools.FakeException: Gotcha', 'details':self.formatted_tb}))
+        self.get_output(2)[3].should.equal(("testFinished", {'name':'Fake context -> Fake assertion 3'}))
     def it_should_not_report_anything_else_at_assertion_end(self):
         self.get_output(2).should.have.length_of(4)
 
     def it_should_tell_team_city_the_suite_ended(self):
-        self.get_output(3)[0].should.equal("##teamcity[testSuiteFinished name='contexts']")
+        self.get_output(3)[0].should.equal(("testSuiteFinished", {'name':'contexts'}))
     def it_should_not_report_anything_else_at_suite_end(self):
         self.get_output(3).should.have.length_of(1)
 
@@ -224,26 +224,26 @@ class WhenAnAssertionErrorsInTeamCity(TeamCitySharedContext):
         self.fake_stdout.getvalue().should.be.empty
 
     def it_should_tell_team_city_it_started(self):
-        self.get_output(0)[0].should.equal("##teamcity[testSuiteStarted name='contexts']")
+        self.get_output(0)[0].should.equal(("testSuiteStarted", {'name':'contexts'}))
     def it_should_not_report_anything_else_at_start(self):
         self.get_output(0).should.have.length_of(1)
 
     def it_should_tell_team_city_the_assertion_started(self):
-        self.get_output(1)[0].should.equal("##teamcity[testStarted name='Fake context -> Fake assertion 4']")
+        self.get_output(1)[0].should.equal(("testStarted", {'name':'Fake context -> Fake assertion 4'}))
     def it_should_not_report_anything_else_at_assertion_start(self):
         self.get_output(1).should.have.length_of(1)
     def it_should_tell_team_city_what_went_to_stdout(self):
-        self.get_output(2)[0].should.equal("##teamcity[testStdOut name='Fake context -> Fake assertion 4' out='to stdout|n']")
+        self.get_output(2)[0].should.equal(("testStdOut", {'name':'Fake context -> Fake assertion 4', 'out':'to stdout|n'}))
     def it_should_tell_team_city_what_went_to_stderr(self):
-        self.get_output(2)[1].should.equal("##teamcity[testStdErr name='Fake context -> Fake assertion 4' out='to stderr|n']")
+        self.get_output(2)[1].should.equal(("testStdErr", {'name':'Fake context -> Fake assertion 4', 'out':'to stderr|n'}))
     def it_should_output_a_stack_trace_for_the_assertion(self):
-        self.get_output(2)[2].should.equal("##teamcity[testFailed name='Fake context -> Fake assertion 4' message='test.tools.FakeException: you fail' details='{}']".format(self.formatted_tb))
-        self.get_output(2)[3].should.equal("##teamcity[testFinished name='Fake context -> Fake assertion 4']")
+        self.get_output(2)[2].should.equal(("testFailed", {'name':'Fake context -> Fake assertion 4', 'message':'test.tools.FakeException: you fail', 'details':self.formatted_tb}))
+        self.get_output(2)[3].should.equal(("testFinished", {'name':'Fake context -> Fake assertion 4'}))
     def it_should_not_report_anything_else_at_assertion_end(self):
         self.get_output(2).should.have.length_of(4)
 
     def it_should_tell_team_city_the_suite_ended(self):
-        self.get_output(3)[0].should.equal("##teamcity[testSuiteFinished name='contexts']")
+        self.get_output(3)[0].should.equal(("testSuiteFinished", {'name':'contexts'}))
     def it_should_not_report_anything_else_at_suite_end(self):
         self.get_output(3).should.have.length_of(1)
 
@@ -288,24 +288,24 @@ class WhenAContextErrorsInTeamCity(TeamCitySharedContext):
         self.fake_stdout.getvalue().should.be.empty
 
     def it_should_tell_team_city_it_started(self):
-        self.get_output(0)[0].should.equal("##teamcity[testSuiteStarted name='contexts']")
+        self.get_output(0)[0].should.equal(("testSuiteStarted", {'name':'contexts'}))
     def it_should_not_report_anything_else_at_start(self):
         self.get_output(0).should.have.length_of(1)
 
     def it_should_tell_team_city_another_test_started(self):
-        self.get_output(1)[0].should.equal("##teamcity[testStarted name='Fake context']")
+        self.get_output(1)[0].should.equal(("testStarted", {'name':'Fake context'}))
     def it_should_tell_team_city_what_went_to_stdout(self):
-        self.get_output(1)[1].should.equal("##teamcity[testStdOut name='Fake context' out='to stdout|n']")
+        self.get_output(1)[1].should.equal(("testStdOut", {'name':'Fake context', 'out':'to stdout|n'}))
     def it_should_tell_team_city_what_went_to_stderr(self):
-        self.get_output(1)[2].should.equal("##teamcity[testStdErr name='Fake context' out='to stderr|n']")
+        self.get_output(1)[2].should.equal(("testStdErr", {'name':'Fake context', 'out':'to stderr|n'}))
     def it_should_tell_team_city_the_test_failed(self):
-        self.get_output(1)[3].should.equal("##teamcity[testFailed name='Fake context' message='test.tools.FakeException: oh dear' details='{}']".format(self.formatted_tb))
-        self.get_output(1)[4].should.equal("##teamcity[testFinished name='Fake context']")
+        self.get_output(1)[3].should.equal(("testFailed", {'name':'Fake context', 'message':'test.tools.FakeException: oh dear', 'details':self.formatted_tb}))
+        self.get_output(1)[4].should.equal(("testFinished", {'name':'Fake context'}))
     def it_should_not_report_anything_else_following_the_ctx_error(self):
         self.get_output(1).should.have.length_of(5)
 
     def it_should_tell_team_city_the_suite_ended(self):
-        self.get_output(2)[0].should.equal("##teamcity[testSuiteFinished name='contexts']")
+        self.get_output(2)[0].should.equal(("testSuiteFinished", {'name':'contexts'}))
     def it_should_not_report_anything_else_at_suite_end(self):
         self.get_output(2).should.have.length_of(1)
 
@@ -340,19 +340,19 @@ class WhenAnUnexpectedErrorOccursInTeamCity(TeamCitySharedContext):
         self.outputs.append(self.stringio.getvalue())
 
     def it_should_tell_team_city_it_started(self):
-        self.get_output(0)[0].should.equal("##teamcity[testSuiteStarted name='contexts']")
+        self.get_output(0)[0].should.equal(("testSuiteStarted", {'name':'contexts'}))
     def it_should_not_report_anything_else_at_start(self):
         self.get_output(0).should.have.length_of(1)
 
     def it_should_tell_team_city_a_test_started_and_failed_for_the_unexpected_error(self):
-        self.get_output(1)[0].should.equal("##teamcity[testStarted name='Test error']")
-        self.get_output(1)[1].should.equal("##teamcity[testFailed name='Test error' message='test.tools.FakeException: another exception' details='{}']".format(self.formatted_tb))
-        self.get_output(1)[2].should.equal("##teamcity[testFinished name='Test error']")
+        self.get_output(1)[0].should.equal(("testStarted", {'name':'Test error'}))
+        self.get_output(1)[1].should.equal(("testFailed", {'name':'Test error', 'message':'test.tools.FakeException: another exception', 'details':self.formatted_tb}))
+        self.get_output(1)[2].should.equal(("testFinished", {'name':'Test error'}))
     def it_should_not_report_anything_else_following_unexpected_error(self):
         self.get_output(1).should.have.length_of(3)
 
     def it_should_tell_team_city_the_suite_ended(self):
-        self.get_output(2)[0].should.equal("##teamcity[testSuiteFinished name='contexts']")
+        self.get_output(2)[0].should.equal(("testSuiteFinished", {'name':'contexts'}))
     def it_should_not_report_anything_else_at_suite_end(self):
         self.get_output(2).should.have.length_of(1)
 
