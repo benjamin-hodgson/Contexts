@@ -133,6 +133,10 @@ class ContextViewModel(object):
         self.status = "running"
 
     @property
+    def failed(self):
+        return self.assertion_failures or self.assertion_errors or self.error_summary
+
+    @property
     def assertion_failures(self):
         return [a for a in self.assertions.values() if a.status == "failed"]
     @property

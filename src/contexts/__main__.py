@@ -53,6 +53,7 @@ def cmd():
 
     _run_impl(os.path.realpath(args.path), reporter, args.shuffle)
 
+    # clean me!
     if isinstance(reporter, reporting.cli.VerboseReporter) and reporter.suite_view_model.failed:
         sys.exit(1)
     elif reporter.reporters[1].suite_view_model.failed:

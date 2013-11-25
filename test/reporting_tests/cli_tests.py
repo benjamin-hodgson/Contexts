@@ -211,6 +211,10 @@ class WhenPrintingVerbosely(object):
                ('made_up_file_15.py', 4, 'made_up_function_4', 'frame4')]
         self.exception4 = tools.build_fake_exception(tb4, "out")
 
+        tb5 = [('made_up_file_16.py', 3, 'made_up_function_3', 'frame3'),
+               ('made_up_file_17.py', 4, 'made_up_function_4', 'frame4')]
+        self.exception5 = tools.build_fake_exception(tb5, "out")
+
         self.context2 = tools.create_context("made.up_context_2", ["abc", 123])
 
     def because_we_run_some_tests(self):
@@ -235,6 +239,9 @@ class WhenPrintingVerbosely(object):
 
         self.reporter.context_started(self.context2)
         self.reporter.context_errored(self.context2, self.exception4)
+        self.outputs.append(self.stringio.getvalue())
+
+        self.reporter.unexpected_error(self.exception5)
         self.outputs.append(self.stringio.getvalue())
 
         self.reporter.suite_ended(None)
@@ -279,16 +286,151 @@ class WhenPrintingVerbosely(object):
   test.tools.FakeException: out
 """)
 
-    def it_should_output_a_summary(self):
+    def it_should_output_a_stack_trace_for_the_unexpected_error(self):
         self.get_output(5).should.equal(
+"""Traceback (most recent call last):
+  File "made_up_file_16.py", line 3, in made_up_function_3
+    frame3
+  File "made_up_file_17.py", line 4, in made_up_function_4
+    frame4
+test.tools.FakeException: out
+""")
+
+    def it_should_output_a_summary(self):
+        self.get_output(6).should.equal(
 """----------------------------------------------------------------------
 FAILED!
-2 contexts, 3 assertions: 1 failed, 2 errors
+2 contexts, 3 assertions: 1 failed, 3 errors
 """)
 
     def get_output(self, n):
         full_output_n = self.outputs[n]
         return full_output_n[len(self.outputs[n-1]):] if n != 0 else full_output_n
+
+
+class WhenPrintingASuccessReportLessVerbosely(object):
+    def in_the_context_of_a_successful_run(self):
+        self.stringio = StringIO()
+        self.reporter = reporting.cli.LessVerboseReporter(self.stringio)
+        self.ctx1 = tools.create_context("")
+        self.ctx2 = tools.create_context("")
+        self.assertion1 = tools.create_assertion("")
+        self.assertion2 = tools.create_assertion("")
+        self.assertion3 = tools.create_assertion("")
+
+    def because_we_run_some_tests(self):
+        self.reporter.suite_started(None)
+
+        self.reporter.context_started(self.ctx1)
+        self.reporter.assertion_started(self.assertion1)
+        self.reporter.assertion_passed(self.assertion1)
+        self.reporter.assertion_started(self.assertion2)
+        self.reporter.assertion_passed(self.assertion2)
+        self.reporter.context_ended(self.ctx1)
+
+        self.reporter.context_started(self.ctx2)
+        self.reporter.assertion_started(self.assertion3)
+        self.reporter.assertion_passed(self.assertion3)
+        self.reporter.context_ended(self.ctx2)
+
+        self.reporter.suite_ended(None)
+
+    def it_should_print_the_summary_to_the_stream(self):
+        self.stringio.getvalue().should.equal(
+"""
+----------------------------------------------------------------------
+PASSED!
+2 contexts, 3 assertions
+""")
+
+
+class WhenPrintingAFailureReportLessVerbosely(object):
+    def in_the_context_of_a_failed_run(self):
+        self.stringio = StringIO()
+        self.reporter = reporting.cli.LessVerboseReporter(self.stringio)
+
+        self.context1 = tools.create_context("made.up_context_1")
+
+        self.assertion1 = tools.create_assertion("made.up.assertion_1")
+        tb1 = [('made_up_file.py', 3, 'made_up_function', 'frame1'),
+               ('another_made_up_file.py', 2, 'another_made_up_function', 'frame2')]
+        self.exception1 = tools.build_fake_exception(tb1, "Gotcha")
+
+        self.assertion2 = tools.create_assertion("made.up.assertion_2")
+        tb2 = [('made_up_file_3.py', 1, 'made_up_function_3', 'frame3'),
+               ('made_up_file_4.py', 2, 'made_up_function_4', 'frame4')]
+        self.exception2 = tools.build_fake_exception(tb2, "you fail")
+
+        self.assertion3 = tools.create_assertion("made.up.assertion_3")
+
+        self.context2 = tools.create_context("made.up_context_2", ["abc", 123, None])
+        tb3 = [('made_up_file_5.py', 1, 'made_up_function_5', 'frame5'),
+               ('made_up_file_6.py', 2, 'made_up_function_6', 'frame6')]
+        self.exception3 = tools.build_fake_exception(tb3, "oh dear")
+
+        tb4 = [('made_up_file_7.py', 1, 'made_up_function_7', 'frame7'),
+               ('made_up_file_8.py', 2, 'made_up_function_8', 'frame8')]
+        self.exception4 = tools.build_fake_exception(tb4, "oh dear")
+
+        self.context3 = tools.create_context("made.up_context_3")
+
+    def because_we_run_some_tests(self):
+        self.reporter.suite_started(None)
+
+        self.reporter.context_started(self.context1)
+        self.reporter.assertion_started(self.assertion1)
+        self.reporter.assertion_errored(self.assertion1, self.exception1)
+        self.reporter.assertion_started(self.assertion2)
+        self.reporter.assertion_failed(self.assertion2, self.exception2)
+        self.reporter.assertion_started(self.assertion3)
+        self.reporter.assertion_passed(self.assertion3)
+        self.reporter.context_ended(self.context1)
+
+        self.reporter.context_started(self.context2)
+        self.reporter.context_errored(self.context2, self.exception3)
+
+        self.reporter.context_started(self.context3)
+        self.reporter.context_ended(self.context3)
+
+        self.reporter.unexpected_error(self.exception4)
+
+        self.reporter.suite_ended(None)
+
+    def it_should_print_a_traceback_for_each_failure(self):
+        self.stringio.getvalue().should.equal("""
+----------------------------------------------------------------------
+made up context 1
+  ERROR: made up assertion 1
+    Traceback (most recent call last):
+      File "made_up_file.py", line 3, in made_up_function
+        frame1
+      File "another_made_up_file.py", line 2, in another_made_up_function
+        frame2
+    test.tools.FakeException: Gotcha
+  FAIL: made up assertion 2
+    Traceback (most recent call last):
+      File "made_up_file_3.py", line 1, in made_up_function_3
+        frame3
+      File "made_up_file_4.py", line 2, in made_up_function_4
+        frame4
+    test.tools.FakeException: you fail
+made up context 2 -> ['abc', 123, None]
+  Traceback (most recent call last):
+    File "made_up_file_5.py", line 1, in made_up_function_5
+      frame5
+    File "made_up_file_6.py", line 2, in made_up_function_6
+      frame6
+  test.tools.FakeException: oh dear
+Traceback (most recent call last):
+  File "made_up_file_7.py", line 1, in made_up_function_7
+    frame7
+  File "made_up_file_8.py", line 2, in made_up_function_8
+    frame8
+test.tools.FakeException: oh dear
+----------------------------------------------------------------------
+FAILED!
+3 contexts, 3 assertions: 1 failed, 3 errors
+""")
 
 
 class WhenCapturingStdOut(object):

@@ -159,6 +159,10 @@ class VerboseReporter(shared.SimpleReporter, shared.StreamReporter):
         super().context_errored(context, exception)
         self._print('  ' + '\n  '.join(self.suite_view_model.contexts[context].error_summary))
 
+    def unexpected_error(self, exception):
+        super().unexpected_error(exception)
+        self._print('\n'.join(self.suite_view_model.unexpected_errors[-1]))
+
     def suite_ended(self, suite):
         super().suite_ended(suite)
         self.summarise()
@@ -183,6 +187,59 @@ class VerboseReporter(shared.SimpleReporter, shared.StreamReporter):
             pluralise("assertion", len(self.suite_view_model.assertions)),
             len(self.suite_view_model.assertion_failures),
             pluralise("error", len(self.suite_view_model.assertion_errors) + len(self.suite_view_model.context_errors) + len(self.suite_view_model.unexpected_errors)))
+
+
+class LessVerboseReporter(VerboseReporter):
+    def __init__(self, stream=sys.stdout):
+        super().__init__(stream)
+        self.real_stream = stream
+        self.stream = StringIO()
+        self.to_output_at_end = StringIO()
+
+    def context_started(self, context):
+        self.current_context_failed = False
+        super().context_started(context)
+
+    def context_ended(self, context):
+        super().context_ended(context)
+        if self.current_context_failed:
+            self.to_output_at_end.write(self.stream.getvalue())
+        self.stream = StringIO()
+
+    def context_errored(self, context, exception):
+        super().context_errored(context, exception)
+        self.to_output_at_end.write(self.stream.getvalue())
+        self.stream = StringIO()
+
+    def assertion_passed(self, assertion):
+        orig_stream = self.stream
+        self.stream = StringIO()
+        super().assertion_passed(assertion)
+        self.stream = orig_stream
+
+    def assertion_failed(self, assertion, exception):
+        super().assertion_failed(assertion, exception)
+        self.current_context_failed = True
+
+    def assertion_errored(self, assertion, exception):
+        super().assertion_errored(assertion, exception)
+        self.current_context_failed = True
+
+    def unexpected_error(self, exception):
+        orig_stream = self.stream
+        self.stream = self.to_output_at_end
+        super().unexpected_error(exception)
+        self.stream = orig_stream
+
+    def suite_ended(self, suite):
+        output = self.to_output_at_end.getvalue()
+        if output:
+            self.real_stream.write('\n' + self.dashes + '\n')
+            self.real_stream.write(output[:-1])
+
+        self.stream = self.real_stream
+        self._print('')
+        super().suite_ended(suite)
 
 
 class StdOutCapturingReporter(SummarisingReporter):
