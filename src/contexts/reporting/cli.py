@@ -134,30 +134,55 @@ class SummarisingReporter(shared.SimpleReporter, shared.StreamReporter):
 
 class VerboseReporter(shared.SimpleReporter, shared.StreamReporter):
     dashes = '-' * 70
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.current_indent = ''
+
+    def indent(self):
+        self.current_indent += '  '
+
+    def dedent(self):
+        self.current_indent = self.current_indent[:-2]
+
+    def _print(self, string, *args, **kwargs):
+        lines = string.split('\n')
+        for i, line in enumerate(lines[:]):
+            lines[i] = self.current_indent + line
+        super()._print('\n'.join(lines), *args, **kwargs)
 
     def context_started(self, context):
         super().context_started(context)
         self._print(self.suite_view_model.contexts[context].name)
+        self.indent()
+
+    def context_ended(self, context):
+        self.dedent()
+        super().context_ended(context)
+
+    def context_errored(self, context, exception):
+        super().context_errored(context, exception)
+        self._print('\n'.join(self.suite_view_model.contexts[context].error_summary))
+        self.dedent()
 
     def assertion_passed(self, assertion):
         super().assertion_started(assertion)
-        self._print('  PASS: ' + self.suite_view_model.current_context.assertions[assertion].name)
+        self._print('PASS: ' + self.suite_view_model.current_context.assertions[assertion].name)
 
     def assertion_failed(self, assertion, exception):
         super().assertion_failed(assertion, exception)
         vm = self.suite_view_model.current_context.assertions[assertion]
-        self._print('  FAIL: ' + vm.name)
-        self._print('    ' + '\n    '.join(vm.error_summary))
+        self._print('FAIL: ' + vm.name)
+        self.indent()
+        self._print('\n'.join(vm.error_summary))
+        self.dedent()
 
     def assertion_errored(self, assertion, exception):
         super().assertion_errored(assertion, exception)
         vm = self.suite_view_model.current_context.assertions[assertion]
-        self._print('  ERROR: ' + vm.name)
-        self._print('    ' + '\n    '.join(vm.error_summary))
-
-    def context_errored(self, context, exception):
-        super().context_errored(context, exception)
-        self._print('  ' + '\n  '.join(self.suite_view_model.contexts[context].error_summary))
+        self._print('ERROR: ' + vm.name)
+        self.indent()
+        self._print('\n'.join(vm.error_summary))
+        self.dedent()
 
     def unexpected_error(self, exception):
         super().unexpected_error(exception)
