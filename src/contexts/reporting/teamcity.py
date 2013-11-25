@@ -29,13 +29,12 @@ class TeamCityReporter(shared.SimpleReporter, shared.StreamReporter):
         context_vm = self.suite_view_model.contexts[context]
         self.teamcity_print("testStarted", name=context_vm.name)
         self.output_buffers(context_vm.name)
-        msg2 = teamcity_format(
-            "##teamcity[testFailed name='{}' message='{}' details='{}']",
-            context_vm.name,
-            context_vm.error_summary[-1],
-            '\n'.join(context_vm.error_summary)
+        self.teamcity_print(
+            "testFailed",
+            name=context_vm.name,
+            message=context_vm.error_summary[-1],
+            details='\n'.join(context_vm.error_summary)
         )
-        self._print(msg2)
         self.teamcity_print("testFinished", name=context_vm.name)
         sys.stdout, sys.stderr = self.real_stdout, self.real_stderr
 
@@ -56,13 +55,12 @@ class TeamCityReporter(shared.SimpleReporter, shared.StreamReporter):
         assertion_vm = self.suite_view_model.current_context.assertions[assertion]
         name = self.context_name_prefix + assertion_vm.name
         self.output_buffers(name)
-        msg = teamcity_format(
-            "##teamcity[testFailed name='{}' message='{}' details='{}']",
-            self.context_name_prefix + assertion_vm.name,
-            assertion_vm.error_summary[-1],
-            '\n'.join(assertion_vm.error_summary)
+        self.teamcity_print(
+            "testFailed",
+            name=self.context_name_prefix + assertion_vm.name,
+            message=assertion_vm.error_summary[-1],
+            details='\n'.join(assertion_vm.error_summary)
         )
-        self._print(msg)
         self.teamcity_print("testFinished", name=name)
 
     def assertion_errored(self, assertion, exception):
@@ -70,47 +68,39 @@ class TeamCityReporter(shared.SimpleReporter, shared.StreamReporter):
         assertion_vm = self.suite_view_model.current_context.assertions[assertion]
         name = self.context_name_prefix + assertion_vm.name
         self.output_buffers(name)
-        msg = teamcity_format(
-            "##teamcity[testFailed name='{}' message='{}' details='{}']",
-            self.context_name_prefix + assertion_vm.name,
-            assertion_vm.error_summary[-1],
-            '\n'.join(assertion_vm.error_summary)
+        self.teamcity_print(
+            "testFailed",
+            name=self.context_name_prefix + assertion_vm.name,
+            message=assertion_vm.error_summary[-1],
+            details='\n'.join(assertion_vm.error_summary)
         )
-        self._print(msg)
         self.teamcity_print("testFinished", name=name)
 
     def unexpected_error(self, exception):
         super().unexpected_error(exception)
+        error_summary = self.suite_view_model.unexpected_errors[-1]
         self.context_name_prefix = ''
         self.teamcity_print("testStarted", name='Test error')
-        error_summary = self.suite_view_model.unexpected_errors[-1]
-        msg2 = teamcity_format(
-            "##teamcity[testFailed name='Test error' message='{}' details='{}']",
-            error_summary[-1],
-            '\n'.join(error_summary)
-        )
-        self._print(msg2)
+        self.teamcity_print("testFailed", name='Test error', message=error_summary[-1], details='\n'.join(error_summary))
         self.teamcity_print("testFinished", name='Test error')
+
+    def output_buffers(self, name):
+        if self.stdout_buffer.getvalue():
+            self.teamcity_print(
+                "testStdOut",
+                name=name,
+                out=self.stdout_buffer.getvalue()
+            )
+        if self.stderr_buffer.getvalue():
+            self.teamcity_print(
+                "testStdErr",
+                name=name,
+                out=self.stderr_buffer.getvalue()
+            )
 
     def teamcity_print(self, msgName, **kwargs):
         msg = ' '.join(teamcity_format("{}='{}'", k, v) for k, v in kwargs.items())
         self._print("##teamcity[{} {}]".format(teamcity_format(msgName), msg))
-
-    def output_buffers(self, name):
-        if self.stdout_buffer.getvalue():
-            msg = teamcity_format(
-                "##teamcity[testStdOut name='{}' out='{}']",
-                name,
-                self.stdout_buffer.getvalue()
-            )
-            self._print(msg)
-        if self.stderr_buffer.getvalue():
-            msg = teamcity_format(
-                "##teamcity[testStdErr name='{}' out='{}']",
-                name,
-                self.stderr_buffer.getvalue()
-            )
-            self._print(msg)
 
 
 def teamcity_format(format_string, *args):
