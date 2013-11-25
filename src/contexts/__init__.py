@@ -1,7 +1,7 @@
 import sys
 import time as time_module
 from . import core
-from .reporting import cli
+from . import reporting
 
 
 __all__ = ['run', 'main', 'catch', 'set_trace']
@@ -28,9 +28,11 @@ def run(spec=None, reporter=None):
     run(package_path:string) - run all the test classes found in the package and subfolders
     """
     if reporter is None:
-        reporter = type("CapturingCLIReporter",
-            (cli.DotsReporter, cli.TimedReporter, cli.StdOutCapturingReporter),
-            {})()
+        reporter = reporting.shared.ReporterComposite((
+            reporting.cli.DotsReporter(),
+            reporting.cli.StdOutCapturingReporter(),
+            reporting.cli.TimedReporter()
+        ))
     if spec is None:
         spec = sys.modules['__main__']
 

@@ -2,7 +2,7 @@ import argparse
 import os
 import sys
 from . import _run_impl
-from .reporting import cli, teamcity
+from . import reporting
 
 
 def cmd():
@@ -31,27 +31,31 @@ def cmd():
         action='store',
         nargs='?',
         default=os.getcwd(),
-        help="Path to the test file or directory to run.")
+        help="Path to the test file or directory to run. (default current directory)")
     args = parser.parse_args()
 
     if args.teamcity or "TEAMCITY_VERSION" in os.environ:
-        reporter = teamcity.TeamCityReporter()
+        reporter = reporting.teamcity.TeamCityReporter()
     elif args.verbose:
-        reporter = cli.VerboseReporter()
+        reporter = reporting.cli.VerboseReporter()
     elif args.capture:
-        reporter = type(
-            "CapturingCLIReporter",
-            (cli.DotsReporter, cli.TimedReporter, cli.StdOutCapturingReporter),
-            {})()
+        reporter = reporting.shared.ReporterComposite((
+            reporting.cli.DotsReporter(),
+            reporting.cli.StdOutCapturingReporter(),
+            reporting.cli.TimedReporter()
+        ))
     else:
-        reporter = type(
-            "NonCapturingCLIReporter",
-            (cli.DotsReporter, cli.TimedReporter, cli.SummarisingReporter),
-            {})()
+        reporter = reporting.shared.ReporterComposite((
+            reporting.cli.DotsReporter(),
+            reporting.cli.SummarisingReporter(),
+            reporting.cli.TimedReporter()
+        ))
 
     _run_impl(os.path.realpath(args.path), reporter, args.shuffle)
 
-    if reporter.suite_view_model.failed:
+    if isinstance(reporter, reporting.cli.VerboseReporter) and reporter.suite_view_model.failed:
+        sys.exit(1)
+    elif reporter.reporters[1].suite_view_model.failed:
         sys.exit(1)
     sys.exit(0)
 

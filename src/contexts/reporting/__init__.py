@@ -31,3 +31,5 @@ class Reporter(object):
 
     def assertion_failed(self, assertion, exception):
         """Called when an assertion throws an AssertionError"""
+
+from . import shared, cli, teamcity
