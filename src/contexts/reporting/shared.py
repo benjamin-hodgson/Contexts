@@ -4,6 +4,27 @@ import traceback
 from . import Reporter
 
 
+class ReporterComposite(object):
+    def __init__(self, reporters):
+        self.reporters = reporters
+
+    @property
+    def failed(self):
+        return any(r.failed for r in self.reporters if hasattr(r, 'failed'))
+
+    def __getattr__(self, name):
+        return MethodComposite([getattr(r, name) for r in self.reporters])
+
+
+class MethodComposite(object):
+    def __init__(self, methods):
+        self.methods = methods
+
+    def __call__(self, *args, **kwargs):
+        for method in self.methods:
+            method(*args, **kwargs)
+
+
 class StreamReporter(Reporter):
     def __init__(self, stream=sys.stderr):
         super().__init__()
