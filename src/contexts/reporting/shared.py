@@ -4,25 +4,54 @@ import traceback
 from . import Reporter
 
 
-class ReporterComposite(object):
-    def __init__(self, reporters):
-        self.reporters = reporters
+class ReporterManager(Reporter):
+    def __init__(self, *reporters):
+        self.reporters = []
+        self.suite_view_model = SuiteViewModel()
+        for reporter in reporters:
+            self.reporters.append(reporter)
+            reporter.suite_view_model = self.suite_view_model  # is this a good idea?
 
     @property
     def failed(self):
         return any(r.failed for r in self.reporters if hasattr(r, 'failed'))
 
-    def __getattr__(self, name):
-        return MethodComposite([getattr(r, name) for r in self.reporters])
+    # TODO: abstract this
+    def suite_started(self, suite):
+        self.call_reporters("suite_started", suite)
+    def suite_ended(self, suite):
+        self.call_reporters("suite_ended", suite)
 
+    def context_started(self, context):
+        self.suite_view_model.context_started(context)
+        self.call_reporters("context_started", context)
+    def context_ended(self, context):
+        self.suite_view_model.context_ended(context)
+        self.call_reporters("context_ended", context)
+    def context_errored(self, context, exception):
+        self.suite_view_model.context_errored(context, exception)
+        self.call_reporters("context_errored", context, exception)
 
-class MethodComposite(object):
-    def __init__(self, methods):
-        self.methods = methods
+    def assertion_started(self, assertion):
+        self.suite_view_model.assertion_started(assertion)
+        self.call_reporters("assertion_started", assertion)
+    def assertion_passed(self, assertion):
+        self.suite_view_model.assertion_passed(assertion)
+        self.call_reporters("assertion_passed", assertion)
+    def assertion_failed(self, assertion, exception):
+        self.suite_view_model.assertion_failed(assertion, exception)
+        self.call_reporters("assertion_failed", assertion, exception)
+    def assertion_errored(self, assertion, exception):
+        self.suite_view_model.assertion_errored(assertion, exception)
+        self.call_reporters("assertion_errored", assertion, exception)
 
-    def __call__(self, *args, **kwargs):
-        for method in self.methods:
-            method(*args, **kwargs)
+    def unexpected_error(self, exception):
+        self.suite_view_model.unexpected_error(exception)
+        self.call_reporters("unexpected_error", exception)
+
+    def call_reporters(self, method, *args):
+        for reporter in self.reporters:
+            getattr(reporter, method)(*args)
 
 
 class StreamReporter(Reporter):
@@ -32,44 +61,6 @@ class StreamReporter(Reporter):
 
     def _print(self, *args, sep=' ', end='\n', flush=True):
         print(*args, sep=sep, end=end, file=self.stream, flush=flush)
-
-
-class SimpleReporter(Reporter):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.suite_view_model = SuiteViewModel()
-
-    def context_started(self, context):
-        super().context_started(context)
-        self.suite_view_model.context_started(context)
-
-    def context_ended(self, context):
-        super().context_ended(context)
-        self.suite_view_model.context_ended(context)
-
-    def context_errored(self, context, exception):
-        self.suite_view_model.context_errored(context, exception)
-        super().context_errored(context, exception)
-
-    def assertion_started(self, assertion):
-        super().assertion_started(assertion)
-        self.suite_view_model.assertion_started(assertion)
-
-    def assertion_passed(self, assertion):
-        self.suite_view_model.assertion_passed(assertion)
-        super().assertion_passed(assertion)
-
-    def assertion_failed(self, assertion, exception):
-        self.suite_view_model.assertion_failed(assertion, exception)
-        super().assertion_failed(assertion, exception)
-
-    def assertion_errored(self, assertion, exception):
-        self.suite_view_model.assertion_errored(assertion, exception)
-        super().assertion_errored(assertion, exception)
-
-    def unexpected_error(self, exception):
-        self.suite_view_model.unexpected_error(exception)
-        super().unexpected_error(exception)
 
 
 class SuiteViewModel(object):
@@ -93,6 +84,11 @@ class SuiteViewModel(object):
     @property
     def context_errors(self):
         return [vm for vm in self.contexts.values() if vm.status == "errored"]
+
+    def suite_started(self, suite):
+        pass
+    def suite_ended(self, suite):
+        pass
 
     def context_started(self, context):
         self.current_context = ContextViewModel(context)

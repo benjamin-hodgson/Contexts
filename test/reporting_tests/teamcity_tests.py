@@ -2,14 +2,14 @@ import sys
 from io import StringIO
 import re
 import sure
-from contexts.reporting import teamcity
+from contexts.reporting import teamcity, shared
 from .. import tools
 
 
 class TeamCitySharedContext(object):
     def shared_context(self):
         self.stringio = StringIO()
-        self.reporter = teamcity.TeamCityReporter(self.stringio)
+        self.reporter = shared.ReporterManager(teamcity.TeamCityReporter(self.stringio))
         self.outputs = []
 
     def get_output(self, n):

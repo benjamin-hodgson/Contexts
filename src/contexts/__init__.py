@@ -28,11 +28,11 @@ def run(spec=None, reporter=None):
     run(package_path:string) - run all the test classes found in the package and subfolders
     """
     if reporter is None:
-        reporter = reporting.shared.ReporterComposite((
+        reporter = reporting.shared.ReporterManager(
             reporting.cli.DotsReporter(),
             reporting.cli.StdOutCapturingReporter(),
             reporting.cli.TimedReporter()
-        ))
+        )
     if spec is None:
         spec = sys.modules['__main__']
 

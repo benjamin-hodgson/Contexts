@@ -26,7 +26,7 @@ class DotsReporter(shared.StreamReporter):
         self._print('E', end='')
 
 
-class VerboseReporter(shared.SimpleReporter, shared.StreamReporter):
+class VerboseReporter(shared.StreamReporter):
     dashes = '-' * 70
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)

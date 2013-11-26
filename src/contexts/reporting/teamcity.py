@@ -3,7 +3,7 @@ from io import StringIO
 from . import shared
 
 
-class TeamCityReporter(shared.SimpleReporter, shared.StreamReporter):
+class TeamCityReporter(shared.StreamReporter):
     def suite_started(self, suite):
         super().suite_started(suite)
         self.teamcity_print("testSuiteStarted", name="contexts")

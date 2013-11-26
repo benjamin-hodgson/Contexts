@@ -39,17 +39,17 @@ def cmd():
     elif args.verbose:
         reporter = reporting.cli.VerboseReporter()
     elif args.capture:
-        reporter = reporting.shared.ReporterComposite((
+        reporter = reporting.shared.ReporterManager(
             reporting.cli.DotsReporter(),
             reporting.cli.StdOutCapturingReporter(),
             reporting.cli.TimedReporter()
-        ))
+        )
     else:
-        reporter = reporting.shared.ReporterComposite((
+        reporter = reporting.shared.ReporterManager(
             reporting.cli.DotsReporter(),
             reporting.cli.SummarisingReporter(),
             reporting.cli.TimedReporter()
-        ))
+        )
 
     _run_impl(os.path.realpath(args.path), reporter, args.shuffle)
 
