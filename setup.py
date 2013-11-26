@@ -12,7 +12,7 @@ setup(
     long_description = """See the Github project page (https://github.com/benjamin-hodgson/Contexts) for more information.""",
     package_dir = {'':'src'},
     packages = find_packages('src'),
-    install_requires = ["setuptools >= 1.0"],
+    install_requires = ["setuptools >= 1.0", "colorama"],
     tests_require = ["sure >= 1.2.2"],
     entry_points = {
     	'console_scripts': ['run-contexts = contexts.__main__:cmd']

@@ -1,6 +1,8 @@
 import datetime
 import sys
+from contextlib import contextmanager
 from io import StringIO
+import colorama
 from . import shared
 
 
@@ -107,6 +109,40 @@ class VerboseReporter(shared.StreamReporter):
             pluralise("assertion", len(self.suite_view_model.assertions)),
             len(self.suite_view_model.assertion_failures),
             pluralise("error", len(self.suite_view_model.assertion_errors) + len(self.suite_view_model.context_errors) + len(self.suite_view_model.unexpected_errors)))
+
+
+class ColouredReporter(VerboseReporter):
+    def context_errored(self, context, exception):
+        with self.red():
+            super().context_errored(context, exception)
+
+    def assertion_passed(self, assertion):
+        with self.green():
+            super().assertion_passed(assertion)
+
+    def assertion_failed(self, assertion, exception):
+        with self.red():
+            super().assertion_failed(assertion, exception)
+
+    def assertion_errored(self, assertion, exception):
+        with self.red():
+            super().assertion_errored(assertion, exception)
+
+    def unexpected_error(self, exception):
+        with self.red():
+            super().unexpected_error(exception)
+
+    @contextmanager
+    def red(self):
+        self.stream.write(colorama.Fore.RED)
+        yield
+        self.stream.write(colorama.Fore.RESET)
+
+    @contextmanager
+    def green(self):
+        self.stream.write(colorama.Fore.GREEN)
+        yield
+        self.stream.write(colorama.Fore.RESET)
 
 
 class SummarisingReporter(VerboseReporter):

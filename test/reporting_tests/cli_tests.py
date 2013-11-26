@@ -404,6 +404,120 @@ FAILED!
         sys.stderr = self.real_stderr
 
 
+class WhenColouringOutput(object):
+    def context(self):
+        self.stringio = StringIO()
+        self.reporter = reporting.shared.ReporterManager(reporting.cli.ColouredReporter(self.stringio))
+        self.outputs = []
+
+        self.context1 = tools.create_context("made.up_context_1")
+
+        self.assertion1 = tools.create_assertion("assertion1")
+
+        self.assertion2 = tools.create_assertion("assertion2")
+        tb2 = [('made_up_file_10.py', 1, 'made_up_function_1', 'frame1'),
+               ('made_up_file_11.py', 2, 'made_up_function_2', 'frame2')]
+        self.exception2 = tools.build_fake_exception(tb2, "you fail")
+
+        self.assertion3 = tools.create_assertion("assertion3")
+        tb3 = [('made_up_file_12.py', 3, 'made_up_function_3', 'frame3'),
+               ('made_up_file_13.py', 4, 'made_up_function_4', 'frame4')]
+        self.exception3 = tools.build_fake_exception(tb3, "no")
+
+        tb4 = [('made_up_file_14.py', 3, 'made_up_function_3', 'frame3'),
+               ('made_up_file_15.py', 4, 'made_up_function_4', 'frame4')]
+        self.exception4 = tools.build_fake_exception(tb4, "out")
+
+        tb5 = [('made_up_file_16.py', 3, 'made_up_function_3', 'frame3'),
+               ('made_up_file_17.py', 4, 'made_up_function_4', 'frame4')]
+        self.exception5 = tools.build_fake_exception(tb5, "out")
+
+        self.context2 = tools.create_context("made.up_context_2", ["abc", 123])
+
+    def because_we_run_some_tests(self):
+        self.reporter.suite_started(None)
+
+        self.reporter.context_started(self.context1)
+        self.outputs.append(self.stringio.getvalue())
+
+        self.reporter.assertion_started(self.assertion1)
+        self.reporter.assertion_passed(self.assertion1)
+        self.outputs.append(self.stringio.getvalue())
+
+        self.reporter.assertion_started(self.assertion2)
+        self.reporter.assertion_failed(self.assertion2, self.exception2)
+        self.outputs.append(self.stringio.getvalue())
+
+        self.reporter.assertion_started(self.assertion3)
+        self.reporter.assertion_errored(self.assertion3, self.exception3)
+        self.outputs.append(self.stringio.getvalue())
+
+        self.reporter.context_ended(self.context1)
+
+        self.reporter.context_started(self.context2)
+        self.reporter.context_errored(self.context2, self.exception4)
+        self.outputs.append(self.stringio.getvalue())
+
+        self.reporter.unexpected_error(self.exception5)
+        self.outputs.append(self.stringio.getvalue())
+
+        self.reporter.suite_ended(None)
+        self.outputs.append(self.stringio.getvalue())
+
+    def it_should_say_the_ctx_started(self):
+        self.get_output(0).should.equal("made up context 1\n")
+
+    def it_should_output_in_green_for_the_passing_assertion(self):
+        self.get_output(1).should.equal('\x1b[32m  PASS: assertion 1\n\x1b[39m')
+
+    def it_should_output_a_red_stack_trace_for_the_failed_assertion(self):
+        self.get_output(2).should.equal(
+"""\x1b[31m  FAIL: assertion 2
+    Traceback (most recent call last):
+      File "made_up_file_10.py", line 1, in made_up_function_1
+        frame1
+      File "made_up_file_11.py", line 2, in made_up_function_2
+        frame2
+    test.tools.FakeException: you fail
+\x1b[39m""")
+
+    def it_should_output_a_red_stack_trace_for_the_errored_assertion(self):
+        self.get_output(3).should.equal(
+"""\x1b[31m  ERROR: assertion 3
+    Traceback (most recent call last):
+      File "made_up_file_12.py", line 3, in made_up_function_3
+        frame3
+      File "made_up_file_13.py", line 4, in made_up_function_4
+        frame4
+    test.tools.FakeException: no
+\x1b[39m""")
+
+    def it_should_output_a_red_stack_trace_for_the_errored_ctx(self):
+        self.get_output(4).should.equal(
+"""made up context 2 -> ['abc', 123]
+\x1b[31m  Traceback (most recent call last):
+    File "made_up_file_14.py", line 3, in made_up_function_3
+      frame3
+    File "made_up_file_15.py", line 4, in made_up_function_4
+      frame4
+  test.tools.FakeException: out
+\x1b[39m""")
+
+    def it_should_output_a_red_stack_trace_for_the_unexpected_error(self):
+        self.get_output(5).should.equal(
+"""\x1b[31mTraceback (most recent call last):
+  File "made_up_file_16.py", line 3, in made_up_function_3
+    frame3
+  File "made_up_file_17.py", line 4, in made_up_function_4
+    frame4
+test.tools.FakeException: out
+\x1b[39m""")
+
+    def get_output(self, n):
+        full_output_n = self.outputs[n]
+        return full_output_n[len(self.outputs[n-1]):] if n != 0 else full_output_n
+
+
 class WhenTimingATestRun(object):
     def context(self):
         self.fake_now = datetime.datetime(2013, 10, 22, 13, 41, 0)
