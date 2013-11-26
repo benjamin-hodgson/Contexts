@@ -7,12 +7,12 @@ core_file = repr(contexts.core.__file__)[1:-1]
 this_file = repr(__file__)[1:-1]
 
 
-class WhenRunningASpec(object):
+class WhenRunningASpec:
     def context(self):
         self.assertion_err = AssertionError()
         self.value_err = ValueError()
 
-        class TestSpec(object):
+        class TestSpec:
             log = ""
             def method_with_establish_in_the_name(s):
                 s.__class__.log += "arrange "
@@ -93,12 +93,12 @@ class WhenRunningASpec(object):
         self.reporter.calls.should.have.length_of(10)
 
 
-class WhenAContextErrors(object):
+class WhenAContextErrors:
     def context(self):
         self.value_err = ValueError("explode")
         self.type_err = TypeError("oh no")
         self.assertion_err = AssertionError("shut up")
-        class ErrorInSetup(object):
+        class ErrorInSetup:
             ran_cleanup = False
             ran_because = False
             ran_assertion = False
@@ -110,7 +110,7 @@ class WhenAContextErrors(object):
                 s.__class__.ran_assertion = True
             def cleanup(s):
                 s.__class__.ran_cleanup = True
-        class ErrorInAction(object):
+        class ErrorInAction:
             ran_cleanup = False
             ran_assertion = False
             def because(s):
@@ -119,7 +119,7 @@ class WhenAContextErrors(object):
                 s.__class__.ran_assertion = True
             def cleanup(s):
                 s.__class__.ran_cleanup = True
-        class ErrorInTeardown(object):
+        class ErrorInTeardown:
             def it(s):
                 pass
             def cleanup(s):
@@ -170,7 +170,7 @@ class WhenAContextErrors(object):
         self.reporters[2].calls[4][2].should.equal(self.assertion_err)
 
 
-class WhenRunningTheSameClassMultipleTimes(object):
+class WhenRunningTheSameClassMultipleTimes:
     def context(self):
         self.create_class()
 
@@ -198,11 +198,11 @@ class WhenRunningTheSameClassMultipleTimes(object):
         self.spec = type("Spec", (object,), cls_dict)
 
 
-class WhenCatchingAnException(object):
+class WhenCatchingAnException:
     def context(self):
         self.exception = ValueError("test exception")
 
-        class TestSpec(object):
+        class TestSpec:
             exception = None
             def context(s):
                 def throwing_function(a, b, c, d=[]):
@@ -231,7 +231,7 @@ class WhenCatchingAnException(object):
         call_names.should_not.contain("assertion_failed")
 
 
-class WhenTimingSomething(object):
+class WhenTimingSomething:
     def context(self):
         self.mock_clock = mock.Mock(return_value = 10)
         self.time_diff = 100.7
@@ -251,10 +251,10 @@ class WhenTimingSomething(object):
         self.result.should.equal(self.time_diff)
 
 
-class WhenASpecHasASuperclass(object):
+class WhenASpecHasASuperclass:
     def context(self):
         self.log = ""
-        class SharedContext(object):
+        class SharedContext:
             def context(s):
                 self.log += "superclass arrange "
             def superclass_because(s):
@@ -309,9 +309,9 @@ class WhenASpecHasASuperclass(object):
         calls.should.have.length_of(1)
 
 
-class WhenASpecHasClassmethods(object):
+class WhenASpecHasClassmethods:
     def given_a_spec_with_classmethods(self):
-        class ClassmethodsSpec(object):
+        class ClassmethodsSpec:
             log = ""
             @classmethod
             def context(cls):
@@ -334,10 +334,10 @@ class WhenASpecHasClassmethods(object):
         self.spec.log.should.equal("arrange act assert teardown ")
 
 
-class WhenASpecHasStaticmethods(object):
+class WhenASpecHasStaticmethods:
     def given_a_spec_with_staticmethods(self):
         self.log = ""
-        class StaticmethodsSpec(object):
+        class StaticmethodsSpec:
             @staticmethod
             def context():
                 self.log += "arrange "
@@ -359,10 +359,10 @@ class WhenASpecHasStaticmethods(object):
         self.log.should.equal("arrange act assert teardown ")
 
 
-class WhenWeRunSpecsWithAlternatelyNamedMethods(object):
+class WhenWeRunSpecsWithAlternatelyNamedMethods:
     @classmethod
     def examples(self):
-        class GivenWhenThen(object):
+        class GivenWhenThen:
             log = ""
             def has_given_in_the_name(self):
                 self.__class__.log += "arrange "
@@ -371,7 +371,7 @@ class WhenWeRunSpecsWithAlternatelyNamedMethods(object):
             def has_then_in_the_name(self):
                 self.__class__.log += "assert "
         yield GivenWhenThen, "arrange act assert "
-        class AlternatelyNamedMethods(object):
+        class AlternatelyNamedMethods:
             log = ""
             @classmethod
             def has_data_in_the_name(cls):
@@ -382,14 +382,14 @@ class WhenWeRunSpecsWithAlternatelyNamedMethods(object):
             def has_it_in_the_name(self):
                 self.__class__.log += "assert "
         yield AlternatelyNamedMethods, "test_data arrange assert "
-        class MoreAlternativeNames(object):
+        class MoreAlternativeNames:
             log = ""
             def has_since_in_the_name(self):
                 self.__class__.log += "act "
             def has_must_in_the_name(self):
                 self.__class__.log += "assert "
         yield MoreAlternativeNames, "act assert "
-        class EvenMoreAlternativeNames(object):
+        class EvenMoreAlternativeNames:
             log = ""
             def has_after_in_the_name(self):
                 self.__class__.log += "act "
@@ -407,22 +407,22 @@ class WhenWeRunSpecsWithAlternatelyNamedMethods(object):
         self.spec.log.should.equal(self.expected_log)
 
 
-class WhenRunningAmbiguouslyNamedMethods(object):
+class WhenRunningAmbiguouslyNamedMethods:
     @classmethod
     def examples(cls):
-        class AmbiguousMethods1(object):
+        class AmbiguousMethods1:
             def this_has_both_context_and_because_in_the_name(self):
                 pass
-        class AmbiguousMethods2(object):
+        class AmbiguousMethods2:
             def this_has_both_because_and_should_in_the_name(self):
                 pass
-        class AmbiguousMethods3(object):
+        class AmbiguousMethods3:
             def this_has_both_should_and_cleanup_in_the_name(self):
                 pass
-        class AmbiguousMethods4(object):
+        class AmbiguousMethods4:
             def this_has_both_cleanup_and_establish_in_the_name(self):
                 pass
-        class AmbiguousMethods5(object):
+        class AmbiguousMethods5:
             @classmethod
             def this_has_both_examples_and_it_in_the_name(self):
                 pass
@@ -451,19 +451,19 @@ class WhenRunningAmbiguouslyNamedMethods(object):
         self.reporter.calls[-1][0].should.equal("suite_ended")
 
 
-class WhenRunningNotSoAmbiguouslyNamedMethods(object):
+class WhenRunningNotSoAmbiguouslyNamedMethods:
     @classmethod
     def examples(self):
-        class NotAmbiguousMethods1(object):
+        class NotAmbiguousMethods1:
             def this_has_both_context_and_establish_in_the_name(self):
                 pass
-        class NotAmbiguousMethods2(object):
+        class NotAmbiguousMethods2:
             def this_has_both_because_and_when_in_the_name(self):
                 pass
-        class NotAmbiguousMethods3(object):
+        class NotAmbiguousMethods3:
             def this_has_both_should_and_it_in_the_name(self):
                 pass
-        class NotAmbiguousMethods4(object):
+        class NotAmbiguousMethods4:
             @classmethod
             def this_has_both_examples_and_data_in_the_name(self):
                 yield []
@@ -479,25 +479,25 @@ class WhenRunningNotSoAmbiguouslyNamedMethods(object):
         self.exception.should.be.none
 
 
-class WhenRunningSpecsWithTooManySpecialMethods(object):
+class WhenRunningSpecsWithTooManySpecialMethods:
     @classmethod
     def examples(cls):
-        class TooManyContexts(object):
+        class TooManyContexts:
             def context(self):
                 pass
             def establish(self):
                 pass
-        class TooManyActions(object):
+        class TooManyActions:
             def because(self):
                 pass
             def when(self):
                 pass
-        class TooManyTeardowns(object):
+        class TooManyTeardowns:
             def cleanup1(self):
                 pass
             def cleanup2(self):
                 pass
-        class TooManyExamples(object):
+        class TooManyExamples:
             @classmethod
             def examples(self):
                 pass
@@ -528,9 +528,9 @@ class WhenRunningSpecsWithTooManySpecialMethods(object):
         self.reporter.calls[-1][0].should.equal("suite_ended")
 
 
-class WhenRunningAClassContainingNoAssertions(object):
+class WhenRunningAClassContainingNoAssertions:
     def context(self):
-        class NoAssertions(object):
+        class NoAssertions:
             log = []
             def context(self):
                 self.__class__.log.append('arrange')

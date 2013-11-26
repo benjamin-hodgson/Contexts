@@ -6,7 +6,7 @@ from contexts.reporting import teamcity, shared
 from .. import tools
 
 
-class TeamCitySharedContext(object):
+class TeamCitySharedContext:
     def shared_context(self):
         self.stringio = StringIO()
         self.reporter = shared.ReporterManager(teamcity.TeamCityReporter(self.stringio))
@@ -357,7 +357,7 @@ class WhenAnUnexpectedErrorOccursInTeamCity(TeamCitySharedContext):
         self.get_output(2).should.have.length_of(1)
 
 
-class WhenEscapingForTeamCity(object):
+class WhenEscapingForTeamCity:
     @classmethod
     def examples(self):
         yield "'", "|'"
@@ -381,7 +381,7 @@ class WhenEscapingForTeamCity(object):
         self.result.should.equal(self.expected)
 
 
-class WhenParsingATeamCityMessage(object):
+class WhenParsingATeamCityMessage:
     # tests for the test helper method
     @classmethod
     def examples(self):

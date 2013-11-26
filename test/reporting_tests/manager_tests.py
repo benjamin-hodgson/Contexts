@@ -4,7 +4,7 @@ from contexts.reporting.shared import ReporterManager
 from .. import tools
 
 
-class WhenComposingReporters(object):
+class WhenComposingReporters:
     @classmethod
     def examples(cls):
         yield "context_started", (tools.create_context("ctx"),)
@@ -35,7 +35,7 @@ class WhenComposingReporters(object):
         getattr(self.mock_suite, self.name).assert_called_once_with(*self.args)
 
 
-class WhenCallingSuiteStartedOrSuiteEnded(object):
+class WhenCallingSuiteStartedOrSuiteEnded:
     @classmethod
     def examples(cls):
         yield "suite_started", ("abc",)
@@ -58,38 +58,3 @@ class WhenCallingSuiteStartedOrSuiteEnded(object):
 
     def it_should_not_call_the_suite_vm(self):
         self.mock_suite.mock_calls.should.be.empty
-
-
-class WhenQueryingAFailedManager(object):
-    def establish_that_the_manager_contains_a_failed_reporter(self):
-        self.manager = ReporterManager(FakeFailedReporter(), FakePassingReporter(), FakeDontKnowReporter())
-
-    def because_we_ask_if_the_run_failed(self):
-        self.result = self.manager.failed
-
-    def it_should_say_it_failed(self):
-        self.result.should.be.true
-
-class WhenQueryingAPassingManager(object):
-    def establish_that_the_manager_contains_a_failed_reporter(self):
-        self.manager = ReporterManager(FakePassingReporter(), FakePassingReporter(), FakeDontKnowReporter())
-
-    def because_we_ask_if_the_run_failed(self):
-        self.result = self.manager.failed
-
-    def it_should_say_it_passed(self):
-        self.result.should.be.false
-
-
-###########################################################
-# Test helpers
-###########################################################
-
-class FakeFailedReporter(object):
-    def __init__(self):
-        self.failed = True
-class FakePassingReporter(object):
-    def __init__(self):
-        self.failed = False
-class FakeDontKnowReporter(object):
-    pass

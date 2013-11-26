@@ -12,17 +12,17 @@ this_file = os.path.realpath(__file__)
 test_data_dir = os.path.join(os.path.dirname(this_file), "test_data")
 
 
-class WhenRunningAModule(object):
+class WhenRunningAModule:
     def context(self):
-        class HasSpecInTheName(object):
+        class HasSpecInTheName:
             was_run = False
             def it_should_run_this(self):
                 self.__class__.was_run = True
-        class HasWhenInTheName(object):
+        class HasWhenInTheName:
             was_run = False
             def it_should_run_this(self):
                 self.__class__.was_run = True
-        class NormalClass(object):
+        class NormalClass:
             was_instantiated = False
             def __init__(self):
                 self.__class__.was_instantiated = True
@@ -44,7 +44,7 @@ class WhenRunningAModule(object):
         self.module.NormalClass.was_instantiated.should.be.false
 
 
-class WhenRunningTheSameModuleMultipleTimes(object):
+class WhenRunningTheSameModuleMultipleTimes:
     # too hard to test that shuffling works for a whole filesystem of tests :(
     def context(self):
         self.create_module()
@@ -72,12 +72,12 @@ class WhenRunningTheSameModuleMultipleTimes(object):
             setattr(self.module, class_name, cls)
 
 
-class WhenRunningAFile(object):
+class WhenRunningAFile:
     def establish_that_there_is_a_file_in_the_filesystem(self):
         self.code = """
 module_ran = False
 
-class TestSpec(object):
+class TestSpec:
     def it(self):
         global module_ran
         module_ran = True
@@ -109,12 +109,12 @@ class TestSpec(object):
             f.write(self.code)
 
 
-class WhenAFileFailsToImport(object):
+class WhenAFileFailsToImport:
     def establish_that_there_is_a_broken_file_in_the_filesystem(self):
         self.code = """
 module_ran = False
 
-class TestSpec(object):
+class TestSpec:
     def it(self):
         global module_ran
         module_ran = True
@@ -151,12 +151,12 @@ raise ZeroDivisionError("bogus error message")
             f.write(self.code)
 
 
-class WhenRunningAFolderWhichIsNotAPackage(object):
+class WhenRunningAFolderWhichIsNotAPackage:
     def establish_that_there_is_a_folder_containing_modules(self):
         self.code = """
 module_ran = False
 
-class TestSpec(object):
+class TestSpec:
     def it(self):
         global module_ran
         module_ran = True
@@ -204,13 +204,13 @@ class TestSpec(object):
                 f.write(self.code)
 
 
-class WhenAFolderContainsAnAlreadyImportedFile(object):
+class WhenAFolderContainsAnAlreadyImportedFile:
     def establish_that_we_have_already_imported_the_module(self):
         self.code = """
 module_ran = False
 is_fake = False
 
-class TestSpec(object):
+class TestSpec:
     def it(self):
         global module_ran
         module_ran = True
@@ -239,7 +239,7 @@ class TestSpec(object):
         importlib.invalidate_caches()
 
     def create_fake_module(self):
-        class TestSpec(object):
+        class TestSpec:
             def it(self):
                 global module_ran
                 module_ran = True
@@ -260,13 +260,13 @@ class TestSpec(object):
             f.write(self.code)
 
 
-class WhenAFolderContainsAFileWithTheSameNameAsAnAlreadyImportedModule(object):
+class WhenAFolderContainsAFileWithTheSameNameAsAnAlreadyImportedModule:
     def establish_that_we_have_imported_a_module_with_the_same_name(self):
         self.code = """
 module_ran = False
 is_fake = False
 
-class TestSpec(object):
+class TestSpec:
     def it(self):
         global module_ran
         module_ran = True
@@ -311,12 +311,12 @@ class TestSpec(object):
             f.write(self.code)
 
 
-class WhenRunningAFolderWhichIsAPackage(object):
+class WhenRunningAFolderWhichIsAPackage:
     def establish_that_there_is_a_folder_containing_modules(self):
         self.code = """
 module_ran = False
 
-class TestSpec(object):
+class TestSpec:
     def it(self):
         global module_ran
         module_ran = True
@@ -383,12 +383,12 @@ class TestSpec(object):
                 f.write(self.code)
 
 
-class WhenRunningAFolderWithSubfolders(object):
+class WhenRunningAFolderWithSubfolders:
     def establish_that_there_is_a_folder_containing_subfolders(self):
         self.code = """
 module_ran = False
 
-class TestSpec(object):
+class TestSpec:
     def it(self):
         global module_ran
         module_ran = True
@@ -464,12 +464,12 @@ class TestSpec(object):
                     f.write(self.code)
 
 
-class WhenRunningAPackageWithSubfolders(object):
+class WhenRunningAPackageWithSubfolders:
     def establish_that_there_is_a_package_containing_subfolders(self):
         self.code = """
 module_ran = False
 
-class TestSpec(object):
+class TestSpec:
     def it(self):
         global module_ran
         module_ran = True
@@ -562,12 +562,12 @@ class TestSpec(object):
                     f.write(self.code)
 
 
-class WhenRunningAFolderWithAFileThatFailsToImport(object):
+class WhenRunningAFolderWithAFileThatFailsToImport:
     def establish_that_there_is_a_folder_containing_modules(self):
         self.bad_code = """
 module_ran = False
 
-class TestSpec(object):
+class TestSpec:
     def it(self):
         global module_ran
         module_ran = True
@@ -577,7 +577,7 @@ raise TypeError("leave it aaaaht")
         self.good_code = """
 module_ran = False
 
-class TestSpec(object):
+class TestSpec:
     def it(self):
         global module_ran
         module_ran = True

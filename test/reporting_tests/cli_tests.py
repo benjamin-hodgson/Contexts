@@ -8,7 +8,7 @@ from contexts import reporting
 from .. import tools
 
 
-class WhenWatchingForDots(object):
+class WhenWatchingForDots:
     def context(self):
         self.stringio = StringIO()
         self.reporter = reporting.shared.ReporterManager(reporting.cli.DotsReporter(self.stringio))
@@ -59,7 +59,7 @@ class WhenWatchingForDots(object):
         self.sixth.should.equal('..FEEE')
 
 
-class WhenPrintingVerbosely(object):
+class WhenPrintingVerbosely:
     def context(self):
         self.stringio = StringIO()
         self.reporter = reporting.shared.ReporterManager(reporting.cli.VerboseReporter(self.stringio))
@@ -181,7 +181,7 @@ FAILED!
         return full_output_n[len(self.outputs[n-1]):] if n != 0 else full_output_n
 
 
-class WhenPrintingASuccessSummary(object):
+class WhenPrintingASuccessSummary:
     def in_the_context_of_a_successful_run(self):
         self.stringio = StringIO()
         self.reporter = reporting.shared.ReporterManager(reporting.cli.SummarisingReporter(self.stringio))
@@ -217,7 +217,7 @@ PASSED!
 """)
 
 
-class WhenPrintingAFailureSummary(object):
+class WhenPrintingAFailureSummary:
     def in_the_context_of_a_failed_run(self):
         self.stringio = StringIO()
         self.reporter = reporting.shared.ReporterManager(reporting.cli.SummarisingReporter(self.stringio))
@@ -306,7 +306,7 @@ FAILED!
 """)
 
 
-class WhenCapturingStdOut(object):
+class WhenCapturingStdOut:
     def context(self):
         self.real_stdout = sys.stdout
         self.real_stderr = sys.stderr
@@ -404,7 +404,7 @@ FAILED!
         sys.stderr = self.real_stderr
 
 
-class WhenColouringOutput(object):
+class WhenColouringOutput:
     def context(self):
         self.stringio = StringIO()
         self.reporter = reporting.shared.ReporterManager(reporting.cli.ColouredReporter(self.stringio))
@@ -518,7 +518,7 @@ test.tools.FakeException: out
         return full_output_n[len(self.outputs[n-1]):] if n != 0 else full_output_n
 
 
-class WhenTimingATestRun(object):
+class WhenTimingATestRun:
     def context(self):
         self.fake_now = datetime.datetime(2013, 10, 22, 13, 41, 0)
         self.fake_soon = datetime.timedelta(seconds=10, milliseconds=490)
@@ -540,7 +540,7 @@ class WhenTimingATestRun(object):
         self.stringio.getvalue().should.equal("(10.5 seconds)\n")
 
 
-class WhenMakingANameHumanReadable(object):
+class WhenMakingANameHumanReadable:
     @classmethod
     def examples(self):
         yield "lowercase", "lowercase"

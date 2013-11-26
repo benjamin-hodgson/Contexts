@@ -4,9 +4,9 @@ import contexts
 from .tools import MockReporter
 
 
-class WhenRunningAParametrisedSpec(object):
+class WhenRunningAParametrisedSpec:
     def given_a_parametrised_test(self):
-        class ParametrisedSpec(object):
+        class ParametrisedSpec:
             initialised = 0
             setups = []
             actions = []
@@ -57,9 +57,9 @@ class WhenRunningAParametrisedSpec(object):
         self.ParametrisedSpec.teardowns.should.equal([1,2])
 
 
-class WhenRunningAParametrisedSpecWithNonParametrisedMethods(object):
+class WhenRunningAParametrisedSpecWithNonParametrisedMethods:
     def context(self):
-        class ParametrisedSpec(object):
+        class ParametrisedSpec:
             initialised = 0
             setups = 0
             actions = 0
@@ -110,9 +110,9 @@ class WhenRunningAParametrisedSpecWithNonParametrisedMethods(object):
         self.ParametrisedSpec.teardowns.should.equal(2)
 
 
-class WhenRunningAModuleWithParametrisedSpecs(object):
+class WhenRunningAModuleWithParametrisedSpecs:
     def context(self):
-        class ParametrisedSpec(object):
+        class ParametrisedSpec:
             initialised = 0
             setups = []
             actions = []
@@ -165,10 +165,10 @@ class WhenRunningAModuleWithParametrisedSpecs(object):
         self.ParametrisedSpec.teardowns.should.equal([1,2])
 
 
-class WhenExamplesRaisesAnException(object):
+class WhenExamplesRaisesAnException:
     def context(self):
         self.raised = Exception()
-        class TestSpec(object):
+        class TestSpec:
             total = 0
             @classmethod
             def examples(s):
@@ -195,9 +195,9 @@ class WhenExamplesRaisesAnException(object):
         self.reporter.calls[-2][1].should.equal(self.raised)
 
 
-class WhenUserFailsToMakeExamplesAClassmethod(object):
+class WhenUserFailsToMakeExamplesAClassmethod:
     def context(self):
-        class Naughty(object):
+        class Naughty:
             def examples(self):
                 pass
         self.spec = Naughty
@@ -219,9 +219,9 @@ class WhenUserFailsToMakeExamplesAClassmethod(object):
         self.reporter.calls[-1][0].should.equal("suite_ended")
 
 
-class WhenExamplesReturnsNone(object):
+class WhenExamplesReturnsNone:
     def context(self):
-        class Spec(object):
+        class Spec:
             times_run = 0
             @classmethod
             def examples(cls):
