@@ -170,7 +170,8 @@ test.tools.FakeException: out
 
     def it_should_output_a_summary(self):
         self.get_output(6).should.equal(
-"""----------------------------------------------------------------------
+"""
+----------------------------------------------------------------------
 FAILED!
 2 contexts, 3 assertions: 1 failed, 3 errors
 """)

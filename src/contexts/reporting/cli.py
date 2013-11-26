@@ -87,6 +87,7 @@ class VerboseReporter(shared.SimpleReporter, shared.StreamReporter):
         self.summarise()
 
     def summarise(self):
+        self._print('')
         self._print(self.dashes)
         if self.suite_view_model.failed:
             self._print('FAILED!')
@@ -157,7 +158,6 @@ class SummarisingReporter(VerboseReporter):
             self.real_stream.write(output[:-1])
 
         self.stream = self.real_stream
-        self._print('')
         super().suite_ended(suite)
 
 

@@ -54,8 +54,11 @@ def cmd():
     _run_impl(os.path.realpath(args.path), reporter, args.shuffle)
 
     # clean me!
-    if isinstance(reporter, reporting.cli.VerboseReporter) and reporter.suite_view_model.failed:
-        sys.exit(1)
+    if isinstance(reporter, (reporting.cli.VerboseReporter, reporting.teamcity.TeamCityReporter)):
+        if reporter.suite_view_model.failed:
+            sys.exit(1)
+        else:
+            sys.exit(0)
     elif reporter.reporters[1].suite_view_model.failed:
         sys.exit(1)
     sys.exit(0)
