@@ -29,9 +29,9 @@ def run(spec=None, reporter=None):
     """
     if reporter is None:
         reporter = reporting.shared.ReporterManager(
-            reporting.cli.DotsReporter(),
-            reporting.cli.StdOutCapturingReporter(),
-            reporting.cli.TimedReporter()
+            reporting.cli.DotsReporter(sys.stdout),
+            reporting.cli.StdOutCapturingReporter(sys.stdout),
+            reporting.cli.TimedReporter(sys.stdout)
         )
     if spec is None:
         spec = sys.modules['__main__']

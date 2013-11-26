@@ -146,7 +146,7 @@ class ColouredReporter(VerboseReporter):
 
 
 class SummarisingReporter(VerboseReporter):
-    def __init__(self, stream=sys.stdout):
+    def __init__(self, stream):
         super().__init__(stream)
         self.real_stream = stream
         self.stream = StringIO()
@@ -191,7 +191,7 @@ class SummarisingReporter(VerboseReporter):
         output = self.to_output_at_end.getvalue()
         if output:
             self.real_stream.write('\n' + self.dashes + '\n')
-            self.real_stream.write(output[:-1])
+            self.real_stream.write(output.strip())
 
         self.stream = self.real_stream
         super().suite_ended(suite)

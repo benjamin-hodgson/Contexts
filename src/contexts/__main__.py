@@ -4,6 +4,8 @@ import sys
 from . import _run_impl
 from . import reporting
 
+import colorama; colorama.init()
+
 
 def cmd():
     parser = argparse.ArgumentParser()
@@ -35,31 +37,27 @@ def cmd():
     args = parser.parse_args()
 
     if args.teamcity or "TEAMCITY_VERSION" in os.environ:
-        reporter = reporting.teamcity.TeamCityReporter()
+        reporters = (reporting.teamcity.TeamCityReporter(sys.stdout),)
     elif args.verbose:
-        reporter = reporting.cli.VerboseReporter()
+        reporters = (reporting.cli.ColouredReporter(sys.stdout),)
     elif args.capture:
-        reporter = reporting.shared.ReporterManager(
-            reporting.cli.DotsReporter(),
-            reporting.cli.StdOutCapturingReporter(),
-            reporting.cli.TimedReporter()
+        reporters = (
+            reporting.cli.DotsReporter(sys.stdout),
+            type("ColouredCapturingReporter", (reporting.cli.ColouredReporter, reporting.cli.StdOutCapturingReporter), {})(sys.stdout),
+            reporting.cli.TimedReporter(sys.stdout)
         )
     else:
-        reporter = reporting.shared.ReporterManager(
-            reporting.cli.DotsReporter(),
-            reporting.cli.SummarisingReporter(),
-            reporting.cli.TimedReporter()
+        reporters = (
+            reporting.cli.DotsReporter(sys.stdout),
+            type("ColouredCapturingReporter", (reporting.cli.ColouredReporter, reporting.cli.SummarisingReporter), {})(sys.stdout),
+            reporting.cli.TimedReporter(sys.stdout)
         )
+
+    reporter = reporting.shared.ReporterManager(*reporters)
 
     _run_impl(os.path.realpath(args.path), reporter, args.shuffle)
 
-    # clean me!
-    if isinstance(reporter, (reporting.cli.VerboseReporter, reporting.teamcity.TeamCityReporter)):
-        if reporter.suite_view_model.failed:
-            sys.exit(1)
-        else:
-            sys.exit(0)
-    elif reporter.reporters[1].suite_view_model.failed:
+    if reporter.suite_view_model.failed:
         sys.exit(1)
     sys.exit(0)
 

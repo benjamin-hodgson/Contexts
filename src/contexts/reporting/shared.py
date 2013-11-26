@@ -55,7 +55,7 @@ class ReporterManager(Reporter):
 
 
 class StreamReporter(Reporter):
-    def __init__(self, stream=sys.stderr):
+    def __init__(self, stream):
         super().__init__()
         self.stream = stream
 

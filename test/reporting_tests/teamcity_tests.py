@@ -369,7 +369,7 @@ class WhenEscapingForTeamCity(object):
         yield '\u0041', 'A'  # should not escape normal ascii
         yield '\u007e', '~'
         yield '\u00df', '|0x00df'  # ß
-        yield '\u2f08', '|0x2f08'  # ⼈
+        yield '\u00e7', '|0x00e7'  # ç
 
     def context(self, example):
         self.input, self.expected = example
