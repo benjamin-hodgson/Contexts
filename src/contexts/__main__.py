@@ -1,7 +1,7 @@
 import argparse
 import os
 import sys
-from . import _run_impl
+from . import run
 from . import reporting
 
 import colorama; colorama.init()
@@ -55,7 +55,7 @@ def cmd():
 
     reporter = reporting.shared.ReporterManager(*reporters)
 
-    _run_impl(os.path.realpath(args.path), reporter, args.shuffle)
+    run(os.path.realpath(args.path), reporter, args.shuffle)
 
     if reporter.suite_view_model.failed:
         sys.exit(1)

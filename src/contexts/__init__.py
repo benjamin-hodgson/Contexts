@@ -17,7 +17,7 @@ def main():
     sys.exit(0)
 
 
-def run(spec=None, reporter=None):
+def run(spec=None, reporter=None, shuffle=True):
     """
     Polymorphic test-running function.
 
@@ -36,12 +36,12 @@ def run(spec=None, reporter=None):
     if spec is None:
         spec = sys.modules['__main__']
 
-    _run_impl(spec, reporter)
+    _run_impl(spec, reporter, shuffle)
 
     return not reporter.failed
 
 
-def _run_impl(spec, reporter, shuffle=True):
+def _run_impl(spec, reporter, shuffle):
     notifier = core.ReporterNotifier(reporter)
     suite = core.Suite(spec, shuffle)
     suite.run(notifier)

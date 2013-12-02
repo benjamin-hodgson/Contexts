@@ -12,6 +12,10 @@ class ReporterManager(Reporter):
             self.reporters.append(reporter)
             reporter.suite_view_model = self.suite_view_model  # is this a good idea?
 
+    @property
+    def failed(self):
+        return self.suite_view_model.failed
+
     # TODO: abstract this
     def suite_started(self, suite):
         self.call_reporters("suite_started", suite)
