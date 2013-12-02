@@ -6,90 +6,6 @@ from . import Reporter
 
 class ReporterNotifier(object):
     def __init__(self, *reporters):
-        self.manager = ReporterManager(*reporters)
-
-    @property
-    def failed(self):
-        return self.manager.failed
-    @property
-    def suite_view_model(self):
-        return self.manager.suite_view_model
-    @suite_view_model.setter
-    def suite_view_model(self, value):
-        self.manager.suite_view_model = value
-
-    def suite_started(self, suite):
-        self.manager.suite_started(suite)
-    def suite_ended(self, suite):
-        self.manager.suite_ended(suite)
-
-    def context_started(self, context):
-        self.manager.context_started(context)
-    def context_ended(self, context):
-        self.manager.context_ended(context)
-    def context_errored(self, context, exception):
-        self.manager.context_errored(context, exception)
-
-    def assertion_started(self, assertion):
-        self.manager.assertion_started(assertion)
-    def assertion_passed(self, assertion):
-        self.manager.assertion_passed(assertion)
-    def assertion_failed(self, assertion, exception):
-        self.manager.assertion_failed(assertion, exception)
-    def assertion_errored(self, assertion, exception):
-        self.manager.assertion_errored(assertion, exception)
-
-    def unexpected_error(self, exception):
-        self.manager.unexpected_error(exception)
-
-    @contextmanager
-    def run_suite(self, suite):
-        self.manager.suite_started(suite)
-        try:
-            yield
-        except Exception as e:
-            self.manager.unexpected_error(e)
-        self.manager.suite_ended(suite)
-
-    @contextmanager
-    def run_context(self, context):
-        self.manager.context_started(context)
-        try:
-            yield
-        except Exception as e:
-            self.manager.context_errored(context, e)
-        else:
-            self.manager.context_ended(context)
-
-    @contextmanager
-    def run_assertion(self, assertion):
-        self.manager.assertion_started(assertion)
-        try:
-            yield
-        except AssertionError as e:
-            self.manager.assertion_failed(assertion, e)
-        except Exception as e:
-            self.manager.assertion_errored(assertion, e)
-        else:
-            self.manager.assertion_passed(assertion)
-
-    @contextmanager
-    def run_class(self, cls):
-        try:
-            yield
-        except Exception as e:
-            self.manager.unexpected_error(e)
-
-    @contextmanager
-    def importing(self, module_spec):
-        try:
-            yield
-        except Exception as e:
-            self.manager.unexpected_error(e)
-
-
-class ReporterManager(Reporter):
-    def __init__(self, *reporters):
         self.reporters = []
         self.suite_view_model = SuiteViewModel()
         for reporter in reporters:
@@ -135,6 +51,51 @@ class ReporterManager(Reporter):
     def call_reporters(self, method, *args):
         for reporter in self.reporters:
             getattr(reporter, method)(*args)
+
+    @contextmanager
+    def run_suite(self, suite):
+        self.suite_started(suite)
+        try:
+            yield
+        except Exception as e:
+            self.unexpected_error(e)
+        self.suite_ended(suite)
+
+    @contextmanager
+    def run_context(self, context):
+        self.context_started(context)
+        try:
+            yield
+        except Exception as e:
+            self.context_errored(context, e)
+        else:
+            self.context_ended(context)
+
+    @contextmanager
+    def run_assertion(self, assertion):
+        self.assertion_started(assertion)
+        try:
+            yield
+        except AssertionError as e:
+            self.assertion_failed(assertion, e)
+        except Exception as e:
+            self.assertion_errored(assertion, e)
+        else:
+            self.assertion_passed(assertion)
+
+    @contextmanager
+    def run_class(self, cls):
+        try:
+            yield
+        except Exception as e:
+            self.unexpected_error(e)
+
+    @contextmanager
+    def importing(self, module_spec):
+        try:
+            yield
+        except Exception as e:
+            self.unexpected_error(e)
 
 
 class StreamReporter(Reporter):
