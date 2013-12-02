@@ -5,13 +5,8 @@ from . import Reporter
 
 
 class ReporterNotifier(object):
-    def __init__(self, manager):
-        self.manager = manager
-
-    @classmethod
-    def from_reporters(cls, *reporters):
-        manager = ReporterManager(*reporters)
-        return cls(manager)
+    def __init__(self, *reporters):
+        self.manager = ReporterManager(*reporters)
 
     @property
     def failed(self):

@@ -9,7 +9,7 @@ from .. import tools
 class TeamCitySharedContext:
     def shared_context(self):
         self.stringio = StringIO()
-        self.reporter = shared.ReporterNotifier.from_reporters(teamcity.TeamCityReporter(self.stringio))
+        self.reporter = shared.ReporterNotifier(teamcity.TeamCityReporter(self.stringio))
         self.outputs = []
 
     def get_output(self, n):

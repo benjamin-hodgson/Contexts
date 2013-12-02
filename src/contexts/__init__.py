@@ -28,13 +28,13 @@ def run(spec=None, reporters=None, shuffle=True):
     run(package_path:string) - run all the test classes found in the package and subfolders
     """
     if reporters is None:
-        notifier = reporting.shared.ReporterNotifier.from_reporters(
+        notifier = reporting.shared.ReporterNotifier(
             reporting.cli.DotsReporter(sys.stdout),
             reporting.cli.StdOutCapturingReporter(sys.stdout),
             reporting.cli.TimedReporter(sys.stdout)
         )
     else:
-        notifier = reporting.shared.ReporterNotifier.from_reporters(*reporters)
+        notifier = reporting.shared.ReporterNotifier(*reporters)
     if spec is None:
         spec = sys.modules['__main__']
 
