@@ -76,11 +76,14 @@ class FakeException(Exception):
 
     @__traceback__.setter
     def __traceback__(self, value):
-        self._tb = value
+        pass
 
     def with_traceback(self, value):
         self._tb = value
         return self
+
+class FakeAssertionError(FakeException, AssertionError):
+    pass
 
 
 class FakeLoader(object):
@@ -91,8 +94,8 @@ class FakeLoader(object):
         return self.source
 
 
-def build_fake_exception(tb_list, *args):
-    exc = FakeException(*args)
+def build_fake_exception(tb_list, *args, cls=FakeException):
+    exc = cls(*args)
 
     frames = []
     line_nums = []
@@ -107,6 +110,9 @@ def build_fake_exception(tb_list, *args):
 
     tb = FakeTraceback(frames, line_nums)
     return exc.with_traceback(tb)
+
+def build_fake_assertion_error(*args):
+    return build_fake_exception(*args, cls=FakeAssertionError)
 
 
 def create_suite():
