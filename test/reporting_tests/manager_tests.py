@@ -1,6 +1,6 @@
 from unittest import mock
 import sure
-from contexts.reporting.shared import ReporterManager
+from contexts.reporting.shared import ReporterNotifier
 from .. import tools
 
 
@@ -18,8 +18,8 @@ class WhenComposingReporters:
 
     def establish_that_the_manager_contains_reporters(self, example):
         self.name, self.args = example
-        self.mock_reporter1, self.mock_reporter2 = (mock.Mock(), mock.Mock())
-        self.manager = ReporterManager(self.mock_reporter1, self.mock_reporter2)
+        self.mock_reporter1, self.mock_reporter2 = mock.Mock(), mock.Mock()
+        self.manager = ReporterNotifier.from_reporters(self.mock_reporter1, self.mock_reporter2)
         self.mock_suite = self.manager.suite_view_model = mock.Mock()
 
     def because_we_call_a_method_on_the_reporter(self, example):
@@ -44,7 +44,7 @@ class WhenCallingSuiteStartedOrSuiteEnded:
     def establish_that_the_manager_contains_reporters(self, example):
         self.name, self.args = example
         self.mock_reporter1, self.mock_reporter2 = (mock.Mock(), mock.Mock())
-        self.manager = ReporterManager(self.mock_reporter1, self.mock_reporter2)
+        self.manager = ReporterNotifier.from_reporters(self.mock_reporter1, self.mock_reporter2)
         self.mock_suite = self.manager.suite_view_model = mock.Mock()
 
     def because_we_call_a_method_on_the_reporter(self, example):

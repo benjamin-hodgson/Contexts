@@ -11,7 +11,7 @@ from .. import tools
 class WhenWatchingForDots:
     def context(self):
         self.stringio = StringIO()
-        self.reporter = reporting.shared.ReporterManager(reporting.cli.DotsReporter(self.stringio))
+        self.reporter = reporting.shared.ReporterNotifier.from_reporters(reporting.cli.DotsReporter(self.stringio))
         self.fake_context = tools.create_context("context")
         self.fake_assertion = tools.create_assertion("assertion")
 
@@ -62,7 +62,7 @@ class WhenWatchingForDots:
 class WhenPrintingVerbosely:
     def context(self):
         self.stringio = StringIO()
-        self.reporter = reporting.shared.ReporterManager(reporting.cli.VerboseReporter(self.stringio))
+        self.reporter = reporting.shared.ReporterNotifier.from_reporters(reporting.cli.VerboseReporter(self.stringio))
         self.outputs = []
 
         self.context1 = tools.create_context("made.up_context_1")
@@ -184,7 +184,7 @@ FAILED!
 class WhenPrintingASuccessSummary:
     def in_the_context_of_a_successful_run(self):
         self.stringio = StringIO()
-        self.reporter = reporting.shared.ReporterManager(reporting.cli.SummarisingReporter(self.stringio))
+        self.reporter = reporting.shared.ReporterNotifier.from_reporters(reporting.cli.SummarisingReporter(self.stringio))
         self.ctx1 = tools.create_context("")
         self.ctx2 = tools.create_context("")
         self.assertion1 = tools.create_assertion("")
@@ -220,7 +220,7 @@ PASSED!
 class WhenPrintingAFailureSummary:
     def in_the_context_of_a_failed_run(self):
         self.stringio = StringIO()
-        self.reporter = reporting.shared.ReporterManager(reporting.cli.SummarisingReporter(self.stringio))
+        self.reporter = reporting.shared.ReporterNotifier.from_reporters(reporting.cli.SummarisingReporter(self.stringio))
 
         self.context1 = tools.create_context("made.up_context_1")
 
@@ -324,7 +324,7 @@ class WhenCapturingStdOut:
         self.assertion5 = tools.create_assertion("assertion")
 
         self.stringio = StringIO()
-        self.reporter = reporting.shared.ReporterManager(reporting.cli.StdOutCapturingReporter(self.stringio))
+        self.reporter = reporting.shared.ReporterNotifier.from_reporters(reporting.cli.StdOutCapturingReporter(self.stringio))
 
     def because_we_print_some_stuff(self):
         self.reporter.suite_started(None)
@@ -407,7 +407,7 @@ FAILED!
 class WhenColouringOutput:
     def context(self):
         self.stringio = StringIO()
-        self.reporter = reporting.shared.ReporterManager(reporting.cli.ColouredReporter(self.stringio))
+        self.reporter = reporting.shared.ReporterNotifier.from_reporters(reporting.cli.ColouredReporter(self.stringio))
         self.outputs = []
 
         self.context1 = tools.create_context("made.up_context_1")
@@ -528,7 +528,7 @@ class WhenTimingATestRun:
         self.FakeDateTime = FakeDateTime
 
         self.stringio = StringIO()
-        self.reporter = reporting.shared.ReporterManager(reporting.cli.TimedReporter(self.stringio))
+        self.reporter = reporting.shared.ReporterNotifier.from_reporters(reporting.cli.TimedReporter(self.stringio))
 
     def because_we_run_a_suite(self):
         with mock.patch('datetime.datetime', self.FakeDateTime):

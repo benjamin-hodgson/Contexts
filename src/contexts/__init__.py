@@ -28,7 +28,7 @@ def run(spec=None, reporter=None, shuffle=True):
     run(package_path:string) - run all the test classes found in the package and subfolders
     """
     if reporter is None:
-        reporter = reporting.shared.ReporterManager(
+        reporter = reporting.shared.ReporterNotifier.from_reporters(
             reporting.cli.DotsReporter(sys.stdout),
             reporting.cli.StdOutCapturingReporter(sys.stdout),
             reporting.cli.TimedReporter(sys.stdout)

@@ -53,11 +53,11 @@ def cmd():
             reporting.cli.TimedReporter(sys.stdout)
         )
 
-    reporter = reporting.shared.ReporterManager(*reporters)
+    reporter = reporting.shared.ReporterNotifier.from_reporters(*reporters)
 
     run(os.path.realpath(args.path), reporter, args.shuffle)
 
-    if reporter.suite_view_model.failed:
+    if reporter.failed:
         sys.exit(1)
     sys.exit(0)
 
