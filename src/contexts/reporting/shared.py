@@ -16,86 +16,64 @@ class ReporterNotifier(object):
     def failed(self):
         return self.suite_view_model.failed
 
-    def suite_started(self, suite):
-        self.call_reporters("suite_started", suite)
-    def suite_ended(self, suite):
-        self.call_reporters("suite_ended", suite)
-
-    def context_started(self, context):
-        self.suite_view_model.context_started(context)
-        self.call_reporters("context_started", context)
-    def context_ended(self, context):
-        self.suite_view_model.context_ended(context)
-        self.call_reporters("context_ended", context)
-    def context_errored(self, context, exception):
-        self.suite_view_model.context_errored(context, exception)
-        self.call_reporters("context_errored", context, exception)
-
-    def assertion_started(self, assertion):
-        self.suite_view_model.assertion_started(assertion)
-        self.call_reporters("assertion_started", assertion)
-    def assertion_passed(self, assertion):
-        self.suite_view_model.assertion_passed(assertion)
-        self.call_reporters("assertion_passed", assertion)
-    def assertion_failed(self, assertion, exception):
-        self.suite_view_model.assertion_failed(assertion, exception)
-        self.call_reporters("assertion_failed", assertion, exception)
-    def assertion_errored(self, assertion, exception):
-        self.suite_view_model.assertion_errored(assertion, exception)
-        self.call_reporters("assertion_errored", assertion, exception)
-
-    def unexpected_error(self, exception):
-        self.suite_view_model.unexpected_error(exception)
-        self.call_reporters("unexpected_error", exception)
-
     def call_reporters(self, method, *args):
         for reporter in self.reporters:
             getattr(reporter, method)(*args)
 
     @contextmanager
     def run_suite(self, suite):
-        self.suite_started(suite)
+        self.call_reporters("suite_started", suite)
         try:
             yield
         except Exception as e:
-            self.unexpected_error(e)
-        self.suite_ended(suite)
+            self.suite_view_model.unexpected_error(e)
+            self.call_reporters("unexpected_error", e)
+        self.call_reporters("suite_ended", suite)
 
     @contextmanager
     def run_context(self, context):
-        self.context_started(context)
+        self.suite_view_model.context_started(context)
+        self.call_reporters("context_started", context)
         try:
             yield
         except Exception as e:
-            self.context_errored(context, e)
+            self.suite_view_model.context_errored(context, e)
+            self.call_reporters("context_errored", context, e)
         else:
-            self.context_ended(context)
+            self.suite_view_model.context_ended(context)
+            self.call_reporters("context_ended", context)
 
     @contextmanager
     def run_assertion(self, assertion):
-        self.assertion_started(assertion)
+        self.suite_view_model.assertion_started(assertion)
+        self.call_reporters("assertion_started", assertion)
         try:
             yield
         except AssertionError as e:
-            self.assertion_failed(assertion, e)
+            self.suite_view_model.assertion_failed(assertion, e)
+            self.call_reporters("assertion_failed", assertion, e)
         except Exception as e:
-            self.assertion_errored(assertion, e)
+            self.suite_view_model.assertion_errored(assertion, e)
+            self.call_reporters("assertion_errored", assertion, e)
         else:
-            self.assertion_passed(assertion)
+            self.suite_view_model.assertion_passed(assertion)
+            self.call_reporters("assertion_passed", assertion)
 
     @contextmanager
     def run_class(self, cls):
         try:
             yield
         except Exception as e:
-            self.unexpected_error(e)
+            self.suite_view_model.unexpected_error(e)
+            self.call_reporters("unexpected_error", e)
 
     @contextmanager
     def importing(self, module_spec):
         try:
             yield
         except Exception as e:
-            self.unexpected_error(e)
+            self.suite_view_model.unexpected_error(e)
+            self.call_reporters("unexpected_error", e)
 
 
 class StreamReporter(Reporter):

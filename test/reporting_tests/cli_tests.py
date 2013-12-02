@@ -18,29 +18,30 @@ class WhenWatchingForDots:
 
     def because_we_run_some_assertions(self):
         # each of these with-stmts should be a separate test case
-        with self.notifier.run_context(self.fake_context):
+        with self.notifier.run_suite(tools.create_suite()):
+            with self.notifier.run_context(self.fake_context):
 
-            with self.notifier.run_assertion(self.fake_assertion):
-                pass
-            self.first = self.stringio.getvalue()
+                with self.notifier.run_assertion(self.fake_assertion):
+                    pass
+                self.first = self.stringio.getvalue()
 
-            with self.notifier.run_assertion(self.fake_assertion):
-                pass
-            self.second = self.stringio.getvalue()
+                with self.notifier.run_assertion(self.fake_assertion):
+                    pass
+                self.second = self.stringio.getvalue()
 
-            with self.notifier.run_assertion(self.fake_assertion):
-                assert False
-            self.third = self.stringio.getvalue()
+                with self.notifier.run_assertion(self.fake_assertion):
+                    assert False
+                self.third = self.stringio.getvalue()
 
-            with self.notifier.run_assertion(self.fake_assertion):
+                with self.notifier.run_assertion(self.fake_assertion):
+                    raise Exception
+                self.fourth = self.stringio.getvalue()
+
                 raise Exception
-            self.fourth = self.stringio.getvalue()
 
-            raise Exception
+            self.fifth = self.stringio.getvalue()
 
-        self.fifth = self.stringio.getvalue()
-
-        self.notifier.unexpected_error(tools.FakeException())
+            raise tools.FakeException()
         self.sixth = self.stringio.getvalue()
 
     def it_should_print_a_dot_for_the_first_pass(self):
@@ -514,9 +515,8 @@ class WhenTimingATestRun:
 
     def because_we_run_a_suite(self):
         with mock.patch('datetime.datetime', self.FakeDateTime):
-            self.reporter.suite_started(None)
-            datetime.datetime.now.return_value += self.fake_soon
-            self.reporter.suite_ended(None)
+            with self.reporter.run_suite(tools.create_suite()):
+                datetime.datetime.now.return_value += self.fake_soon
 
     def it_should_report_the_total_time_for_the_test_run(self):
         self.stringio.getvalue().should.equal("(10.5 seconds)\n")
