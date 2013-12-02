@@ -9,7 +9,7 @@ from .. import tools
 class TeamCitySharedContext:
     def shared_context(self):
         self.stringio = StringIO()
-        self.reporter = shared.ReporterNotifier(teamcity.TeamCityReporter(self.stringio))
+        self.notifier = shared.ReporterNotifier(teamcity.TeamCityReporter(self.stringio))
         self.outputs = []
 
     def get_output(self, n):
@@ -34,31 +34,31 @@ class WhenATestRunPassesInTeamCity(TeamCitySharedContext):
         self.assertion3 = tools.create_assertion("FakeAssertion3")
 
     def because_we_run_some_assertions(self):
-        self.reporter.suite_started(None)
+        self.notifier.suite_started(None)
         self.outputs.append(self.stringio.getvalue())
 
-        self.reporter.context_started(self.ctx1)
+        self.notifier.context_started(self.ctx1)
 
         print("to stdout")
         print("to stderr", file=sys.stderr)
-        self.reporter.assertion_started(self.assertion1)
+        self.notifier.assertion_started(self.assertion1)
         self.outputs.append(self.stringio.getvalue())
-        self.reporter.assertion_passed(self.assertion1)
+        self.notifier.assertion_passed(self.assertion1)
         self.outputs.append(self.stringio.getvalue())
-        self.reporter.assertion_started(self.assertion2)
+        self.notifier.assertion_started(self.assertion2)
         self.outputs.append(self.stringio.getvalue())
         print("to stdout again")
-        self.reporter.assertion_passed(self.assertion2)
+        self.notifier.assertion_passed(self.assertion2)
         self.outputs.append(self.stringio.getvalue())
-        self.reporter.context_ended(self.ctx1)
+        self.notifier.context_ended(self.ctx1)
 
-        self.reporter.context_started(self.ctx2)
-        self.reporter.assertion_started(self.assertion3)
-        self.reporter.assertion_passed(self.assertion3)
-        self.reporter.context_ended(self.ctx2)
+        self.notifier.context_started(self.ctx2)
+        self.notifier.assertion_started(self.assertion3)
+        self.notifier.assertion_passed(self.assertion3)
+        self.notifier.context_ended(self.ctx2)
         self.outputs.append(self.stringio.getvalue())
 
-        self.reporter.suite_ended(None)
+        self.notifier.suite_ended(None)
         self.outputs.append(self.stringio.getvalue())
 
     def it_should_not_print_anything_to_the_real_stdout(self):
@@ -132,21 +132,21 @@ class WhenAnAssertionFailsInTeamCity(TeamCitySharedContext):
         self.context = tools.create_context("FakeContext")
 
     def because_we_run_an_assertion(self):
-        self.reporter.suite_started(None)
+        self.notifier.suite_started(None)
         self.outputs.append(self.stringio.getvalue())
 
-        self.reporter.context_started(self.context)
+        self.notifier.context_started(self.context)
 
         print("to stdout")
         print("to stderr", file=sys.stderr)
-        self.reporter.assertion_started(self.assertion)
+        self.notifier.assertion_started(self.assertion)
         self.outputs.append(self.stringio.getvalue())
-        self.reporter.assertion_failed(self.assertion, self.exception)
+        self.notifier.assertion_failed(self.assertion, self.exception)
         self.outputs.append(self.stringio.getvalue())
 
-        self.reporter.context_ended(self.context)
+        self.notifier.context_ended(self.context)
 
-        self.reporter.suite_ended(None)
+        self.notifier.suite_ended(None)
         self.outputs.append(self.stringio.getvalue())
 
     def it_should_not_print_anything_to_the_real_stdout(self):
@@ -201,21 +201,21 @@ class WhenAnAssertionErrorsInTeamCity(TeamCitySharedContext):
         self.assertion = tools.create_assertion("FakeAssertion4")
 
     def because_we_run_an_assertion(self):
-        self.reporter.suite_started(None)
+        self.notifier.suite_started(None)
         self.outputs.append(self.stringio.getvalue())
 
-        self.reporter.context_started(self.context)
+        self.notifier.context_started(self.context)
 
         print("to stdout")
         print("to stderr", file=sys.stderr)
-        self.reporter.assertion_started(self.assertion)
+        self.notifier.assertion_started(self.assertion)
         self.outputs.append(self.stringio.getvalue())
-        self.reporter.assertion_errored(self.assertion, self.exception)
+        self.notifier.assertion_errored(self.assertion, self.exception)
         self.outputs.append(self.stringio.getvalue())
 
-        self.reporter.context_ended(self.context)
+        self.notifier.context_ended(self.context)
 
-        self.reporter.suite_ended(None)
+        self.notifier.suite_ended(None)
         self.outputs.append(self.stringio.getvalue())
 
     def it_should_not_print_anything_to_the_real_stdout(self):
@@ -270,16 +270,16 @@ class WhenAContextErrorsInTeamCity(TeamCitySharedContext):
         self.ctx = tools.create_context("FakeContext")
 
     def because_we_run_an_assertion(self):
-        self.reporter.suite_started(None)
+        self.notifier.suite_started(None)
         self.outputs.append(self.stringio.getvalue())
 
-        self.reporter.context_started(self.ctx)
+        self.notifier.context_started(self.ctx)
         print("to stdout")
         print("to stderr", file=sys.stderr)
-        self.reporter.context_errored(self.ctx, self.exception)
+        self.notifier.context_errored(self.ctx, self.exception)
         self.outputs.append(self.stringio.getvalue())
 
-        self.reporter.suite_ended(None)
+        self.notifier.suite_ended(None)
         self.outputs.append(self.stringio.getvalue())
 
     def it_should_not_print_anything_to_the_real_stdout(self):
@@ -330,13 +330,13 @@ class WhenAnUnexpectedErrorOccursInTeamCity(TeamCitySharedContext):
         # unexpected error happens when (for example) a syntax error occurs
         # in the user's test code. Very unlikely that anything will have been printed
         # at this stage.
-        self.reporter.suite_started(None)
+        self.notifier.suite_started(None)
         self.outputs.append(self.stringio.getvalue())
 
-        self.reporter.unexpected_error(self.exception)
+        self.notifier.unexpected_error(self.exception)
         self.outputs.append(self.stringio.getvalue())
 
-        self.reporter.suite_ended(None)
+        self.notifier.suite_ended(None)
         self.outputs.append(self.stringio.getvalue())
 
     def it_should_tell_team_city_it_started(self):

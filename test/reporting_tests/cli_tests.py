@@ -179,7 +179,7 @@ FAILED!
 class WhenPrintingASuccessSummary:
     def in_the_context_of_a_successful_run(self):
         self.stringio = StringIO()
-        self.reporter = reporting.shared.ReporterNotifier(reporting.cli.SummarisingReporter(self.stringio))
+        self.notifier = reporting.shared.ReporterNotifier(reporting.cli.SummarisingReporter(self.stringio))
         self.ctx1 = tools.create_context("")
         self.ctx2 = tools.create_context("")
         self.assertion1 = tools.create_assertion("")
@@ -187,21 +187,17 @@ class WhenPrintingASuccessSummary:
         self.assertion3 = tools.create_assertion("")
 
     def because_we_run_some_tests(self):
-        self.reporter.suite_started(None)
+        with self.notifier.run_suite(None):
 
-        self.reporter.context_started(self.ctx1)
-        self.reporter.assertion_started(self.assertion1)
-        self.reporter.assertion_passed(self.assertion1)
-        self.reporter.assertion_started(self.assertion2)
-        self.reporter.assertion_passed(self.assertion2)
-        self.reporter.context_ended(self.ctx1)
+            with self.notifier.run_context(self.ctx1):
+                with self.notifier.run_assertion(self.assertion1):
+                    pass
+                with self.notifier.run_assertion(self.assertion2):
+                    pass
 
-        self.reporter.context_started(self.ctx2)
-        self.reporter.assertion_started(self.assertion3)
-        self.reporter.assertion_passed(self.assertion3)
-        self.reporter.context_ended(self.ctx2)
-
-        self.reporter.suite_ended(None)
+            with self.notifier.run_context(self.ctx2):
+                with self.notifier.run_assertion(self.assertion2):
+                    pass
 
     def it_should_print_the_summary_to_the_stream(self):
         self.stringio.getvalue().should.equal(
