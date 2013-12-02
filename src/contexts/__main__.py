@@ -53,11 +53,9 @@ def cmd():
             reporting.cli.TimedReporter(sys.stdout)
         )
 
-    reporter = reporting.shared.ReporterNotifier.from_reporters(*reporters)
+    passed = run(os.path.realpath(args.path), reporters, args.shuffle)
 
-    run(os.path.realpath(args.path), reporter, args.shuffle)
-
-    if reporter.failed:
+    if not passed:
         sys.exit(1)
     sys.exit(0)
 

@@ -17,7 +17,7 @@ def main():
     sys.exit(0)
 
 
-def run(spec=None, reporter=None, shuffle=True):
+def run(spec=None, reporters=None, shuffle=True):
     """
     Polymorphic test-running function.
 
@@ -27,24 +27,21 @@ def run(spec=None, reporter=None, shuffle=True):
     run(folder_path:string) - run all the test classes found in the folder and subfolders
     run(package_path:string) - run all the test classes found in the package and subfolders
     """
-    if reporter is None:
-        reporter = reporting.shared.ReporterNotifier.from_reporters(
+    if reporters is None:
+        notifier = reporting.shared.ReporterNotifier.from_reporters(
             reporting.cli.DotsReporter(sys.stdout),
             reporting.cli.StdOutCapturingReporter(sys.stdout),
             reporting.cli.TimedReporter(sys.stdout)
         )
+    else:
+        notifier = reporting.shared.ReporterNotifier.from_reporters(*reporters)
     if spec is None:
         spec = sys.modules['__main__']
 
-    _run_impl(spec, reporter, shuffle)
-
-    return not reporter.failed
-
-
-def _run_impl(spec, reporter, shuffle):
-    notifier = reporting.shared.ReporterNotifier(reporter)
     suite = core.Suite(spec, shuffle)
     suite.run(notifier)
+
+    return not notifier.failed
 
 
 def catch(func, *args, **kwargs):

@@ -30,7 +30,7 @@ class WhenRunningAParametrisedSpec:
         self.reporter = MockReporter()
 
     def because_we_run_the_class(self):
-        contexts.run(self.ParametrisedSpec, self.reporter)
+        contexts.run(self.ParametrisedSpec, [self.reporter])
 
     def the_ctx_should_not_error(self):
         call_names = [call[0] for call in self.reporter.calls]
@@ -83,7 +83,7 @@ class WhenRunningAParametrisedSpecWithNonParametrisedMethods:
         self.reporter = MockReporter()
 
     def because_we_run_the_class(self):
-        contexts.run(self.ParametrisedSpec, self.reporter)
+        contexts.run(self.ParametrisedSpec, [self.reporter])
 
     def the_ctx_should_not_error(self):
         call_names = [call[0] for call in self.reporter.calls]
@@ -138,7 +138,7 @@ class WhenRunningAModuleWithParametrisedSpecs:
         self.reporter = MockReporter()
 
     def because_we_run_the_module(self):
-        contexts.run(self.module, self.reporter)
+        contexts.run(self.module, [self.reporter])
 
     def the_ctx_should_not_error(self):
         call_names = [call[0] for call in self.reporter.calls]
@@ -180,7 +180,7 @@ class WhenExamplesRaisesAnException:
         self.reporter = MockReporter()
 
     def because_we_run_the_spec(self):
-        self.exception = contexts.catch(contexts.run, self.spec, self.reporter)
+        self.exception = contexts.catch(contexts.run, self.spec, [self.reporter])
 
     def it_should_not_throw_an_exception(self):
         self.exception.should.be.none
@@ -204,7 +204,7 @@ class WhenUserFailsToMakeExamplesAClassmethod:
         self.reporter = MockReporter()
 
     def because_we_run_the_spec(self):
-        self.exception = contexts.catch(contexts.run, self.spec, self.reporter)
+        self.exception = contexts.catch(contexts.run, self.spec, [self.reporter])
 
     def it_should_not_throw_an_exception(self):
         self.exception.should.be.none
@@ -231,7 +231,7 @@ class WhenExamplesReturnsNone:
         self.spec = Spec
 
     def because_we_run_the_spec(self):
-        self.exception = contexts.catch(contexts.run, self.spec, MockReporter())
+        self.exception = contexts.catch(contexts.run, self.spec, [MockReporter()])
 
     def it_should_not_throw_an_exception(self):
         self.exception.should.be.none

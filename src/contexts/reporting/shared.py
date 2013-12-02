@@ -105,7 +105,6 @@ class ReporterManager(Reporter):
     def failed(self):
         return self.suite_view_model.failed
 
-    # TODO: abstract this
     def suite_started(self, suite):
         self.call_reporters("suite_started", suite)
     def suite_ended(self, suite):

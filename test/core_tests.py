@@ -33,7 +33,7 @@ class WhenRunningASpec:
         self.reporter = MockReporter()
 
     def because_we_run_the_spec(self):
-        contexts.run(self.spec, self.reporter)
+        contexts.run(self.spec, [self.reporter])
 
     def it_should_run_the_methods_in_the_correct_order(self):
         self.spec.log.should.equal("arrange act assert assert assert teardown ")
@@ -134,7 +134,7 @@ class WhenAContextErrors:
         for spec in self.specs:
             reporter = MockReporter()
             self.reporters.append(reporter)
-            contexts.run(spec, reporter)
+            contexts.run(spec, [reporter])
 
     def it_should_call_ctx_errored_for_the_first_error(self):
         self.reporters[0].calls[2][0].should.equal("context_errored")
@@ -178,8 +178,8 @@ class WhenRunningTheSameClassMultipleTimes:
         self.reporter2 = MockReporter()
 
     def because_we_run_the_class_twice(self):
-        contexts.run(self.spec, self.reporter1)
-        contexts.run(self.spec, self.reporter2)
+        contexts.run(self.spec, [self.reporter1])
+        contexts.run(self.spec, [self.reporter2])
 
     def it_should_run_the_assertions_in_a_different_order(self):
         first_order = [call[1].name for call in self.reporter1.calls if call[0] == "assertion_started"]
@@ -216,7 +216,7 @@ class WhenCatchingAnException:
         self.reporter = MockReporter()
 
     def because_we_run_the_spec(self):
-        contexts.run(self.spec, self.reporter)
+        contexts.run(self.spec, [self.reporter])
 
     def it_should_catch_and_return_the_exception(self):
         self.spec.exception.should.equal(self.exception)
@@ -279,7 +279,7 @@ class WhenASpecHasASuperclass:
         self.reporter = MockReporter()
 
     def because_we_run_the_spec(self):
-        contexts.run(self.spec, self.reporter)
+        contexts.run(self.spec, [self.reporter])
 
     def it_should_run_the_superclass_setup_first(self):
         self.log[:19].should.equal("superclass arrange ")
@@ -328,7 +328,7 @@ class WhenASpecHasClassmethods:
         self.spec = ClassmethodsSpec
 
     def because_we_run_the_spec(self):
-        contexts.run(self.spec, MockReporter())
+        contexts.run(self.spec, [MockReporter()])
 
     def it_should_run_the_classmethods(self):
         self.spec.log.should.equal("arrange act assert teardown ")
@@ -353,7 +353,7 @@ class WhenASpecHasStaticmethods:
         self.spec = StaticmethodsSpec
 
     def because_we_run_the_spec(self):
-        contexts.run(self.spec, MockReporter())
+        contexts.run(self.spec, [MockReporter()])
 
     def it_should_run_the_staticmethods(self):
         self.log.should.equal("arrange act assert teardown ")
@@ -401,7 +401,7 @@ class WhenWeRunSpecsWithAlternatelyNamedMethods:
         self.spec, self.expected_log = example
 
     def because_we_run_the_spec(self, example):
-        contexts.run(self.spec, MockReporter())
+        contexts.run(self.spec, [MockReporter()])
 
     def it_should_run_the_methods_in_the_correct_order(self):
         self.spec.log.should.equal(self.expected_log)
@@ -436,7 +436,7 @@ class WhenRunningAmbiguouslyNamedMethods:
         self.reporter = MockReporter()
 
     def because_we_try_to_run_the_spec(self, example):
-        self.exception = contexts.catch(contexts.run, example, self.reporter)
+        self.exception = contexts.catch(contexts.run, example, [self.reporter])
 
     def it_should_not_throw_an_exception(self):
         self.exception.should.be.none
@@ -473,7 +473,7 @@ class WhenRunningNotSoAmbiguouslyNamedMethods:
         yield NotAmbiguousMethods4
 
     def because_we_try_to_run_the_spec(self, example):
-        self.exception = contexts.catch(contexts.run, example, MockReporter())
+        self.exception = contexts.catch(contexts.run, example, [MockReporter()])
 
     def it_should_not_raise_any_exceptions(self):
         self.exception.should.be.none
@@ -513,7 +513,7 @@ class WhenRunningSpecsWithTooManySpecialMethods:
         self.reporter = MockReporter()
 
     def because_we_try_to_run_the_spec(self, example):
-        self.exception = contexts.catch(contexts.run, example, self.reporter)
+        self.exception = contexts.catch(contexts.run, example, [self.reporter])
 
     def it_should_not_raise_an_exception(self):
         self.exception.should.be.none
@@ -542,7 +542,7 @@ class WhenRunningAClassContainingNoAssertions:
         self.reporter = MockReporter()
 
     def because_we_run_the_spec(self):
-        contexts.run(self.spec, self.reporter)
+        contexts.run(self.spec, [self.reporter])
 
     def it_should_not_run_any_assertions(self):
         self.spec.log.should.be.empty
