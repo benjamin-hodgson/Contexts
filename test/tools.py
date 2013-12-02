@@ -1,3 +1,4 @@
+import types
 import contexts
 
 
@@ -116,7 +117,7 @@ def build_fake_assertion_error(*args):
 
 
 def create_suite():
-    return contexts.core.Suite()
+    return contexts.core.Suite(types.ModuleType(''), True)
 
 
 def create_context(name, example=contexts.core._NullExample()):

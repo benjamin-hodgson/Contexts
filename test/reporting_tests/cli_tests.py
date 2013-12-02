@@ -187,8 +187,7 @@ class WhenPrintingASuccessSummary:
         self.assertion3 = tools.create_assertion("")
 
     def because_we_run_some_tests(self):
-        with self.notifier.run_suite(None):
-
+        with self.notifier.run_suite(tools.create_suite()):
             with self.notifier.run_context(self.ctx1):
                 with self.notifier.run_assertion(self.assertion1):
                     pass
@@ -208,6 +207,7 @@ PASSED!
 """)
 
 
+# TODO: break up this test
 class WhenPrintingAFailureSummary:
     def in_the_context_of_a_failed_run(self):
         self.stringio = StringIO()
@@ -223,7 +223,7 @@ class WhenPrintingAFailureSummary:
         self.assertion2 = tools.create_assertion("made.up.assertion_2")
         tb2 = [('made_up_file_3.py', 1, 'made_up_function_3', 'frame3'),
                ('made_up_file_4.py', 2, 'made_up_function_4', 'frame4')]
-        self.exception2 = tools.build_fake_exception(tb2, "you fail")
+        self.exception2 = tools.build_fake_assertion_error(tb2, "you fail")
 
         self.assertion3 = tools.create_assertion("made.up.assertion_3")
 
@@ -239,26 +239,23 @@ class WhenPrintingAFailureSummary:
         self.context3 = tools.create_context("made.up_context_3")
 
     def because_we_run_some_tests(self):
-        self.reporter.suite_started(None)
+        with self.reporter.run_suite(tools.create_suite()):
+            with self.reporter.run_context(self.context1):
+                with self.reporter.run_assertion(self.assertion1):
+                    raise self.exception1
+                with self.reporter.run_assertion(self.assertion2):
+                    raise self.exception2
+                with self.reporter.run_assertion(self.assertion3):
+                    pass
 
-        self.reporter.context_started(self.context1)
-        self.reporter.assertion_started(self.assertion1)
-        self.reporter.assertion_errored(self.assertion1, self.exception1)
-        self.reporter.assertion_started(self.assertion2)
-        self.reporter.assertion_failed(self.assertion2, self.exception2)
-        self.reporter.assertion_started(self.assertion3)
-        self.reporter.assertion_passed(self.assertion3)
-        self.reporter.context_ended(self.context1)
+            with self.reporter.run_context(self.context2):
+                raise self.exception3
 
-        self.reporter.context_started(self.context2)
-        self.reporter.context_errored(self.context2, self.exception3)
+            with self.reporter.run_context(self.context3):
+                pass
 
-        self.reporter.context_started(self.context3)
-        self.reporter.context_ended(self.context3)
-
-        self.reporter.unexpected_error(self.exception4)
-
-        self.reporter.suite_ended(None)
+            self.output_before_end = self.stringio.getvalue()
+            raise self.exception4
 
     def it_should_print_a_traceback_for_each_failure(self):
         self.stringio.getvalue().should.equal("""
@@ -277,7 +274,7 @@ made up context 1
         frame3
       File "made_up_file_4.py", line 2, in made_up_function_4
         frame4
-    test.tools.FakeException: you fail
+    test.tools.FakeAssertionError: you fail
 made up context 2 -> ['abc', 123, None]
   Traceback (most recent call last):
     File "made_up_file_5.py", line 1, in made_up_function_5
@@ -296,7 +293,11 @@ FAILED!
 3 contexts, 3 assertions: 1 failed, 3 errors
 """)
 
+    def it_should_not_print_until_the_end(self):
+        self.output_before_end.should.be.empty
 
+
+# TODO: break up this test
 class WhenCapturingStdOut:
     def context(self):
         self.real_stdout = sys.stdout
@@ -318,40 +319,32 @@ class WhenCapturingStdOut:
         self.reporter = reporting.shared.ReporterNotifier(reporting.cli.StdOutCapturingReporter(self.stringio))
 
     def because_we_print_some_stuff(self):
-        self.reporter.suite_started(None)
+        with self.reporter.run_suite(tools.create_suite()):
+            with self.reporter.run_context(self.ctx1):
+                print("passing context")
+                with self.reporter.run_assertion(self.assertion1):
+                    print("passing assertion")
+                    print("to stderr", file=sys.stderr)
 
-        self.reporter.context_started(self.ctx1)
-        print("passing context")
-        self.reporter.assertion_started(self.assertion1)
-        print("passing assertion")
-        print("to stderr", file=sys.stderr)
-        self.reporter.assertion_passed(self.assertion1)
-        self.reporter.context_ended(self.ctx1)
+            with self.reporter.run_context(self.ctx2):
+                print("failing context")
+                with self.reporter.run_assertion(self.assertion2):
+                    print("failing assertion")
+                    raise tools.FakeAssertionError()
+                with self.reporter.run_assertion(self.assertion3):
+                    print("erroring assertion")
+                    raise tools.FakeException()
 
-        self.reporter.context_started(self.ctx2)
-        print("failing context")
-        self.reporter.assertion_started(self.assertion2)
-        print("failing assertion")
-        self.reporter.assertion_failed(self.assertion2, tools.FakeException())
-        self.reporter.assertion_started(self.assertion3)
-        print("erroring assertion")
-        self.reporter.assertion_errored(self.assertion3, tools.FakeException())
-        self.reporter.context_ended(self.ctx2)
+            with self.reporter.run_context(self.ctx3):
+                print("erroring context")
+                with self.reporter.run_assertion(self.assertion4):
+                    print("assertion in erroring context")
+                raise tools.FakeException()
 
-        self.reporter.context_started(self.ctx3)
-        print("erroring context")
-        self.reporter.assertion_started(self.assertion4)
-        print("assertion in erroring context")
-        self.reporter.assertion_passed(self.assertion4)
-        self.reporter.context_errored(self.ctx3, tools.FakeException())
-
-        self.reporter.context_started(self.ctx4)
-        self.reporter.assertion_started(self.assertion5)
-        # don't print anything
-        self.reporter.assertion_failed(self.assertion5, tools.FakeException())
-        self.reporter.context_ended(self.ctx4)
-
-        self.reporter.suite_ended(None)
+            with self.reporter.run_context(self.ctx4):
+                with self.reporter.run_assertion(self.assertion5):
+                    # don't print anything
+                   raise tools.FakeAssertionError()
 
     def it_should_not_print_anything_to_stdout(self):
         self.fake_stdout.getvalue().should.be.empty
@@ -364,7 +357,7 @@ class WhenCapturingStdOut:
 ----------------------------------------------------------------------
 context
   FAIL: assertion
-    test.tools.FakeException
+    test.tools.FakeAssertionError
     ------------------ >> begin captured stdout << -------------------
     failing context
     failing assertion
@@ -384,7 +377,7 @@ context
   -------------------- >> end captured stdout << ---------------------
 context
   FAIL: assertion
-    test.tools.FakeException
+    test.tools.FakeAssertionError
 ----------------------------------------------------------------------
 FAILED!
 4 contexts, 5 assertions: 2 failed, 2 errors
@@ -408,7 +401,7 @@ class WhenColouringOutput:
         self.assertion2 = tools.create_assertion("assertion2")
         tb2 = [('made_up_file_10.py', 1, 'made_up_function_1', 'frame1'),
                ('made_up_file_11.py', 2, 'made_up_function_2', 'frame2')]
-        self.exception2 = tools.build_fake_exception(tb2, "you fail")
+        self.exception2 = tools.build_fake_assertion_error(tb2, "you fail")
 
         self.assertion3 = tools.create_assertion("assertion3")
         tb3 = [('made_up_file_12.py', 3, 'made_up_function_3', 'frame3'),
@@ -426,33 +419,27 @@ class WhenColouringOutput:
         self.context2 = tools.create_context("made.up_context_2", ["abc", 123])
 
     def because_we_run_some_tests(self):
-        self.reporter.suite_started(None)
+        with self.reporter.run_suite(tools.create_suite()):
+            with self.reporter.run_context(self.context1):
+                self.outputs.append(self.stringio.getvalue())
 
-        self.reporter.context_started(self.context1)
-        self.outputs.append(self.stringio.getvalue())
+                with self.reporter.run_assertion(self.assertion1):
+                    pass
+                self.outputs.append(self.stringio.getvalue())
 
-        self.reporter.assertion_started(self.assertion1)
-        self.reporter.assertion_passed(self.assertion1)
-        self.outputs.append(self.stringio.getvalue())
+                with self.reporter.run_assertion(self.assertion2):
+                    raise self.exception2
+                self.outputs.append(self.stringio.getvalue())
 
-        self.reporter.assertion_started(self.assertion2)
-        self.reporter.assertion_failed(self.assertion2, self.exception2)
-        self.outputs.append(self.stringio.getvalue())
+                with self.reporter.run_assertion(self.assertion3):
+                    raise self.exception3
+                self.outputs.append(self.stringio.getvalue())
 
-        self.reporter.assertion_started(self.assertion3)
-        self.reporter.assertion_errored(self.assertion3, self.exception3)
-        self.outputs.append(self.stringio.getvalue())
+            with self.reporter.run_context(self.context2):
+                raise self.exception4
+            self.outputs.append(self.stringio.getvalue())
 
-        self.reporter.context_ended(self.context1)
-
-        self.reporter.context_started(self.context2)
-        self.reporter.context_errored(self.context2, self.exception4)
-        self.outputs.append(self.stringio.getvalue())
-
-        self.reporter.unexpected_error(self.exception5)
-        self.outputs.append(self.stringio.getvalue())
-
-        self.reporter.suite_ended(None)
+            raise self.exception5
         self.outputs.append(self.stringio.getvalue())
 
     def it_should_say_the_ctx_started(self):
@@ -469,7 +456,7 @@ class WhenColouringOutput:
         frame1
       File "made_up_file_11.py", line 2, in made_up_function_2
         frame2
-    test.tools.FakeException: you fail
+    test.tools.FakeAssertionError: you fail
 \x1b[39m""")
 
     def it_should_output_a_red_stack_trace_for_the_errored_assertion(self):
@@ -502,7 +489,11 @@ class WhenColouringOutput:
   File "made_up_file_17.py", line 4, in made_up_function_4
     frame4
 test.tools.FakeException: out
-\x1b[39m""")
+\x1b[39m
+----------------------------------------------------------------------
+FAILED!
+2 contexts, 3 assertions: 1 failed, 3 errors
+""")
 
     def get_output(self, n):
         full_output_n = self.outputs[n]
