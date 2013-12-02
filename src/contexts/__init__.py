@@ -42,7 +42,7 @@ def run(spec=None, reporter=None, shuffle=True):
 
 
 def _run_impl(spec, reporter, shuffle):
-    notifier = core.ReporterNotifier(reporter)
+    notifier = reporting.shared.ReporterNotifier(reporter)
     suite = core.Suite(spec, shuffle)
     suite.run(notifier)
 

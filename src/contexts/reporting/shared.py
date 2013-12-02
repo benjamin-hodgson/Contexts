@@ -1,7 +1,57 @@
 import re
-import sys
 import traceback
+from contextlib import contextmanager
 from . import Reporter
+
+
+class ReporterNotifier(object):
+    def __init__(self, reporter):
+        self.reporter = reporter
+
+    @contextmanager
+    def run_suite(self, suite):
+        self.reporter.suite_started(suite)
+        try:
+            yield
+        except Exception as e:
+            self.reporter.unexpected_error(e)
+        self.reporter.suite_ended(suite)
+
+    @contextmanager
+    def run_context(self, context):
+        self.reporter.context_started(context)
+        try:
+            yield
+        except Exception as e:
+            self.reporter.context_errored(context, e)
+        else:
+            self.reporter.context_ended(context)
+
+    @contextmanager
+    def run_assertion(self, assertion):
+        self.reporter.assertion_started(assertion)
+        try:
+            yield
+        except AssertionError as e:
+            self.reporter.assertion_failed(assertion, e)
+        except Exception as e:
+            self.reporter.assertion_errored(assertion, e)
+        else:
+            self.reporter.assertion_passed(assertion)
+
+    @contextmanager
+    def run_class(self, cls):
+        try:
+            yield
+        except Exception as e:
+            self.reporter.unexpected_error(e)
+
+    @contextmanager
+    def importing(self, module_spec):
+        try:
+            yield
+        except Exception as e:
+            self.reporter.unexpected_error(e)
 
 
 class ReporterManager(Reporter):
