@@ -8,36 +8,38 @@ from contexts import reporting
 from .. import tools
 
 
+# TODO: break up this test
 class WhenWatchingForDots:
     def context(self):
         self.stringio = StringIO()
-        self.reporter = reporting.shared.ReporterNotifier(reporting.cli.DotsReporter(self.stringio))
+        self.notifier = reporting.shared.ReporterNotifier(reporting.cli.DotsReporter(self.stringio))
         self.fake_context = tools.create_context("context")
         self.fake_assertion = tools.create_assertion("assertion")
 
     def because_we_run_some_assertions(self):
-        self.reporter.context_started(self.fake_context)
+        with self.notifier.run_context(self.fake_context):
 
-        self.reporter.assertion_started(self.fake_assertion)
-        self.reporter.assertion_passed(self.fake_assertion)
-        self.first = self.stringio.getvalue()
+            with self.notifier.run_assertion(self.fake_assertion):
+                pass
+            self.first = self.stringio.getvalue()
 
-        self.reporter.assertion_started(self.fake_assertion)
-        self.reporter.assertion_passed(self.fake_assertion)
-        self.second = self.stringio.getvalue()
+            with self.notifier.run_assertion(self.fake_assertion):
+                pass
+            self.second = self.stringio.getvalue()
 
-        self.reporter.assertion_started(self.fake_assertion)
-        self.reporter.assertion_failed(self.fake_assertion, tools.FakeException())
-        self.third = self.stringio.getvalue()
+            with self.notifier.run_assertion(self.fake_assertion):
+                assert False
+            self.third = self.stringio.getvalue()
 
-        self.reporter.assertion_started(self.fake_assertion)
-        self.reporter.assertion_errored(self.fake_assertion, tools.FakeException())
-        self.fourth = self.stringio.getvalue()
+            with self.notifier.run_assertion(self.fake_assertion):
+                raise Exception
+            self.fourth = self.stringio.getvalue()
 
-        self.reporter.context_errored(self.fake_context, tools.FakeException())
+            raise Exception
+
         self.fifth = self.stringio.getvalue()
 
-        self.reporter.unexpected_error(tools.FakeException())
+        self.notifier.unexpected_error(tools.FakeException())
         self.sixth = self.stringio.getvalue()
 
     def it_should_print_a_dot_for_the_first_pass(self):

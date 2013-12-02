@@ -109,6 +109,10 @@ def build_fake_exception(tb_list, *args):
     return exc.with_traceback(tb)
 
 
+def create_suite():
+    return contexts.core.Suite()
+
+
 def create_context(name, example=contexts.core._NullExample()):
     instance = type(name, (), {})()
     instance._contexts_test_data = None

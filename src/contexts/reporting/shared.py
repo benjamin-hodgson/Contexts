@@ -9,8 +9,8 @@ class ReporterNotifier(object):
         self.reporters = []
         self.suite_view_model = SuiteViewModel()
         for reporter in reporters:
-            self.reporters.append(reporter)
             reporter.suite_view_model = self.suite_view_model  # is this a good idea?
+            self.reporters.append(reporter)
 
     @property
     def failed(self):
