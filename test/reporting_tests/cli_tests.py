@@ -87,6 +87,7 @@ class WhenCapturingStdOut:
         sys.stdout = self.fake_stdout = StringIO()
         sys.stderr = self.fake_stderr = StringIO()
 
+        self.suite = tools.create_suite()
         self.ctx1 = tools.create_context("context")
         self.ctx2 = tools.create_context("context")
         self.ctx3 = tools.create_context("context")
@@ -99,35 +100,41 @@ class WhenCapturingStdOut:
 
         self.stringio = StringIO()
         self.reporter = reporting.cli.StdOutCapturingReporter(self.stringio)
-        self.notifier = reporting.shared.ReporterNotifier(self.reporter)
 
     def because_we_print_some_stuff(self):
-        with self.notifier.run_suite(tools.create_suite()):
-            with self.notifier.run_context(self.ctx1):
-                print("passing context")
-                with self.notifier.run_assertion(self.assertion1):
-                    print("passing assertion")
-                    print("to stderr", file=sys.stderr)
+        self.reporter.suite_started(self.suite)
+        self.reporter.context_started(self.ctx1)
+        print("passing context")
+        self.reporter.assertion_started(self.assertion1)
+        print("passing assertion")
+        print("to stderr", file=sys.stderr)
+        self.reporter.assertion_passed(self.assertion1)
+        self.reporter.context_ended(self.ctx1)
 
-            with self.notifier.run_context(self.ctx2):
-                print("failing context")
-                with self.notifier.run_assertion(self.assertion2):
-                    print("failing assertion")
-                    raise tools.FakeAssertionError()
-                with self.notifier.run_assertion(self.assertion3):
-                    print("erroring assertion")
-                    raise tools.FakeException()
+        self.reporter.context_started(self.ctx2)
+        print("failing context")
+        self.reporter.assertion_started(self.assertion2)
+        print("failing assertion")
+        self.reporter.assertion_failed(self.assertion2, tools.FakeAssertionError())
+        self.reporter.assertion_started(self.assertion3)
+        print("erroring assertion")
+        self.reporter.assertion_errored(self.assertion3, tools.FakeException())
+        self.reporter.context_ended(self.ctx2)
 
-            with self.notifier.run_context(self.ctx3):
-                print("erroring context")
-                with self.notifier.run_assertion(self.assertion4):
-                    print("assertion in erroring context")
-                raise tools.FakeException()
+        self.reporter.context_started(self.ctx3)
+        print("erroring context")
+        self.reporter.assertion_started(self.assertion4)
+        print("assertion in erroring context")
+        self.reporter.assertion_passed(self.assertion4)
+        self.reporter.context_errored(self.ctx3, tools.FakeException())
 
-            with self.notifier.run_context(self.ctx4):
-                with self.notifier.run_assertion(self.assertion5):
-                    # don't print anything
-                   raise tools.FakeAssertionError()
+        self.reporter.context_started(self.ctx4)
+        self.reporter.assertion_started(self.assertion5)
+        # don't print anything
+        self.reporter.assertion_failed(self.assertion5, tools.FakeAssertionError())
+        self.reporter.context_ended(self.ctx4)
+
+        self.reporter.suite_ended(self.suite)
 
     def it_should_not_print_anything_to_stdout(self):
         self.fake_stdout.getvalue().should.be.empty
