@@ -10,7 +10,6 @@ class TeamCitySharedContext:
     def shared_context(self):
         self.stringio = StringIO()
         self.reporter = teamcity.TeamCityReporter(self.stringio)
-        self.notifier = shared.ReporterNotifier(self.reporter)
         self.outputs = []
 
     def get_output(self, n):
@@ -28,6 +27,7 @@ class WhenATestRunPassesInTeamCity(TeamCitySharedContext):
         self.real_stdout, self.real_stderr = sys.stdout, sys.stderr
         sys.stdout, sys.stderr = self.fake_stdout, self.fake_stderr = StringIO(), StringIO()
 
+        self.suite = tools.create_suite()
         self.ctx1 = tools.create_context("FakeContext")
         self.ctx2 = tools.create_context("FakeContext2", ["abc", 123, None])
         self.assertion1 = tools.create_assertion("FakeAssertion1")
@@ -35,25 +35,30 @@ class WhenATestRunPassesInTeamCity(TeamCitySharedContext):
         self.assertion3 = tools.create_assertion("FakeAssertion3")
 
     def because_we_run_some_assertions(self):
-        with self.notifier.run_suite(tools.create_suite()):
-            self.outputs.append(self.stringio.getvalue())
+        self.reporter.suite_started(self.suite)
+        self.outputs.append(self.stringio.getvalue())
 
-            with self.notifier.run_context(self.ctx1):
-                print("to stdout")
-                print("to stderr", file=sys.stderr)
-                with self.notifier.run_assertion(self.assertion1):
-                    self.outputs.append(self.stringio.getvalue())
-                self.outputs.append(self.stringio.getvalue())
-                with self.notifier.run_assertion(self.assertion2):
-                    self.outputs.append(self.stringio.getvalue())
-                    print("to stdout again")
-                self.outputs.append(self.stringio.getvalue())
+        self.reporter.context_started(self.ctx1)
+        print("to stdout")
+        print("to stderr", file=sys.stderr)
+        self.reporter.assertion_started(self.assertion1)
+        self.outputs.append(self.stringio.getvalue())
+        self.reporter.assertion_passed(self.assertion1)
+        self.outputs.append(self.stringio.getvalue())
+        self.reporter.assertion_started(self.assertion2)
+        self.outputs.append(self.stringio.getvalue())
+        print("to stdout again")
+        self.reporter.assertion_passed(self.assertion2)
+        self.outputs.append(self.stringio.getvalue())
+        self.reporter.context_ended(self.ctx1)
 
-            with self.notifier.run_context(self.ctx2):
-                with self.notifier.run_assertion(self.assertion3):
-                    pass
-            self.outputs.append(self.stringio.getvalue())
+        self.reporter.context_started(self.ctx2)
+        self.reporter.assertion_started(self.assertion3)
+        self.reporter.assertion_passed(self.assertion3)
+        self.reporter.context_ended(self.ctx2)
+        self.outputs.append(self.stringio.getvalue())
 
+        self.reporter.suite_ended(self.suite)
         self.outputs.append(self.stringio.getvalue())
 
     def it_should_not_print_anything_to_the_real_stdout(self):
@@ -127,17 +132,19 @@ class WhenAnAssertionFailsInTeamCity(TeamCitySharedContext):
         self.context = tools.create_context("FakeContext")
 
     def because_we_run_an_assertion(self):
-        with self.notifier.run_suite(tools.create_suite()):
-            self.outputs.append(self.stringio.getvalue())
+        self.reporter.suite_started(tools.create_suite())
+        self.outputs.append(self.stringio.getvalue())
 
-            with self.notifier.run_context(self.context):
-                print("to stdout")
-                print("to stderr", file=sys.stderr)
-                with self.notifier.run_assertion(self.assertion):
-                    self.outputs.append(self.stringio.getvalue())
-                    raise self.exception
-                self.outputs.append(self.stringio.getvalue())
+        self.reporter.context_started(self.context)
+        print("to stdout")
+        print("to stderr", file=sys.stderr)
+        self.reporter.assertion_started(self.assertion)
+        self.outputs.append(self.stringio.getvalue())
+        self.reporter.assertion_failed(self.assertion, self.exception)
+        self.outputs.append(self.stringio.getvalue())
+        self.reporter.context_ended(self.context)
 
+        self.reporter.suite_ended(tools.create_suite())
         self.outputs.append(self.stringio.getvalue())
 
     def it_should_not_print_anything_to_the_real_stdout(self):
@@ -178,6 +185,7 @@ class WhenAnAssertionErrorsInTeamCity(TeamCitySharedContext):
         self.real_stdout, self.real_stderr = sys.stdout, sys.stderr
         sys.stdout, sys.stderr = self.fake_stdout, self.fake_stderr = StringIO(), StringIO()
 
+        self.suite = tools.create_suite()
         tb = [('made_up_file_3.py', 1, 'made_up_function_3', 'frame3'),
                ('made_up_file_4.py', 2, 'made_up_function_4', 'frame4')]
         self.exception = tools.build_fake_exception(tb, "you fail")
@@ -192,17 +200,19 @@ class WhenAnAssertionErrorsInTeamCity(TeamCitySharedContext):
         self.assertion = tools.create_assertion("FakeAssertion4")
 
     def because_we_run_an_assertion(self):
-        with self.notifier.run_suite(tools.create_suite()):
-            self.outputs.append(self.stringio.getvalue())
+        self.reporter.suite_started(self.suite)
+        self.outputs.append(self.stringio.getvalue())
 
-            with self.notifier.run_context(self.context):
-                print("to stdout")
-                print("to stderr", file=sys.stderr)
-                with self.notifier.run_assertion(self.assertion):
-                    self.outputs.append(self.stringio.getvalue())
-                    raise self.exception
-                self.outputs.append(self.stringio.getvalue())
+        self.reporter.context_started(self.context)
+        print("to stdout")
+        print("to stderr", file=sys.stderr)
+        self.reporter.assertion_started(self.assertion)
+        self.outputs.append(self.stringio.getvalue())
+        self.reporter.assertion_errored(self.assertion, self.exception)
+        self.outputs.append(self.stringio.getvalue())
+        self.reporter.context_ended(self.context)
 
+        self.reporter.suite_ended(self.suite)
         self.outputs.append(self.stringio.getvalue())
 
     def it_should_not_print_anything_to_the_real_stdout(self):
@@ -243,6 +253,7 @@ class WhenAContextErrorsInTeamCity(TeamCitySharedContext):
         self.real_stdout, self.real_stderr = sys.stdout, sys.stderr
         sys.stdout, sys.stderr = self.fake_stdout, self.fake_stderr = StringIO(), StringIO()
 
+        self.suite = tools.create_suite()
         tb = [('made_up_file_5.py', 1, 'made_up_function_5', 'frame5'),
                ('made_up_file_6.py', 2, 'made_up_function_6', 'frame6')]
         self.exception = tools.build_fake_exception(tb, "oh dear")
@@ -257,15 +268,16 @@ class WhenAContextErrorsInTeamCity(TeamCitySharedContext):
         self.ctx = tools.create_context("FakeContext")
 
     def because_we_run_an_assertion(self):
-        with self.notifier.run_suite(tools.create_suite()):
-            self.outputs.append(self.stringio.getvalue())
+        self.reporter.suite_started(self.suite)
+        self.outputs.append(self.stringio.getvalue())
 
-            with self.notifier.run_context(self.ctx):
-                print("to stdout")
-                print("to stderr", file=sys.stderr)
-                raise self.exception
-            self.outputs.append(self.stringio.getvalue())
+        self.reporter.context_started(self.ctx)
+        print("to stdout")
+        print("to stderr", file=sys.stderr)
+        self.reporter.context_errored(self.ctx, self.exception)
+        self.outputs.append(self.stringio.getvalue())
 
+        self.reporter.suite_ended(self.suite)
         self.outputs.append(self.stringio.getvalue())
 
     def it_should_not_print_anything_to_the_real_stdout(self):
@@ -303,6 +315,7 @@ class WhenAnUnexpectedErrorOccursInTeamCity(TeamCitySharedContext):
     def establish_the_exception(self):
         tb = [('made_up_file_7.py', 1, 'made_up_function_7', 'frame7'),
                ('made_up_file_8.py', 2, 'made_up_function_8', 'frame8')]
+        self.suite = tools.create_suite()
         self.exception = tools.build_fake_exception(tb, "another exception")
         self.formatted_tb = (
 'Traceback (most recent call last):|n'
@@ -316,10 +329,11 @@ class WhenAnUnexpectedErrorOccursInTeamCity(TeamCitySharedContext):
         # unexpected error happens when (for example) a syntax error occurs
         # in the user's test code. Very unlikely that anything will have been printed
         # at this stage.
-        with self.notifier.run_suite(tools.create_suite()):
-            self.outputs.append(self.stringio.getvalue())
+        self.reporter.suite_started(self.suite)
+        self.outputs.append(self.stringio.getvalue())
 
-            raise self.exception
+        self.reporter.unexpected_error(self.exception)
+        self.reporter.suite_ended(self.suite)
 
         self.outputs.append(self.stringio.getvalue())
 
