@@ -32,68 +32,53 @@ class VerboseReporter(shared.StreamReporter):
     dashes = '-' * 70
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.current_indent = ''
         self.context_count = 0
         self.assertion_count = 0
         self.failure_count = 0
         self.error_count = 0
 
-    def indent(self):
-        self.current_indent += '  '
-
-    def dedent(self):
-        self.current_indent = self.current_indent[:-2]
-
-    def _print(self, string, *args, **kwargs):
-        lines = string.split('\n')
-        for i, line in enumerate(lines[:]):
-            lines[i] = self.current_indent + line
-        super()._print('\n'.join(lines), *args, **kwargs)
-
     def context_started(self, context):
         super().context_started(context)
         self.context_count += 1
         self._print(shared.context_name(context))
-        self.indent()
-
-    def context_ended(self, context):
-        self.dedent()
-        super().context_ended(context)
 
     def context_errored(self, context, exception):
-        super().context_errored(context, exception)
-        self._print('\n'.join(shared.format_exception(exception)))
-        self.dedent()
         self.error_count += 1
+        super().context_errored(context, exception)
+        for line in shared.format_exception(exception):
+            self._print('  ' + line)
 
     def assertion_started(self, assertion):
-        super().assertion_started(assertion)
         self.assertion_count += 1
+        super().assertion_started(assertion)
 
     def assertion_passed(self, assertion):
         super().assertion_started(assertion)
-        self._print('PASS: ' + shared.make_readable(assertion.name))
+        self._print('  PASS: ' + shared.make_readable(assertion.name))
 
     def assertion_failed(self, assertion, exception):
-        super().assertion_failed(assertion, exception)
-        self._print('FAIL: ' + shared.make_readable(assertion.name))
-        self.indent()
-        self._print('\n'.join(shared.format_exception(exception)))
-        self.dedent()
         self.failure_count += 1
 
+        super().assertion_failed(assertion, exception)
+
+        self._print('  FAIL: ' + shared.make_readable(assertion.name))
+        for line in shared.format_exception(exception):
+            self._print('    ' + line)
+
     def assertion_errored(self, assertion, exception):
-        super().assertion_errored(assertion, exception)
-        self._print('ERROR: ' + shared.make_readable(assertion.name))
-        self.indent()
-        self._print('\n'.join(shared.format_exception(exception)))
-        self.dedent()
         self.error_count += 1
 
+        super().assertion_errored(assertion, exception)
+
+        self._print('  ERROR: ' + shared.make_readable(assertion.name))
+        for line in shared.format_exception(exception):
+            self._print('    ' + line)
+
     def unexpected_error(self, exception):
-        super().unexpected_error(exception)
-        self._print('\n'.join(shared.format_exception(exception)))
         self.error_count += 1
+        super().unexpected_error(exception)
+        for line in shared.format_exception(exception):
+            self._print(line)
 
     def suite_ended(self, suite):
         super().suite_ended(suite)
@@ -209,8 +194,8 @@ class SummarisingReporter(VerboseReporter):
 
 
 class StdOutCapturingReporter(SummarisingReporter):
-    def centred_dashes(self, string):
-        num = str(70 - len(self.current_indent))
+    def centred_dashes(self, string, indentation):
+        num = str(70 - indentation)
         return ("{:-^"+num+"}").format(string)
 
     def context_started(self, context):
@@ -226,23 +211,23 @@ class StdOutCapturingReporter(SummarisingReporter):
     def context_errored(self, context, exception):
         super().context_errored(context, exception)
         sys.stdout = self.real_stdout
-        self.add_buffer_to_summary()
+        self.add_buffer_to_summary(2)
 
     def assertion_failed(self, assertion, exception):
         super().assertion_failed(assertion, exception)
-        self.add_buffer_to_summary()
+        self.add_buffer_to_summary(4)
 
     def assertion_errored(self, assertion, exception):
         super().assertion_errored(assertion, exception)
-        self.add_buffer_to_summary()
+        self.add_buffer_to_summary(4)
 
-    def add_buffer_to_summary(self):
+    def add_buffer_to_summary(self, indentation):
         if self.buffer.getvalue():
-            self.indent()
-            self._print(self.centred_dashes(" >> begin captured stdout << "))
-            self._print(self.buffer.getvalue().strip())
-            self._print(self.centred_dashes(" >> end captured stdout << "))
-            self.dedent()
+            lines = [self.centred_dashes(" >> begin captured stdout << ", indentation)]
+            lines.extend(self.buffer.getvalue().strip().split('\n'))
+            lines.append(self.centred_dashes(" >> end captured stdout << ", indentation))
+            for line in lines:
+                self._print(' '*(indentation) + line)
 
 
 class TimedReporter(shared.StreamReporter):
