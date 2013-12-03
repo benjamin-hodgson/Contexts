@@ -8,40 +8,28 @@ from contexts import reporting
 from .. import tools
 
 
-# TODO: break up this test
-class WhenWatchingForDots:
+class DotsReporterSharedContext:
     def context(self):
         self.stringio = StringIO()
         self.notifier = reporting.shared.ReporterNotifier(reporting.cli.DotsReporter(self.stringio))
         self.fake_context = tools.create_context("context")
         self.fake_assertion = tools.create_assertion("assertion")
 
+class WhenWatchingForDotsAndAssertionsPass(DotsReporterSharedContext):
     def because_we_run_some_assertions(self):
         with self.notifier.run_suite(tools.create_suite()):
             with self.notifier.run_context(self.fake_context):
-
                 with self.notifier.run_assertion(self.fake_assertion):
-                    pass
+                    self.before = self.stringio.getvalue()
                 self.first = self.stringio.getvalue()
 
                 with self.notifier.run_assertion(self.fake_assertion):
                     pass
                 self.second = self.stringio.getvalue()
+        self.end = self.stringio.getvalue()
 
-                with self.notifier.run_assertion(self.fake_assertion):
-                    assert False
-                self.third = self.stringio.getvalue()
-
-                with self.notifier.run_assertion(self.fake_assertion):
-                    raise Exception
-                self.fourth = self.stringio.getvalue()
-
-                raise Exception
-
-            self.fifth = self.stringio.getvalue()
-
-            raise tools.FakeException()
-        self.sixth = self.stringio.getvalue()
+    def it_should_not_print_anything_before_the_first_pass(self):
+        self.before.should.be.empty
 
     def it_should_print_a_dot_for_the_first_pass(self):
         self.first.should.equal('.')
@@ -49,18 +37,77 @@ class WhenWatchingForDots:
     def it_should_print_a_dot_for_the_second_pass(self):
         self.second.should.equal('..')
 
+    def it_should_not_print_anything_else_at_the_end(self):
+        self.end.should.equal(self.second)
+
+class WhenWatchingForDotsAndAnAssertionFails(DotsReporterSharedContext):
+    def because_an_assertion_fails(self):
+        with self.notifier.run_suite(tools.create_suite()):
+            with self.notifier.run_context(self.fake_context):
+                with self.notifier.run_assertion(self.fake_assertion):
+                    self.before = self.stringio.getvalue()
+                    assert False
+                self.after = self.stringio.getvalue()
+        self.end = self.stringio.getvalue()
+
+    def it_should_not_print_anything_before_the_assertion_fails(self):
+        self.before.should.be.empty
+
     def it_should_print_an_F_for_the_failure(self):
-        self.third.should.equal('..F')
+        self.after.should.equal('F')
 
-    def it_should_print_an_E_for_the_assertion_error(self):
-        self.fourth.should.equal('..FE')
+    def it_should_not_print_anything_else_at_the_end(self):
+        self.end.should.equal(self.after)
 
-    def it_should_print_an_E_for_the_ctx_error(self):
-        self.fifth.should.equal('..FEE')
+class WhenWatchingForDotsAndAnAssertionErrors(DotsReporterSharedContext):
+    def because_an_assertion_fails(self):
+        with self.notifier.run_suite(tools.create_suite()):
+            with self.notifier.run_context(self.fake_context):
+                with self.notifier.run_assertion(self.fake_assertion):
+                    self.before = self.stringio.getvalue()
+                    raise Exception
+                self.after = self.stringio.getvalue()
+        self.end = self.stringio.getvalue()
 
-    def it_should_print_an_E_for_the_unexpected_error(self):
-        self.sixth.should.equal('..FEEE')
+    def it_should_not_print_anything_before_the_assertion_errors(self):
+        self.before.should.be.empty
 
+    def it_should_print_an_E_for_the_error(self):
+        self.after.should.equal('E')
+
+    def it_should_not_print_anything_else_at_the_end(self):
+        self.end.should.equal(self.after)
+
+class WhenWatchingForDotsAndAContextErrors(DotsReporterSharedContext):
+    def because_an_assertion_fails(self):
+        with self.notifier.run_suite(tools.create_suite()):
+            with self.notifier.run_context(self.fake_context):
+                self.before = self.stringio.getvalue()
+                raise Exception
+            self.after = self.stringio.getvalue()
+        self.end = self.stringio.getvalue()
+
+    def it_should_not_print_anything_before_the_error(self):
+        self.before.should.be.empty
+
+    def it_should_print_an_E_for_the_error(self):
+        self.after.should.equal('E')
+
+    def it_should_not_print_anything_else_at_the_end(self):
+        self.end.should.equal(self.after)
+
+class WhenWatchingForDotsAndAnUnexpectedErrorOccurs(DotsReporterSharedContext):
+    def because_an_assertion_fails(self):
+        with self.notifier.run_suite(tools.create_suite()):
+            self.before = self.stringio.getvalue()
+            raise Exception
+        self.after = self.stringio.getvalue()
+
+    def it_should_not_print_anything_before_the_error(self):
+        self.before.should.be.empty
+
+    def it_should_print_an_E_for_the_error(self):
+        self.after.should.equal('E')
 
 # TODO: break up this test
 class WhenPrintingVerbosely:

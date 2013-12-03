@@ -2,6 +2,9 @@ import sure
 from contexts.reporting.shared import ReporterNotifier
 from .. import tools
 
+# I think, if the other tests stop using the notifier, this file won't be necessary - 
+# the core tests have already proved that the correct reporter methods get called
+
 class NotifierSharedContext:
     def establish_that_the_notifier_contains_mocks(self):
         self.mock_reporter1 = tools.MockReporter()
