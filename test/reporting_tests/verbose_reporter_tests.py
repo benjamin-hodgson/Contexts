@@ -8,12 +8,7 @@ class VerboseReporterSharedContext:
     def context(self):
         self.stringio = StringIO()
         self.reporter = reporting.cli.VerboseReporter(self.stringio)
-        self.notifier = reporting.shared.ReporterNotifier(self.reporter)
         self.outputs = []
-
-    def get_output(self, n):
-        full_output_n = self.outputs[n]
-        return full_output_n[len(self.outputs[n-1]):] if n != 0 else full_output_n
 
 class WhenPrintingVerboselyAndASuiteEnds(VerboseReporterSharedContext):
     def because_a_suite_ends(self):
@@ -34,14 +29,9 @@ class WhenPrintingVerboselyAndAContextStarts(VerboseReporterSharedContext):
 
 class WhenPrintingVerboselyAndAnAssertionPasses(VerboseReporterSharedContext):
     def because_an_assertion_passes(self):
-        # FIXME: shouldn't use the notifier
-        with self.notifier.run_context(tools.create_context()):
-            self.outputs.append(self.stringio.getvalue())
-            with self.notifier.run_assertion(tools.create_assertion("assertion1")):
-                pass
-            self.outputs.append(self.stringio.getvalue())
+        self.reporter.assertion_passed(tools.create_assertion("assertion1"))
     def it_should_say_the_assertion_passed(self):
-        self.get_output(1).should.equal('  PASS: assertion 1\n')
+        self.stringio.getvalue().should.equal('  PASS: assertion 1\n')
 
 class WhenPrintingVerboselyAndAnAssertionFails(VerboseReporterSharedContext):
     def context(self):
@@ -51,15 +41,10 @@ class WhenPrintingVerboselyAndAnAssertionFails(VerboseReporterSharedContext):
         self.assertion = tools.create_assertion("assertion2")
 
     def because_an_assertion_fails(self):
-        # FIXME: shouldn't use the notifier
-        with self.notifier.run_context(tools.create_context()):
-            self.outputs.append(self.stringio.getvalue())
-            with self.notifier.run_assertion(self.assertion):
-                raise self.exception
-            self.outputs.append(self.stringio.getvalue())
+        self.reporter.assertion_failed(self.assertion, self.exception)
 
     def it_should_output_a_stack_trace(self):
-        self.get_output(1).should.equal(
+        self.stringio.getvalue().should.equal(
 """  FAIL: assertion 2
     Traceback (most recent call last):
       File "made_up_file_10.py", line 1, in made_up_function_1
@@ -77,15 +62,10 @@ class WhenPrintingVerboselyAndAnAssertionErrors(VerboseReporterSharedContext):
         self.assertion = tools.create_assertion("assertion3")
 
     def because_an_assertion_errors(self):
-        # FIXME: shouldn't use the notifier
-        with self.notifier.run_context(tools.create_context()):
-            self.outputs.append(self.stringio.getvalue())
-            with self.notifier.run_assertion(self.assertion):
-                raise self.exception
-            self.outputs.append(self.stringio.getvalue())
+        self.reporter.assertion_errored(self.assertion, self.exception)
 
     def it_should_output_a_stack_trace(self):
-        self.get_output(1).should.equal(
+        self.stringio.getvalue().should.equal(
 """  ERROR: assertion 3
     Traceback (most recent call last):
       File "made_up_file_12.py", line 3, in made_up_function_3
@@ -103,15 +83,11 @@ class WhenPrintingVerboselyAndAContextErrors(VerboseReporterSharedContext):
         self.context = tools.create_context("made.up_context_2", ["abc", 123])
 
     def because_a_ctx_errors(self):
-        # FIXME: shouldn't use the notifier
-        with self.notifier.run_context(self.context):
-            raise self.exception
-        self.outputs.append(self.stringio.getvalue())
+        self.reporter.context_errored(self.context, self.exception)
 
     def it_should_output_a_stack_trace(self):
-        self.get_output(0).should.equal(
-"""made up context 2 -> ['abc', 123]
-  Traceback (most recent call last):
+        self.stringio.getvalue().should.equal(
+"""  Traceback (most recent call last):
     File "made_up_file_14.py", line 3, in made_up_function_3
       frame3
     File "made_up_file_15.py", line 4, in made_up_function_4
