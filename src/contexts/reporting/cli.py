@@ -193,7 +193,7 @@ class SummarisingReporter(VerboseReporter):
         super().suite_ended(suite)
 
 
-class StdOutCapturingReporter(SummarisingReporter):
+class StdOutCapturingReporter(VerboseReporter):
     def centred_dashes(self, string, indentation):
         num = str(70 - indentation)
         return ("{:-^"+num+"}").format(string)

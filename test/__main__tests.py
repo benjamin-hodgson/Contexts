@@ -58,4 +58,5 @@ class WhenCreatingReportersInQuietMode:
 
     def it_should_return_a_reporter_with_a_stringio_output(self):
         self.reporters[0].stream.should_not.equal(sys.stdout)
+        self.reporters[0].stream.should_not.equal(sys.stderr)
         self.reporters[0].stream.should.be.an('io.StringIO')

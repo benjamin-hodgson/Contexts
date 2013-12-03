@@ -79,62 +79,33 @@ FAILED!
 """)
 
 
-# TODO: break up this test
-class WhenCapturingStdOut:
-    def context(self):
+class StdOutCapturingSharedContext:
+    def shared_context(self):
         self.real_stdout = sys.stdout
         self.real_stderr = sys.stderr
         sys.stdout = self.fake_stdout = StringIO()
         sys.stderr = self.fake_stderr = StringIO()
 
-        self.suite = tools.create_suite()
-        self.ctx1 = tools.create_context("context")
-        self.ctx2 = tools.create_context("context")
-        self.ctx3 = tools.create_context("context")
-        self.ctx4 = tools.create_context("context")
-        self.assertion1 = tools.create_assertion("assertion")
-        self.assertion2 = tools.create_assertion("assertion")
-        self.assertion3 = tools.create_assertion("assertion")
-        self.assertion4 = tools.create_assertion("assertion")
-        self.assertion5 = tools.create_assertion("assertion")
-
         self.stringio = StringIO()
         self.reporter = reporting.cli.StdOutCapturingReporter(self.stringio)
 
+    def cleanup_stdout_and_stderr(self):
+        sys.stdout = self.real_stdout
+        sys.stderr = self.real_stderr
+
+class WhenCapturingStdOutAndATestPasses(StdOutCapturingSharedContext):
+    def context(self):
+        self.ctx = tools.create_context("context")
+        self.assertion = tools.create_assertion("assertion")
+
     def because_we_print_some_stuff(self):
-        self.reporter.suite_started(self.suite)
-        self.reporter.context_started(self.ctx1)
+        self.reporter.context_started(self.ctx)
         print("passing context")
-        self.reporter.assertion_started(self.assertion1)
+        self.reporter.assertion_started(self.assertion)
         print("passing assertion")
         print("to stderr", file=sys.stderr)
-        self.reporter.assertion_passed(self.assertion1)
-        self.reporter.context_ended(self.ctx1)
-
-        self.reporter.context_started(self.ctx2)
-        print("failing context")
-        self.reporter.assertion_started(self.assertion2)
-        print("failing assertion")
-        self.reporter.assertion_failed(self.assertion2, tools.FakeAssertionError())
-        self.reporter.assertion_started(self.assertion3)
-        print("erroring assertion")
-        self.reporter.assertion_errored(self.assertion3, tools.FakeException())
-        self.reporter.context_ended(self.ctx2)
-
-        self.reporter.context_started(self.ctx3)
-        print("erroring context")
-        self.reporter.assertion_started(self.assertion4)
-        print("assertion in erroring context")
-        self.reporter.assertion_passed(self.assertion4)
-        self.reporter.context_errored(self.ctx3, tools.FakeException())
-
-        self.reporter.context_started(self.ctx4)
-        self.reporter.assertion_started(self.assertion5)
-        # don't print anything
-        self.reporter.assertion_failed(self.assertion5, tools.FakeAssertionError())
-        self.reporter.context_ended(self.ctx4)
-
-        self.reporter.suite_ended(self.suite)
+        self.reporter.assertion_passed(self.assertion)
+        self.reporter.context_ended(self.ctx)
 
     def it_should_not_print_anything_to_stdout(self):
         self.fake_stdout.getvalue().should.be.empty
@@ -143,8 +114,29 @@ class WhenCapturingStdOut:
         self.fake_stderr.getvalue().should.equal("to stderr\n")
 
     def it_should_output_the_captured_stdout_for_the_failures(self):
-        self.stringio.getvalue().should.equal("""
-----------------------------------------------------------------------
+        self.stringio.getvalue().should.equal("""\
+context
+  PASS: assertion
+""")
+
+class WhenCapturingStdOutAndATestFails(StdOutCapturingSharedContext):
+    def context(self):
+        self.ctx = tools.create_context("context")
+        self.assertion = tools.create_assertion("assertion")
+
+    def because_the_test_fails_and_we_print_something(self):
+        self.reporter.context_started(self.ctx)
+        print("failing context")
+        self.reporter.assertion_started(self.assertion)
+        print("failing assertion")
+        self.reporter.assertion_failed(self.assertion, tools.FakeAssertionError())
+        self.reporter.context_ended(self.ctx)
+
+    def it_should_not_print_anything_to_stdout(self):
+        self.fake_stdout.getvalue().should.be.empty
+
+    def it_should_output_the_captured_stdout(self):
+        self.stringio.getvalue().should.equal("""\
 context
   FAIL: assertion
     test.tools.FakeAssertionError
@@ -152,31 +144,83 @@ context
     failing context
     failing assertion
     ------------------- >> end captured stdout << --------------------
+""")
+
+class WhenCapturingStdOutAndATestErrors(StdOutCapturingSharedContext):
+    def context(self):
+        self.ctx = tools.create_context("context")
+        self.assertion = tools.create_assertion("assertion")
+
+    def because_the_test_errors_and_we_print_something(self):
+        self.reporter.context_started(self.ctx)
+        print("failing context")
+        self.reporter.assertion_started(self.assertion)
+        print("erroring assertion")
+        self.reporter.assertion_errored(self.assertion, tools.FakeException())
+        self.reporter.context_ended(self.ctx)
+
+    def it_should_not_print_anything_to_stdout(self):
+        self.fake_stdout.getvalue().should.be.empty
+
+    def it_should_output_the_captured_stdout(self):
+        self.stringio.getvalue().should.equal("""\
+context
   ERROR: assertion
     test.tools.FakeException
     ------------------ >> begin captured stdout << -------------------
     failing context
-    failing assertion
     erroring assertion
     ------------------- >> end captured stdout << --------------------
+""")
+
+class WhenCapturingStdOutAndAContextErrors(StdOutCapturingSharedContext):
+    def context(self):
+        self.ctx = tools.create_context("context")
+        self.assertion = tools.create_assertion("assertion")
+
+    def because_the_ctx_errors_and_we_print_something(self):
+        self.reporter.context_started(self.ctx)
+        print("erroring context")
+        self.reporter.assertion_started(self.assertion)
+        print("assertion in erroring context")
+        self.reporter.assertion_passed(self.assertion)
+        self.reporter.context_errored(self.ctx, tools.FakeException())
+
+    def it_should_not_print_anything_to_stdout(self):
+        self.fake_stdout.getvalue().should.be.empty
+
+    def it_should_output_the_captured_stdout(self):
+        self.stringio.getvalue().should.equal("""\
 context
+  PASS: assertion
   test.tools.FakeException
   ------------------- >> begin captured stdout << --------------------
   erroring context
   assertion in erroring context
   -------------------- >> end captured stdout << ---------------------
+""")
+
+class WhenCapturingStdOutButNotPrinting(StdOutCapturingSharedContext):
+    def context(self):
+        self.ctx = tools.create_context("context")
+        self.assertion = tools.create_assertion("assertion")
+
+    def because_an_assertion_fails_but_we_dont_print(self):
+        self.reporter.context_started(self.ctx)
+        self.reporter.assertion_started(self.assertion)
+        # don't print anything
+        self.reporter.assertion_failed(self.assertion, tools.FakeAssertionError())
+        self.reporter.context_ended(self.ctx)
+
+    def it_should_not_print_anything_to_stdout(self):
+        self.fake_stdout.getvalue().should.be.empty
+
+    def it_should_not_output_the_delimiters(self):
+        self.stringio.getvalue().should.equal("""\
 context
   FAIL: assertion
     test.tools.FakeAssertionError
-----------------------------------------------------------------------
-FAILED!
-4 contexts, 5 assertions: 2 failed, 2 errors
 """)
-
-    def cleanup_stdout_and_stderr(self):
-        sys.stdout = self.real_stdout
-        sys.stderr = self.real_stderr
-
 
 class WhenColouringOutput:
     def context(self):

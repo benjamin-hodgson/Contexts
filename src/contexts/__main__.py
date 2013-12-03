@@ -61,18 +61,31 @@ def create_reporters(args):
     if args.teamcity or "TEAMCITY_VERSION" in os.environ:
         return (reporting.teamcity.TeamCityReporter(sys.stdout),)
     elif args.verbosity == 'verbose':
-        return (reporting.cli.ColouredReporter(sys.stdout),)
+        return (type(
+            "VerboseCapturingReporter",
+            (reporting.cli.ColouredReporter,
+             reporting.cli.StdOutCapturingReporter),
+            {})(sys.stdout),)
     elif args.verbosity == 'quiet':
         return (reporting.cli.StdOutCapturingReporter(StringIO()),)
     elif args.capture:
         return (
             reporting.cli.DotsReporter(sys.stdout),
-            type("ColouredCapturingReporter", (reporting.cli.ColouredReporter, reporting.cli.StdOutCapturingReporter), {})(sys.stdout),
+            type(
+                "ColouredCapturingReporter",
+                (reporting.cli.ColouredReporter,
+                 reporting.cli.StdOutCapturingReporter,
+                 reporting.cli.SummarisingReporter),
+                {})(sys.stdout),
             reporting.cli.TimedReporter(sys.stdout)
         )
     return (
         reporting.cli.DotsReporter(sys.stdout),
-        type("ColouredSummarisingReporter", (reporting.cli.ColouredReporter, reporting.cli.SummarisingReporter), {})(sys.stdout),
+        type(
+            "ColouredSummarisingReporter",
+            (reporting.cli.ColouredReporter,
+             reporting.cli.SummarisingReporter),
+            {})(sys.stdout),
         reporting.cli.TimedReporter(sys.stdout)
     )
 
