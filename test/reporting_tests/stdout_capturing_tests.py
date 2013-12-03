@@ -24,7 +24,7 @@ class WhenCapturingStdOutAndATestPasses(StdOutCapturingSharedContext):
         self.ctx = tools.create_context("context")
         self.assertion = tools.create_assertion("assertion")
 
-    def because_we_print_some_stuff(self):
+    def because_the_assertion_passes(self):
         self.reporter.context_started(self.ctx)
         print("passing context")
         self.reporter.assertion_started(self.assertion)
@@ -39,7 +39,7 @@ class WhenCapturingStdOutAndATestPasses(StdOutCapturingSharedContext):
     def it_should_let_stderr_through(self):
         self.fake_stderr.getvalue().should.equal("to stderr\n")
 
-    def it_should_output_the_captured_stdout_for_the_failures(self):
+    def it_should_not_output_the_captured_stdout(self):
         self.stringio.getvalue().should.equal("""\
 context
   PASS: assertion
