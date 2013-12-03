@@ -182,9 +182,9 @@ class WhenColouringOutput:
     def context(self):
         self.stringio = StringIO()
         self.reporter = reporting.cli.ColouredReporter(self.stringio)
-        self.notifier = reporting.shared.ReporterNotifier(self.reporter)
         self.outputs = []
 
+        self.suite = tools.create_suite()
         self.context1 = tools.create_context("made.up_context_1")
 
         self.assertion1 = tools.create_assertion("assertion1")
@@ -210,27 +210,30 @@ class WhenColouringOutput:
         self.context2 = tools.create_context("made.up_context_2", ["abc", 123])
 
     def because_we_run_some_tests(self):
-        with self.notifier.run_suite(tools.create_suite()):
-            with self.notifier.run_context(self.context1):
-                self.outputs.append(self.stringio.getvalue())
+        self.reporter.suite_started(self.suite)
+        self.reporter.context_started(self.context1)
+        self.outputs.append(self.stringio.getvalue())
 
-                with self.notifier.run_assertion(self.assertion1):
-                    pass
-                self.outputs.append(self.stringio.getvalue())
+        self.reporter.assertion_started(self.assertion1)
+        self.reporter.assertion_passed(self.assertion1)
+        self.outputs.append(self.stringio.getvalue())
 
-                with self.notifier.run_assertion(self.assertion2):
-                    raise self.exception2
-                self.outputs.append(self.stringio.getvalue())
+        self.reporter.assertion_started(self.assertion2)
+        self.reporter.assertion_failed(self.assertion2, self.exception2)
+        self.outputs.append(self.stringio.getvalue())
 
-                with self.notifier.run_assertion(self.assertion3):
-                    raise self.exception3
-                self.outputs.append(self.stringio.getvalue())
+        self.reporter.assertion_started(self.assertion3)
+        self.reporter.assertion_errored(self.assertion3, self.exception3)
+        self.outputs.append(self.stringio.getvalue())
 
-            with self.notifier.run_context(self.context2):
-                raise self.exception4
-            self.outputs.append(self.stringio.getvalue())
+        self.reporter.context_ended(self.context1)
 
-            raise self.exception5
+        self.reporter.context_started(self.context2)
+        self.reporter.context_errored(self.context2, self.exception4)
+        self.outputs.append(self.stringio.getvalue())
+
+        self.reporter.unexpected_error(self.exception5)
+        self.reporter.suite_ended(self.suite)
         self.outputs.append(self.stringio.getvalue())
 
     def it_should_say_the_ctx_started(self):
@@ -300,13 +303,15 @@ class WhenTimingATestRun:
             now = mock.Mock(return_value=self.fake_now)
         self.FakeDateTime = FakeDateTime
 
+        self.suite = tools.create_suite()
         self.stringio = StringIO()
-        self.notifier = reporting.shared.ReporterNotifier(reporting.cli.TimedReporter(self.stringio))
+        self.reporter = reporting.cli.TimedReporter(self.stringio)
 
     def because_we_run_a_suite(self):
         with mock.patch('datetime.datetime', self.FakeDateTime):
-            with self.notifier.run_suite(tools.create_suite()):
-                datetime.datetime.now.return_value += self.fake_soon
+            self.reporter.suite_started(self.suite)
+            datetime.datetime.now.return_value += self.fake_soon
+            self.reporter.suite_ended(self.suite)
 
     def it_should_report_the_total_time_for_the_test_run(self):
         self.stringio.getvalue().should.equal("(10.5 seconds)\n")
