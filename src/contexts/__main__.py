@@ -62,7 +62,7 @@ def create_reporters(args):
         )
     return (
         reporting.cli.DotsReporter(sys.stdout),
-        type("ColouredCapturingReporter", (reporting.cli.ColouredReporter, reporting.cli.SummarisingReporter), {})(sys.stdout),
+        type("ColouredSummarisingReporter", (reporting.cli.ColouredReporter, reporting.cli.SummarisingReporter), {})(sys.stdout),
         reporting.cli.TimedReporter(sys.stdout)
     )
 
