@@ -40,6 +40,9 @@ PASSED!
 2 contexts, 3 assertions
 """)
 
+    def it_should_say_it_passed(self):
+        self.reporter.failed.should.be.false
+
 
 class WhenPrintingAFailureSummary:
     def establish_that_a_test_has_failed(self):
@@ -75,6 +78,9 @@ made up context
 FAILED!
 1 context, 1 assertion: 1 failed, 0 errors
 """)
+
+    def it_should_say_it_failed(self):
+        self.reporter.failed.should.be.true
 
 
 class WhenTimingATestRun:

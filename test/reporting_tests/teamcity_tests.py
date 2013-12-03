@@ -2,7 +2,7 @@ import sys
 from io import StringIO
 import re
 import sure
-from contexts.reporting import teamcity, shared
+from contexts.reporting import teamcity
 from .. import tools
 
 
