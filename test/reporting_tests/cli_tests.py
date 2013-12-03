@@ -98,7 +98,8 @@ class WhenCapturingStdOut:
         self.assertion5 = tools.create_assertion("assertion")
 
         self.stringio = StringIO()
-        self.notifier = reporting.shared.ReporterNotifier(reporting.cli.StdOutCapturingReporter(self.stringio))
+        self.reporter = reporting.cli.StdOutCapturingReporter(self.stringio)
+        self.notifier = reporting.shared.ReporterNotifier(self.reporter)
 
     def because_we_print_some_stuff(self):
         with self.notifier.run_suite(tools.create_suite()):
@@ -173,7 +174,8 @@ FAILED!
 class WhenColouringOutput:
     def context(self):
         self.stringio = StringIO()
-        self.reporter = reporting.shared.ReporterNotifier(reporting.cli.ColouredReporter(self.stringio))
+        self.reporter = reporting.cli.ColouredReporter(self.stringio)
+        self.notifier = reporting.shared.ReporterNotifier(self.reporter)
         self.outputs = []
 
         self.context1 = tools.create_context("made.up_context_1")
@@ -201,23 +203,23 @@ class WhenColouringOutput:
         self.context2 = tools.create_context("made.up_context_2", ["abc", 123])
 
     def because_we_run_some_tests(self):
-        with self.reporter.run_suite(tools.create_suite()):
-            with self.reporter.run_context(self.context1):
+        with self.notifier.run_suite(tools.create_suite()):
+            with self.notifier.run_context(self.context1):
                 self.outputs.append(self.stringio.getvalue())
 
-                with self.reporter.run_assertion(self.assertion1):
+                with self.notifier.run_assertion(self.assertion1):
                     pass
                 self.outputs.append(self.stringio.getvalue())
 
-                with self.reporter.run_assertion(self.assertion2):
+                with self.notifier.run_assertion(self.assertion2):
                     raise self.exception2
                 self.outputs.append(self.stringio.getvalue())
 
-                with self.reporter.run_assertion(self.assertion3):
+                with self.notifier.run_assertion(self.assertion3):
                     raise self.exception3
                 self.outputs.append(self.stringio.getvalue())
 
-            with self.reporter.run_context(self.context2):
+            with self.notifier.run_context(self.context2):
                 raise self.exception4
             self.outputs.append(self.stringio.getvalue())
 
@@ -292,11 +294,11 @@ class WhenTimingATestRun:
         self.FakeDateTime = FakeDateTime
 
         self.stringio = StringIO()
-        self.reporter = reporting.shared.ReporterNotifier(reporting.cli.TimedReporter(self.stringio))
+        self.notifier = reporting.shared.ReporterNotifier(reporting.cli.TimedReporter(self.stringio))
 
     def because_we_run_a_suite(self):
         with mock.patch('datetime.datetime', self.FakeDateTime):
-            with self.reporter.run_suite(tools.create_suite()):
+            with self.notifier.run_suite(tools.create_suite()):
                 datetime.datetime.now.return_value += self.fake_soon
 
     def it_should_report_the_total_time_for_the_test_run(self):
@@ -326,10 +328,10 @@ class WhenMakingANameHumanReadable:
         self.input, self.expected = example
 
     def because_we_make_the_string_readable(self):
-        self.reporter = reporting.shared.make_readable(self.input)
+        self.result = reporting.shared.make_readable(self.input)
 
     def it_should_return_a_string_with_appropriate_spaces(self):
-        self.reporter.should.equal(self.expected)
+        self.result.should.equal(self.expected)
 
 
 if __name__ == "__main__":
