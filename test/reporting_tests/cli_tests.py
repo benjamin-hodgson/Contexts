@@ -12,31 +12,28 @@ class DotsReporterSharedContext:
     def context(self):
         self.stringio = StringIO()
         self.reporter = reporting.cli.DotsReporter(self.stringio)
-        self.notifier = reporting.shared.ReporterNotifier(self.reporter)
-        self.fake_context = tools.create_context("context")
-        self.fake_assertion = tools.create_assertion("assertion")
 
 class WhenWatchingForDotsAndAnAssertionPasses(DotsReporterSharedContext):
     def because_an_assertion_passes(self):
-        self.reporter.assertion_passed(self.fake_assertion)
+        self.reporter.assertion_passed(tools.create_assertion())
     def it_should_print_a_dot(self):
         self.stringio.getvalue().should.equal('.')
 
 class WhenWatchingForDotsAndAnAssertionFails(DotsReporterSharedContext):
     def because_an_assertion_fails(self):
-        self.reporter.assertion_failed(self.fake_assertion, AssertionError())
+        self.reporter.assertion_failed(tools.create_assertion(), AssertionError())
     def it_should_print_an_F(self):
         self.stringio.getvalue().should.equal('F')
 
 class WhenWatchingForDotsAndAnAssertionErrors(DotsReporterSharedContext):
     def because_an_assertion_errors(self):
-        self.reporter.assertion_errored(self.fake_assertion, Exception())
+        self.reporter.assertion_errored(tools.create_assertion(), Exception())
     def it_should_print_an_E_for_the_error(self):
         self.stringio.getvalue().should.equal('E')
 
 class WhenWatchingForDotsAndAContextErrors(DotsReporterSharedContext):
     def because_an_assertion_fails(self):
-        self.reporter.context_errored(self.fake_context, Exception())
+        self.reporter.context_errored(tools.create_context(), Exception())
     def it_should_print_an_E_for_the_error(self):
         self.stringio.getvalue().should.equal('E')
 
@@ -46,70 +43,64 @@ class WhenWatchingForDotsAndAnUnexpectedErrorOccurs(DotsReporterSharedContext):
     def it_should_print_an_E_for_the_error(self):
         self.stringio.getvalue().should.equal('E')
 
-# TODO: break up this test
-class WhenPrintingVerbosely:
+
+
+class VerboseReporterSharedContext:
     def context(self):
         self.stringio = StringIO()
-        self.notifier = reporting.shared.ReporterNotifier(reporting.cli.VerboseReporter(self.stringio))
+        self.reporter = reporting.cli.VerboseReporter(self.stringio)
+        self.notifier = reporting.shared.ReporterNotifier(self.reporter)
         self.outputs = []
 
-        self.context1 = tools.create_context("made.up_context_1")
+    def get_output(self, n):
+        full_output_n = self.outputs[n]
+        return full_output_n[len(self.outputs[n-1]):] if n != 0 else full_output_n
 
-        self.assertion1 = tools.create_assertion("assertion1")
+class WhenPrintingVerboselyAndASuiteEnds(VerboseReporterSharedContext):
+    def because_a_suite_ends(self):
+        self.reporter.suite_ended(tools.create_suite())
+    def it_should_output_a_summary(self):
+        self.stringio.getvalue().should.equal("""
+----------------------------------------------------------------------
+PASSED!
+0 contexts, 0 assertions
+""")
+# TODO: tests that make assertions about the counts
 
-        self.assertion2 = tools.create_assertion("assertion2")
-        tb2 = [('made_up_file_10.py', 1, 'made_up_function_1', 'frame1'),
-               ('made_up_file_11.py', 2, 'made_up_function_2', 'frame2')]
-        self.exception2 = tools.build_fake_assertion_error(tb2, "you fail")
+class WhenPrintingVerboselyAndAContextStarts(VerboseReporterSharedContext):
+    def because_a_ctx_starts(self):
+        self.reporter.context_started(tools.create_context("made.up_context_1"))
+    def it_should_print_its_name(self):
+        self.stringio.getvalue().should.equal("made up context 1\n")
 
-        self.assertion3 = tools.create_assertion("assertion3")
-        tb3 = [('made_up_file_12.py', 3, 'made_up_function_3', 'frame3'),
-               ('made_up_file_13.py', 4, 'made_up_function_4', 'frame4')]
-        self.exception3 = tools.build_fake_exception(tb3, "no")
-
-        tb4 = [('made_up_file_14.py', 3, 'made_up_function_3', 'frame3'),
-               ('made_up_file_15.py', 4, 'made_up_function_4', 'frame4')]
-        self.exception4 = tools.build_fake_exception(tb4, "out")
-
-        tb5 = [('made_up_file_16.py', 3, 'made_up_function_3', 'frame3'),
-               ('made_up_file_17.py', 4, 'made_up_function_4', 'frame4')]
-        self.exception5 = tools.build_fake_exception(tb5, "out")
-
-        self.context2 = tools.create_context("made.up_context_2", ["abc", 123])
-
-    def because_we_run_some_tests(self):
-        # each of these with-stmts should be a separate test case
-        with self.notifier.run_suite(None):
-            with self.notifier.run_context(self.context1):
-                self.outputs.append(self.stringio.getvalue())
-
-                with self.notifier.run_assertion(self.assertion1):
-                    pass
-                self.outputs.append(self.stringio.getvalue())
-
-                with self.notifier.run_assertion(self.assertion2):
-                    raise self.exception2
-                self.outputs.append(self.stringio.getvalue())
-
-                with self.notifier.run_assertion(self.assertion3):
-                    raise self.exception3
-                self.outputs.append(self.stringio.getvalue())
-
-            with self.notifier.run_context(self.context2):
-                raise self.exception4
+class WhenPrintingVerboselyAndAnAssertionPasses(VerboseReporterSharedContext):
+    def because_an_assertion_passes(self):
+        # FIXME: shouldn't use the notifier
+        with self.notifier.run_context(tools.create_context()):
             self.outputs.append(self.stringio.getvalue())
-
-            raise self.exception5
-        self.outputs.append(self.stringio.getvalue())
-
-    def it_should_say_the_ctx_started(self):
-        self.get_output(0).should.equal("made up context 1\n")
-
-    def it_should_say_the_first_assertion_passed(self):
+            with self.notifier.run_assertion(tools.create_assertion("assertion1")):
+                pass
+            self.outputs.append(self.stringio.getvalue())
+    def it_should_say_the_assertion_passed(self):
         self.get_output(1).should.equal('  PASS: assertion 1\n')
 
-    def it_should_output_a_stack_trace_for_the_failed_assertion(self):
-        self.get_output(2).should.equal(
+class WhenPrintingVerboselyAndAnAssertionFails(VerboseReporterSharedContext):
+    def context(self):
+        tb = [('made_up_file_10.py', 1, 'made_up_function_1', 'frame1'),
+              ('made_up_file_11.py', 2, 'made_up_function_2', 'frame2')]
+        self.exception = tools.build_fake_assertion_error(tb, "you fail")
+        self.assertion = tools.create_assertion("assertion2")
+
+    def because_an_assertion_fails(self):
+        # FIXME: shouldn't use the notifier
+        with self.notifier.run_context(tools.create_context()):
+            self.outputs.append(self.stringio.getvalue())
+            with self.notifier.run_assertion(self.assertion):
+                raise self.exception
+            self.outputs.append(self.stringio.getvalue())
+
+    def it_should_output_a_stack_trace(self):
+        self.get_output(1).should.equal(
 """  FAIL: assertion 2
     Traceback (most recent call last):
       File "made_up_file_10.py", line 1, in made_up_function_1
@@ -119,8 +110,23 @@ class WhenPrintingVerbosely:
     test.tools.FakeAssertionError: you fail
 """)
 
-    def it_should_output_a_stack_trace_for_the_errored_assertion(self):
-        self.get_output(3).should.equal(
+class WhenPrintingVerboselyAndAnAssertionErrors(VerboseReporterSharedContext):
+    def context(self):
+        tb = [('made_up_file_12.py', 3, 'made_up_function_3', 'frame3'),
+               ('made_up_file_13.py', 4, 'made_up_function_4', 'frame4')]
+        self.exception = tools.build_fake_exception(tb, "no")
+        self.assertion = tools.create_assertion("assertion3")
+
+    def because_an_assertion_errors(self):
+        # FIXME: shouldn't use the notifier
+        with self.notifier.run_context(tools.create_context()):
+            self.outputs.append(self.stringio.getvalue())
+            with self.notifier.run_assertion(self.assertion):
+                raise self.exception
+            self.outputs.append(self.stringio.getvalue())
+
+    def it_should_output_a_stack_trace(self):
+        self.get_output(1).should.equal(
 """  ERROR: assertion 3
     Traceback (most recent call last):
       File "made_up_file_12.py", line 3, in made_up_function_3
@@ -130,8 +136,21 @@ class WhenPrintingVerbosely:
     test.tools.FakeException: no
 """)
 
-    def it_should_output_a_stack_trace_for_the_errored_ctx(self):
-        self.get_output(4).should.equal(
+class WhenPrintingVerboselyAndAContextErrors(VerboseReporterSharedContext):
+    def context(self):
+        tb = [('made_up_file_14.py', 3, 'made_up_function_3', 'frame3'),
+               ('made_up_file_15.py', 4, 'made_up_function_4', 'frame4')]
+        self.exception = tools.build_fake_exception(tb, "out")
+        self.context = tools.create_context("made.up_context_2", ["abc", 123])
+
+    def because_a_ctx_errors(self):
+        # FIXME: shouldn't use the notifier
+        with self.notifier.run_context(self.context):
+            raise self.exception
+        self.outputs.append(self.stringio.getvalue())
+
+    def it_should_output_a_stack_trace(self):
+        self.get_output(0).should.equal(
 """made up context 2 -> ['abc', 123]
   Traceback (most recent call last):
     File "made_up_file_14.py", line 3, in made_up_function_3
@@ -141,23 +160,22 @@ class WhenPrintingVerbosely:
   test.tools.FakeException: out
 """)
 
-    def it_should_output_a_stack_trace_for_the_unexpected_error_and_a_summary(self):
-        self.get_output(5).should.equal(
+class WhenPrintingVerboselyAndAnUnexpectedErrorOccurs(VerboseReporterSharedContext):
+    def context(self):
+        tb = [('made_up_file_16.py', 3, 'made_up_function_3', 'frame3'),
+               ('made_up_file_17.py', 4, 'made_up_function_4', 'frame4')]
+        self.exception = tools.build_fake_exception(tb, "out")
+    def because_an_unexpected_error_occurs(self):
+        self.reporter.unexpected_error(self.exception)
+    def it_should_output_a_stack_trace(self):
+        self.stringio.getvalue().should.equal(
 """Traceback (most recent call last):
   File "made_up_file_16.py", line 3, in made_up_function_3
     frame3
   File "made_up_file_17.py", line 4, in made_up_function_4
     frame4
 test.tools.FakeException: out
-
-----------------------------------------------------------------------
-FAILED!
-2 contexts, 3 assertions: 1 failed, 3 errors
 """)
-
-    def get_output(self, n):
-        full_output_n = self.outputs[n]
-        return full_output_n[len(self.outputs[n-1]):] if n != 0 else full_output_n
 
 
 class WhenPrintingASuccessSummary:

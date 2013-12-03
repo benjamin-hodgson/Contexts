@@ -119,13 +119,13 @@ def create_suite():
     return contexts.core.Suite(types.ModuleType(''), True)
 
 
-def create_context(name, example=contexts.core._NullExample()):
+def create_context(name='context', example=contexts.core._NullExample()):
     instance = type(name, (), {})()
     instance._contexts_test_data = None
     return contexts.core.Context(instance, example, False)
 
 
-def create_assertion(name):
+def create_assertion(name='context'):
     f = lambda: None
     f.__name__ = name
     return contexts.core.Assertion(f)
