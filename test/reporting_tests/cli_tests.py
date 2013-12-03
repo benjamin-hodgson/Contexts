@@ -11,24 +11,28 @@ from .. import tools
 class WhenPrintingASuccessSummary:
     def in_the_context_of_a_successful_run(self):
         self.stringio = StringIO()
-        self.notifier = reporting.shared.ReporterNotifier(reporting.cli.SummarisingReporter(self.stringio))
+        self.reporter = reporting.cli.SummarisingReporter(self.stringio)
+
         self.ctx1 = tools.create_context("")
         self.ctx2 = tools.create_context("")
         self.assertion1 = tools.create_assertion("")
         self.assertion2 = tools.create_assertion("")
         self.assertion3 = tools.create_assertion("")
 
-    def because_we_run_some_tests(self):
-        with self.notifier.run_suite(tools.create_suite()):
-            with self.notifier.run_context(self.ctx1):
-                with self.notifier.run_assertion(self.assertion1):
-                    pass
-                with self.notifier.run_assertion(self.assertion2):
-                    pass
+        self.reporter.context_started(self.ctx1)
+        self.reporter.assertion_started(self.assertion1)
+        self.reporter.assertion_passed(self.assertion1)
+        self.reporter.assertion_started(self.assertion2)
+        self.reporter.assertion_passed(self.assertion2)
+        self.reporter.context_ended(self.ctx1)
 
-            with self.notifier.run_context(self.ctx2):
-                with self.notifier.run_assertion(self.assertion2):
-                    pass
+        self.reporter.context_started(self.ctx2)
+        self.reporter.assertion_started(self.assertion3)
+        self.reporter.assertion_passed(self.assertion3)
+        self.reporter.context_ended(self.ctx2)
+
+    def because_the_suite_ends(self):
+        self.reporter.suite_ended(tools.create_suite())
 
     def it_should_print_the_summary_to_the_stream(self):
         self.stringio.getvalue().should.equal(
@@ -39,94 +43,40 @@ PASSED!
 """)
 
 
-# TODO: break up this test
 class WhenPrintingAFailureSummary:
-    def in_the_context_of_a_failed_run(self):
+    def establish_that_some_tests_have_failed(self):
         self.stringio = StringIO()
-        self.reporter = reporting.shared.ReporterNotifier(reporting.cli.SummarisingReporter(self.stringio))
+        self.reporter = reporting.cli.SummarisingReporter(self.stringio)
 
-        self.context1 = tools.create_context("made.up_context_1")
-
-        self.assertion1 = tools.create_assertion("made.up.assertion_1")
+        self.context = tools.create_context("made.up_context")
+        self.assertion = tools.create_assertion("made.up.assertion_1")
         tb1 = [('made_up_file.py', 3, 'made_up_function', 'frame1'),
                ('another_made_up_file.py', 2, 'another_made_up_function', 'frame2')]
-        self.exception1 = tools.build_fake_exception(tb1, "Gotcha")
+        self.exception = tools.build_fake_assertion_error(tb1, "Gotcha")
 
-        self.assertion2 = tools.create_assertion("made.up.assertion_2")
-        tb2 = [('made_up_file_3.py', 1, 'made_up_function_3', 'frame3'),
-               ('made_up_file_4.py', 2, 'made_up_function_4', 'frame4')]
-        self.exception2 = tools.build_fake_assertion_error(tb2, "you fail")
+        self.reporter.context_started(self.context)
+        self.reporter.assertion_started(self.assertion)
+        self.reporter.assertion_failed(self.assertion, self.exception)
+        self.reporter.context_ended(self.context)
 
-        self.assertion3 = tools.create_assertion("made.up.assertion_3")
+    def because_the_suite_ends(self):
+        self.reporter.suite_ended(tools.create_suite)
 
-        self.context2 = tools.create_context("made.up_context_2", ["abc", 123, None])
-        tb3 = [('made_up_file_5.py', 1, 'made_up_function_5', 'frame5'),
-               ('made_up_file_6.py', 2, 'made_up_function_6', 'frame6')]
-        self.exception3 = tools.build_fake_exception(tb3, "oh dear")
-
-        tb4 = [('made_up_file_7.py', 1, 'made_up_function_7', 'frame7'),
-               ('made_up_file_8.py', 2, 'made_up_function_8', 'frame8')]
-        self.exception4 = tools.build_fake_exception(tb4, "oh dear")
-
-        self.context3 = tools.create_context("made.up_context_3")
-
-    def because_we_run_some_tests(self):
-        with self.reporter.run_suite(tools.create_suite()):
-            with self.reporter.run_context(self.context1):
-                with self.reporter.run_assertion(self.assertion1):
-                    raise self.exception1
-                with self.reporter.run_assertion(self.assertion2):
-                    raise self.exception2
-                with self.reporter.run_assertion(self.assertion3):
-                    pass
-
-            with self.reporter.run_context(self.context2):
-                raise self.exception3
-
-            with self.reporter.run_context(self.context3):
-                pass
-
-            self.output_before_end = self.stringio.getvalue()
-            raise self.exception4
-
-    def it_should_print_a_traceback_for_each_failure(self):
+    def it_should_print_the_failure_tracebacks(self):
         self.stringio.getvalue().should.equal("""
 ----------------------------------------------------------------------
-made up context 1
-  ERROR: made up assertion 1
+made up context
+  FAIL: made up assertion 1
     Traceback (most recent call last):
       File "made_up_file.py", line 3, in made_up_function
         frame1
       File "another_made_up_file.py", line 2, in another_made_up_function
         frame2
-    test.tools.FakeException: Gotcha
-  FAIL: made up assertion 2
-    Traceback (most recent call last):
-      File "made_up_file_3.py", line 1, in made_up_function_3
-        frame3
-      File "made_up_file_4.py", line 2, in made_up_function_4
-        frame4
-    test.tools.FakeAssertionError: you fail
-made up context 2 -> ['abc', 123, None]
-  Traceback (most recent call last):
-    File "made_up_file_5.py", line 1, in made_up_function_5
-      frame5
-    File "made_up_file_6.py", line 2, in made_up_function_6
-      frame6
-  test.tools.FakeException: oh dear
-Traceback (most recent call last):
-  File "made_up_file_7.py", line 1, in made_up_function_7
-    frame7
-  File "made_up_file_8.py", line 2, in made_up_function_8
-    frame8
-test.tools.FakeException: oh dear
+    test.tools.FakeAssertionError: Gotcha
 ----------------------------------------------------------------------
 FAILED!
-3 contexts, 3 assertions: 1 failed, 3 errors
+1 context, 1 assertion: 1 failed, 0 errors
 """)
-
-    def it_should_not_print_until_the_end(self):
-        self.output_before_end.should.be.empty
 
 
 # TODO: break up this test
@@ -148,33 +98,33 @@ class WhenCapturingStdOut:
         self.assertion5 = tools.create_assertion("assertion")
 
         self.stringio = StringIO()
-        self.reporter = reporting.shared.ReporterNotifier(reporting.cli.StdOutCapturingReporter(self.stringio))
+        self.notifier = reporting.shared.ReporterNotifier(reporting.cli.StdOutCapturingReporter(self.stringio))
 
     def because_we_print_some_stuff(self):
-        with self.reporter.run_suite(tools.create_suite()):
-            with self.reporter.run_context(self.ctx1):
+        with self.notifier.run_suite(tools.create_suite()):
+            with self.notifier.run_context(self.ctx1):
                 print("passing context")
-                with self.reporter.run_assertion(self.assertion1):
+                with self.notifier.run_assertion(self.assertion1):
                     print("passing assertion")
                     print("to stderr", file=sys.stderr)
 
-            with self.reporter.run_context(self.ctx2):
+            with self.notifier.run_context(self.ctx2):
                 print("failing context")
-                with self.reporter.run_assertion(self.assertion2):
+                with self.notifier.run_assertion(self.assertion2):
                     print("failing assertion")
                     raise tools.FakeAssertionError()
-                with self.reporter.run_assertion(self.assertion3):
+                with self.notifier.run_assertion(self.assertion3):
                     print("erroring assertion")
                     raise tools.FakeException()
 
-            with self.reporter.run_context(self.ctx3):
+            with self.notifier.run_context(self.ctx3):
                 print("erroring context")
-                with self.reporter.run_assertion(self.assertion4):
+                with self.notifier.run_assertion(self.assertion4):
                     print("assertion in erroring context")
                 raise tools.FakeException()
 
-            with self.reporter.run_context(self.ctx4):
-                with self.reporter.run_assertion(self.assertion5):
+            with self.notifier.run_context(self.ctx4):
+                with self.notifier.run_assertion(self.assertion5):
                     # don't print anything
                    raise tools.FakeAssertionError()
 
