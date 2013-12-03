@@ -8,7 +8,6 @@ class MockReporter(object):
     def __init__(self):
         self.calls = []
         self.failed = False
-        self.suite_view_model = None
 
     def suite_started(self, suite):
         self.calls.append(('suite_started', suite))

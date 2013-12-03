@@ -17,7 +17,6 @@ class WhenWatchingForDots:
         self.fake_assertion = tools.create_assertion("assertion")
 
     def because_we_run_some_assertions(self):
-        # each of these with-stmts should be a separate test case
         with self.notifier.run_suite(tools.create_suite()):
             with self.notifier.run_context(self.fake_context):
 

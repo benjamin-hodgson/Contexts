@@ -33,6 +33,10 @@ class VerboseReporter(shared.StreamReporter):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.current_indent = ''
+        self.context_count = 0
+        self.assertion_count = 0
+        self.failure_count = 0
+        self.error_count = 0
 
     def indent(self):
         self.current_indent += '  '
@@ -48,7 +52,8 @@ class VerboseReporter(shared.StreamReporter):
 
     def context_started(self, context):
         super().context_started(context)
-        self._print(self.suite_view_model.contexts[context].name)
+        self.context_count += 1
+        self._print(shared.context_name(context))
         self.indent()
 
     def context_ended(self, context):
@@ -57,32 +62,38 @@ class VerboseReporter(shared.StreamReporter):
 
     def context_errored(self, context, exception):
         super().context_errored(context, exception)
-        self._print('\n'.join(self.suite_view_model.contexts[context].error_summary))
+        self._print('\n'.join(shared.format_exception(exception)))
         self.dedent()
+        self.error_count += 1
+
+    def assertion_started(self, assertion):
+        super().assertion_started(assertion)
+        self.assertion_count += 1
 
     def assertion_passed(self, assertion):
         super().assertion_started(assertion)
-        self._print('PASS: ' + self.suite_view_model.current_context.assertions[assertion].name)
+        self._print('PASS: ' + shared.make_readable(assertion.name))
 
     def assertion_failed(self, assertion, exception):
         super().assertion_failed(assertion, exception)
-        vm = self.suite_view_model.current_context.assertions[assertion]
-        self._print('FAIL: ' + vm.name)
+        self._print('FAIL: ' + shared.make_readable(assertion.name))
         self.indent()
-        self._print('\n'.join(vm.error_summary))
+        self._print('\n'.join(shared.format_exception(exception)))
         self.dedent()
+        self.failure_count += 1
 
     def assertion_errored(self, assertion, exception):
         super().assertion_errored(assertion, exception)
-        vm = self.suite_view_model.current_context.assertions[assertion]
-        self._print('ERROR: ' + vm.name)
+        self._print('ERROR: ' + shared.make_readable(assertion.name))
         self.indent()
-        self._print('\n'.join(vm.error_summary))
+        self._print('\n'.join(shared.format_exception(exception)))
         self.dedent()
+        self.error_count += 1
 
     def unexpected_error(self, exception):
         super().unexpected_error(exception)
-        self._print('\n'.join(self.suite_view_model.unexpected_errors[-1]))
+        self._print('\n'.join(shared.format_exception(exception)))
+        self.error_count += 1
 
     def suite_ended(self, suite):
         super().suite_ended(suite)
@@ -91,7 +102,7 @@ class VerboseReporter(shared.StreamReporter):
     def summarise(self):
         self._print('')
         self._print(self.dashes)
-        if self.suite_view_model.failed:
+        if self.failure_count or self.error_count:
             self._print('FAILED!')
             self._print(self.failure_numbers())
         else:
@@ -100,15 +111,15 @@ class VerboseReporter(shared.StreamReporter):
 
     def success_numbers(self):
         return "{}, {}".format(
-            pluralise("context", len(self.suite_view_model.contexts)),
-            pluralise("assertion", len(self.suite_view_model.assertions)))
+            pluralise("context", self.context_count),
+            pluralise("assertion", self.assertion_count))
 
     def failure_numbers(self):
         return "{}, {}: {} failed, {}".format(
-            pluralise("context", len(self.suite_view_model.contexts)),
-            pluralise("assertion", len(self.suite_view_model.assertions)),
-            len(self.suite_view_model.assertion_failures),
-            pluralise("error", len(self.suite_view_model.assertion_errors) + len(self.suite_view_model.context_errors) + len(self.suite_view_model.unexpected_errors)))
+            pluralise("context", self.context_count),
+            pluralise("assertion", self.assertion_count),
+            self.failure_count,
+            pluralise("error", self.error_count))
 
 
 class ColouredReporter(VerboseReporter):
