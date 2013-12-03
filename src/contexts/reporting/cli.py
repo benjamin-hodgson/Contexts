@@ -4,6 +4,7 @@ from contextlib import contextmanager
 from io import StringIO
 import colorama
 from . import shared
+from . import Reporter
 
 
 class DotsReporter(shared.StreamReporter):
@@ -28,54 +29,34 @@ class DotsReporter(shared.StreamReporter):
         self._print('E', end='')
 
 
-class VerboseReporter(shared.StreamReporter):
+class VerboseReporter(shared.CountingReporter, shared.StreamReporter):
     dashes = '-' * 70
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.context_count = 0
-        self.assertion_count = 0
-        self.failure_count = 0
-        self.error_count = 0
-
     def context_started(self, context):
         super().context_started(context)
-        self.context_count += 1
         self._print(shared.context_name(context))
 
     def context_errored(self, context, exception):
-        self.error_count += 1
         super().context_errored(context, exception)
         for line in shared.format_exception(exception):
             self._print('  ' + line)
 
-    def assertion_started(self, assertion):
-        self.assertion_count += 1
-        super().assertion_started(assertion)
-
     def assertion_passed(self, assertion):
-        super().assertion_started(assertion)
+        super().assertion_passed(assertion)
         self._print('  PASS: ' + shared.make_readable(assertion.name))
 
     def assertion_failed(self, assertion, exception):
-        self.failure_count += 1
-
         super().assertion_failed(assertion, exception)
-
         self._print('  FAIL: ' + shared.make_readable(assertion.name))
         for line in shared.format_exception(exception):
             self._print('    ' + line)
 
     def assertion_errored(self, assertion, exception):
-        self.error_count += 1
-
         super().assertion_errored(assertion, exception)
-
         self._print('  ERROR: ' + shared.make_readable(assertion.name))
         for line in shared.format_exception(exception):
             self._print('    ' + line)
 
     def unexpected_error(self, exception):
-        self.error_count += 1
         super().unexpected_error(exception)
         for line in shared.format_exception(exception):
             self._print(line)

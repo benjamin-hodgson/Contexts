@@ -2,7 +2,6 @@ import datetime
 from io import StringIO
 from unittest import mock
 import sure
-import contexts
 from contexts import reporting
 from .. import tools
 
@@ -12,23 +11,23 @@ class WhenPrintingASuccessSummary:
         self.stringio = StringIO()
         self.reporter = reporting.cli.SummarisingReporter(self.stringio)
 
-        self.ctx1 = tools.create_context("")
-        self.ctx2 = tools.create_context("")
-        self.assertion1 = tools.create_assertion("")
-        self.assertion2 = tools.create_assertion("")
-        self.assertion3 = tools.create_assertion("")
+        ctx1 = tools.create_context("")
+        ctx2 = tools.create_context("")
+        assertion1 = tools.create_assertion("")
+        assertion2 = tools.create_assertion("")
+        assertion3 = tools.create_assertion("")
 
-        self.reporter.context_started(self.ctx1)
-        self.reporter.assertion_started(self.assertion1)
-        self.reporter.assertion_passed(self.assertion1)
-        self.reporter.assertion_started(self.assertion2)
-        self.reporter.assertion_passed(self.assertion2)
-        self.reporter.context_ended(self.ctx1)
+        self.reporter.context_started(ctx1)
+        self.reporter.assertion_started(assertion1)
+        self.reporter.assertion_passed(assertion1)
+        self.reporter.assertion_started(assertion2)
+        self.reporter.assertion_passed(assertion2)
+        self.reporter.context_ended(ctx1)
 
-        self.reporter.context_started(self.ctx2)
-        self.reporter.assertion_started(self.assertion3)
-        self.reporter.assertion_passed(self.assertion3)
-        self.reporter.context_ended(self.ctx2)
+        self.reporter.context_started(ctx2)
+        self.reporter.assertion_started(assertion3)
+        self.reporter.assertion_passed(assertion3)
+        self.reporter.context_ended(ctx2)
 
     def because_the_suite_ends(self):
         self.reporter.suite_ended(tools.create_suite())

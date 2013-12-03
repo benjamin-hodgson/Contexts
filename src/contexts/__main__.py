@@ -10,7 +10,6 @@ import colorama; colorama.init()
 
 def cmd():
     args = parse_args(sys.argv[1:])
-
     reporters = create_reporters(args)
 
     passed = run(os.path.realpath(args.path), reporters, args.shuffle)
