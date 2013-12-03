@@ -1,6 +1,7 @@
 import argparse
 import os
 import sys
+from io import StringIO
 from . import run
 from . import reporting
 
@@ -27,10 +28,17 @@ def parse_args(args):
         default=True,
         help="Disable capturing of stdout during tests.")
     parser.add_argument('-v', '--verbose',
-        action='store_true',
-        dest='verbose',
-        default=False,
+        action='store_const',
+        dest='verbosity',
+        const='verbose',
+        default='normal',
         help="Enable verbose progress reporting.")
+    parser.add_argument('-q', '--quiet',
+        action='store_const',
+        dest='verbosity',
+        const='quiet',
+        default='normal',
+        help="Disable progress reporting.")
     parser.add_argument('--teamcity',
         action='store_true',
         dest='teamcity',
@@ -52,8 +60,10 @@ def parse_args(args):
 def create_reporters(args):
     if args.teamcity or "TEAMCITY_VERSION" in os.environ:
         return (reporting.teamcity.TeamCityReporter(sys.stdout),)
-    elif args.verbose:
+    elif args.verbosity == 'verbose':
         return (reporting.cli.ColouredReporter(sys.stdout),)
+    elif args.verbosity == 'quiet':
+        return (reporting.cli.StdOutCapturingReporter(StringIO()),)
     elif args.capture:
         return (
             reporting.cli.DotsReporter(sys.stdout),
