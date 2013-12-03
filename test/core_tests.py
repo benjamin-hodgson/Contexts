@@ -7,6 +7,7 @@ core_file = repr(contexts.core.__file__)[1:-1]
 this_file = repr(__file__)[1:-1]
 
 
+# this test is waaay too big
 class WhenRunningASpec:
     def context(self):
         self.assertion_err = AssertionError()
@@ -30,37 +31,38 @@ class WhenRunningASpec:
                 s.__class__.log += "teardown "
 
         self.spec = TestSpec
-        self.reporter = MockReporter()
+        self.reporter1 = MockReporter()
+        self.reporter2 = MockReporter()
 
     def because_we_run_the_spec(self):
-        contexts.run(self.spec, [self.reporter])
+        contexts.run(self.spec, [self.reporter1, self.reporter2])
 
     def it_should_run_the_methods_in_the_correct_order(self):
         self.spec.log.should.equal("arrange act assert assert assert teardown ")
 
     def it_should_call_suite_started_first(self):
-        self.reporter.calls[0][0].should.equal('suite_started')
+        self.reporter1.calls[0][0].should.equal('suite_started')
 
     def it_should_call_ctx_started_second(self):
-        self.reporter.calls[1][0].should.equal('context_started')
+        self.reporter1.calls[1][0].should.equal('context_started')
 
     def it_should_pass_in_the_ctx(self):
-        self.reporter.calls[1][1].name.should.equal('TestSpec')
+        self.reporter1.calls[1][1].name.should.equal('TestSpec')
 
     def it_should_call_assertion_started_three_times(self):
-        assert self.reporter.calls[2][0] == "assertion_started"
-        self.reporter.calls[2][0].should.equal('assertion_started')
-        self.reporter.calls[4][0].should.equal('assertion_started')
-        self.reporter.calls[6][0].should.equal('assertion_started')
+        assert self.reporter1.calls[2][0] == "assertion_started"
+        self.reporter1.calls[2][0].should.equal('assertion_started')
+        self.reporter1.calls[4][0].should.equal('assertion_started')
+        self.reporter1.calls[6][0].should.equal('assertion_started')
 
     def it_should_call_assertion_passed_and_failed_and_errored(self):
-        calls = [self.reporter.calls[i][0] for i in (3,5,7)]
+        calls = [self.reporter1.calls[i][0] for i in (3,5,7)]
         calls.should.contain('assertion_passed')
         calls.should.contain('assertion_failed')
         calls.should.contain('assertion_errored')
 
     def the_assertions_should_have_the_right_names(self):
-        names = [self.reporter.calls[i][1].name for i in (3,5,7)]
+        names = [self.reporter1.calls[i][1].name for i in (3,5,7)]
         names.should.contain('method_with_should_in_the_name')
         names.should.contain('failing_method_with_should_in_the_name')
         names.should.contain('erroring_method_with_should_in_the_name')
@@ -68,31 +70,35 @@ class WhenRunningASpec:
     def it_should_pass_in_the_exceptions(self):
         exceptions = {}
         for i in (3,5,7):
-            call_name = self.reporter.calls[i][0]
+            call_name = self.reporter1.calls[i][0]
             if call_name == 'assertion_failed':
-                exceptions['fail'] = self.reporter.calls[i][2]
+                exceptions['fail'] = self.reporter1.calls[i][2]
             if call_name == 'assertion_errored':
-                exceptions['error'] = self.reporter.calls[i][2]
+                exceptions['error'] = self.reporter1.calls[i][2]
 
         exceptions['fail'].should.equal(self.assertion_err)
         exceptions['error'].should.equal(self.value_err)
 
     def it_should_call_ctx_ended_next(self):
-        self.reporter.calls[8][0].should.equal('context_ended')
+        self.reporter1.calls[8][0].should.equal('context_ended')
 
     def it_should_pass_in_the_ctx_again(self):
-        self.reporter.calls[8][1].should.equal(self.reporter.calls[1][1])
+        self.reporter1.calls[8][1].should.equal(self.reporter1.calls[1][1])
 
     def it_should_call_suite_ended_last(self):
-        self.reporter.calls[9][0].should.equal('suite_ended')
+        self.reporter1.calls[9][0].should.equal('suite_ended')
 
     def it_should_pass_in_the_same_suite_as_at_the_start(self):
-        self.reporter.calls[9][1].should.equal(self.reporter.calls[0][1])
+        self.reporter1.calls[9][1].should.equal(self.reporter1.calls[0][1])
 
     def it_should_not_make_any_more_calls(self):
-        self.reporter.calls.should.have.length_of(10)
+        self.reporter1.calls.should.have.length_of(10)
+
+    def it_should_do_exactly_the_same_to_the_second_reporter(self):
+        self.reporter2.calls.should.equal(self.reporter1.calls)
 
 
+# break up this test too
 class WhenAContextErrors:
     def context(self):
         self.value_err = ValueError("explode")
