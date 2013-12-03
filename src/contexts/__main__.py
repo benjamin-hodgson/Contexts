@@ -8,6 +8,18 @@ import colorama; colorama.init()
 
 
 def cmd():
+    args = parse_args(sys.argv[1:])
+
+    reporters = create_reporters(args)
+
+    passed = run(os.path.realpath(args.path), reporters, args.shuffle)
+
+    if not passed:
+        sys.exit(1)
+    sys.exit(0)
+
+
+def parse_args(args):
     parser = argparse.ArgumentParser()
     parser.add_argument('-s', '--no-capture',
         action='store_false',
@@ -34,30 +46,25 @@ def cmd():
         nargs='?',
         default=os.getcwd(),
         help="Path to the test file or directory to run. (default current directory)")
-    args = parser.parse_args()
+    return parser.parse_args(args)
 
+
+def create_reporters(args):
     if args.teamcity or "TEAMCITY_VERSION" in os.environ:
-        reporters = (reporting.teamcity.TeamCityReporter(sys.stdout),)
+        return (reporting.teamcity.TeamCityReporter(sys.stdout),)
     elif args.verbose:
-        reporters = (reporting.cli.ColouredReporter(sys.stdout),)
+        return (reporting.cli.ColouredReporter(sys.stdout),)
     elif args.capture:
-        reporters = (
+        return (
             reporting.cli.DotsReporter(sys.stdout),
             type("ColouredCapturingReporter", (reporting.cli.ColouredReporter, reporting.cli.StdOutCapturingReporter), {})(sys.stdout),
             reporting.cli.TimedReporter(sys.stdout)
         )
-    else:
-        reporters = (
-            reporting.cli.DotsReporter(sys.stdout),
-            type("ColouredCapturingReporter", (reporting.cli.ColouredReporter, reporting.cli.SummarisingReporter), {})(sys.stdout),
-            reporting.cli.TimedReporter(sys.stdout)
-        )
-
-    passed = run(os.path.realpath(args.path), reporters, args.shuffle)
-
-    if not passed:
-        sys.exit(1)
-    sys.exit(0)
+    return (
+        reporting.cli.DotsReporter(sys.stdout),
+        type("ColouredCapturingReporter", (reporting.cli.ColouredReporter, reporting.cli.SummarisingReporter), {})(sys.stdout),
+        reporting.cli.TimedReporter(sys.stdout)
+    )
 
 
 if __name__ == "__main__":
