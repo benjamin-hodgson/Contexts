@@ -5,115 +5,63 @@ import types
 from io import StringIO
 from unittest import mock
 import sure
-from contexts import __main__
 import contexts
+from contexts import __main__
+from contexts.reporting import cli
 
+
+###########################################################
+# Outside-in tests (good)
+###########################################################
 
 class WhenLoadingUpTheModule:
+    # this test is just to balance
+    # the fact that we're mocking it everywhere else
     def it_should_get_main_from_init(self):
         __main__.main.should.equal(contexts.main)
 
+class MainSharedContext:
+    def shared_context(self):
+        self.real_main = __main__.main
+        self.mock_main = __main__.main = mock.Mock()
+        self.real_argv = sys.argv
+        self.real_stdout = sys.stdout
+        sys.stdout = mock.Mock()
+        sys.stdout.isatty.return_value = True
 
-class WhenRunningFromCommandLine:
-    def establish_that_we_are_mocking_out_all_calls(self):
-        self.save_real_functions()
-        self.create_mocks()
-        self.mock_parse.return_value.path = '/a/made/up/path'
+    def cleanup_main_and_argv_and_stdout(self):
+        __main__.main = self.real_main
+        sys.argv = self.real_argv
+        sys.stdout = self.real_stdout
 
-        __main__.parse_args = self.mock_parse
-        __main__.create_reporters = self.mock_create
-        __main__.main = self.mock_main
+class WhenRunningFromCommandLineWithArguments(MainSharedContext):
+    @classmethod
+    def examples(self):
+        yield [], (os.getcwd(), (cli.DotsReporter(sys.stdout), cli.ColouredSummarisingCapturingReporter(sys.stdout), cli.TimedReporter(sys.stdout)), True)
+        yield ['-v'], (os.getcwd(), (cli.ColouredVerboseCapturingReporter(sys.stdout),), True)
+        yield ['--verbose'], (os.getcwd(), (cli.ColouredVerboseCapturingReporter(sys.stdout),), True)
+        yield ['--verbose', '--no-colour'], (os.getcwd(), (cli.StdOutCapturingReporter(sys.stdout),), True)
+        yield ['-q'], (os.getcwd(), (QuietReporterResemblance(),), True)
+        yield ['--quiet'], (os.getcwd(), (QuietReporterResemblance(),), True)
+        yield ['-s'], (os.getcwd(), (cli.DotsReporter(sys.stdout), cli.ColouredSummarisingReporter(sys.stdout), cli.TimedReporter(sys.stdout)), True)
+        yield ['--no-capture'], (os.getcwd(), (cli.DotsReporter(sys.stdout), cli.ColouredSummarisingReporter(sys.stdout), cli.TimedReporter(sys.stdout)), True)
+        yield ['--no-colour'], (os.getcwd(), (cli.DotsReporter(sys.stdout), cli.SummarisingCapturingReporter(sys.stdout), cli.TimedReporter(sys.stdout)), True)
+        yield ['--no-capture', '--no-colour'], (os.getcwd(), (cli.DotsReporter(sys.stdout), cli.SummarisingReporter(sys.stdout), cli.TimedReporter(sys.stdout)), True)
+        yield ['--teamcity'], (os.getcwd(), (contexts.reporting.teamcity.TeamCityReporter(sys.stdout),), True)
+        yield ['--no-random'], (os.getcwd(), (cli.DotsReporter(sys.stdout), cli.ColouredSummarisingCapturingReporter(sys.stdout), cli.TimedReporter(sys.stdout)), False)
+        yield [os.path.join(os.getcwd(),'made','up','path')], (os.path.join(os.getcwd(),'made','up','path'), (cli.DotsReporter(sys.stdout), cli.ColouredSummarisingCapturingReporter(sys.stdout), cli.TimedReporter(sys.stdout)), True)
 
-    def because_we_run_from_cmd_line(self):
+    def establish_arguments(self, example):
+        argv, self.expected = example
+        sys.argv = ['run-contexts'] + argv
+
+    def because_we_call_cmd(self):
         __main__.cmd()
 
-    def it_should_parse_the_args(self):
-        self.mock_parse.assert_called_once_with(sys.argv[1:])
+    def it_should_call_main_with_the_correct_arguments(self):
+        self.mock_main.assert_called_once_with(*self.expected)
 
-    def it_should_send_the_parsed_args_to_create_reporters(self):
-        self.mock_create.assert_called_once_with(self.mock_parse.return_value)
-
-    def it_should_call_into_the_business_logic_with_the_correct_arguments(self):
-        self.mock_main.assert_called_once_with(
-            self.mock_parse.return_value.path,
-            self.mock_create.return_value,
-            self.mock_parse.return_value.shuffle)
-
-    def cleanup_the_mocks(self):
-        __main__.parse_args = self.real_parse
-        __main__.create_reporters = self.real_create
-        __main__.main = self.real_main
-
-    def create_mocks(self):
-        self.mock_parse = mock.Mock()
-        self.mock_create = mock.Mock()
-        self.mock_main = mock.Mock()
-
-    def save_real_functions(self):
-        self.real_parse = __main__.parse_args
-        self.real_create = __main__.create_reporters
-        self.real_main = __main__.main
-
-
-class WhenParsingArguments:
-    @classmethod
-    def examples(cls):
-        # do the defaults; try them individually; try them all together
-        yield [], args_with()
-        yield ['-s'], args_with(capture=False)
-        yield ['--no-capture'], args_with(capture=False)
-        yield ['-v'], args_with(verbosity='verbose')
-        yield ['--verbose'], args_with(verbosity='verbose')
-        yield ['-q'], args_with(verbosity='quiet')
-        yield ['--quiet'], args_with(verbosity='quiet')
-        yield ['--teamcity'], args_with(teamcity=True)
-        yield ['--no-random'], args_with(shuffle=False)
-        yield ['--no-colour'], args_with(colour=False)
-        yield ['my/fake/path'], args_with(path='my/fake/path')
-        yield (
-            ['-sv','--no-random', '--teamcity', 'another/made/up/location'],
-            args_with(capture=False, verbosity='verbose', teamcity=True, shuffle=False, path='another/made/up/location')
-        )
-
-    def establish_what_the_arguments_are(self, example):
-        self.args, self.expected = example
-
-        # argparse will try and print to stderr,
-        # we don't want that to happen during the test run
-        self.real_stderr = sys.stderr
-        sys.stderr = StringIO()
-
-    def because_we_parse_the_arguments(self):
-        # argparse will try to quit if it fails
-        # we don't want that to happen during the test run
-        try:
-            self.result = __main__.parse_args(self.args)
-        except BaseException as e:
-            pass
-
-    def it_should_return_the_correct_value_for_no_capture(self):
-        self.result.capture.should.equal(self.expected['capture'])
-
-    def it_should_return_the_correct_value_for_verbose(self):
-        self.result.verbosity.should.equal(self.expected['verbosity'])
-
-    def it_should_return_the_correct_value_for_teamcity(self):
-        self.result.teamcity.should.equal(self.expected['teamcity'])
-
-    def it_should_return_the_correct_value_for_shuffle(self):
-        self.result.shuffle.should.equal(self.expected['shuffle'])
-
-    def it_should_return_the_correct_value_for_colour(self):
-        self.result.colour.should.equal(self.expected['colour'])
-
-    def it_should_return_the_correct_path(self):
-        self.result.path.should.equal(self.expected['path'])
-
-    def cleanup_stderr(self):
-        sys.stderr = self.real_stderr
-
-
-class WhenArgumentsSpecifyMutuallyExclusiveOptions:
+class WhenArgumentsSpecifyMutuallyExclusiveOptions(MainSharedContext):
     @classmethod
     def examples(cls):
         yield ['-q', '-v']
@@ -122,7 +70,7 @@ class WhenArgumentsSpecifyMutuallyExclusiveOptions:
         yield ['--verbose', '-q']
 
     def establish_that_user_wants_verbose_and_quiet(self, example):
-        self.args = example
+        sys.argv = ['run-contexts'] + example
         self.exception = None
 
         # argparse will try and print to stderr,
@@ -130,52 +78,25 @@ class WhenArgumentsSpecifyMutuallyExclusiveOptions:
         self.real_stderr = sys.stderr
         sys.stderr = StringIO()
 
-    def because_we_try_to_parse_the_args(self):
+    def because_we_run_from_cmd_line(self):
         try:
-            __main__.parse_args(self.args)
+            __main__.cmd()
         except BaseException as e:
             self.exception = e
+
+    def it_should_not_call_main(self):
+        self.mock_main.mock_calls.should.be.empty
 
     def it_should_quit(self):
         self.exception.should.be.a('SystemExit')
 
-    def cleanup_stderr(self):
+    def cleanup_stderr_and_argv(self):
         sys.stderr = self.real_stderr
 
 
-class WhenCreatingReportersInQuietMode:
-    def establish_that_the_args_specify_quiet_mode(self):
-        self.args = types.SimpleNamespace(**args_with(verbosity='quiet'))
-
-    def because_we_create_the_list_of_reporters(self):
-        self.reporters = __main__.create_reporters(self.args)
-
-    def it_should_return_a_reporter_with_a_stringio_output(self):
-        self.reporters[0].stream.should_not.equal(sys.stdout)
-        self.reporters[0].stream.should_not.equal(sys.stderr)
-        self.reporters[0].stream.should.be.an('io.StringIO')
-
-class WhenCreatingReportersWithNoColours:
-    def establish_that_args_specify_no_colours(self):
-        self.args = types.SimpleNamespace(**args_with(colour=False))
-
-    def because_we_create_the_list_of_reporters(self):
-        self.reporters = __main__.create_reporters(self.args)
-
-    def none_of_them_should_be_coloured_reporters(self):
-        for reporter in self.reporters:
-            reporter.should_not.be.a('contexts.reporting.cli.ColouredReporter')
-
-class WhenCreatingVerboseReportersWithNoColours:
-    def establish_that_args_specify_no_colours(self):
-        self.args = types.SimpleNamespace(**args_with(colour=False, verbosity='verbose'))
-
-    def because_we_create_the_list_of_reporters(self):
-        self.reporters = __main__.create_reporters(self.args)
-
-    def none_of_them_should_be_coloured_reporters(self):
-        for reporter in self.reporters:
-            reporter.should_not.be.a('contexts.reporting.cli.ColouredReporter')
+###########################################################
+# Component tests (bad)
+###########################################################
 
 class WhenColoramaIsNotInstalled:
     def establish_that_colorama_raises_import_error(self):
@@ -226,3 +147,10 @@ def args_with(**kwargs):
     }
     defaults.update(kwargs)
     return defaults
+
+class QuietReporterResemblance(object):
+    """
+    Compares equal to quiet reporters
+    """
+    def __eq__(self, other):
+        return type(other) == cli.StdOutCapturingReporter and other.stream != sys.stdout

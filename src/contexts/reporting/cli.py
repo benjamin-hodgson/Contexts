@@ -86,6 +86,7 @@ class VerboseReporter(shared.CountingReporter, shared.StreamReporter):
             pluralise("error", self.error_count))
 
 
+# maybe this should be in a separate module?
 class ColouredReporter(VerboseReporter):
     def __init__(self, *args, **kwargs):
         global colorama
@@ -176,6 +177,9 @@ class SummarisingReporter(VerboseReporter):
         self.stream = self.real_stream
         super().suite_ended(suite)
 
+    def __eq__(self, other):
+        return type(self) == type(other) and self.real_stream == other.real_stream
+
 
 class StdOutCapturingReporter(VerboseReporter):
     def centred_dashes(self, string, indentation):
@@ -228,6 +232,19 @@ class TimedReporter(shared.StreamReporter):
         total_secs = (self.end_time - self.start_time).total_seconds()
         rounded = round(total_secs, 1)
         self._print("({} seconds)".format(rounded))
+
+
+class ColouredVerboseCapturingReporter(ColouredReporter, StdOutCapturingReporter):
+    pass
+
+class SummarisingCapturingReporter(StdOutCapturingReporter, SummarisingReporter):
+    pass
+
+class ColouredSummarisingReporter(ColouredReporter, SummarisingReporter):
+    pass
+
+class ColouredSummarisingCapturingReporter(ColouredReporter, StdOutCapturingReporter, SummarisingReporter):
+    pass
 
 
 def pluralise(noun, num):

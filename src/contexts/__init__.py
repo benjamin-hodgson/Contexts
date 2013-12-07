@@ -39,7 +39,7 @@ def run(spec=None, reporters=None, shuffle=True):
             reporting.cli.TimedReporter(sys.stdout)
         )
 
-    notifier = reporting.shared.ReporterNotifier(*reporters)
+    notifier = core.ReporterNotifier(*reporters)
 
     if spec is None:
         spec = sys.modules['__main__']

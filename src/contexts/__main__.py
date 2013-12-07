@@ -74,46 +74,40 @@ def create_reporters(args):
 
     if args.teamcity or "TEAMCITY_VERSION" in os.environ:
         return (reporting.teamcity.TeamCityReporter(sys.stdout),)
+
+    if args.verbosity == 'quiet':
+        return (reporting.cli.StdOutCapturingReporter(StringIO()),)
+
     if args.verbosity == 'verbose' and not args.colour:
         return (reporting.cli.StdOutCapturingReporter(sys.stdout),)
     if args.verbosity == 'verbose' and args.colour:
-        return (type(
-            "VerboseCapturingReporter",
-            (reporting.cli.ColouredReporter,
-             reporting.cli.StdOutCapturingReporter),
-            {})(sys.stdout),)
-    if args.verbosity == 'quiet':
-        return (reporting.cli.StdOutCapturingReporter(StringIO()),)
+        return (reporting.cli.ColouredVerboseCapturingReporter(sys.stdout),)
+
     if args.capture and args.colour:
         return (
             reporting.cli.DotsReporter(sys.stdout),
-            type(
-                "ColouredCapturingReporter",
-                (reporting.cli.ColouredReporter,
-                 reporting.cli.StdOutCapturingReporter,
-                 reporting.cli.SummarisingReporter),
-                {})(sys.stdout),
+            reporting.cli.ColouredSummarisingCapturingReporter(sys.stdout),
             reporting.cli.TimedReporter(sys.stdout)
         )
     if args.capture and not args.colour:
         return (
             reporting.cli.DotsReporter(sys.stdout),
-            type(
-                "CapturingReporter",
-                (reporting.cli.StdOutCapturingReporter,
-                 reporting.cli.SummarisingReporter),
-                {})(sys.stdout),
+            reporting.cli.SummarisingCapturingReporter(sys.stdout),
             reporting.cli.TimedReporter(sys.stdout)
         )
-    return (
-        reporting.cli.DotsReporter(sys.stdout),
-        type(
-            "ColouredSummarisingReporter",
-            (reporting.cli.ColouredReporter,
-             reporting.cli.SummarisingReporter),
-            {})(sys.stdout),
-        reporting.cli.TimedReporter(sys.stdout)
-    )
+
+    if not args.capture and args.colour:
+        return (
+            reporting.cli.DotsReporter(sys.stdout),
+            reporting.cli.ColouredSummarisingReporter(sys.stdout),
+            reporting.cli.TimedReporter(sys.stdout)
+        )
+    if not args.capture and not args.colour:
+        return (
+            reporting.cli.DotsReporter(sys.stdout),
+            reporting.cli.SummarisingReporter(sys.stdout),
+            reporting.cli.TimedReporter(sys.stdout)
+        )
 
 
 if __name__ == "__main__":
