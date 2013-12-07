@@ -1,3 +1,4 @@
+import builtins
 import os
 import sys
 import types
@@ -53,6 +54,9 @@ class WhenParsingArguments:
 
     def it_should_return_the_correct_value_for_shuffle(self):
         self.result.shuffle.should.equal(self.expected['shuffle'])
+
+    def it_should_return_the_correct_value_for_colour(self):
+        self.result.colour.should.equal(self.expected['colour'])
 
     def it_should_return_the_correct_path(self):
         self.result.path.should.equal(self.expected['path'])
@@ -114,6 +118,25 @@ class WhenCreatingReportersWithNoColours:
         for reporter in self.reporters:
             reporter.should_not.be.a('contexts.reporting.cli.ColouredReporter')
 
+class WhenColoramaIsNotInstalled:
+    def establish_that_colorama_raises_import_error(self):
+        self.real_import = builtins.__import__
+        def fake_import(name, *args, **kwargs):
+            if name == "colorama":
+                raise ImportError
+            return self.real_import(name, *args, **kwargs)
+        builtins.__import__ = fake_import
+
+    def because_we_create_the_list_of_reporters(self):
+        self.reporters = __main__.create_reporters(types.SimpleNamespace(**args_with()))
+
+    def none_of_them_should_be_coloured_reporters(self):
+        for reporter in self.reporters:
+            reporter.should_not.be.a('contexts.reporting.cli.ColouredReporter')
+
+    def cleanup_import(self):
+        builtins.__import__ = self.real_import
+
 
 ###########################################################
 # Test helper methods
@@ -126,7 +149,7 @@ def args_with(**kwargs):
         'teamcity': False,
         'shuffle': True,
         'path': os.getcwd(),
-        'colour': False
+        'colour': True
     }
     defaults.update(kwargs)
     return defaults

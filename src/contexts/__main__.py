@@ -5,9 +5,6 @@ from io import StringIO
 from . import main
 from . import reporting
 
-import colorama; colorama.init()
-
-
 def cmd():
     args = parse_args(sys.argv[1:])
     reporters = create_reporters(args)
@@ -64,6 +61,13 @@ def create_reporters(args):
     # multiple inheritance is part of the reason this function is hard to test.
     # Try to get the reporters to the point where they can be composed
     # without inheritance.
+    try:
+        import colorama
+    except ImportError:
+        args.colour = False
+    else:
+        colorama.init()
+
     if args.teamcity or "TEAMCITY_VERSION" in os.environ:
         return (reporting.teamcity.TeamCityReporter(sys.stdout),)
     if args.verbosity == 'verbose':
