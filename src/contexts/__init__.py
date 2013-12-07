@@ -1,11 +1,10 @@
 import sys
-import time as time_module
 from . import core
 from . import reporting
-from .decorators import setup, action, assertion, teardown, spec
+from .tools import catch, set_trace, time, setup, action, assertion, teardown, spec
 
 
-__all__ = ['run', 'main', 'catch', 'set_trace', 'setup', 'action', 'assertion', 'teardown', 'spec']
+__all__ = ['run', 'main', 'catch', 'set_trace', 'time', 'setup', 'action', 'assertion', 'teardown', 'spec']
 
 
 def main(*args, **kwargs):
@@ -20,7 +19,7 @@ def main(*args, **kwargs):
     sys.exit(0)
 
 
-def run(spec=None, reporters=None, shuffle=True):
+def run(to_run=None, reporters=None, shuffle=True):
     """
     Polymorphic test-running function.
 
@@ -42,58 +41,10 @@ def run(spec=None, reporters=None, shuffle=True):
 
     notifier = core.ReporterNotifier(*reporters)
 
-    if spec is None:
-        spec = sys.modules['__main__']
+    if to_run is None:
+        to_run = sys.modules['__main__']
 
-    suite = core.Suite(spec, shuffle)
+    suite = core.Suite(to_run, shuffle)
     suite.run(notifier)
 
     return not notifier.failed
-
-
-def catch(func, *args, **kwargs):
-    """
-    Call the supplied function with the supplied arguments,
-    catching and returning any exception that it throws.
-
-    Arguments:
-        func: the function to run.
-        *args: positional arguments to pass into the function.
-        **kwargs: keyword arguments to pass into the function.
-    Returns:
-        If the function throws an exception, return the exception.
-        If the function does not throw an exception, return None.
-    """
-    try:
-        func(*args, **kwargs)
-    except Exception as e:
-        return e
-
-
-def time(func, *args, **kwargs):
-    """
-    Call the supplied function with the supplied arguments,
-    and return the total execution time as a float in seconds.
-
-    The precision of the returned value depends on the precision of
-    `time.time()` on your platform.
-
-    Arguments:
-        func: the function to run.
-        *args: positional arguments to pass into the function.
-        **kwargs: keyword arguments to pass into the function.
-    Returns:
-        Execution time of the function as a float in seconds.
-    """
-    start_time = time_module.time()
-    func(*args, **kwargs)
-    end_time = time_module.time()
-    return end_time - start_time
-
-
-def set_trace():
-    """Start a Pdb instance at the calling frame, with stdout routed to sys.__stdout__."""
-    # https://github.com/nose-devs/nose/blob/master/nose/tools/nontrivial.py
-    import pdb
-    pdb.Pdb(stdout=sys.__stdout__).set_trace(sys._getframe().f_back)
-
