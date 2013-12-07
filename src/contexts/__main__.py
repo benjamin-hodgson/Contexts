@@ -31,6 +31,11 @@ def parse_args(args):
         dest='shuffle',
         default=True,
         help="Disable test order randomisation.")
+    parser.add_argument('--no-colour',
+        action='store_false',
+        dest='colour',
+        default=True,
+        help='Disable coloured output.')
     parser.add_argument('path',
         action='store',
         nargs='?',
@@ -61,21 +66,31 @@ def create_reporters(args):
     # without inheritance.
     if args.teamcity or "TEAMCITY_VERSION" in os.environ:
         return (reporting.teamcity.TeamCityReporter(sys.stdout),)
-    elif args.verbosity == 'verbose':
+    if args.verbosity == 'verbose':
         return (type(
             "VerboseCapturingReporter",
             (reporting.cli.ColouredReporter,
              reporting.cli.StdOutCapturingReporter),
             {})(sys.stdout),)
-    elif args.verbosity == 'quiet':
+    if args.verbosity == 'quiet':
         return (reporting.cli.StdOutCapturingReporter(StringIO()),)
-    elif args.capture:
+    if args.capture and args.colour:
         return (
             reporting.cli.DotsReporter(sys.stdout),
             type(
                 "ColouredCapturingReporter",
                 (reporting.cli.ColouredReporter,
                  reporting.cli.StdOutCapturingReporter,
+                 reporting.cli.SummarisingReporter),
+                {})(sys.stdout),
+            reporting.cli.TimedReporter(sys.stdout)
+        )
+    if args.capture and not args.colour:
+        return (
+            reporting.cli.DotsReporter(sys.stdout),
+            type(
+                "CapturingReporter",
+                (reporting.cli.StdOutCapturingReporter,
                  reporting.cli.SummarisingReporter),
                 {})(sys.stdout),
             reporting.cli.TimedReporter(sys.stdout)
