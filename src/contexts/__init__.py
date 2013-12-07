@@ -2,9 +2,10 @@ import sys
 import time as time_module
 from . import core
 from . import reporting
+from .decorators import setup, action, assertion, teardown, spec
 
 
-__all__ = ['run', 'main', 'catch', 'set_trace']
+__all__ = ['run', 'main', 'catch', 'set_trace', 'setup', 'action', 'assertion', 'teardown', 'spec']
 
 
 def main(*args, **kwargs):
