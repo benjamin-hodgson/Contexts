@@ -5,6 +5,7 @@ from io import StringIO
 from . import main
 from . import reporting
 
+
 def cmd():
     args = parse_args(sys.argv[1:])
     reporters = create_reporters(args)

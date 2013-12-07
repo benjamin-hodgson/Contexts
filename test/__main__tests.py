@@ -3,8 +3,56 @@ import os
 import sys
 import types
 from io import StringIO
+from unittest import mock
 import sure
 from contexts import __main__
+import contexts
+
+
+class WhenLoadingUpTheModule:
+    def it_should_get_main_from_init(self):
+        __main__.main.should.equal(contexts.main)
+
+
+class WhenRunningFromCommandLine:
+    def establish_that_we_are_mocking_out_all_calls(self):
+        self.save_real_functions()
+        self.create_mocks()
+        self.mock_parse.return_value.path = '/a/made/up/path'
+
+        __main__.parse_args = self.mock_parse
+        __main__.create_reporters = self.mock_create
+        __main__.main = self.mock_main
+
+    def because_we_run_from_cmd_line(self):
+        __main__.cmd()
+
+    def it_should_parse_the_args(self):
+        self.mock_parse.assert_called_once_with(sys.argv[1:])
+
+    def it_should_send_the_parsed_args_to_create_reporters(self):
+        self.mock_create.assert_called_once_with(self.mock_parse.return_value)
+
+    def it_should_call_into_the_business_logic_with_the_correct_arguments(self):
+        self.mock_main.assert_called_once_with(
+            self.mock_parse.return_value.path,
+            self.mock_create.return_value,
+            self.mock_parse.return_value.shuffle)
+
+    def cleanup_the_mocks(self):
+        __main__.parse_args = self.real_parse
+        __main__.create_reporters = self.real_create
+        __main__.main = self.real_main
+
+    def create_mocks(self):
+        self.mock_parse = mock.Mock()
+        self.mock_create = mock.Mock()
+        self.mock_main = mock.Mock()
+
+    def save_real_functions(self):
+        self.real_parse = __main__.parse_args
+        self.real_create = __main__.create_reporters
+        self.real_main = __main__.main
 
 
 class WhenParsingArguments:
