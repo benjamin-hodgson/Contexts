@@ -28,6 +28,7 @@ class MainSharedContext:
         self.real_stdout = sys.stdout
         sys.stdout = mock.Mock()
         sys.stdout.isatty.return_value = True
+        os.environ.pop("TEAMCITY_VERSION", None)
 
     def cleanup_main_and_argv_and_stdout(self):
         __main__.main = self.real_main
