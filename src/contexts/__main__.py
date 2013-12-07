@@ -2,7 +2,7 @@ import argparse
 import os
 import sys
 from io import StringIO
-from . import run
+from . import main
 from . import reporting
 
 import colorama; colorama.init()
@@ -11,12 +11,7 @@ import colorama; colorama.init()
 def cmd():
     args = parse_args(sys.argv[1:])
     reporters = create_reporters(args)
-
-    passed = run(os.path.realpath(args.path), reporters, args.shuffle)
-
-    if not passed:
-        sys.exit(1)
-    sys.exit(0)
+    main(os.path.realpath(args.path), reporters, args.shuffle)
 
 
 def parse_args(args):

@@ -82,7 +82,6 @@ FAILED!
     def it_should_say_it_failed(self):
         self.reporter.failed.should.be.true
 
-
 class WhenTimingATestRun:
     def context(self):
         self.fake_now = datetime.datetime(2013, 10, 22, 13, 41, 0)

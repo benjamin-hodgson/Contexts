@@ -7,11 +7,13 @@ from . import reporting
 __all__ = ['run', 'main', 'catch', 'set_trace']
 
 
-def main():
+def main(*args, **kwargs):
     """
-    Find and run any test classes in the main file.
+    Call contexts.run() with the sepcified arguments,
+    exiting with code 0 if the test run was successful,
+    code 1 if unsuccessful.
     """
-    passed = run()
+    passed = run(*args, **kwargs)
     if not passed:
         sys.exit(1)
     sys.exit(0)
@@ -21,11 +23,14 @@ def run(spec=None, reporters=None, shuffle=True):
     """
     Polymorphic test-running function.
 
+    run() - run all the test classes in the main module
     run(class) - run the test class
     run(module) - run all the test classes in the module
     run(file_path:string) - run all the test classes found in the file
     run(folder_path:string) - run all the test classes found in the folder and subfolders
     run(package_path:string) - run all the test classes found in the package and subfolders
+
+    Returns: True if the test runn passed, False if it failed.
     """
     if reporters is None:  # default list of reporters
         reporters = (
