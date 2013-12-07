@@ -43,10 +43,12 @@ class WhenRunningASpec:
     def it_should_call_suite_started_first(self):
         self.reporter1.calls[0][0].should.equal('suite_started')
 
-    def it_should_call_ctx_started_second(self):
+    @contexts.assertion
+    def it_should_call_context_started_second(self):
         self.reporter1.calls[1][0].should.equal('context_started')
 
-    def it_should_pass_in_the_ctx(self):
+    @contexts.assertion
+    def it_should_pass_in_the_context(self):
         self.reporter1.calls[1][1].name.should.equal('TestSpec')
 
     def it_should_call_assertion_started_three_times(self):
@@ -79,10 +81,12 @@ class WhenRunningASpec:
         exceptions['fail'].should.equal(self.assertion_err)
         exceptions['error'].should.equal(self.value_err)
 
-    def it_should_call_ctx_ended_next(self):
+    @contexts.assertion
+    def it_should_call_context_ended_next(self):
         self.reporter1.calls[8][0].should.equal('context_ended')
 
-    def it_should_pass_in_the_ctx_again(self):
+    @contexts.assertion
+    def it_should_pass_in_the_context_again(self):
         self.reporter1.calls[8][1].should.equal(self.reporter1.calls[1][1])
 
     def it_should_call_suite_ended_last(self):
@@ -142,7 +146,8 @@ class WhenAContextErrors:
             self.reporters.append(reporter)
             contexts.run(spec, [reporter])
 
-    def it_should_call_ctx_errored_for_the_first_error(self):
+    @contexts.assertion
+    def it_should_call_context_errored_for_the_first_error(self):
         self.reporters[0].calls[2][0].should.equal("context_errored")
 
     def it_should_pass_in_the_first_exception(self):
@@ -157,7 +162,8 @@ class WhenAContextErrors:
     def it_should_still_run_the_teardown_despite_the_setup_error(self):
         self.specs[0].ran_cleanup.should.be.true
 
-    def it_should_call_ctx_errored_for_the_second_error(self):
+    @contexts.assertion
+    def it_should_call_context_errored_for_the_second_error(self):
         self.reporters[1].calls[2][0].should.equal("context_errored")
 
     def it_should_pass_in_the_second_exception(self):
@@ -169,7 +175,8 @@ class WhenAContextErrors:
     def it_should_still_run_the_teardown_despite_the_action_error(self):
         self.specs[1].ran_cleanup.should.be.true
 
-    def it_should_call_ctx_errored_for_the_third_error(self):
+    @contexts.assertion
+    def it_should_call_context_errored_for_the_third_error(self):
         self.reporters[2].calls[4][0].should.equal("context_errored")
 
     def it_should_pass_in_the_third_exception(self):
@@ -310,7 +317,8 @@ class WhenASpecHasASuperclass:
     def it_should_run_the_superclass_teardown_second(self):
         self.log[109:238].should.equal("superclass cleanup ")
 
-    def it_should_only_call_ctx_started_on_the_reporter_once(self):
+    @contexts.assertion
+    def it_should_only_call_context_started_on_the_reporter_once(self):
         calls = [call for call in self.reporter.calls if call[0] == "context_started"]
         calls.should.have.length_of(1)
 

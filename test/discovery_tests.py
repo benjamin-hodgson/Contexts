@@ -56,7 +56,8 @@ class WhenRunningTheSameModuleMultipleTimes:
         contexts.run(self.module, [self.reporter1])
         contexts.run(self.module, [self.reporter2])
 
-    def it_should_run_the_ctxs_in_a_different_order(self):
+    @contexts.assertion
+    def it_should_run_the_contexts_in_a_different_order(self):
         first_order = [call[1].name for call in self.reporter1.calls if call[0] == "context_started"]
         second_order = [call[1].name for call in self.reporter2.calls if call[0] == "context_started"]
         first_order.should_not.equal(second_order)

@@ -1,5 +1,6 @@
 from io import StringIO
 import sure
+import contexts
 from contexts import reporting
 from .. import tools
 
@@ -22,7 +23,8 @@ PASSED!
 # TODO: tests that make assertions about the counts
 
 class WhenPrintingVerboselyAndAContextStarts(VerboseReporterSharedContext):
-    def because_a_ctx_starts(self):
+    @contexts.action
+    def because_a_context_starts(self):
         self.reporter.context_started(tools.create_context("made.up_context_1"))
     def it_should_print_its_name(self):
         self.stringio.getvalue().should.equal("made up context 1\n")
@@ -82,7 +84,8 @@ class WhenPrintingVerboselyAndAContextErrors(VerboseReporterSharedContext):
         self.exception = tools.build_fake_exception(tb, "out")
         self.context = tools.create_context("made.up_context_2", ["abc", 123])
 
-    def because_a_ctx_errors(self):
+    @contexts.action
+    def because_a_context_errors(self):
         self.reporter.context_errored(self.context, self.exception)
 
     def it_should_output_a_stack_trace(self):

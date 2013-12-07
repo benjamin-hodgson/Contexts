@@ -2,6 +2,7 @@ import sys
 from io import StringIO
 import re
 import sure
+import contexts
 from contexts.reporting import teamcity
 from .. import tools
 
@@ -101,7 +102,8 @@ class WhenATestRunPassesInTeamCity(TeamCitySharedContext):
         # also asserting that nothing about stdout comes out here
         self.get_output(5)[0].should.equal(("testStarted", {'name':"Fake context 2 -> |[|'abc|', 123, None|] -> Fake assertion 3"}))
         self.get_output(5)[1].should.equal(("testFinished", {'name':"Fake context 2 -> |[|'abc|', 123, None|] -> Fake assertion 3"}))
-    def it_should_not_report_anything_following_the_second_ctx(self):
+    @contexts.assertion
+    def it_should_not_report_anything_following_the_second_context(self):
         self.get_output(5).should.have.length_of(2)
 
     def it_should_tell_team_city_the_suite_ended(self):

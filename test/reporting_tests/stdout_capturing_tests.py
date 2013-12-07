@@ -1,6 +1,7 @@
 import sys
 from io import StringIO
 import sure
+import contexts
 from contexts import reporting
 from .. import tools
 
@@ -104,7 +105,8 @@ class WhenCapturingStdOutAndAContextErrors(StdOutCapturingSharedContext):
         self.ctx = tools.create_context("context")
         self.assertion = tools.create_assertion("assertion")
 
-    def because_the_ctx_errors_and_we_print_something(self):
+    @contexts.action
+    def because_the_context_errors_and_we_print_something(self):
         self.reporter.context_started(self.ctx)
         print("erroring context")
         self.reporter.assertion_started(self.assertion)

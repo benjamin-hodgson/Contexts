@@ -32,7 +32,8 @@ class WhenRunningAParametrisedSpec:
     def because_we_run_the_class(self):
         contexts.run(self.ParametrisedSpec, [self.reporter])
 
-    def the_ctx_should_not_error(self):
+    @contexts.assertion
+    def the_context_should_not_error(self):
         call_names = [call[0] for call in self.reporter.calls]
         call_names.should_not.contain("context_errored")
 
@@ -85,7 +86,8 @@ class WhenRunningAParametrisedSpecWithNonParametrisedMethods:
     def because_we_run_the_class(self):
         contexts.run(self.ParametrisedSpec, [self.reporter])
 
-    def the_ctx_should_not_error(self):
+    @contexts.assertion
+    def the_context_should_not_error(self):
         call_names = [call[0] for call in self.reporter.calls]
         call_names.should_not.contain("context_errored")
 
@@ -140,7 +142,8 @@ class WhenRunningAModuleWithParametrisedSpecs:
     def because_we_run_the_module(self):
         contexts.run(self.module, [self.reporter])
 
-    def the_ctx_should_not_error(self):
+    @contexts.assertion
+    def the_context_should_not_error(self):
         call_names = [call[0] for call in self.reporter.calls]
         call_names.should_not.contain("context_errored")
 

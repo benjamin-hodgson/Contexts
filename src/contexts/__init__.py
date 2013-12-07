@@ -30,7 +30,7 @@ def run(to_run=None, reporters=None, shuffle=True):
     run(folder_path:string) - run all the test classes found in the folder and subfolders
     run(package_path:string) - run all the test classes found in the package and subfolders
 
-    Returns: True if the test runn passed, False if it failed.
+    Returns: True if the test run passed, False if it failed.
     """
     if reporters is None:  # default list of reporters
         reporters = (
