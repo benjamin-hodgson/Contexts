@@ -25,6 +25,10 @@ cd Contexts
 python setup.py install
 ```
 
+Contexts has no compulsory external dependencies. There is an optional dependency -
+if you like red and green colours in the output from your test runner
+(and who doesn't!), you need to install [Colorama](https://pypi.python.org/pypi/colorama).
+
 Example
 -------
 Here's an example of a test case that the authors of [Requests](https://github.com/kennethreitz/requests)
