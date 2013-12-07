@@ -49,6 +49,21 @@ class WhenParsingArguments:
         self.result.path.should.equal(self.expected['path'])
 
 
+class WhenArgumentsSpecifyMutuallyExclusiveOptions:
+    def establish_that_user_wants_verbose_and_quiet(self):
+        self.args = ['-q', '-v']
+        self.exception = None
+
+    def because_we_try_to_parse_the_args(self):
+        try:
+            __main__.parse_args(self.args)
+        except BaseException as e:
+            self.exception = e
+
+    def it_should_quit(self):
+        self.exception.should.be.a('SystemExit')
+
+
 class WhenCreatingReportersInQuietMode:
     def establish_that_the_args_specify_quiet_mode(self):
         self.args = types.SimpleNamespace(verbosity='quiet', teamcity=False, capture=True)

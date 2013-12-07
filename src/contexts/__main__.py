@@ -21,18 +21,6 @@ def parse_args(args):
         dest='capture',
         default=True,
         help="Disable capturing of stdout during tests.")
-    parser.add_argument('-v', '--verbose',
-        action='store_const',
-        dest='verbosity',
-        const='verbose',
-        default='normal',
-        help="Enable verbose progress reporting.")
-    parser.add_argument('-q', '--quiet',
-        action='store_const',
-        dest='verbosity',
-        const='quiet',
-        default='normal',
-        help="Disable progress reporting.")
     parser.add_argument('--teamcity',
         action='store_true',
         dest='teamcity',
@@ -48,10 +36,29 @@ def parse_args(args):
         nargs='?',
         default=os.getcwd(),
         help="Path to the test file or directory to run. (default current directory)")
+
+    group = parser.add_mutually_exclusive_group(required=False)
+    group.add_argument('-v', '--verbose',
+        action='store_const',
+        dest='verbosity',
+        const='verbose',
+        default='normal',
+        help="Enable verbose progress reporting.")
+    group.add_argument('-q', '--quiet',
+        action='store_const',
+        dest='verbosity',
+        const='quiet',
+        default='normal',
+        help="Disable progress reporting.")
+
     return parser.parse_args(args)
 
 
 def create_reporters(args):
+    # Refactoring hint:
+    # multiple inheritance is part of the reason this function is hard to test.
+    # Try to get the reporters to the point where they can be composed
+    # without inheritance.
     if args.teamcity or "TEAMCITY_VERSION" in os.environ:
         return (reporting.teamcity.TeamCityReporter(sys.stdout),)
     elif args.verbosity == 'verbose':
