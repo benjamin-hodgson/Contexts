@@ -4,7 +4,7 @@ from setuptools import setup, find_packages
 
 setup(
     name = "Contexts",
-    version = "0.5.2",
+    version = "0.5.2.1",
     author = "Benjamin Hodgson",
     author_email = "benjamin.hodgson@huddle.net",
     url = "https://github.com/benjamin-hodgson/Contexts",

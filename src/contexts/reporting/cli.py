@@ -2,9 +2,7 @@ import datetime
 import sys
 from contextlib import contextmanager
 from io import StringIO
-import colorama
 from . import shared
-from . import Reporter
 
 
 class DotsReporter(shared.StreamReporter):
@@ -89,6 +87,10 @@ class VerboseReporter(shared.CountingReporter, shared.StreamReporter):
 
 
 class ColouredReporter(VerboseReporter):
+    def __init__(self, *args, **kwargs):
+        global colorama
+        import colorama
+
     def context_errored(self, context, exception):
         with self.red():
             super().context_errored(context, exception)
