@@ -90,6 +90,7 @@ class ColouredReporter(VerboseReporter):
     def __init__(self, *args, **kwargs):
         global colorama
         import colorama
+        super().__init__(*args, **kwargs)
 
     def context_errored(self, context, exception):
         with self.red():

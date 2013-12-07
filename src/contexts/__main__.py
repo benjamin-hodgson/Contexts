@@ -73,7 +73,9 @@ def create_reporters(args):
 
     if args.teamcity or "TEAMCITY_VERSION" in os.environ:
         return (reporting.teamcity.TeamCityReporter(sys.stdout),)
-    if args.verbosity == 'verbose':
+    if args.verbosity == 'verbose' and not args.colour:
+        return (reporting.cli.StdOutCapturingReporter(sys.stdout),)
+    if args.verbosity == 'verbose' and args.colour:
         return (type(
             "VerboseCapturingReporter",
             (reporting.cli.ColouredReporter,

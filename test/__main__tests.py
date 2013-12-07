@@ -118,6 +118,17 @@ class WhenCreatingReportersWithNoColours:
         for reporter in self.reporters:
             reporter.should_not.be.a('contexts.reporting.cli.ColouredReporter')
 
+class WhenCreatingVerboseReportersWithNoColours:
+    def establish_that_args_specify_no_colours(self):
+        self.args = types.SimpleNamespace(**args_with(colour=False, verbosity='verbose'))
+
+    def because_we_create_the_list_of_reporters(self):
+        self.reporters = __main__.create_reporters(self.args)
+
+    def none_of_them_should_be_coloured_reporters(self):
+        for reporter in self.reporters:
+            reporter.should_not.be.a('contexts.reporting.cli.ColouredReporter')
+
 class WhenColoramaIsNotInstalled:
     def establish_that_colorama_raises_import_error(self):
         self.real_import = builtins.__import__
