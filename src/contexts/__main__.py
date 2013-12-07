@@ -61,6 +61,9 @@ def create_reporters(args):
     # multiple inheritance is part of the reason this function is hard to test.
     # Try to get the reporters to the point where they can be composed
     # without inheritance.
+    if not sys.stdout.isatty():
+        args.colour = False
+
     try:
         import colorama
     except ImportError:

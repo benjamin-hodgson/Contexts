@@ -137,6 +137,20 @@ class WhenColoramaIsNotInstalled:
     def cleanup_import(self):
         builtins.__import__ = self.real_import
 
+class WhenStdOutIsAPipe:
+    def establish_that_stdout_is_a_pipe(self):
+        self.real_isatty = sys.stdout.isatty
+        sys.stdout.isatty = lambda: False
+
+    def because_we_create_the_list_of_reporters(self):
+        self.reporters = __main__.create_reporters(types.SimpleNamespace(**args_with()))
+
+    def none_of_them_should_be_coloured_reporters(self):
+        for reporter in self.reporters:
+            reporter.should_not.be.a('contexts.reporting.cli.ColouredReporter')
+
+    def cleanup_stdout(self):
+        sys.stdout.isatty = self.real_isatty
 
 ###########################################################
 # Test helper methods
