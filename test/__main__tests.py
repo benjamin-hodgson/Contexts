@@ -41,6 +41,9 @@ class WhenRunningFromCommandLineWithArguments(MainSharedContext):
         yield ['-v'], (os.getcwd(), (cli.ColouredVerboseCapturingReporter(sys.stdout),), True)
         yield ['--verbose'], (os.getcwd(), (cli.ColouredVerboseCapturingReporter(sys.stdout),), True)
         yield ['--verbose', '--no-colour'], (os.getcwd(), (cli.StdOutCapturingReporter(sys.stdout),), True)
+        yield ['--verbose', '--no-capture'], (os.getcwd(), (cli.ColouredVerboseReporter(sys.stdout),), True)
+        yield ['--verbose', '--no-colour', '--no-capture'], (os.getcwd(), (cli.VerboseReporter(sys.stdout),), True)
+        yield ['-vs'], (os.getcwd(), (cli.ColouredVerboseReporter(sys.stdout),), True)
         yield ['-q'], (os.getcwd(), (QuietReporterResemblance(),), True)
         yield ['--quiet'], (os.getcwd(), (QuietReporterResemblance(),), True)
         yield ['-s'], (os.getcwd(), (cli.DotsReporter(sys.stdout), cli.ColouredSummarisingReporter(sys.stdout), cli.TimedReporter(sys.stdout)), True)
@@ -65,6 +68,7 @@ class WhenArgumentsSpecifyMutuallyExclusiveOptions(MainSharedContext):
     @classmethod
     def examples(cls):
         yield ['-q', '-v']
+        yield ['-qv']
         yield ['--quiet', '--verbose']
         yield ['-q', '--verbose']
         yield ['--verbose', '-q']

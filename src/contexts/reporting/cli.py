@@ -234,6 +234,9 @@ class TimedReporter(shared.StreamReporter):
         self._print("({} seconds)".format(rounded))
 
 
+class ColouredVerboseReporter(ColouredReporter, VerboseReporter):
+    pass
+
 class ColouredVerboseCapturingReporter(ColouredReporter, StdOutCapturingReporter):
     pass
 

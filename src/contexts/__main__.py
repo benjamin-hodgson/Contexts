@@ -78,31 +78,35 @@ def create_reporters(args):
     if args.verbosity == 'quiet':
         return (reporting.cli.StdOutCapturingReporter(StringIO()),)
 
-    if args.verbosity == 'verbose' and not args.colour:
+    if args.verbosity == 'verbose':
+        if not args.capture:
+            if args.colour:
+                return (reporting.cli.ColouredVerboseReporter(sys.stdout),)
+            return (reporting.cli.VerboseReporter(sys.stdout),)
+        if args.colour:
+            return (reporting.cli.ColouredVerboseCapturingReporter(sys.stdout),)
         return (reporting.cli.StdOutCapturingReporter(sys.stdout),)
-    if args.verbosity == 'verbose' and args.colour:
-        return (reporting.cli.ColouredVerboseCapturingReporter(sys.stdout),)
 
-    if args.capture and args.colour:
-        return (
-            reporting.cli.DotsReporter(sys.stdout),
-            reporting.cli.ColouredSummarisingCapturingReporter(sys.stdout),
-            reporting.cli.TimedReporter(sys.stdout)
-        )
-    if args.capture and not args.colour:
+    if args.capture:
+        if args.colour:
+            return (
+                reporting.cli.DotsReporter(sys.stdout),
+                reporting.cli.ColouredSummarisingCapturingReporter(sys.stdout),
+                reporting.cli.TimedReporter(sys.stdout)
+            )
         return (
             reporting.cli.DotsReporter(sys.stdout),
             reporting.cli.SummarisingCapturingReporter(sys.stdout),
             reporting.cli.TimedReporter(sys.stdout)
         )
 
-    if not args.capture and args.colour:
-        return (
-            reporting.cli.DotsReporter(sys.stdout),
-            reporting.cli.ColouredSummarisingReporter(sys.stdout),
-            reporting.cli.TimedReporter(sys.stdout)
-        )
-    if not args.capture and not args.colour:
+    if not args.capture:
+        if args.colour:
+            return (
+                reporting.cli.DotsReporter(sys.stdout),
+                reporting.cli.ColouredSummarisingReporter(sys.stdout),
+                reporting.cli.TimedReporter(sys.stdout)
+            )
         return (
             reporting.cli.DotsReporter(sys.stdout),
             reporting.cli.SummarisingReporter(sys.stdout),
