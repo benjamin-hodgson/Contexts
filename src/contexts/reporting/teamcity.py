@@ -4,13 +4,13 @@ from . import shared
 
 
 class TeamCityReporter(shared.StreamReporter):
-    def test_run_started(self, test_run):
-        super().test_run_started(test_run)
-        self.teamcity_print("testSuiteStarted", name="contexts")
+    def suite_started(self, suite):
+        super().suite_started(suite)
+        self.teamcity_print("testSuiteStarted", name=shared.make_readable(suite.name))
 
-    def test_run_ended(self, test_run):
-        super().test_run_ended(test_run)
-        self.teamcity_print("testSuiteFinished", name="contexts")
+    def suite_ended(self, suite):
+        super().suite_ended(suite)
+        self.teamcity_print("testSuiteFinished", name=shared.make_readable(suite.name))
 
     def context_started(self, context):
         super().context_started(context)
