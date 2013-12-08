@@ -188,13 +188,23 @@ class WhenAContextErrors:
         self.reporters[2].calls[5][2].should.equal(self.assertion_err)
 
 
-class WhenRunningTheSameClassMultipleTimes:
+class MultipleRunsSharedContext:
     def context(self):
         self.create_class()
 
         self.reporter1 = SpyReporter()
         self.reporter2 = SpyReporter()
+    def create_class(self):
+        cls_dict = {}
+        for x in range(100):
+            method_name = 'it' + str(x)
+            def it(self):
+                pass
+            it.__name__ = method_name
+            cls_dict[method_name] = it
+        self.spec = type("Spec", (object,), cls_dict)
 
+class WhenRunningTheSameClassMultipleTimes(MultipleRunsSharedContext):
     def because_we_run_the_class_twice(self):
         contexts.run(self.spec, [self.reporter1])
         contexts.run(self.spec, [self.reporter2])
@@ -204,16 +214,15 @@ class WhenRunningTheSameClassMultipleTimes:
         second_order = [call[1].name for call in self.reporter2.calls if call[0] == "assertion_started"]
         first_order.should_not.equal(second_order)
 
-    def create_class(self):
-        cls_dict = {}
-        for x in range(100):
-            method_name = 'it' + str(x)
-            def it(self):
-                pass
-            it.__name__ = method_name
-            cls_dict[method_name] = it
+class WhenRunningTheSameClassMultipleTimesWithShuffleDisabled(MultipleRunsSharedContext):
+    def because_we_run_the_class_twice_with_shuffle_disabled(self):
+        contexts.run(self.spec, [self.reporter1], shuffle=False)
+        contexts.run(self.spec, [self.reporter2], shuffle=False)
 
-        self.spec = type("Spec", (object,), cls_dict)
+    def it_should_run_the_assertions_in_the_same_order(self):
+        first_order = [call[1].name for call in self.reporter1.calls if call[0] == "assertion_started"]
+        second_order = [call[1].name for call in self.reporter2.calls if call[0] == "assertion_started"]
+        first_order.should.equal(second_order)
 
 
 class WhenCatchingAnException:

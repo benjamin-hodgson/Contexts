@@ -1,7 +1,6 @@
 import builtins
 import os
 import sys
-import types
 from io import StringIO
 from unittest import mock
 import sure
@@ -10,15 +9,12 @@ from contexts import __main__
 from contexts.reporting import cli
 
 
-###########################################################
-# Outside-in tests (good)
-###########################################################
-
 class WhenLoadingUpTheModule:
     # this test is just to balance
     # the fact that we're mocking it everywhere else
     def it_should_get_main_from_init(self):
         __main__.main.should.equal(contexts.main)
+
 
 class MainSharedContext:
     def shared_context(self):
@@ -34,6 +30,7 @@ class MainSharedContext:
         __main__.main = self.real_main
         sys.argv = self.real_argv
         sys.stdout = self.real_stdout
+
 
 class WhenRunningFromCommandLineWithArguments(MainSharedContext):
     @classmethod
@@ -64,6 +61,7 @@ class WhenRunningFromCommandLineWithArguments(MainSharedContext):
 
     def it_should_call_main_with_the_correct_arguments(self):
         self.mock_main.assert_called_once_with(*self.expected)
+
 
 class WhenArgumentsSpecifyMutuallyExclusiveOptions(MainSharedContext):
     @classmethod
@@ -99,11 +97,7 @@ class WhenArgumentsSpecifyMutuallyExclusiveOptions(MainSharedContext):
         sys.stderr = self.real_stderr
 
 
-###########################################################
-# Component tests (bad)
-###########################################################
-
-class WhenColoramaIsNotInstalled:
+class WhenColoramaIsNotInstalled(MainSharedContext):
     def establish_that_colorama_raises_import_error(self):
         self.real_import = builtins.__import__
         def fake_import(name, *args, **kwargs):
@@ -112,30 +106,26 @@ class WhenColoramaIsNotInstalled:
             return self.real_import(name, *args, **kwargs)
         builtins.__import__ = fake_import
 
-    def because_we_create_the_list_of_reporters(self):
-        self.reporters = __main__.create_reporters(types.SimpleNamespace(**args_with()))
+    def because_we_run_from_cmd_line(self):
+        __main__.cmd()
 
-    def none_of_them_should_be_coloured_reporters(self):
-        for reporter in self.reporters:
-            reporter.should_not.be.a('contexts.reporting.cli.ColouredReporter')
+    def it_should_not_send_a_coloured_reporter_to_main(self):
+        self.mock_main.assert_called_once_with(os.getcwd(), (cli.DotsReporter(sys.stdout), cli.SummarisingCapturingReporter(sys.stdout), cli.TimedReporter(sys.stdout)), True)
 
     def cleanup_import(self):
         builtins.__import__ = self.real_import
 
-class WhenStdOutIsAPipe:
+
+class WhenStdOutIsAPipe(MainSharedContext):
     def establish_that_stdout_is_a_pipe(self):
-        self.real_isatty = sys.stdout.isatty
-        sys.stdout.isatty = lambda: False
+        sys.stdout.isatty.return_value = False
 
-    def because_we_create_the_list_of_reporters(self):
-        self.reporters = __main__.create_reporters(types.SimpleNamespace(**args_with()))
+    def because_we_run_from_cmd_line(self):
+        __main__.cmd()
 
-    def none_of_them_should_be_coloured_reporters(self):
-        for reporter in self.reporters:
-            reporter.should_not.be.a('contexts.reporting.cli.ColouredReporter')
+    def it_should_not_send_a_coloured_reporter_to_main(self):
+        self.mock_main.assert_called_once_with(os.getcwd(), (cli.DotsReporter(sys.stdout), cli.SummarisingCapturingReporter(sys.stdout), cli.TimedReporter(sys.stdout)), True)
 
-    def cleanup_stdout(self):
-        sys.stdout.isatty = self.real_isatty
 
 ###########################################################
 # Test helper methods
