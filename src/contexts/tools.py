@@ -81,9 +81,19 @@ def teardown(func):
     return func
 
 
+def examples(func):
+    """
+    Decorator. Marks a method as an examples method.
+    """
+    func._contexts_role = "examples"
+    return func
+
+
 def spec(cls):
     """
     Class decorator. Marks a class as a test class.
     """
     cls._contexts_role = "Spec"
     return cls
+
+context = spec

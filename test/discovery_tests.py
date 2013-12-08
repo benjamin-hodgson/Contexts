@@ -5,7 +5,7 @@ import sys
 import types
 import sure
 import contexts
-from .tools import MockReporter
+from .tools import SpyReporter
 
 
 this_file = os.path.realpath(__file__)
@@ -32,7 +32,7 @@ class WhenRunningAModule:
         self.module.NormalClass = NormalClass
 
     def because_we_run_the_module(self):
-        contexts.run(self.module, [MockReporter()])
+        contexts.run(self.module, [SpyReporter()])
 
     def it_should_run_the_spec(self):
         self.module.HasSpecInTheName.was_run.should.be.true
@@ -49,8 +49,8 @@ class WhenRunningTheSameModuleMultipleTimes:
     def context(self):
         self.create_module()
 
-        self.reporter1 = MockReporter()
-        self.reporter2 = MockReporter()
+        self.reporter1 = SpyReporter()
+        self.reporter2 = SpyReporter()
 
     def because_we_run_the_module_twice(self):
         contexts.run(self.module, [self.reporter1])
@@ -88,7 +88,7 @@ class TestSpec:
         self.write_file()
 
     def because_we_run_the_file(self):
-        contexts.run(self.filename, [MockReporter()])
+        contexts.run(self.filename, [SpyReporter()])
 
     def it_should_import_the_file(self):
         sys.modules.should.contain(self.module_name)
@@ -125,7 +125,7 @@ raise ZeroDivisionError("bogus error message")
         self.old_sys_dot_path = sys.path[:]
         self.module_name = "broken_test_file"
         self.write_file()
-        self.reporter = MockReporter()
+        self.reporter = SpyReporter()
 
     def because_we_run_the_file(self):
         self.exception = contexts.catch(contexts.run, self.filename, [self.reporter])
@@ -168,7 +168,7 @@ class TestSpec:
         self.write_files()
 
     def because_we_run_the_folder(self):
-        contexts.run(self.folder_path, [MockReporter()])
+        contexts.run(self.folder_path, [SpyReporter()])
 
     def it_should_import_the_first_module(self):
         sys.modules.should.contain(self.module_names[0])
@@ -223,7 +223,7 @@ class TestSpec:
         self.create_fake_module()
 
     def because_we_run_the_folder(self):
-        contexts.run(self.folder_path, [MockReporter()])
+        contexts.run(self.folder_path, [SpyReporter()])
 
     def it_should_not_re_import_the_module(self):
         sys.modules[self.module_name].is_fake.should.be.true
@@ -279,7 +279,7 @@ class TestSpec:
         self.create_fake_module()
 
     def because_we_run_the_folder(self):
-        contexts.run(self.folder_path, [MockReporter()])
+        contexts.run(self.folder_path, [SpyReporter()])
 
     def it_should_import_the_new_module_and_overwrite_the_old_one(self):
         sys.modules[self.module_name].is_fake.should.be.false
@@ -329,7 +329,7 @@ class TestSpec:
         self.write_files()
 
     def because_we_run_the_folder(self):
-        contexts.run(self.folder_path, [MockReporter()])
+        contexts.run(self.folder_path, [SpyReporter()])
 
     def it_should_import_the_package(self):
         sys.modules.should.contain(self.package_name)
@@ -405,7 +405,7 @@ class TestSpec:
         self.create_tree()
 
     def because_we_run_the_folder(self):
-        contexts.run(self.folder_path, [MockReporter()])
+        contexts.run(self.folder_path, [SpyReporter()])
 
     def it_should_import_the_file_in_the_test_folder(self):
         sys.modules.should.contain("test_file1")
@@ -487,7 +487,7 @@ class TestSpec:
 
 
     def because_we_run_the_package(self):
-        contexts.run(self.folder_path, [MockReporter()])
+        contexts.run(self.folder_path, [SpyReporter()])
 
     def it_should_import_the_file_in_the_test_folder(self):
         sys.modules.should.contain("test_file1")
@@ -587,7 +587,7 @@ class TestSpec:
         self.module_names = ["test_file1", "test_file2"]
         self.create_folder()
         self.write_files()
-        self.reporter = MockReporter()
+        self.reporter = SpyReporter()
 
     def because_we_run_the_folder(self):
         self.exception = contexts.catch(contexts.run, self.folder_path, [self.reporter])

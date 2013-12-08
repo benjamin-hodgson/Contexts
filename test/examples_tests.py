@@ -1,7 +1,7 @@
 import types
 import sure
 import contexts
-from .tools import MockReporter
+from .tools import SpyReporter
 
 
 class WhenRunningAParametrisedSpec:
@@ -27,7 +27,7 @@ class WhenRunningAParametrisedSpec:
             def cleanup(self, example):
                 self.__class__.teardowns.append(example)
         self.ParametrisedSpec = ParametrisedSpec
-        self.reporter = MockReporter()
+        self.reporter = SpyReporter()
 
     def because_we_run_the_class(self):
         contexts.run(self.ParametrisedSpec, [self.reporter])
@@ -81,7 +81,7 @@ class WhenRunningAParametrisedSpecWithNonParametrisedMethods:
             def cleanup(self):
                 self.__class__.teardowns += 1
         self.ParametrisedSpec = ParametrisedSpec
-        self.reporter = MockReporter()
+        self.reporter = SpyReporter()
 
     def because_we_run_the_class(self):
         contexts.run(self.ParametrisedSpec, [self.reporter])
@@ -137,7 +137,7 @@ class WhenRunningAModuleWithParametrisedSpecs:
         self.module = types.ModuleType('fake_specs')
         self.ParametrisedSpec = ParametrisedSpec
         self.module.ParametrisedSpec = ParametrisedSpec
-        self.reporter = MockReporter()
+        self.reporter = SpyReporter()
 
     def because_we_run_the_module(self):
         contexts.run(self.module, [self.reporter])
@@ -180,7 +180,7 @@ class WhenExamplesRaisesAnException:
             def it(s, example):
                 s.__class__.total += example
         self.spec = TestSpec
-        self.reporter = MockReporter()
+        self.reporter = SpyReporter()
 
     def because_we_run_the_spec(self):
         self.exception = contexts.catch(contexts.run, self.spec, [self.reporter])
@@ -204,7 +204,7 @@ class WhenUserFailsToMakeExamplesAClassmethod:
             def examples(self):
                 pass
         self.spec = Naughty
-        self.reporter = MockReporter()
+        self.reporter = SpyReporter()
 
     def because_we_run_the_spec(self):
         self.exception = contexts.catch(contexts.run, self.spec, [self.reporter])
@@ -234,7 +234,7 @@ class WhenExamplesReturnsNone:
         self.spec = Spec
 
     def because_we_run_the_spec(self):
-        self.exception = contexts.catch(contexts.run, self.spec, [MockReporter()])
+        self.exception = contexts.catch(contexts.run, self.spec, [SpyReporter()])
 
     def it_should_not_throw_an_exception(self):
         self.exception.should.be.none

@@ -1,10 +1,19 @@
 import sys
 from . import core
 from . import reporting
-from .tools import catch, set_trace, time, setup, action, assertion, teardown, spec
+from .tools import (
+    catch, set_trace, time,
+    setup, action, assertion, teardown, examples,
+    spec, context
+)
 
 
-__all__ = ['run', 'main', 'catch', 'set_trace', 'time', 'setup', 'action', 'assertion', 'teardown', 'spec']
+__all__ = [
+    'run', 'main',
+    'catch', 'set_trace', 'time',
+    'setup', 'action', 'assertion', 'teardown', 'examples',
+    'spec', 'context'
+]
 
 
 def main(*args, **kwargs):

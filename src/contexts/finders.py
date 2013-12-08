@@ -63,13 +63,11 @@ class MethodFinder(object):
 
             if not regex.search(name):
                 continue
+
             if callable(val):
                 method = types.MethodType(val, self.spec)
                 found.append(method)
-            elif isinstance(val, classmethod):
-                method = getattr(cls, name)
-                found.append(method)
-            elif isinstance(val, staticmethod):
+            elif isinstance(val, (classmethod, staticmethod)):
                 method = getattr(cls, name)
                 found.append(method)
 
@@ -82,9 +80,10 @@ class MethodFinder(object):
 def find_examples_method(cls):
     found = []
     for name, val in cls.__dict__.items():
-        if not example_re.search(name):
+        entry = val._contexts_role if hasattr(val, '_contexts_role') else name
+        if not example_re.search(entry):
             continue
-        if establish_re.search(name) or because_re.search(name) or should_re.search(name) or cleanup_re.search(name):
+        if establish_re.search(entry) or because_re.search(entry) or should_re.search(entry) or cleanup_re.search(entry):
             msg = "The method {} is ambiguously named".format(name)
             raise errors.MethodNamingError(msg)
         if not isinstance(val, classmethod):

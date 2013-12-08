@@ -1,7 +1,7 @@
 from unittest import mock
 import sure
 import contexts
-from .tools import MockReporter
+from .tools import SpyReporter
 
 core_file = repr(contexts.core.__file__)[1:-1]
 this_file = repr(__file__)[1:-1]
@@ -31,8 +31,8 @@ class WhenRunningASpec:
                 s.__class__.log += "teardown "
 
         self.spec = TestSpec
-        self.reporter1 = MockReporter()
-        self.reporter2 = MockReporter()
+        self.reporter1 = SpyReporter()
+        self.reporter2 = SpyReporter()
 
     def because_we_run_the_spec(self):
         contexts.run(self.spec, [self.reporter1, self.reporter2])
@@ -142,7 +142,7 @@ class WhenAContextErrors:
     def because_we_run_the_specs(self):
         self.reporters = []
         for spec in self.specs:
-            reporter = MockReporter()
+            reporter = SpyReporter()
             self.reporters.append(reporter)
             contexts.run(spec, [reporter])
 
@@ -187,8 +187,8 @@ class WhenRunningTheSameClassMultipleTimes:
     def context(self):
         self.create_class()
 
-        self.reporter1 = MockReporter()
-        self.reporter2 = MockReporter()
+        self.reporter1 = SpyReporter()
+        self.reporter2 = SpyReporter()
 
     def because_we_run_the_class_twice(self):
         contexts.run(self.spec, [self.reporter1])
@@ -226,7 +226,7 @@ class WhenCatchingAnException:
                 s.__class__.exception = contexts.catch(s.throwing_function, 3, c='yes', b=None)
 
         self.spec = TestSpec
-        self.reporter = MockReporter()
+        self.reporter = SpyReporter()
 
     def because_we_run_the_spec(self):
         contexts.run(self.spec, [self.reporter])
@@ -289,7 +289,7 @@ class WhenASpecHasASuperclass:
                 self.log += "subclass cleanup "
 
         self.spec = Spec
-        self.reporter = MockReporter()
+        self.reporter = SpyReporter()
 
     def because_we_run_the_spec(self):
         contexts.run(self.spec, [self.reporter])
@@ -342,7 +342,7 @@ class WhenASpecHasClassmethods:
         self.spec = ClassmethodsSpec
 
     def because_we_run_the_spec(self):
-        contexts.run(self.spec, [MockReporter()])
+        contexts.run(self.spec, [SpyReporter()])
 
     def it_should_run_the_classmethods(self):
         self.spec.log.should.equal("arrange act assert teardown ")
@@ -367,7 +367,7 @@ class WhenASpecHasStaticmethods:
         self.spec = StaticmethodsSpec
 
     def because_we_run_the_spec(self):
-        contexts.run(self.spec, [MockReporter()])
+        contexts.run(self.spec, [SpyReporter()])
 
     def it_should_run_the_staticmethods(self):
         self.log.should.equal("arrange act assert teardown ")
@@ -415,7 +415,7 @@ class WhenWeRunSpecsWithAlternatelyNamedMethods:
         self.spec, self.expected_log = example
 
     def because_we_run_the_spec(self, example):
-        contexts.run(self.spec, [MockReporter()])
+        contexts.run(self.spec, [SpyReporter()])
 
     def it_should_run_the_methods_in_the_correct_order(self):
         self.spec.log.should.equal(self.expected_log)
@@ -447,7 +447,7 @@ class WhenRunningAmbiguouslyNamedMethods:
         yield AmbiguousMethods5
 
     def context(self):
-        self.reporter = MockReporter()
+        self.reporter = SpyReporter()
 
     def because_we_try_to_run_the_spec(self, example):
         self.exception = contexts.catch(contexts.run, example, [self.reporter])
@@ -487,7 +487,7 @@ class WhenRunningNotSoAmbiguouslyNamedMethods:
         yield NotAmbiguousMethods4
 
     def because_we_try_to_run_the_spec(self, example):
-        self.exception = contexts.catch(contexts.run, example, [MockReporter()])
+        self.exception = contexts.catch(contexts.run, example, [SpyReporter()])
 
     def it_should_not_raise_any_exceptions(self):
         self.exception.should.be.none
@@ -524,7 +524,7 @@ class WhenRunningSpecsWithTooManySpecialMethods:
         yield TooManyExamples
 
     def context(self):
-        self.reporter = MockReporter()
+        self.reporter = SpyReporter()
 
     def because_we_try_to_run_the_spec(self, example):
         self.exception = contexts.catch(contexts.run, example, [self.reporter])
@@ -553,7 +553,7 @@ class WhenRunningAClassContainingNoAssertions:
             def cleanup(self):
                 self.__class__.log.append('teardown')
         self.spec = NoAssertions
-        self.reporter = MockReporter()
+        self.reporter = SpyReporter()
 
     def because_we_run_the_spec(self):
         contexts.run(self.spec, [self.reporter])
