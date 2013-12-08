@@ -16,36 +16,43 @@ class TestRun(object):
 
     def run(self, reporter_notifier):
         with reporter_notifier.run_test_run(self):
-            for cls in self.get_classes(reporter_notifier):
-                self.run_class(cls, reporter_notifier)
+            modules = self.get_modules(reporter_notifier)
+            if self.shuffle:
+                random.shuffle(modules)
+            for module in modules:
+                suite = Suite(module, self.shuffle)
+                suite.run(reporter_notifier)
 
-    def get_classes(self, reporter_notifier):
+    def get_modules(self, reporter_notifier):
         if isinstance(self.source, types.ModuleType):
-            list_of_lists = [list(finders.find_specs_in_module(self.source))]
-        elif isinstance(self.source, str) and os.path.isfile(self.source):
-            module = discovery.import_from_file(self.source)
-            list_of_lists = [list(finders.find_specs_in_module(module))]
-        elif isinstance(self.source, str) and os.path.isdir(self.source):
+            return [self.source]
+        if isinstance(self.source, str) and os.path.isfile(self.source):
+            return [discovery.import_from_file(self.source)]
+        if isinstance(self.source, str) and os.path.isdir(self.source):
             module_specs = discovery.find_modules(self.source)
-            list_of_lists = []
+            modules = []
             for module_spec in module_specs:
                 with reporter_notifier.importing(module_spec):
-                    module = discovery.load_module(*module_spec)
-                    module_classes = list(finders.find_specs_in_module(module))
-                    list_of_lists.append(module_classes)
-        else:
-            list_of_lists = [[self.source]]
+                    modules.append(discovery.load_module(*module_spec))
+            return modules
 
+        # if we got here, self.source is a class
+        module = types.ModuleType("contexts_module")
+        setattr(module, "Spec", self.source)
+        return [module]
+
+
+class Suite(object):
+    def __init__(self, module, shuffle):
+        self.module = module
+        self.shuffle = shuffle
+
+    def run(self, reporter_notifier):
+        found_classes = list(finders.find_specs_in_module(self.module))
         if self.shuffle:
-            random.shuffle(list_of_lists)
-
-        ret = []
-        for l in list_of_lists:
-            if self.shuffle:
-                random.shuffle(l)
-            ret.extend(l)
-
-        return ret
+            random.shuffle(found_classes)
+        for cls in found_classes:
+            self.run_class(cls, reporter_notifier)
 
     def run_class(self, cls, reporter_notifier):
         with reporter_notifier.run_class(cls):

@@ -45,6 +45,7 @@ class WhenMarkingAnOtherwiseNamedMethodAsSetup:
     def it_should_treat_the_marked_method_as_setup(self):
         self.spec.log.should.equal("arrange act assert teardown ")
 
+
 class WhenMarkingAnUnrelatedMethodAsAction:
     def context(self):
         class Spec:
@@ -86,6 +87,7 @@ class WhenMarkingAnOtherwiseNamedMethodAsAction:
 
     def it_should_treat_the_marked_method_as_action(self):
         self.spec.log.should.equal("arrange act assert teardown ")
+
 
 class WhenMarkingAnUnrelatedMethodAsAssertion:
     def context(self):
@@ -129,6 +131,7 @@ class WhenMarkingAnOtherwiseNamedMethodAsAssertion:
     def it_should_treat_the_marked_method_as_assertion(self):
         self.spec.log.should.equal("arrange act assert teardown ")
 
+
 class WhenMarkingAnUnrelatedMethodAsTeardown:
     def context(self):
         class Spec:
@@ -171,6 +174,7 @@ class WhenMarkingAnOtherwiseNamedMethodAsTeardown:
     def it_should_treat_the_marked_method_as_teardown(self):
         self.spec.log.should.equal("arrange act assert teardown ")
 
+
 class WhenMarkingAnUnrelatedMethodAsExamples:
     def context(self):
         class Spec:
@@ -208,6 +212,7 @@ class WhenMarkingAnOtherwiseNamedMethodAsExamples:
 
     def it_should_treat_the_marked_method_as_teardown(self):
         self.spec.log.should.equal([1,2])
+
 
 class WhenMarkingAClassAsASpec:
     def context(self):
