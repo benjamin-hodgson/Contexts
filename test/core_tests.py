@@ -328,56 +328,6 @@ class WhenASpecHasASuperclass:
         calls.should.have.length_of(1)
 
 
-class WhenASpecHasClassmethods:
-    def given_a_spec_with_classmethods(self):
-        class ClassmethodsSpec:
-            log = ""
-            @classmethod
-            def context(cls):
-                cls.log += "arrange "
-            @classmethod
-            def because(cls):
-                cls.log += "act "
-            @classmethod
-            def it(cls):
-                cls.log += "assert "
-            @classmethod
-            def cleanup(cls):
-                cls.log += "teardown "
-        self.spec = ClassmethodsSpec
-
-    def because_we_run_the_spec(self):
-        contexts.run(self.spec, [SpyReporter()])
-
-    def it_should_run_the_classmethods(self):
-        self.spec.log.should.equal("arrange act assert teardown ")
-
-
-class WhenASpecHasStaticmethods:
-    def given_a_spec_with_staticmethods(self):
-        self.log = ""
-        class StaticmethodsSpec:
-            @staticmethod
-            def context():
-                self.log += "arrange "
-            @staticmethod
-            def because():
-                self.log += "act "
-            @staticmethod
-            def it():
-                self.log += "assert "
-            @staticmethod
-            def cleanup():
-                self.log += "teardown "
-        self.spec = StaticmethodsSpec
-
-    def because_we_run_the_spec(self):
-        contexts.run(self.spec, [SpyReporter()])
-
-    def it_should_run_the_staticmethods(self):
-        self.log.should.equal("arrange act assert teardown ")
-
-
 class WhenWeRunSpecsWithAlternatelyNamedMethods:
     @classmethod
     def examples(self):

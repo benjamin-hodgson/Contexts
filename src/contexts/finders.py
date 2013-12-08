@@ -67,9 +67,6 @@ class MethodFinder(object):
             if callable(val):
                 method = types.MethodType(val, self.spec)
                 found.append(method)
-            elif isinstance(val, (classmethod, staticmethod)):
-                method = getattr(cls, name)
-                found.append(method)
 
         if one_per_class:
             assert_single_method_of_given_type(cls, found)
