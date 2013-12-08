@@ -9,13 +9,13 @@ from . import errors
 from . import finders
 
 
-class Suite(object):
+class TestRun(object):
     def __init__(self, source, shuffle):
         self.source = source
         self.shuffle = shuffle
 
     def run(self, reporter_notifier):
-        with reporter_notifier.run_suite(self):
+        with reporter_notifier.run_test_run(self):
             for cls in self.get_classes(reporter_notifier):
                 self.run_class(cls, reporter_notifier)
 
@@ -49,6 +49,7 @@ class Suite(object):
             for example in get_examples(cls):
                 context = Context(cls(), example, self.shuffle)
                 context.run(reporter_notifier)
+
 
 def get_examples(cls):
     examples_method = finders.find_examples_method(cls)
@@ -145,13 +146,13 @@ class ReporterNotifier(object):
             getattr(reporter, method)(*args)
 
     @contextmanager
-    def run_suite(self, suite):
-        self.call_reporters("suite_started", suite)
+    def run_test_run(self, test_run):
+        self.call_reporters("test_run_started", test_run)
         try:
             yield
         except Exception as e:
             self.call_reporters("unexpected_error", e)
-        self.call_reporters("suite_ended", suite)
+        self.call_reporters("test_run_ended", test_run)
 
     @contextmanager
     def run_context(self, context):

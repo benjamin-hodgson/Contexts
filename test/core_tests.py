@@ -40,8 +40,8 @@ class WhenRunningASpec:
     def it_should_run_the_methods_in_the_correct_order(self):
         self.spec.log.should.equal("arrange act assert assert assert teardown ")
 
-    def it_should_call_suite_started_first(self):
-        self.reporter1.calls[0][0].should.equal('suite_started')
+    def it_should_call_test_run_started_first(self):
+        self.reporter1.calls[0][0].should.equal('test_run_started')
 
     @contexts.assertion
     def it_should_call_context_started_second(self):
@@ -89,10 +89,10 @@ class WhenRunningASpec:
     def it_should_pass_in_the_context_again(self):
         self.reporter1.calls[8][1].should.equal(self.reporter1.calls[1][1])
 
-    def it_should_call_suite_ended_last(self):
-        self.reporter1.calls[9][0].should.equal('suite_ended')
+    def it_should_call_test_run_ended_last(self):
+        self.reporter1.calls[9][0].should.equal('test_run_ended')
 
-    def it_should_pass_in_the_same_suite_as_at_the_start(self):
+    def it_should_pass_in_the_same_test_run_as_at_the_start(self):
         self.reporter1.calls[9][1].should.equal(self.reporter1.calls[0][1])
 
     def it_should_not_make_any_more_calls(self):
@@ -461,8 +461,8 @@ class WhenRunningAmbiguouslyNamedMethods:
     def it_should_pass_in_a_MethodNamingError(self):
         self.reporter.calls[1][1].should.be.a(contexts.errors.MethodNamingError)
 
-    def it_should_finish_the_suite(self):
-        self.reporter.calls[-1][0].should.equal("suite_ended")
+    def it_should_finish_the_test_run(self):
+        self.reporter.calls[-1][0].should.equal("test_run_ended")
 
 
 class WhenRunningNotSoAmbiguouslyNamedMethods:
@@ -538,8 +538,8 @@ class WhenRunningSpecsWithTooManySpecialMethods:
     def it_should_pass_in_a_TooManySpecialMethodsError(self):
         self.reporter.calls[1][1].should.be.a(contexts.errors.TooManySpecialMethodsError)
 
-    def it_should_finish_the_suite(self):
-        self.reporter.calls[-1][0].should.equal("suite_ended")
+    def it_should_finish_the_test_run(self):
+        self.reporter.calls[-1][0].should.equal("test_run_ended")
 
 
 class WhenRunningAClassContainingNoAssertions:
@@ -561,11 +561,11 @@ class WhenRunningAClassContainingNoAssertions:
     def it_should_not_run_any_assertions(self):
         self.spec.log.should.be.empty
 
-    def it_should_call_suite_started(self):
-        self.reporter.calls[0][0].should.equal('suite_started')
+    def it_should_call_test_run_started(self):
+        self.reporter.calls[0][0].should.equal('test_run_started')
 
-    def then_it_should_call_suite_ended(self):
-        self.reporter.calls[1][0].should.equal('suite_ended')
+    def then_it_should_call_test_run_ended(self):
+        self.reporter.calls[1][0].should.equal('test_run_ended')
 
 
 if __name__ == "__main__":

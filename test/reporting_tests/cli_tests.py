@@ -29,8 +29,8 @@ class WhenPrintingASuccessSummary:
         self.reporter.assertion_passed(assertion3)
         self.reporter.context_ended(ctx2)
 
-    def because_the_suite_ends(self):
-        self.reporter.suite_ended(tools.create_suite())
+    def because_the_test_run_ends(self):
+        self.reporter.test_run_ended(tools.create_test_run())
 
     def it_should_print_the_summary_to_the_stream(self):
         self.stringio.getvalue().should.equal(
@@ -60,8 +60,8 @@ class WhenPrintingAFailureSummary:
         self.reporter.assertion_failed(self.assertion, self.exception)
         self.reporter.context_ended(self.context)
 
-    def because_the_suite_ends(self):
-        self.reporter.suite_ended(tools.create_suite)
+    def because_the_test_run_ends(self):
+        self.reporter.test_run_ended(tools.create_test_run())
 
     def it_should_print_the_failure_tracebacks(self):
         self.stringio.getvalue().should.equal("""
@@ -91,15 +91,15 @@ class WhenTimingATestRun:
             now = mock.Mock(return_value=self.fake_now)
         self.FakeDateTime = FakeDateTime
 
-        self.suite = tools.create_suite()
+        self.test_run = tools.create_test_run()
         self.stringio = StringIO()
         self.reporter = reporting.cli.TimedReporter(self.stringio)
 
-    def because_we_run_a_suite(self):
+    def because_we_run_a_test_run(self):
         with mock.patch('datetime.datetime', self.FakeDateTime):
-            self.reporter.suite_started(self.suite)
+            self.reporter.test_run_started(self.test_run)
             datetime.datetime.now.return_value += self.fake_soon
-            self.reporter.suite_ended(self.suite)
+            self.reporter.test_run_ended(self.test_run)
 
     def it_should_report_the_total_time_for_the_test_run(self):
         self.stringio.getvalue().should.equal("(10.5 seconds)\n")

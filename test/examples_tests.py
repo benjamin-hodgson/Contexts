@@ -218,8 +218,8 @@ class WhenUserFailsToMakeExamplesAClassmethod:
     def it_should_pass_in_a_TypeError(self):
         self.reporter.calls[1][1].should.be.a(TypeError)
 
-    def it_should_finish_the_suite(self):
-        self.reporter.calls[-1][0].should.equal("suite_ended")
+    def it_should_finish_the_test_run(self):
+        self.reporter.calls[-1][0].should.equal("test_run_ended")
 
 
 class WhenExamplesReturnsNone:

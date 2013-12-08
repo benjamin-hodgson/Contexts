@@ -11,9 +11,9 @@ class VerboseReporterSharedContext:
         self.reporter = reporting.cli.VerboseReporter(self.stringio)
         self.outputs = []
 
-class WhenPrintingVerboselyAndASuiteEnds(VerboseReporterSharedContext):
-    def because_a_suite_ends(self):
-        self.reporter.suite_ended(tools.create_suite())
+class WhenPrintingVerboselyAndATestRunEnds(VerboseReporterSharedContext):
+    def because_a_test_run_ends(self):
+        self.reporter.test_run_ended(tools.create_test_run())
     def it_should_output_a_summary(self):
         self.stringio.getvalue().should.equal("""
 ----------------------------------------------------------------------

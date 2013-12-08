@@ -59,8 +59,8 @@ class VerboseReporter(shared.CountingReporter, shared.StreamReporter):
         for line in shared.format_exception(exception):
             self._print(line)
 
-    def suite_ended(self, suite):
-        super().suite_ended(suite)
+    def test_run_ended(self, test_run):
+        super().test_run_ended(test_run)
         self.summarise()
 
     def summarise(self):
@@ -168,14 +168,14 @@ class SummarisingReporter(VerboseReporter):
         super().unexpected_error(exception)
         self.stream = orig_stream
 
-    def suite_ended(self, suite):
+    def test_run_ended(self, test_run):
         output = self.to_output_at_end.getvalue()
         if output:
             self.real_stream.write('\n' + self.dashes + '\n')
             self.real_stream.write(output.strip())
 
         self.stream = self.real_stream
-        super().suite_ended(suite)
+        super().test_run_ended(test_run)
 
     def __eq__(self, other):
         return type(self) == type(other) and self.real_stream == other.real_stream
@@ -219,12 +219,12 @@ class StdOutCapturingReporter(VerboseReporter):
 
 
 class TimedReporter(shared.StreamReporter):
-    def suite_started(self, suite):
-        super().suite_started(suite)
+    def test_run_started(self, test_run):
+        super().test_run_started(test_run)
         self.start_time = datetime.datetime.now()
 
-    def suite_ended(self, suite):
-        super().suite_ended(suite)
+    def test_run_ended(self, test_run):
+        super().test_run_ended(test_run)
         self.end_time = datetime.datetime.now()
         self.print_time()
 

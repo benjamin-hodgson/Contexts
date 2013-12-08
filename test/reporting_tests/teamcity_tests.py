@@ -28,7 +28,7 @@ class WhenATestRunPassesInTeamCity(TeamCitySharedContext):
         self.real_stdout, self.real_stderr = sys.stdout, sys.stderr
         sys.stdout, sys.stderr = self.fake_stdout, self.fake_stderr = StringIO(), StringIO()
 
-        self.suite = tools.create_suite()
+        self.test_run = tools.create_test_run()
         self.ctx1 = tools.create_context("FakeContext")
         self.ctx2 = tools.create_context("FakeContext2", ["abc", 123, None])
         self.assertion1 = tools.create_assertion("FakeAssertion1")
@@ -36,7 +36,7 @@ class WhenATestRunPassesInTeamCity(TeamCitySharedContext):
         self.assertion3 = tools.create_assertion("FakeAssertion3")
 
     def because_we_run_some_assertions(self):
-        self.reporter.suite_started(self.suite)
+        self.reporter.test_run_started(self.test_run)
         self.outputs.append(self.stringio.getvalue())
 
         self.reporter.context_started(self.ctx1)
@@ -59,7 +59,7 @@ class WhenATestRunPassesInTeamCity(TeamCitySharedContext):
         self.reporter.context_ended(self.ctx2)
         self.outputs.append(self.stringio.getvalue())
 
-        self.reporter.suite_ended(self.suite)
+        self.reporter.test_run_ended(self.test_run)
         self.outputs.append(self.stringio.getvalue())
 
     def it_should_not_print_anything_to_the_real_stdout(self):
@@ -106,9 +106,9 @@ class WhenATestRunPassesInTeamCity(TeamCitySharedContext):
     def it_should_not_report_anything_following_the_second_context(self):
         self.get_output(5).should.have.length_of(2)
 
-    def it_should_tell_team_city_the_suite_ended(self):
+    def it_should_tell_team_city_the_test_run_ended(self):
         self.get_output(6)[0].should.equal(("testSuiteFinished", {'name':'contexts'}))
-    def it_should_not_report_anything_else_at_suite_end(self):
+    def it_should_not_report_anything_else_at_test_run_end(self):
         self.get_output(6).should.have.length_of(1)
 
     def cleanup_stdout_and_stderr(self):
@@ -134,7 +134,7 @@ class WhenAnAssertionFailsInTeamCity(TeamCitySharedContext):
         self.context = tools.create_context("FakeContext")
 
     def because_we_run_an_assertion(self):
-        self.reporter.suite_started(tools.create_suite())
+        self.reporter.test_run_started(tools.create_test_run())
         self.outputs.append(self.stringio.getvalue())
 
         self.reporter.context_started(self.context)
@@ -146,7 +146,7 @@ class WhenAnAssertionFailsInTeamCity(TeamCitySharedContext):
         self.outputs.append(self.stringio.getvalue())
         self.reporter.context_ended(self.context)
 
-        self.reporter.suite_ended(tools.create_suite())
+        self.reporter.test_run_ended(tools.create_test_run())
         self.outputs.append(self.stringio.getvalue())
 
     def it_should_not_print_anything_to_the_real_stdout(self):
@@ -173,9 +173,9 @@ class WhenAnAssertionFailsInTeamCity(TeamCitySharedContext):
     def it_should_not_report_anything_else_at_assertion_end(self):
         self.get_output(2).should.have.length_of(4)
 
-    def it_should_tell_team_city_the_suite_ended(self):
+    def it_should_tell_team_city_the_test_run_ended(self):
         self.get_output(3)[0].should.equal(("testSuiteFinished", {'name':'contexts'}))
-    def it_should_not_report_anything_else_at_suite_end(self):
+    def it_should_not_report_anything_else_at_test_run_end(self):
         self.get_output(3).should.have.length_of(1)
 
     def cleanup_stdout_and_stderr(self):
@@ -187,7 +187,7 @@ class WhenAnAssertionErrorsInTeamCity(TeamCitySharedContext):
         self.real_stdout, self.real_stderr = sys.stdout, sys.stderr
         sys.stdout, sys.stderr = self.fake_stdout, self.fake_stderr = StringIO(), StringIO()
 
-        self.suite = tools.create_suite()
+        self.test_run = tools.create_test_run()
         tb = [('made_up_file_3.py', 1, 'made_up_function_3', 'frame3'),
                ('made_up_file_4.py', 2, 'made_up_function_4', 'frame4')]
         self.exception = tools.build_fake_exception(tb, "you fail")
@@ -202,7 +202,7 @@ class WhenAnAssertionErrorsInTeamCity(TeamCitySharedContext):
         self.assertion = tools.create_assertion("FakeAssertion4")
 
     def because_we_run_an_assertion(self):
-        self.reporter.suite_started(self.suite)
+        self.reporter.test_run_started(self.test_run)
         self.outputs.append(self.stringio.getvalue())
 
         self.reporter.context_started(self.context)
@@ -214,7 +214,7 @@ class WhenAnAssertionErrorsInTeamCity(TeamCitySharedContext):
         self.outputs.append(self.stringio.getvalue())
         self.reporter.context_ended(self.context)
 
-        self.reporter.suite_ended(self.suite)
+        self.reporter.test_run_ended(self.test_run)
         self.outputs.append(self.stringio.getvalue())
 
     def it_should_not_print_anything_to_the_real_stdout(self):
@@ -241,9 +241,9 @@ class WhenAnAssertionErrorsInTeamCity(TeamCitySharedContext):
     def it_should_not_report_anything_else_at_assertion_end(self):
         self.get_output(2).should.have.length_of(4)
 
-    def it_should_tell_team_city_the_suite_ended(self):
+    def it_should_tell_team_city_the_test_run_ended(self):
         self.get_output(3)[0].should.equal(("testSuiteFinished", {'name':'contexts'}))
-    def it_should_not_report_anything_else_at_suite_end(self):
+    def it_should_not_report_anything_else_at_test_run_end(self):
         self.get_output(3).should.have.length_of(1)
 
     def cleanup_stdout_and_stderr(self):
@@ -255,7 +255,7 @@ class WhenAContextErrorsInTeamCity(TeamCitySharedContext):
         self.real_stdout, self.real_stderr = sys.stdout, sys.stderr
         sys.stdout, sys.stderr = self.fake_stdout, self.fake_stderr = StringIO(), StringIO()
 
-        self.suite = tools.create_suite()
+        self.test_run = tools.create_test_run()
         tb = [('made_up_file_5.py', 1, 'made_up_function_5', 'frame5'),
                ('made_up_file_6.py', 2, 'made_up_function_6', 'frame6')]
         self.exception = tools.build_fake_exception(tb, "oh dear")
@@ -270,7 +270,7 @@ class WhenAContextErrorsInTeamCity(TeamCitySharedContext):
         self.ctx = tools.create_context("FakeContext")
 
     def because_we_run_an_assertion(self):
-        self.reporter.suite_started(self.suite)
+        self.reporter.test_run_started(self.test_run)
         self.outputs.append(self.stringio.getvalue())
 
         self.reporter.context_started(self.ctx)
@@ -279,7 +279,7 @@ class WhenAContextErrorsInTeamCity(TeamCitySharedContext):
         self.reporter.context_errored(self.ctx, self.exception)
         self.outputs.append(self.stringio.getvalue())
 
-        self.reporter.suite_ended(self.suite)
+        self.reporter.test_run_ended(self.test_run)
         self.outputs.append(self.stringio.getvalue())
 
     def it_should_not_print_anything_to_the_real_stdout(self):
@@ -304,9 +304,9 @@ class WhenAContextErrorsInTeamCity(TeamCitySharedContext):
     def it_should_not_report_anything_else_following_the_ctx_error(self):
         self.get_output(1).should.have.length_of(5)
 
-    def it_should_tell_team_city_the_suite_ended(self):
+    def it_should_tell_team_city_the_test_run_ended(self):
         self.get_output(2)[0].should.equal(("testSuiteFinished", {'name':'contexts'}))
-    def it_should_not_report_anything_else_at_suite_end(self):
+    def it_should_not_report_anything_else_at_test_run_end(self):
         self.get_output(2).should.have.length_of(1)
 
     def cleanup_stdout_and_stderr(self):
@@ -317,7 +317,7 @@ class WhenAnUnexpectedErrorOccursInTeamCity(TeamCitySharedContext):
     def establish_the_exception(self):
         tb = [('made_up_file_7.py', 1, 'made_up_function_7', 'frame7'),
                ('made_up_file_8.py', 2, 'made_up_function_8', 'frame8')]
-        self.suite = tools.create_suite()
+        self.test_run = tools.create_test_run()
         self.exception = tools.build_fake_exception(tb, "another exception")
         self.formatted_tb = (
 'Traceback (most recent call last):|n'
@@ -331,11 +331,11 @@ class WhenAnUnexpectedErrorOccursInTeamCity(TeamCitySharedContext):
         # unexpected error happens when (for example) a syntax error occurs
         # in the user's test code. Very unlikely that anything will have been printed
         # at this stage.
-        self.reporter.suite_started(self.suite)
+        self.reporter.test_run_started(self.test_run)
         self.outputs.append(self.stringio.getvalue())
 
         self.reporter.unexpected_error(self.exception)
-        self.reporter.suite_ended(self.suite)
+        self.reporter.test_run_ended(self.test_run)
 
         self.outputs.append(self.stringio.getvalue())
 
@@ -348,7 +348,7 @@ class WhenAnUnexpectedErrorOccursInTeamCity(TeamCitySharedContext):
         self.get_output(1)[0].should.equal(("testStarted", {'name':'Test error'}))
         self.get_output(1)[1].should.equal(("testFailed", {'name':'Test error', 'message':'test.tools.FakeException: another exception', 'details':self.formatted_tb}))
         self.get_output(1)[2].should.equal(("testFinished", {'name':'Test error'}))
-    def it_should_tell_team_city_the_suite_ended(self):
+    def it_should_tell_team_city_the_test_run_ended(self):
         self.get_output(1)[3].should.equal(("testSuiteFinished", {'name':'contexts'}))
     def it_should_not_report_anything_else_following_unexpected_error(self):
         self.get_output(1).should.have.length_of(4)

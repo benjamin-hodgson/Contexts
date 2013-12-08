@@ -9,10 +9,10 @@ class MockReporter(object):
         self.calls = []
         self.failed = False
 
-    def suite_started(self, suite):
-        self.calls.append(('suite_started', suite))
-    def suite_ended(self, suite):
-        self.calls.append(('suite_ended', suite))
+    def test_run_started(self, test_run):
+        self.calls.append(('test_run_started', test_run))
+    def test_run_ended(self, test_run):
+        self.calls.append(('test_run_ended', test_run))
 
     def context_started(self, context):
         self.calls.append(('context_started', context))
@@ -115,8 +115,8 @@ def build_fake_assertion_error(*args):
     return build_fake_exception(*args, cls=FakeAssertionError)
 
 
-def create_suite():
-    return contexts.core.Suite(types.ModuleType(''), True)
+def create_test_run():
+    return contexts.core.TestRun(types.ModuleType(''), True)
 
 
 def create_context(name='context', example=contexts.core._NullExample()):

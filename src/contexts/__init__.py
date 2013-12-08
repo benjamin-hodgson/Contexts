@@ -44,7 +44,7 @@ def run(to_run=None, reporters=None, shuffle=True):
     if to_run is None:
         to_run = sys.modules['__main__']
 
-    suite = core.Suite(to_run, shuffle)
-    suite.run(notifier)
+    test_run = core.TestRun(to_run, shuffle)
+    test_run.run(notifier)
 
     return not notifier.failed
