@@ -36,6 +36,9 @@ class TestRun(object):
         else:
             list_of_lists = [[self.source]]
 
+        if self.shuffle:
+            random.shuffle(list_of_lists)
+
         ret = []
         for l in list_of_lists:
             if self.shuffle:
