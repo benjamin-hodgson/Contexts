@@ -46,6 +46,7 @@ class Suite(object):
     def __init__(self, module, shuffle):
         self.module = module
         self.shuffle = shuffle
+        self.name = self.module.__name__
 
     def run(self, reporter_notifier):
         with reporter_notifier.run_suite(self):

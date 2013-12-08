@@ -31,8 +31,10 @@ class WhenRunningAModule:
         self.module.HasWhenInTheName = HasWhenInTheName
         self.module.NormalClass = NormalClass
 
+        self.reporter = SpyReporter()
+
     def because_we_run_the_module(self):
-        contexts.run(self.module, [SpyReporter()])
+        contexts.run(self.module, [self.reporter])
 
     def it_should_run_the_spec(self):
         self.module.HasSpecInTheName.was_run.should.be.true
@@ -42,6 +44,18 @@ class WhenRunningAModule:
 
     def it_should_not_instantiate_the_normal_class(self):
         self.module.NormalClass.was_instantiated.should.be.false
+
+    def it_should_call_suite_started(self):
+        self.reporter.calls[1][0].should.equal("suite_started")
+
+    def it_should_pass_the_suite_object_into_suite_started(self):
+        self.reporter.calls[1][1].name.should.equal('fake_specs')
+
+    def it_should_call_suite_ended(self):
+        self.reporter.calls[-2][0].should.equal("suite_ended")
+
+    def it_should_pass_the_suite_object_into_suite_ended(self):
+        self.reporter.calls[-2][1].name.should.equal('fake_specs')
 
 
 class WhenRunningTheSameModuleMultipleTimes:
@@ -86,15 +100,28 @@ class TestSpec:
         self.old_sys_dot_path = sys.path[:]
         self.module_name = "test_file"
         self.write_file()
+        self.reporter = SpyReporter()
 
     def because_we_run_the_file(self):
-        contexts.run(self.filename, [SpyReporter()])
+        contexts.run(self.filename, [self.reporter])
 
     def it_should_import_the_file(self):
         sys.modules.should.contain(self.module_name)
 
     def it_should_run_the_specs(self):
         sys.modules[self.module_name].module_ran.should.be.true
+
+    def it_should_call_suite_started(self):
+        self.reporter.calls[1][0].should.equal("suite_started")
+
+    def it_should_pass_the_suite_object_into_suite_started(self):
+        self.reporter.calls[1][1].name.should.equal(self.module_name)
+
+    def it_should_call_suite_ended(self):
+        self.reporter.calls[-2][0].should.equal("suite_ended")
+
+    def it_should_pass_the_suite_object_into_suite_ended(self):
+        self.reporter.calls[-2][1].name.should.equal(self.module_name)
 
     def it_should_not_modify_sys_dot_path(self):
         sys.path.should.equal(self.old_sys_dot_path)
@@ -167,8 +194,10 @@ class TestSpec:
         self.create_folder()
         self.write_files()
 
+        self.reporter = SpyReporter()
+
     def because_we_run_the_folder(self):
-        contexts.run(self.folder_path, [SpyReporter()])
+        contexts.run(self.folder_path, [self.reporter])
 
     def it_should_import_the_first_module(self):
         sys.modules.should.contain(self.module_names[0])
@@ -184,6 +213,22 @@ class TestSpec:
 
     def it_should_not_run_the_non_test_module(self):
         sys.modules.should_not.contain(self.module_names[2])
+
+    def it_should_call_suite_started_for_both_modules(self):
+        self.reporter.calls[1][0].should.equal('suite_started')
+        self.reporter.calls[7][0].should.equal('suite_started')
+
+    def it_should_pass_the_suites_into_suite_started(self):
+        names = {call[1].name for call in self.reporter.calls if call[0] == 'suite_started'}
+        names.should.equal({'test_file1', 'test_file2'})
+
+    def it_should_call_suite_ended_for_both_modules(self):
+        self.reporter.calls[6][0].should.equal('suite_ended')
+        self.reporter.calls[12][0].should.equal('suite_ended')
+
+    def it_should_pass_the_suites_into_suite_ended(self):
+        names = {call[1].name for call in self.reporter.calls if call[0] == 'suite_ended'}
+        names.should.equal({'test_file1', 'test_file2'})
 
     def it_should_not_modify_sys_dot_path(self):
         sys.path.should.equal(self.old_sys_dot_path)
@@ -328,8 +373,10 @@ class TestSpec:
         self.create_folder()
         self.write_files()
 
+        self.reporter = SpyReporter()
+
     def because_we_run_the_folder(self):
-        contexts.run(self.folder_path, [SpyReporter()])
+        contexts.run(self.folder_path, [self.reporter])
 
     def it_should_import_the_package(self):
         sys.modules.should.contain(self.package_name)
@@ -362,6 +409,24 @@ class TestSpec:
 
     def it_should_run_the_second_module(self):
         sys.modules[self.package_name + '.' + self.module_names[2]].module_ran.should.be.true
+
+    def it_should_call_suite_started_for_three_modules(self):
+        self.reporter.calls[1][0].should.equal('suite_started')
+        self.reporter.calls[7][0].should.equal('suite_started')
+        self.reporter.calls[13][0].should.equal('suite_started')
+
+    def it_should_pass_the_suites_into_suite_started(self):
+        names = {call[1].name for call in self.reporter.calls if call[0] == 'suite_started'}
+        names.should.equal({'package_folder', 'package_folder.test_file1', 'package_folder.test_file2'})
+
+    def it_should_call_suite_ended_for_three_modules(self):
+        self.reporter.calls[6][0].should.equal('suite_ended')
+        self.reporter.calls[12][0].should.equal('suite_ended')
+        self.reporter.calls[18][0].should.equal('suite_ended')
+
+    def it_should_pass_the_suites_into_suite_ended(self):
+        names = {call[1].name for call in self.reporter.calls if call[0] == 'suite_ended'}
+        names.should.equal({'package_folder', 'package_folder.test_file1', 'package_folder.test_file2'})
 
     def it_should_not_modify_sys_dot_path(self):
         sys.path.should.equal(self.old_sys_dot_path)
@@ -404,8 +469,10 @@ class TestSpec:
         }
         self.create_tree()
 
+        self.reporter = SpyReporter()
+
     def because_we_run_the_folder(self):
-        contexts.run(self.folder_path, [SpyReporter()])
+        contexts.run(self.folder_path, [self.reporter])
 
     def it_should_import_the_file_in_the_test_folder(self):
         sys.modules.should.contain("test_file1")
@@ -442,6 +509,24 @@ class TestSpec:
         sys.modules.should_not.contain("__init__")
         sys.modules.should_not.contain("test_subpackage.__init__")
         sys.modules.should_not.contain("another_subpackage.__init__")
+
+    def it_should_call_suite_started_for_three_modules(self):
+        self.reporter.calls[1][0].should.equal('suite_started')
+        self.reporter.calls[7][0].should.equal('suite_started')
+        self.reporter.calls[13][0].should.equal('suite_started')
+
+    def it_should_pass_the_suites_into_suite_started(self):
+        names = {call[1].name for call in self.reporter.calls if call[0] == 'suite_started'}
+        names.should.equal({'test_file1', 'test_subpackage', 'test_subpackage.test_file2'})
+
+    def it_should_call_suite_ended_for_three_modules(self):
+        self.reporter.calls[6][0].should.equal('suite_ended')
+        self.reporter.calls[12][0].should.equal('suite_ended')
+        self.reporter.calls[18][0].should.equal('suite_ended')
+
+    def it_should_pass_the_suites_into_suite_ended(self):
+        names = {call[1].name for call in self.reporter.calls if call[0] == 'suite_ended'}
+        names.should.equal({'test_file1', 'test_subpackage', 'test_subpackage.test_file2'})
 
     def it_should_not_modify_sys_dot_path(self):
         sys.path.should.equal(self.old_sys_dot_path)
@@ -484,10 +569,11 @@ class TestSpec:
             "another_subpackage": ["__init__", "test_file4"]
         }
         self.create_tree()
+        self.reporter = SpyReporter()
 
 
     def because_we_run_the_package(self):
-        contexts.run(self.folder_path, [SpyReporter()])
+        contexts.run(self.folder_path, [self.reporter])
 
     def it_should_import_the_file_in_the_test_folder(self):
         sys.modules.should.contain("test_file1")
@@ -537,6 +623,26 @@ class TestSpec:
         sys.modules.should_not.contain("package4.test_subpackage.__init__")
         sys.modules.should_not.contain("another_subpackage.__init__")
         sys.modules.should_not.contain("package4.another_subpackage.__init__")
+
+    def it_should_call_suite_started_for_four_modules(self):
+        self.reporter.calls[1][0].should.equal('suite_started')
+        self.reporter.calls[7][0].should.equal('suite_started')
+        self.reporter.calls[13][0].should.equal('suite_started')
+        self.reporter.calls[19][0].should.equal('suite_started')
+
+    def it_should_pass_the_suites_into_suite_started(self):
+        names = {call[1].name for call in self.reporter.calls if call[0] == 'suite_started'}
+        names.should.equal({'package4', 'package4.test_subpackage', 'package4.test_subpackage.test_file2', 'test_file1'})
+
+    def it_should_call_suite_ended_for_four_modules(self):
+        self.reporter.calls[6][0].should.equal('suite_ended')
+        self.reporter.calls[12][0].should.equal('suite_ended')
+        self.reporter.calls[18][0].should.equal('suite_ended')
+        self.reporter.calls[24][0].should.equal('suite_ended')
+
+    def it_should_pass_the_suites_into_suite_ended(self):
+        names = {call[1].name for call in self.reporter.calls if call[0] == 'suite_ended'}
+        names.should.equal({'package4', 'package4.test_subpackage', 'package4.test_subpackage.test_file2', 'test_file1'})
 
     def it_should_not_modify_sys_dot_path(self):
         sys.path.should.equal(self.old_sys_dot_path)
