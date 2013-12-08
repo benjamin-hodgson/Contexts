@@ -13,116 +13,130 @@ class TeamCitySharedContext:
         self.reporter = teamcity.TeamCityReporter(self.stringio)
         self.outputs = []
 
-    def get_output(self, n):
-        full_output_n = self.outputs[n].strip()
-        list_n = full_output_n.split('\n')
-        if n != 0:
-            full_output_n_minus_1 = self.outputs[n-1].strip()
-            list_n_minus_1 = full_output_n_minus_1.split('\n')
-            list_n = list_n[len(list_n_minus_1):]
-        return [teamcity_parse(s) for s in list_n]
+    def parse_line(self, n):
+        if n < 0:  # to hide the fact that the last line will be empty
+            n -= 1
+        return teamcity_parse(self.stringio.getvalue().split('\n')[n])
 
 
-class WhenATestRunPassesInTeamCity(TeamCitySharedContext):
-    def establish_that_we_are_spying_on_stdout_and_stderr(self):
+###########################################################
+# Suite tests
+###########################################################
+
+class WhenASuiteStartsInTeamCity(TeamCitySharedContext):
+    def because_the_suite_starts(self):
+        self.reporter.suite_started(tools.create_suite('test_suite'))
+    def it_should_tell_team_city_the_suite_started(self):
+        teamcity_parse(self.stringio.getvalue()).should.equal(("testSuiteStarted", {'name':'test suite'}))
+
+
+class WhenASuiteEndsInTeamCity(TeamCitySharedContext):
+    def because_the_suite_ends(self):
+        self.reporter.suite_ended(tools.create_suite('mah_suite'))
+    def it_should_tell_team_city_the_suite_ended(self):
+        teamcity_parse(self.stringio.getvalue()).should.equal(("testSuiteFinished", {'name':'mah suite'}))
+
+
+###########################################################
+# assertion_started tests
+###########################################################
+
+class WhenAnAssertionStartsInTeamCity(TeamCitySharedContext):
+    def establish_that_a_context_is_running(self):
+        context = tools.create_context('MyNiceContext')
+        self.assertion = tools.create_assertion('aLovelyAssertion')
+        self.reporter.context_started(context)
+
+    def because_the_assertion_starts(self):
+        self.reporter.assertion_started(self.assertion)
+
+    def it_should_tell_team_city_it_started(self):
+        self.parse_line(0).should.equal(("testStarted", {'name':'My nice context -> a lovely assertion'}))
+
+
+class WhenAnAssertionInAContextWithExamplesStartsInTeamCity(TeamCitySharedContext):
+    @contexts.setup
+    def establish_that_a_context_with_an_example_is_running(self):
+        context = tools.create_context('ContextWithExamples', 12.3)
+        self.assertion = tools.create_assertion('aLovelyAssertion')
+        self.reporter.context_started(context)
+
+    def because_the_assertion_starts(self):
+        self.reporter.assertion_started(self.assertion)
+
+    @contexts.assertion
+    def it_should_report_the_example(self):
+        self.parse_line(0)[1]['name'].should.equal('Context with examples -> 12.3 -> a lovely assertion')
+
+
+###########################################################
+# assertion_passed tests
+###########################################################
+
+class WhenAnAssertionPassesInTeamCity(TeamCitySharedContext):
+    def establish_that_a_context_is_running(self):
+        context = tools.create_context('MyNiceContext')
+        self.assertion = tools.create_assertion('aLovelyAssertion')
+        self.reporter.context_started(context)
+    def because_the_assertion_ends(self):
+        self.reporter.assertion_passed(self.assertion)
+    def it_should_tell_team_city_it_passed(self):
+        self.parse_line(0).should.equal(("testFinished", {'name':'My nice context -> a lovely assertion'}))
+
+
+class WhenAnAssertionInAContextWithExamplesPassesInTeamCity(TeamCitySharedContext):
+    @contexts.setup
+    def establish_that_a_context_with_an_example_is_running(self):
+        context = tools.create_context('ContextWithExamples', 12.3)
+        self.assertion = tools.create_assertion('aLovelyAssertion')
+        self.reporter.context_started(context)
+    def because_the_assertion_passes(self):
+        self.reporter.assertion_passed(self.assertion)
+    @contexts.assertion
+    def it_should_report_the_example(self):
+        self.parse_line(0)[1]['name'].should.equal('Context with examples -> 12.3 -> a lovely assertion')
+
+
+class WhenSomethingGetsPrintedDuringAPassingAssertionInTeamCity(TeamCitySharedContext):
+    def establish_that_something_has_been_printed(self):
         self.real_stdout, self.real_stderr = sys.stdout, sys.stderr
         sys.stdout, sys.stderr = self.fake_stdout, self.fake_stderr = StringIO(), StringIO()
 
-        self.expected_suite_name = 'test suite'
-        self.suite = tools.create_suite('test_suite')
-        self.ctx1 = tools.create_context("FakeContext")
-        self.ctx2 = tools.create_context("FakeContext2", ["abc", 123, None])
-        self.assertion1 = tools.create_assertion("FakeAssertion1")
-        self.assertion2 = tools.create_assertion("FakeAssertion2")
-        self.assertion3 = tools.create_assertion("FakeAssertion3")
+        context = tools.create_context('Context')
+        self.assertion = tools.create_assertion('assertion')
 
-    def because_we_run_some_assertions(self):
-        self.reporter.suite_started(self.suite)
-        self.outputs.append(self.stringio.getvalue())
-
-        self.reporter.context_started(self.ctx1)
+        self.reporter.context_started(context)
         print("to stdout")
         print("to stderr", file=sys.stderr)
-        self.reporter.assertion_started(self.assertion1)
-        self.outputs.append(self.stringio.getvalue())
-        self.reporter.assertion_passed(self.assertion1)
-        self.outputs.append(self.stringio.getvalue())
-        self.reporter.assertion_started(self.assertion2)
-        self.outputs.append(self.stringio.getvalue())
-        print("to stdout again")
-        self.reporter.assertion_passed(self.assertion2)
-        self.outputs.append(self.stringio.getvalue())
-        self.reporter.context_ended(self.ctx1)
 
-        self.reporter.context_started(self.ctx2)
-        self.reporter.assertion_started(self.assertion3)
-        self.reporter.assertion_passed(self.assertion3)
-        self.reporter.context_ended(self.ctx2)
-        self.outputs.append(self.stringio.getvalue())
+    def because_the_assertion_passes(self):
+        self.reporter.assertion_passed(self.assertion)
 
-        self.reporter.suite_ended(self.suite)
-        self.outputs.append(self.stringio.getvalue())
-
-    def it_should_not_print_anything_to_the_real_stdout(self):
+    def it_should_not_print_anything_to_stdout(self):
         self.fake_stdout.getvalue().should.be.empty
-    def it_should_not_print_anything_to_the_real_stderr(self):
-        self.fake_stdout.getvalue().should.be.empty
+    def it_should_not_print_anything_to_stderr(self):
+        self.fake_stderr.getvalue().should.be.empty
 
-    def it_should_tell_team_city_the_suite_started(self):
-        self.get_output(0)[0].should.equal(("testSuiteStarted", {'name':self.expected_suite_name}))
-    def it_should_not_report_anything_else_at_start(self):
-        self.get_output(0).should.have.length_of(1)
-
-    def it_should_tell_team_city_the_first_assertion_started(self):
-        self.get_output(1)[0].should.equal(("testStarted", {'name':'Fake context -> Fake assertion 1'}))
-    def it_should_not_report_anything_else_at_first_assertion_start(self):
-        self.get_output(1).should.have.length_of(1)
-    def it_should_tell_team_city_what_went_to_stdout_the_first_time(self):
-        self.get_output(2)[0].should.equal(("testStdOut", {'name':'Fake context -> Fake assertion 1', 'out':'to stdout|n'}))
-    def it_should_tell_team_city_what_went_to_stderr_the_first_time(self):
-        self.get_output(2)[1].should.equal(("testStdErr", {'name':'Fake context -> Fake assertion 1', 'out':'to stderr|n'}))
-    def it_should_tell_team_city_the_first_assertion_passed(self):
-        self.get_output(2)[2].should.equal(("testFinished", {'name':'Fake context -> Fake assertion 1'}))
-    def it_should_not_report_anything_else_at_first_assertion_end(self):
-        self.get_output(2).should.have.length_of(3)
-
-    def it_should_tell_team_city_the_second_assertion_started(self):
-        self.get_output(3)[0].should.equal(("testStarted", {'name':'Fake context -> Fake assertion 2'}))
-    def it_should_not_report_anything_else_at_second_assertion_start(self):
-        self.get_output(3).should.have.length_of(1)
-    def it_should_tell_team_city_what_went_to_stdout_the_second_time(self):
-        self.get_output(4)[0].should.equal(("testStdOut", {'name':'Fake context -> Fake assertion 2', 'out':'to stdout|nto stdout again|n'}))
-    def it_should_tell_team_city_what_went_to_stderr_the_second_time(self):
-        self.get_output(4)[1].should.equal(("testStdErr", {'name':'Fake context -> Fake assertion 2', 'out':'to stderr|n'}))
-    def it_should_tell_team_city_the_second_assertion_passed(self):
-        self.get_output(4)[2].should.equal(("testFinished", {'name':'Fake context -> Fake assertion 2'}))
-    def it_should_not_report_anything_else_at_second_assertion_end(self):
-        self.get_output(4).should.have.length_of(3)
-
-    def it_should_report_the_exmpl(self):
-        # also asserting that nothing about stdout comes out here
-        self.get_output(5)[0].should.equal(("testStarted", {'name':"Fake context 2 -> |[|'abc|', 123, None|] -> Fake assertion 3"}))
-        self.get_output(5)[1].should.equal(("testFinished", {'name':"Fake context 2 -> |[|'abc|', 123, None|] -> Fake assertion 3"}))
-    @contexts.assertion
-    def it_should_not_report_anything_following_the_second_context(self):
-        self.get_output(5).should.have.length_of(2)
-
-    def it_should_tell_team_city_the_suite_ended(self):
-        self.get_output(6)[0].should.equal(("testSuiteFinished", {'name':self.expected_suite_name}))
-    def it_should_not_report_anything_else_at_suite_end(self):
-        self.get_output(6).should.have.length_of(1)
+    def it_should_report_what_went_to_stdout(self):
+        self.parse_line(0).should.equal(("testStdOut", {'name':'Context -> assertion', 'out':'to stdout|n'}))
+    def it_should_report_what_went_to_stderr(self):
+        self.parse_line(1).should.equal(("testStdErr", {'name':'Context -> assertion', 'out':'to stderr|n'}))
 
     def cleanup_stdout_and_stderr(self):
         sys.stdout, sys.stderr = self.real_stdout, self.real_stderr
 
 
+###########################################################
+# assertion_failed tests
+###########################################################
+
 class WhenAnAssertionFailsInTeamCity(TeamCitySharedContext):
-    def establish_that_we_are_spying_on_stdout_and_stderr(self):
-        self.real_stdout, self.real_stderr = sys.stdout, sys.stderr
-        sys.stdout, sys.stderr = self.fake_stdout, self.fake_stderr = StringIO(), StringIO()
+    def establish_that_a_context_is_running(self):
+        context = tools.create_context('FakeContext')
+        self.assertion = tools.create_assertion('Fake_assertion')
 
         tb = [('made_up_file.py', 3, 'made_up_function', 'frame1'),
-               ('another_made_up_file.py', 2, 'another_made_up_function', 'frame2')]
+              ('another_made_up_file.py', 2, 'another_made_up_function', 'frame2')]
         self.exception = tools.build_fake_assertion_error(tb, "Gotcha")
         self.formatted_tb = (
 'Traceback (most recent call last):|n'
@@ -131,191 +145,235 @@ class WhenAnAssertionFailsInTeamCity(TeamCitySharedContext):
 '  File "another_made_up_file.py", line 2, in another_made_up_function|n'
 '    frame2|n'
 'test.tools.FakeAssertionError: Gotcha')
-        self.assertion = tools.create_assertion("FakeAssertion3")
-        self.context = tools.create_context("FakeContext")
 
-        self.expected_suite_name = 'mah suite'
-        self.suite = tools.create_suite('mah_suite')
+        self.reporter.context_started(context)
 
-    def because_we_run_an_assertion(self):
-        self.reporter.suite_started(self.suite)
-        self.outputs.append(self.stringio.getvalue())
+    def because_the_assertion_fails(self):
+        self.reporter.assertion_failed(self.assertion, self.exception)
 
-        self.reporter.context_started(self.context)
+    def it_should_tell_team_city_it_failed(self):
+        self.parse_line(0).should.equal((
+            "testFailed",
+            {
+                'name':'Fake context -> Fake assertion',
+                'message':'test.tools.FakeAssertionError: Gotcha',
+                'details':self.formatted_tb
+            }))
+    def it_should_tell_team_city_it_finished(self):
+        self.parse_line(1).should.equal(("testFinished", {'name':'Fake context -> Fake assertion'}))
+
+
+class WhenAnAssertionInAContextWithExamplesFailsInTeamCity(TeamCitySharedContext):
+    @contexts.setup
+    def establish_that_a_context_with_an_example_is_running(self):
+        context = tools.create_context('ContextWithExamples', 12.3)
+        self.assertion = tools.create_assertion('aLovelyAssertion')
+
+        self.reporter.context_started(context)
+
+    def because_the_assertion_fails(self):
+        self.reporter.assertion_failed(self.assertion, Exception())
+
+    @contexts.assertion
+    def it_should_report_the_example(self):
+        self.parse_line(0)[1]['name'].should.equal('Context with examples -> 12.3 -> a lovely assertion')
+
+
+class WhenSomethingGetsPrintedDuringAFailingAssertionInTeamCity(TeamCitySharedContext):
+    def establish_that_something_has_been_printed(self):
+        self.real_stdout, self.real_stderr = sys.stdout, sys.stderr
+        sys.stdout, sys.stderr = self.fake_stdout, self.fake_stderr = StringIO(), StringIO()
+
+        context = tools.create_context('Context')
+        self.assertion = tools.create_assertion('assertion')
+
+        self.reporter.context_started(context)
         print("to stdout")
         print("to stderr", file=sys.stderr)
-        self.reporter.assertion_started(self.assertion)
-        self.outputs.append(self.stringio.getvalue())
-        self.reporter.assertion_failed(self.assertion, self.exception)
-        self.outputs.append(self.stringio.getvalue())
-        self.reporter.context_ended(self.context)
 
-        self.reporter.suite_ended(self.suite)
-        self.outputs.append(self.stringio.getvalue())
+    def because_the_assertion_fails(self):
+        self.reporter.assertion_failed(self.assertion, Exception())
 
-    def it_should_not_print_anything_to_the_real_stdout(self):
+    def it_should_not_print_anything_to_stdout(self):
         self.fake_stdout.getvalue().should.be.empty
-    def it_should_not_print_anything_to_the_real_stderr(self):
-        self.fake_stdout.getvalue().should.be.empty
+    def it_should_not_print_anything_to_stderr(self):
+        self.fake_stderr.getvalue().should.be.empty
 
-    def it_should_tell_team_city_it_started(self):
-        self.get_output(0)[0].should.equal(("testSuiteStarted", {'name':self.expected_suite_name}))
-    def it_should_not_report_anything_else_at_start(self):
-        self.get_output(0).should.have.length_of(1)
-
-    def it_should_tell_team_city_the_assertion_started(self):
-        self.get_output(1)[0].should.equal(("testStarted", {'name':'Fake context -> Fake assertion 3'}))
-    def it_should_not_report_anything_else_at_assertion_start(self):
-        self.get_output(1).should.have.length_of(1)
-    def it_should_tell_team_city_what_went_to_stdout(self):
-        self.get_output(2)[0].should.equal(("testStdOut", {'name':'Fake context -> Fake assertion 3', 'out':'to stdout|n'}))
-    def it_should_tell_team_city_what_went_to_stderr(self):
-        self.get_output(2)[1].should.equal(("testStdErr", {'name':'Fake context -> Fake assertion 3', 'out':'to stderr|n'}))
-    def it_should_tell_team_city_the_assertion_failed(self):
-        self.get_output(2)[2].should.equal(("testFailed", {'name':'Fake context -> Fake assertion 3', 'message':'test.tools.FakeAssertionError: Gotcha', 'details':self.formatted_tb}))
-        self.get_output(2)[3].should.equal(("testFinished", {'name':'Fake context -> Fake assertion 3'}))
-    def it_should_not_report_anything_else_at_assertion_end(self):
-        self.get_output(2).should.have.length_of(4)
-
-    def it_should_tell_team_city_the_suite_ended(self):
-        self.get_output(3)[0].should.equal(("testSuiteFinished", {'name':self.expected_suite_name}))
-    def it_should_not_report_anything_else_at_suite_end(self):
-        self.get_output(3).should.have.length_of(1)
+    def it_should_report_what_went_to_stdout(self):
+        self.parse_line(0).should.equal(("testStdOut", {'name':'Context -> assertion', 'out':'to stdout|n'}))
+    def it_should_report_what_went_to_stderr(self):
+        self.parse_line(1).should.equal(("testStdErr", {'name':'Context -> assertion', 'out':'to stderr|n'}))
 
     def cleanup_stdout_and_stderr(self):
         sys.stdout, sys.stderr = self.real_stdout, self.real_stderr
 
 
+###########################################################
+# assertion_errored tests
+###########################################################
+
 class WhenAnAssertionErrorsInTeamCity(TeamCitySharedContext):
-    def establish_that_we_are_spying_on_stdout_and_stderr(self):
+    def establish_that_a_context_is_running(self):
+        context = tools.create_context('FakeContext')
+        self.assertion = tools.create_assertion('Fake_assertion')
+
+        tb = [('made_up_file.py', 3, 'made_up_function', 'frame1'),
+              ('another_made_up_file.py', 2, 'another_made_up_function', 'frame2')]
+        self.exception = tools.build_fake_assertion_error(tb, "Gotcha")
+        self.formatted_tb = (
+'Traceback (most recent call last):|n'
+'  File "made_up_file.py", line 3, in made_up_function|n'
+'    frame1|n'
+'  File "another_made_up_file.py", line 2, in another_made_up_function|n'
+'    frame2|n'
+'test.tools.FakeAssertionError: Gotcha')
+
+        self.reporter.context_started(context)
+
+    def because_the_assertion_errors(self):
+        self.reporter.assertion_errored(self.assertion, self.exception)
+
+    def it_should_tell_team_city_it_failed(self):
+        self.parse_line(0).should.equal((
+            "testFailed",
+            {
+                'name':'Fake context -> Fake assertion',
+                'message':'test.tools.FakeAssertionError: Gotcha',
+                'details':self.formatted_tb
+            }))
+    def it_should_tell_team_city_it_finished(self):
+        self.parse_line(1).should.equal(("testFinished", {'name':'Fake context -> Fake assertion'}))
+
+
+class WhenAnAssertionInAContextWithExamplesErrorsInTeamCity(TeamCitySharedContext):
+    @contexts.setup
+    def establish_that_a_context_with_an_example_is_running(self):
+        context = tools.create_context('ContextWithExamples', 12.3)
+        self.assertion = tools.create_assertion('aLovelyAssertion')
+
+        self.reporter.context_started(context)
+
+    def because_the_assertion_errors(self):
+        self.reporter.assertion_errored(self.assertion, Exception())
+
+    @contexts.assertion
+    def it_should_report_the_example(self):
+        self.parse_line(0)[1]['name'].should.equal('Context with examples -> 12.3 -> a lovely assertion')
+
+
+class WhenSomethingGetsPrintedDuringAnErroringAssertionInTeamCity(TeamCitySharedContext):
+    def establish_that_something_has_been_printed(self):
         self.real_stdout, self.real_stderr = sys.stdout, sys.stderr
         sys.stdout, sys.stderr = self.fake_stdout, self.fake_stderr = StringIO(), StringIO()
 
-        self.suite = tools.create_suite()
-        tb = [('made_up_file_3.py', 1, 'made_up_function_3', 'frame3'),
-               ('made_up_file_4.py', 2, 'made_up_function_4', 'frame4')]
-        self.exception = tools.build_fake_exception(tb, "you fail")
-        self.formatted_tb = (
-'Traceback (most recent call last):|n'
-'  File "made_up_file_3.py", line 1, in made_up_function_3|n'
-'    frame3|n'
-'  File "made_up_file_4.py", line 2, in made_up_function_4|n'
-'    frame4|n'
-'test.tools.FakeException: you fail')
         self.context = tools.create_context("FakeContext")
         self.assertion = tools.create_assertion("FakeAssertion4")
 
+        self.reporter.context_started(self.context)
+        print("to stdout")
+        print("to stderr", file=sys.stderr)
+
     def because_we_run_an_assertion(self):
-        self.reporter.suite_started(self.suite)
-        self.outputs.append(self.stringio.getvalue())
+        self.reporter.assertion_errored(self.assertion, Exception())
+
+    def it_should_not_print_anything_to_the_real_stdout(self):
+        self.fake_stdout.getvalue().should.be.empty
+    def it_should_not_print_anything_to_the_real_stderr(self):
+        self.fake_stdout.getvalue().should.be.empty
+
+    def it_should_tell_team_city_what_went_to_stdout(self):
+        self.parse_line(0).should.equal(("testStdOut", {'name':'Fake context -> Fake assertion 4', 'out':'to stdout|n'}))
+    def it_should_tell_team_city_what_went_to_stderr(self):
+        self.parse_line(1).should.equal(("testStdErr", {'name':'Fake context -> Fake assertion 4', 'out':'to stderr|n'}))
+
+    def cleanup_stdout_and_stderr(self):
+        sys.stdout, sys.stderr = self.real_stdout, self.real_stderr
+
+
+###########################################################
+# context_errored tests
+###########################################################
+
+class WhenAContextErrorsInTeamCity(TeamCitySharedContext):
+    def establish_that_a_context_is_running(self):
+        self.context = tools.create_context('FakeContext')
+
+        tb = [('made_up_file.py', 3, 'made_up_function', 'frame1'),
+              ('another_made_up_file.py', 2, 'another_made_up_function', 'frame2')]
+        self.exception = tools.build_fake_exception(tb, "Gotcha")
+        self.formatted_tb = (
+'Traceback (most recent call last):|n'
+'  File "made_up_file.py", line 3, in made_up_function|n'
+'    frame1|n'
+'  File "another_made_up_file.py", line 2, in another_made_up_function|n'
+'    frame2|n'
+'test.tools.FakeException: Gotcha')
+
+        self.reporter.context_started(self.context)
+
+    def because_we_run_an_assertion(self):
+        self.reporter.context_errored(self.context, self.exception)
+
+    def it_should_tell_team_city_a_test_started(self):
+        self.parse_line(0).should.equal(("testStarted", {'name':'Fake context'}))
+    def it_should_tell_team_city_the_test_failed(self):
+        self.parse_line(1).should.equal((
+            "testFailed",
+            {
+                'name':'Fake context',
+                'message':'test.tools.FakeException: Gotcha',
+                'details':self.formatted_tb
+            }))
+    def it_should_tell_team_city_the_test_finished(self):
+        self.parse_line(2).should.equal(("testFinished", {'name':'Fake context'}))
+
+
+class WhenAContextWithExamplesErrorsInTeamCity(TeamCitySharedContext):
+    @contexts.setup
+    def establish_that_a_context_with_an_example_is_running(self):
+        self.context = tools.create_context('ContextWithExamples', 12.3)
+        self.reporter.context_started(self.context)
+
+    @contexts.action
+    def because_the_context_errors(self):
+        self.reporter.context_errored(self.context, Exception())
+
+    @contexts.assertion
+    def it_should_report_the_example(self):
+        self.parse_line(0)[1]['name'].should.equal('Context with examples -> 12.3')
+
+
+class WhenSomethingGetsPrintedDuringAnErroringContextInTeamCity(TeamCitySharedContext):
+    def establish_that_something_has_been_printed(self):
+        self.real_stdout, self.real_stderr = sys.stdout, sys.stderr
+        sys.stdout, sys.stderr = self.fake_stdout, self.fake_stderr = StringIO(), StringIO()
+
+        self.context = tools.create_context("FakeContext")
 
         self.reporter.context_started(self.context)
         print("to stdout")
         print("to stderr", file=sys.stderr)
-        self.reporter.assertion_started(self.assertion)
-        self.outputs.append(self.stringio.getvalue())
-        self.reporter.assertion_errored(self.assertion, self.exception)
-        self.outputs.append(self.stringio.getvalue())
-        self.reporter.context_ended(self.context)
-
-        self.reporter.suite_ended(self.suite)
-        self.outputs.append(self.stringio.getvalue())
-
-    def it_should_not_print_anything_to_the_real_stdout(self):
-        self.fake_stdout.getvalue().should.be.empty
-    def it_should_not_print_anything_to_the_real_stderr(self):
-        self.fake_stdout.getvalue().should.be.empty
-
-    def it_should_tell_team_city_it_started(self):
-        self.get_output(0)[0].should.equal(("testSuiteStarted", {'name':self.suite.name}))
-    def it_should_not_report_anything_else_at_start(self):
-        self.get_output(0).should.have.length_of(1)
-
-    def it_should_tell_team_city_the_assertion_started(self):
-        self.get_output(1)[0].should.equal(("testStarted", {'name':'Fake context -> Fake assertion 4'}))
-    def it_should_not_report_anything_else_at_assertion_start(self):
-        self.get_output(1).should.have.length_of(1)
-    def it_should_tell_team_city_what_went_to_stdout(self):
-        self.get_output(2)[0].should.equal(("testStdOut", {'name':'Fake context -> Fake assertion 4', 'out':'to stdout|n'}))
-    def it_should_tell_team_city_what_went_to_stderr(self):
-        self.get_output(2)[1].should.equal(("testStdErr", {'name':'Fake context -> Fake assertion 4', 'out':'to stderr|n'}))
-    def it_should_output_a_stack_trace_for_the_assertion(self):
-        self.get_output(2)[2].should.equal(("testFailed", {'name':'Fake context -> Fake assertion 4', 'message':'test.tools.FakeException: you fail', 'details':self.formatted_tb}))
-        self.get_output(2)[3].should.equal(("testFinished", {'name':'Fake context -> Fake assertion 4'}))
-    def it_should_not_report_anything_else_at_assertion_end(self):
-        self.get_output(2).should.have.length_of(4)
-
-    def it_should_tell_team_city_the_suite_ended(self):
-        self.get_output(3)[0].should.equal(("testSuiteFinished", {'name':self.suite.name}))
-    def it_should_not_report_anything_else_at_suite_end(self):
-        self.get_output(3).should.have.length_of(1)
-
-    def cleanup_stdout_and_stderr(self):
-        sys.stdout, sys.stderr = self.real_stdout, self.real_stderr
-
-
-class WhenAContextErrorsInTeamCity(TeamCitySharedContext):
-    def establish_that_we_are_spying_on_stdout_and_stderr(self):
-        self.real_stdout, self.real_stderr = sys.stdout, sys.stderr
-        sys.stdout, sys.stderr = self.fake_stdout, self.fake_stderr = StringIO(), StringIO()
-
-        self.suite = tools.create_suite()
-        tb = [('made_up_file_5.py', 1, 'made_up_function_5', 'frame5'),
-               ('made_up_file_6.py', 2, 'made_up_function_6', 'frame6')]
-        self.exception = tools.build_fake_exception(tb, "oh dear")
-        self.formatted_tb = (
-'Traceback (most recent call last):|n'
-'  File "made_up_file_5.py", line 1, in made_up_function_5|n'
-'    frame5|n'
-'  File "made_up_file_6.py", line 2, in made_up_function_6|n'
-'    frame6|n'
-'test.tools.FakeException: oh dear')
-
-        self.ctx = tools.create_context("FakeContext")
 
     def because_we_run_an_assertion(self):
-        self.reporter.suite_started(self.suite)
-        self.outputs.append(self.stringio.getvalue())
-
-        self.reporter.context_started(self.ctx)
-        print("to stdout")
-        print("to stderr", file=sys.stderr)
-        self.reporter.context_errored(self.ctx, self.exception)
-        self.outputs.append(self.stringio.getvalue())
-
-        self.reporter.suite_ended(self.suite)
-        self.outputs.append(self.stringio.getvalue())
+        self.reporter.context_errored(self.context, Exception())
 
     def it_should_not_print_anything_to_the_real_stdout(self):
         self.fake_stdout.getvalue().should.be.empty
     def it_should_not_print_anything_to_the_real_stderr(self):
         self.fake_stdout.getvalue().should.be.empty
 
-    def it_should_tell_team_city_the_suite_started(self):
-        self.get_output(0)[0].should.equal(("testSuiteStarted", {'name':self.suite.name}))
-    def it_should_not_report_anything_else_at_start(self):
-        self.get_output(0).should.have.length_of(1)
-
-    def it_should_tell_team_city_another_test_started(self):
-        self.get_output(1)[0].should.equal(("testStarted", {'name':'Fake context'}))
     def it_should_tell_team_city_what_went_to_stdout(self):
-        self.get_output(1)[1].should.equal(("testStdOut", {'name':'Fake context', 'out':'to stdout|n'}))
+        self.parse_line(1).should.equal(("testStdOut", {'name':'Fake context', 'out':'to stdout|n'}))
     def it_should_tell_team_city_what_went_to_stderr(self):
-        self.get_output(1)[2].should.equal(("testStdErr", {'name':'Fake context', 'out':'to stderr|n'}))
-    def it_should_tell_team_city_the_test_failed(self):
-        self.get_output(1)[3].should.equal(("testFailed", {'name':'Fake context', 'message':'test.tools.FakeException: oh dear', 'details':self.formatted_tb}))
-        self.get_output(1)[4].should.equal(("testFinished", {'name':'Fake context'}))
-    def it_should_not_report_anything_else_following_the_ctx_error(self):
-        self.get_output(1).should.have.length_of(5)
-
-    def it_should_tell_team_city_the_suite_ended(self):
-        self.get_output(2)[0].should.equal(("testSuiteFinished", {'name':self.suite.name}))
-    def it_should_not_report_anything_else_at_suite_end(self):
-        self.get_output(2).should.have.length_of(1)
+        self.parse_line(2).should.equal(("testStdErr", {'name':'Fake context', 'out':'to stderr|n'}))
 
     def cleanup_stdout_and_stderr(self):
         sys.stdout, sys.stderr = self.real_stdout, self.real_stderr
 
+
+###########################################################
+# unexpected_error tests
+###########################################################
 
 class WhenAnUnexpectedErrorOccursInTeamCity(TeamCitySharedContext):
     def establish_the_exception(self):
@@ -331,31 +389,67 @@ class WhenAnUnexpectedErrorOccursInTeamCity(TeamCitySharedContext):
 '    frame8|n'
 'test.tools.FakeException: another exception')
 
-    def because_we_run_some_assertions(self):
-        # unexpected error happens when (for example) a syntax error occurs
-        # in the user's test code. Very unlikely that anything will have been printed
-        # at this stage.
-        self.reporter.suite_started(self.suite)
-        self.outputs.append(self.stringio.getvalue())
-
+    def because_an_unexpected_error_occurs(self):
         self.reporter.unexpected_error(self.exception)
-        self.reporter.suite_ended(self.suite)
 
-        self.outputs.append(self.stringio.getvalue())
+    def it_should_tell_team_city_a_test_started(self):
+        self.parse_line(0).should.equal(("testStarted", {'name':'Test error'}))
+    def it_should_tell_team_city_the_test_failed(self):
+        self.parse_line(1).should.equal((
+            "testFailed",
+            {
+                'name':'Test error',
+                'message':'test.tools.FakeException: another exception',
+                'details':self.formatted_tb
+            }))
+    def it_should_tell_team_city_the_test_finished(self):
+        self.parse_line(2).should.equal(("testFinished", {'name':'Test error'}))
 
-    def it_should_tell_team_city_it_started(self):
-        self.get_output(0)[0].should.equal(("testSuiteStarted", {'name':self.suite.name}))
-    def it_should_not_report_anything_else_at_start(self):
-        self.get_output(0).should.have.length_of(1)
 
-    def it_should_tell_team_city_a_test_started_and_failed_for_the_unexpected_error(self):
-        self.get_output(1)[0].should.equal(("testStarted", {'name':'Test error'}))
-        self.get_output(1)[1].should.equal(("testFailed", {'name':'Test error', 'message':'test.tools.FakeException: another exception', 'details':self.formatted_tb}))
-        self.get_output(1)[2].should.equal(("testFinished", {'name':'Test error'}))
-    def it_should_tell_team_city_the_suite_ended(self):
-        self.get_output(1)[3].should.equal(("testSuiteFinished", {'name':self.suite.name}))
-    def it_should_not_report_anything_else_following_unexpected_error(self):
-        self.get_output(1).should.have.length_of(4)
+###########################################################
+# tests for sequential calls
+###########################################################
+# these are really testing context_ended and context_errored,
+# but sadly we can only observe it through assertion_started
+
+class WhenASecondContextRuns(TeamCitySharedContext):
+    def establish_that_a_context_has_run_and_ended(self):
+        context1 = tools.create_context('the_first_context')
+
+        self.reporter.context_started(context1)
+        self.reporter.context_ended(context1)
+
+        self.context2 = tools.create_context('the_second_context')
+        self.assertion = tools.create_assertion('aLovelyAssertion')
+
+        self.reporter.context_started(self.context2)
+
+    def when_something_gets_sent_to_team_city(self):
+        self.reporter.assertion_started(self.assertion)
+
+    @contexts.assertion
+    def it_should_report_the_name_of_the_current_context(self):
+        self.parse_line(0)[1]['name'].should.equal('the second context -> a lovely assertion')
+
+
+class WhenASecondContextRunsAfterAnError(TeamCitySharedContext):
+    def establish_that_a_context_has_run_and_errored(self):
+        context1 = tools.create_context('the_first_context')
+
+        self.reporter.context_started(context1)
+        self.reporter.context_errored(context1, Exception())
+
+        self.context2 = tools.create_context('the_second_context')
+        self.assertion = tools.create_assertion('aLovelyAssertion')
+
+        self.reporter.context_started(self.context2)
+
+    def when_something_gets_sent_to_team_city(self):
+        self.reporter.assertion_started(self.assertion)
+
+    @contexts.assertion
+    def it_should_report_the_name_of_the_current_context(self):
+        self.parse_line(-1)[1]['name'].should.equal('the second context -> a lovely assertion')
 
 
 class WhenEscapingForTeamCity:
