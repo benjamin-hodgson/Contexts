@@ -339,7 +339,6 @@ class WhenWeRunSpecsWithAlternatelyNamedMethods:
                 self.__class__.log += "act "
             def has_then_in_the_name(self):
                 self.__class__.log += "assert "
-        yield GivenWhenThen, "arrange act assert "
         class AlternatelyNamedMethods:
             log = ""
             @classmethod
@@ -350,20 +349,21 @@ class WhenWeRunSpecsWithAlternatelyNamedMethods:
                 self.__class__.log += "arrange "
             def has_it_in_the_name(self):
                 self.__class__.log += "assert "
-        yield AlternatelyNamedMethods, "test_data arrange assert "
         class MoreAlternativeNames:
             log = ""
             def has_since_in_the_name(self):
                 self.__class__.log += "act "
             def has_must_in_the_name(self):
                 self.__class__.log += "assert "
-        yield MoreAlternativeNames, "act assert "
         class EvenMoreAlternativeNames:
             log = ""
             def has_after_in_the_name(self):
                 self.__class__.log += "act "
             def has_will_in_the_name(self):
                 self.__class__.log += "assert "
+        yield GivenWhenThen, "arrange act assert "
+        yield AlternatelyNamedMethods, "test_data arrange assert "
+        yield MoreAlternativeNames, "act assert "
         yield EvenMoreAlternativeNames, "act assert "
 
     def context(self, example):
@@ -435,7 +435,7 @@ class WhenRunningNotSoAmbiguouslyNamedMethods:
         class NotAmbiguousMethods4:
             @classmethod
             def this_has_both_examples_and_data_in_the_name(self):
-                yield []
+                yield 1
         yield NotAmbiguousMethods1
         yield NotAmbiguousMethods2
         yield NotAmbiguousMethods3
