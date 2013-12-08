@@ -22,6 +22,8 @@ class MainSharedContext:
         self.mock_main = __main__.main = mock.Mock()
         self.real_argv = sys.argv
         self.real_stdout = sys.stdout
+
+        sys.argv = ['run-contexts']
         sys.stdout = mock.Mock()
         sys.stdout.isatty.return_value = True
         os.environ.pop("TEAMCITY_VERSION", None)
