@@ -48,11 +48,12 @@ class Suite(object):
         self.shuffle = shuffle
 
     def run(self, reporter_notifier):
-        found_classes = list(finders.find_specs_in_module(self.module))
-        if self.shuffle:
-            random.shuffle(found_classes)
-        for cls in found_classes:
-            self.run_class(cls, reporter_notifier)
+        with reporter_notifier.run_suite(self):
+            found_classes = list(finders.find_specs_in_module(self.module))
+            if self.shuffle:
+                random.shuffle(found_classes)
+            for cls in found_classes:
+                self.run_class(cls, reporter_notifier)
 
     def run_class(self, cls, reporter_notifier):
         with reporter_notifier.run_class(cls):
@@ -163,6 +164,12 @@ class ReporterNotifier(object):
         except Exception as e:
             self.call_reporters("unexpected_error", e)
         self.call_reporters("test_run_ended", test_run)
+
+    @contextmanager
+    def run_suite(self, suite):
+        self.call_reporters("suite_started", suite)
+        yield
+        self.call_reporters("suite_ended", suite)
 
     @contextmanager
     def run_context(self, context):

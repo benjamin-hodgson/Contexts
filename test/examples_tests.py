@@ -192,10 +192,10 @@ class WhenExamplesRaisesAnException:
         self.spec.total.should.equal(3)
 
     def it_should_call_unexpected_error_on_the_reporter(self):
-        self.reporter.calls[-2][0].should.equal("unexpected_error")
+        self.reporter.calls[-3][0].should.equal("unexpected_error")
 
     def it_should_pass_in_the_exception(self):
-        self.reporter.calls[-2][1].should.equal(self.raised)
+        self.reporter.calls[-3][1].should.equal(self.raised)
 
 
 class WhenUserFailsToMakeExamplesAClassmethod:
@@ -213,10 +213,10 @@ class WhenUserFailsToMakeExamplesAClassmethod:
         self.exception.should.be.none
 
     def it_should_call_unexpected_error_on_the_reporter(self):
-        self.reporter.calls[1][0].should.equal("unexpected_error")
+        self.reporter.calls[2][0].should.equal("unexpected_error")
 
     def it_should_pass_in_a_TypeError(self):
-        self.reporter.calls[1][1].should.be.a(TypeError)
+        self.reporter.calls[2][1].should.be.a(TypeError)
 
     def it_should_finish_the_test_run(self):
         self.reporter.calls[-1][0].should.equal("test_run_ended")

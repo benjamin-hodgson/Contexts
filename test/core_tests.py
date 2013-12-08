@@ -43,35 +43,37 @@ class WhenRunningASpec:
     def it_should_call_test_run_started_first(self):
         self.reporter1.calls[0][0].should.equal('test_run_started')
 
+    def it_should_call_suite_started(self):
+        self.reporter1.calls[1][0].should.equal('suite_started')
+
     @contexts.assertion
-    def it_should_call_context_started_second(self):
-        self.reporter1.calls[1][0].should.equal('context_started')
+    def it_should_call_context_started_next(self):
+        self.reporter1.calls[2][0].should.equal('context_started')
 
     @contexts.assertion
     def it_should_pass_in_the_context(self):
-        self.reporter1.calls[1][1].name.should.equal('TestSpec')
+        self.reporter1.calls[2][1].name.should.equal('TestSpec')
 
     def it_should_call_assertion_started_three_times(self):
-        assert self.reporter1.calls[2][0] == "assertion_started"
-        self.reporter1.calls[2][0].should.equal('assertion_started')
-        self.reporter1.calls[4][0].should.equal('assertion_started')
-        self.reporter1.calls[6][0].should.equal('assertion_started')
+        self.reporter1.calls[3][0].should.equal('assertion_started')
+        self.reporter1.calls[5][0].should.equal('assertion_started')
+        self.reporter1.calls[7][0].should.equal('assertion_started')
 
     def it_should_call_assertion_passed_and_failed_and_errored(self):
-        calls = [self.reporter1.calls[i][0] for i in (3,5,7)]
+        calls = [self.reporter1.calls[i][0] for i in (4,6,8)]
         calls.should.contain('assertion_passed')
         calls.should.contain('assertion_failed')
         calls.should.contain('assertion_errored')
 
     def the_assertions_should_have_the_right_names(self):
-        names = [self.reporter1.calls[i][1].name for i in (3,5,7)]
+        names = [self.reporter1.calls[i][1].name for i in (4,6,8)]
         names.should.contain('method_with_should_in_the_name')
         names.should.contain('failing_method_with_should_in_the_name')
         names.should.contain('erroring_method_with_should_in_the_name')
 
     def it_should_pass_in_the_exceptions(self):
         exceptions = {}
-        for i in (3,5,7):
+        for i in (4,6,8):
             call_name = self.reporter1.calls[i][0]
             if call_name == 'assertion_failed':
                 exceptions['fail'] = self.reporter1.calls[i][2]
@@ -83,20 +85,23 @@ class WhenRunningASpec:
 
     @contexts.assertion
     def it_should_call_context_ended_next(self):
-        self.reporter1.calls[8][0].should.equal('context_ended')
+        self.reporter1.calls[9][0].should.equal('context_ended')
 
     @contexts.assertion
     def it_should_pass_in_the_context_again(self):
-        self.reporter1.calls[8][1].should.equal(self.reporter1.calls[1][1])
+        self.reporter1.calls[9][1].should.equal(self.reporter1.calls[2][1])
+
+    def it_should_call_suite_ended(self):
+        self.reporter1.calls[10][0].should.equal('suite_ended')
 
     def it_should_call_test_run_ended_last(self):
-        self.reporter1.calls[9][0].should.equal('test_run_ended')
+        self.reporter1.calls[11][0].should.equal('test_run_ended')
 
     def it_should_pass_in_the_same_test_run_as_at_the_start(self):
-        self.reporter1.calls[9][1].should.equal(self.reporter1.calls[0][1])
+        self.reporter1.calls[11][1].should.equal(self.reporter1.calls[0][1])
 
     def it_should_not_make_any_more_calls(self):
-        self.reporter1.calls.should.have.length_of(10)
+        self.reporter1.calls.should.have.length_of(12)
 
     def it_should_do_exactly_the_same_to_the_second_reporter(self):
         self.reporter2.calls.should.equal(self.reporter1.calls)
@@ -148,10 +153,10 @@ class WhenAContextErrors:
 
     @contexts.assertion
     def it_should_call_context_errored_for_the_first_error(self):
-        self.reporters[0].calls[2][0].should.equal("context_errored")
+        self.reporters[0].calls[3][0].should.equal("context_errored")
 
     def it_should_pass_in_the_first_exception(self):
-        self.reporters[0].calls[2][2].should.equal(self.value_err)
+        self.reporters[0].calls[3][2].should.equal(self.value_err)
 
     def it_should_not_run_the_first_action(self):
         self.specs[0].ran_because.should.be.false
@@ -164,10 +169,10 @@ class WhenAContextErrors:
 
     @contexts.assertion
     def it_should_call_context_errored_for_the_second_error(self):
-        self.reporters[1].calls[2][0].should.equal("context_errored")
+        self.reporters[1].calls[3][0].should.equal("context_errored")
 
     def it_should_pass_in_the_second_exception(self):
-        self.reporters[1].calls[2][2].should.equal(self.type_err)
+        self.reporters[1].calls[3][2].should.equal(self.type_err)
 
     def it_should_not_run_the_second_assertion(self):
         self.specs[1].ran_assertion.should.be.false
@@ -177,10 +182,10 @@ class WhenAContextErrors:
 
     @contexts.assertion
     def it_should_call_context_errored_for_the_third_error(self):
-        self.reporters[2].calls[4][0].should.equal("context_errored")
+        self.reporters[2].calls[5][0].should.equal("context_errored")
 
     def it_should_pass_in_the_third_exception(self):
-        self.reporters[2].calls[4][2].should.equal(self.assertion_err)
+        self.reporters[2].calls[5][2].should.equal(self.assertion_err)
 
 
 class WhenRunningTheSameClassMultipleTimes:
@@ -456,10 +461,10 @@ class WhenRunningAmbiguouslyNamedMethods:
         self.exception.should.be.none
 
     def it_should_call_unexpected_error_on_the_reporter(self):
-        self.reporter.calls[1][0].should.equal("unexpected_error")
+        self.reporter.calls[2][0].should.equal("unexpected_error")
 
     def it_should_pass_in_a_MethodNamingError(self):
-        self.reporter.calls[1][1].should.be.a(contexts.errors.MethodNamingError)
+        self.reporter.calls[2][1].should.be.a(contexts.errors.MethodNamingError)
 
     def it_should_finish_the_test_run(self):
         self.reporter.calls[-1][0].should.equal("test_run_ended")
@@ -533,10 +538,10 @@ class WhenRunningSpecsWithTooManySpecialMethods:
         self.exception.should.be.none
 
     def it_should_call_unexpected_error_on_the_reporter(self):
-        self.reporter.calls[1][0].should.equal("unexpected_error")
+        self.reporter.calls[2][0].should.equal("unexpected_error")
 
     def it_should_pass_in_a_TooManySpecialMethodsError(self):
-        self.reporter.calls[1][1].should.be.a(contexts.errors.TooManySpecialMethodsError)
+        self.reporter.calls[2][1].should.be.a(contexts.errors.TooManySpecialMethodsError)
 
     def it_should_finish_the_test_run(self):
         self.reporter.calls[-1][0].should.equal("test_run_ended")
@@ -565,7 +570,7 @@ class WhenRunningAClassContainingNoAssertions:
         self.reporter.calls[0][0].should.equal('test_run_started')
 
     def then_it_should_call_test_run_ended(self):
-        self.reporter.calls[1][0].should.equal('test_run_ended')
+        self.reporter.calls[-1][0].should.equal('test_run_ended')
 
 
 if __name__ == "__main__":

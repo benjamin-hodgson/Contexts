@@ -8,6 +8,12 @@ class Reporter(object):
     def test_run_ended(self, test_run):
         """Called at the end of a test run"""
 
+    def suite_started(self, suite):
+        """Called at the start of a test module"""
+
+    def suite_ended(self, suite):
+        """Called at the end of a test module"""
+
     def unexpected_error(self, exception):
         """Called when an error occurs outside of a Context or Assertion"""
 
