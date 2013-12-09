@@ -138,7 +138,10 @@ class Assertion(object):
 def run_with_test_data(func, test_data):
     sig = inspect.signature(func)
     if not isinstance(test_data, _NullExample) and sig.parameters:
-        func(test_data)
+        if isinstance(test_data, tuple) and len(sig.parameters) == len(test_data):
+            func(*test_data)
+        else:
+            func(test_data)
     else:
         func()
 
