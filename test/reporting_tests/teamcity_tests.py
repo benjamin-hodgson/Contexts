@@ -24,17 +24,21 @@ class TeamCitySharedContext:
 ###########################################################
 
 class WhenASuiteStartsInTeamCity(TeamCitySharedContext):
+    def context(self):
+        self.suite_name = 'test_suite'
     def because_the_suite_starts(self):
-        self.reporter.suite_started(tools.create_suite('test_suite'))
+        self.reporter.suite_started(tools.create_suite(self.suite_name))
     def it_should_tell_team_city_the_suite_started(self):
-        teamcity_parse(self.stringio.getvalue()).should.equal(("testSuiteStarted", {'name':'test suite'}))
+        teamcity_parse(self.stringio.getvalue()).should.equal(("testSuiteStarted", {'name':self.suite_name}))
 
 
 class WhenASuiteEndsInTeamCity(TeamCitySharedContext):
+    def context(self):
+        self.suite_name = 'mah_suite'
     def because_the_suite_ends(self):
-        self.reporter.suite_ended(tools.create_suite('mah_suite'))
+        self.reporter.suite_ended(tools.create_suite(self.suite_name))
     def it_should_tell_team_city_the_suite_ended(self):
-        teamcity_parse(self.stringio.getvalue()).should.equal(("testSuiteFinished", {'name':'mah suite'}))
+        teamcity_parse(self.stringio.getvalue()).should.equal(("testSuiteFinished", {'name':self.suite_name}))
 
 
 ###########################################################

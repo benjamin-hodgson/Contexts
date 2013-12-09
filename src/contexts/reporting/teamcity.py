@@ -6,11 +6,11 @@ from . import shared
 class TeamCityReporter(shared.StreamReporter):
     def suite_started(self, suite):
         super().suite_started(suite)
-        self.teamcity_print("testSuiteStarted", name=shared.make_readable(suite.name))
+        self.teamcity_print("testSuiteStarted", name=suite.name)
 
     def suite_ended(self, suite):
         super().suite_ended(suite)
-        self.teamcity_print("testSuiteFinished", name=shared.make_readable(suite.name))
+        self.teamcity_print("testSuiteFinished", name=suite.name)
 
     def context_started(self, context):
         super().context_started(context)
