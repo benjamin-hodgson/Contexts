@@ -1,7 +1,9 @@
 import contextlib
 import importlib
+import importlib.abc
 import os
 import sys
+import types
 
 
 def import_from_file(file_path):
@@ -11,7 +13,9 @@ def import_from_file(file_path):
     folder = os.path.dirname(file_path)
     filename = os.path.basename(file_path)
     module_name = os.path.splitext(filename)[0]
-    return import_module(folder, module_name)
+    prune_sys_dot_modules(folder, module_name)
+    with prepend_folder_to_sys_dot_path(folder):
+        return importlib.import_module(module_name)
 
 
 def import_module(dir_path, module_name):
@@ -24,7 +28,7 @@ def import_module(dir_path, module_name):
 
 
 def prune_sys_dot_modules(dir_path, module_name):
-    requested_file = os.path.join(dir_path, module_name + '.py')
+    requested_file = os.path.join(dir_path, *module_name.split('.')) + '.py'
     if module_name in sys.modules:
         existing_module = sys.modules[module_name]
         if not same_file(existing_module.__file__, requested_file):
