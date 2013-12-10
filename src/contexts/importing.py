@@ -32,7 +32,7 @@ def import_module(dir_path, module_name):
         source = f.read()
 
     parsed = ast.parse(source)
-    transformer = AssertionRewritingTransformer()
+    transformer = AssertionRewriter()
     transformer.visit(parsed)
 
     code = compile(parsed, requested_file, 'exec', dont_inherit=True, optimize=0)
@@ -84,9 +84,25 @@ def same_file(path1, path2):
     return os.path.realpath(path1) == os.path.realpath(path2)
 
 
-class AssertionRewritingTransformer(ast.NodeTransformer):
+class AssertionRewriter(ast.NodeTransformer):
     def visit_Assert(self, node):
         if node.msg:
             return node
-        new_node = ast.copy_location(ast.Assert(node.test, ast.Str("Asserted False")), node)
-        return ast.fix_missing_locations(new_node)
+        msg = AssertionMessageGenerator().visit(node.test)
+        node.msg = ast.Str(msg)
+        return ast.fix_missing_locations(node)
+
+class AssertionMessageGenerator(ast.NodeVisitor):
+    def visit_Compare(self, node):
+        if isinstance(node.left, ast.Num):
+            left = node.left.n
+        else:
+            left = node.left.s
+        if isinstance(node.comparators[0], ast.Num):
+            right = node.comparators[0].n
+        else:
+            right = node.comparators[0].s
+        return "Asserted {0} == {1} but found {0} != {1}.".format(repr(left), repr(right))
+
+    def visit_Name(self, node):
+        return "Explicitly asserted False"
