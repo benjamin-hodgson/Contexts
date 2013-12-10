@@ -48,7 +48,7 @@ class TestSpec:
         str(the_call[2]).should.equal(self.message)
 
 
-class WhenUserAssertsFalse(AssertionRewritingSharedContext):
+class WhenUserExpicitlyAssertsFalse(AssertionRewritingSharedContext):
     def context(self):
         self.filename = os.path.join(TEST_DATA_DIR, "assert_false.py")
         self.code = """
@@ -69,6 +69,35 @@ class TestSpec:
         str(the_call[2]).should.equal("Explicitly asserted False")
 
 
+class WhenUserAssertsOnAnArbitraryObject(AssertionRewritingSharedContext):
+    def context(self):
+        self.module_name = "assert_object"
+        self.filename = os.path.join(TEST_DATA_DIR, self.module_name + ".py")
+        self.code = """
+class Thing(object):
+    def __bool__(self):
+        return False
+
+a_thing = Thing()
+
+class TestSpec:
+    def it(self):
+        assert a_thing
+"""
+        self.write_file()
+
+    def because_we_run_the_spec(self):
+        contexts.run(self.filename, [self.reporter])
+
+    def it_should_call_assertion_failed(self):
+        [call[0] for call in self.reporter.calls].should.contain('assertion_failed')
+
+    def the_exception_should_contain_a_generated_message(self):
+        a_thing = sys.modules[self.module_name].a_thing
+        the_call, = [call for call in self.reporter.calls if call[0] == 'assertion_failed']
+        str(the_call[2]).should.equal("Asserted {} but found it not to be truthy".format(repr(a_thing)))
+
+
 class WhenUserAssertsEqual(AssertionRewritingSharedContext):
     @classmethod
     def examples(cls):
@@ -80,7 +109,7 @@ class WhenUserAssertsEqual(AssertionRewritingSharedContext):
         yield {'fantastic':'wonderful'}, {'fantastic':['not equal']}
 
     def context(self, x, y):
-        self.filename = os.path.join(TEST_DATA_DIR, "assert_equal_literal.py")
+        self.filename = os.path.join(TEST_DATA_DIR, "assert_equal.py")
         self.code = """
 class TestSpec:
     def it(self):

@@ -5,8 +5,6 @@ import sys
 import types
 
 
-
-
 def import_from_file(file_path):
     """
     Import the specified file, with an unqualified module name.
@@ -29,8 +27,17 @@ def import_module(dir_path, module_name):
     if module_name in sys.modules:
         return sys.modules[module_name]
 
-    with open(filename, 'r', encoding='utf-8') as f:
-        source = f.read()
+    module = create_module_object(module_name, filename)
+    sys.modules[module_name] = module
+
+    try:
+        with open(filename, 'r', encoding='utf-8') as f:
+            source = f.read()
+    except ImportError:
+        raise
+    except Exception as e:
+        del sys.modules[module_name]
+        raise ImportError from e
 
     parsed = ast.parse(source)
     transformer = AssertionRewriter()
@@ -38,10 +45,12 @@ def import_module(dir_path, module_name):
 
     code = compile(parsed, filename, 'exec', dont_inherit=True, optimize=0)
 
-    module = create_module_object(module_name, filename)
+    try:
+        exec(code, module.__dict__)
+    except:
+        del sys.modules[module_name]
+        raise
 
-    exec(code, module.__dict__)
-    sys.modules[module_name] = module
     return module
 
 
@@ -105,11 +114,19 @@ class AssertionRewriter(ast.NodeTransformer):
 
 
 class AssertionTestVisitor(ast.NodeVisitor):
+    def visit(self, node):
+        ret = super().visit(node)
+        if ret is None:  # then it's not a node we know about
+            return self.visit_unknown_node(node)
+        return ret
+
     def visit_Compare(self, compare_node):
         if isinstance(compare_node.ops[0], ast.NotEq):
             format_string = 'Asserted {0} != {1} but found them to be equal'
-        else:
+        elif isinstance(compare_node.ops[0], ast.Eq):
             format_string = 'Asserted {0} == {1} but found them not to be equal'
+        else:
+            return None
 
         return_nodes = []
         format_params = []
@@ -125,4 +142,15 @@ class AssertionTestVisitor(ast.NodeVisitor):
         return return_nodes, msg
 
     def visit_Name(self, node):
-        return [], ast.Str("Explicitly asserted False")
+        if node.id == 'False':
+            return [], ast.Str("Explicitly asserted False")
+
+    def visit_unknown_node(self, node):
+        format_string = "Asserted {} but found it not to be truthy"
+
+        name = '@contexts_assertion_var'
+        load_name = ast.Name(name, ast.Load())
+        format_params = [ast.Call(func=ast.Name('repr', ast.Load()), args=[load_name], keywords=[])]
+        msg = ast.Call(func=ast.Attribute(value=ast.Str(format_string), attr='format', ctx=ast.Load()), args=format_params, keywords=[])
+
+        return [ast.Assign([ast.Name(name, ast.Store())], node)], msg
