@@ -1,3 +1,4 @@
+import ast
 import contextlib
 import os
 import sys
@@ -29,7 +30,12 @@ def import_module(dir_path, module_name):
 
     with open(requested_file, 'r') as f:
         source = f.read()
-    code = compile(source, requested_file, 'exec', dont_inherit=True, optimize=0)
+
+    parsed = ast.parse(source)
+    transformer = AssertionRewritingTransformer()
+    transformer.visit(parsed)
+
+    code = compile(parsed, requested_file, 'exec', dont_inherit=True, optimize=0)
 
     module = types.ModuleType(module_name)
     module.__file__ = requested_file
@@ -76,3 +82,11 @@ def prepend_folder_to_sys_dot_path(folder_path):
 
 def same_file(path1, path2):
     return os.path.realpath(path1) == os.path.realpath(path2)
+
+
+class AssertionRewritingTransformer(ast.NodeTransformer):
+    def visit_Assert(self, node):
+        if node.msg:
+            return node
+        new_node = ast.copy_location(ast.Assert(node.test, ast.Str("Asserted False")), node)
+        return ast.fix_missing_locations(new_node)
