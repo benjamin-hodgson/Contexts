@@ -7,6 +7,7 @@ from contextlib import contextmanager
 from . import discovery
 from . import errors
 from . import finders
+from . import importing
 
 
 class TestRun(object):
@@ -27,13 +28,13 @@ class TestRun(object):
         if isinstance(self.source, types.ModuleType):
             return [self.source]
         if isinstance(self.source, str) and os.path.isfile(self.source):
-            return [discovery.import_from_file(self.source)]
+            return [importing.import_from_file(self.source)]
         if isinstance(self.source, str) and os.path.isdir(self.source):
-            module_specs = discovery.find_modules(self.source)
+            specifications = discovery.module_specs(self.source)
             modules = []
-            for module_spec in module_specs:
+            for module_spec in specifications:
                 with reporter_notifier.importing(module_spec):
-                    modules.append(discovery.load_module(*module_spec))
+                    modules.append(importing.import_module(*module_spec))
             return modules
 
         # if we got here, self.source is a class
