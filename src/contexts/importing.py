@@ -28,7 +28,7 @@ def import_module(dir_path, module_name):
     if module_name in sys.modules:
         return sys.modules[module_name]
 
-    with open(filename, 'r') as f:
+    with open(filename, 'r', encoding='utf-8') as f:
         source = f.read()
 
     parsed = ast.parse(source)
