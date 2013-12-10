@@ -1,4 +1,5 @@
 import types
+from unittest import mock
 import sure
 import contexts
 
@@ -259,3 +260,49 @@ class WhenMarkingAClassAsAContext:
 
     def it_should_treat_the_marked_class_as_a_spec(self):
         self.spec.log.should.equal("arrange act assert teardown ")
+
+
+class WhenCatchingAnException:
+    def context(self):
+        self.exception = ValueError("test exception")
+
+        class TestSpec:
+            exception = None
+            def context(s):
+                def throwing_function(a, b, c, d=[]):
+                    s.__class__.call_args = (a,b,c,d)
+                    raise self.exception
+                s.throwing_function = throwing_function
+            def should(s):
+                s.__class__.exception = contexts.catch(s.throwing_function, 3, c='yes', b=None)
+
+        self.spec = TestSpec
+
+    def because_we_run_the_spec(self):
+        contexts.run(self.spec, [])
+
+    def it_should_catch_and_return_the_exception(self):
+        self.spec.exception.should.equal(self.exception)
+
+    def it_should_call_it_with_the_supplied_arguments(self):
+        self.spec.call_args.should.equal((3, None, 'yes', []))
+
+
+class WhenTimingSomething:
+    def context(self):
+        self.mock_clock = mock.Mock(return_value = 10)
+        self.time_diff = 100.7
+        def slow_function(a,b,c,d=[]):
+            self.call_args = (a,b,c,d)
+            self.mock_clock.return_value += self.time_diff
+        self.slow_function = slow_function
+
+    def because_we_run_a_slow_function(self):
+        with mock.patch("time.time", self.mock_clock):
+            self.result = contexts.time(self.slow_function, 3, c='yes', b=None)
+
+    def it_should_call_the_function_with_the_supplied_arguments(self):
+        self.call_args.should.equal((3, None, 'yes', []))
+
+    def it_should_return_the_time_difference_in_seconds(self):
+        self.result.should.equal(self.time_diff)
