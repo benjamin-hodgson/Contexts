@@ -34,7 +34,6 @@ class TestSpec:
     def it(self):
         assert False, {}
 """.format(repr(self.message))
-
         self.write_file()
 
     def because_we_run_the_spec(self):
@@ -98,14 +97,42 @@ class TestSpec:
         str(the_call[2]).should.equal("Asserted {} but found it not to be truthy".format(repr(a_thing)))
 
 
+class WhenUserAssertsOnAFunctionCall(AssertionRewritingSharedContext):
+    def context(self):
+        self.module_name = "assert_function_call"
+        self.filename = os.path.join(TEST_DATA_DIR, self.module_name + ".py")
+        self.code = """
+from unittest import mock
+
+m = mock.Mock(return_value=False)
+
+class TestSpec:
+    def it(self):
+        assert m()
+"""
+        self.write_file()
+
+    def because_we_run_the_spec(self):
+        contexts.run(self.filename, [self.reporter])
+
+    def it_should_only_call_the_mock_once(self):
+        mock = sys.modules[self.module_name].m
+        mock.assert_called_once_with()
+
+    def it_should_call_assertion_failed(self):
+        [call[0] for call in self.reporter.calls].should.contain('assertion_failed')
+
+    def the_exception_should_contain_a_generated_message(self):
+        the_call, = [call for call in self.reporter.calls if call[0] == 'assertion_failed']
+        str(the_call[2]).should.equal("Asserted {} but found it not to be truthy".format(False))
+
+
 class WhenUserAssertsEqual(AssertionRewritingSharedContext):
     @classmethod
     def examples(cls):
         yield 1, 2
-        yield 5, 12
         yield 'a', 'b'
-        yield 12.3, 5.1
-        yield 'x', 1
+        yield (), 3.2
         yield {'fantastic':'wonderful'}, {'fantastic':['not equal']}
 
     def context(self, x, y):
@@ -130,12 +157,89 @@ class TestSpec:
         str(the_call[2]).should.equal("Asserted {0} == {1} but found them not to be equal".format(repr(x), repr(y)))
 
 
+class WhenUserAssertsEqualOnAFunctionCallOnTheLeft(AssertionRewritingSharedContext):
+    @classmethod
+    def examples(cls):
+        yield 1, 2
+        yield 'a', 'b'
+        yield (), 3.2
+        yield {'fantastic':'wonderful'}, {'fantastic':['not equal']}
+
+    def context(self, x, y):
+        self.module_name = "assert_equal_func_left"
+        self.filename = os.path.join(TEST_DATA_DIR, self.module_name + ".py")
+        self.code = """
+from unittest import mock
+
+m = mock.Mock(return_value = {0})
+
+class TestSpec:
+    def it(self):
+        assert m() == {1}
+""".format(repr(x), repr(y))
+        self.write_file()
+
+    def because_we_run_the_spec(self):
+        contexts.run(self.filename, [self.reporter])
+
+    def it_should_only_call_the_mock_once(self):
+        mock = sys.modules[self.module_name].m
+        mock.assert_called_once_with()
+
+    def it_should_call_assertion_failed(self):
+        [call[0] for call in self.reporter.calls].should.contain('assertion_failed')
+
+    def the_exception_should_contain_a_generated_message(self, x, y):
+        the_call, = [call for call in self.reporter.calls if call[0] == 'assertion_failed']
+        str(the_call[2]).should.equal("Asserted {0} == {1} but found them not to be equal".format(repr(x), repr(y)))
+
+
+class WhenUserAssertsEqualOnAFunctionCallOnTheRight(AssertionRewritingSharedContext):
+    @classmethod
+    def examples(cls):
+        yield 1, 2
+        yield 'a', 'b'
+        yield (), 3.2
+        yield {'fantastic':'wonderful'}, {'fantastic':['not equal']}
+
+    def context(self, x, y):
+        self.module_name = "assert_equal_func_right"
+        self.filename = os.path.join(TEST_DATA_DIR, self.module_name + ".py")
+        self.code = """
+from unittest import mock
+
+m = mock.Mock(return_value = {0})
+
+class TestSpec:
+    def it(self):
+        assert {1} == m()
+""".format(repr(x), repr(y))
+        self.write_file()
+
+    def because_we_run_the_spec(self):
+        contexts.run(self.filename, [self.reporter])
+
+    def it_should_only_call_the_mock_once(self):
+        mock = sys.modules[self.module_name].m
+        mock.assert_called_once_with()
+
+    def it_should_call_assertion_failed(self):
+        [call[0] for call in self.reporter.calls].should.contain('assertion_failed')
+
+    def the_exception_should_contain_a_generated_message(self, x, y):
+        the_call, = [call for call in self.reporter.calls if call[0] == 'assertion_failed']
+        str(the_call[2]).should.equal("Asserted {0} == {1} but found them not to be equal".format(repr(y), repr(x)))
+
+
 class WhenUserAssertsNotEqual(AssertionRewritingSharedContext):
     @classmethod
     def examples(self):
-        yield 13
-        yield 'x'
-        yield {'abc':[123, None]}
+        yield 1
+        yield 12.3
+        yield 'a'
+        yield ()
+        yield {'fantastic':'wonderful'}
+
     def context(self, x):
         self.filename = os.path.join(TEST_DATA_DIR, "assert_not_equal.py")
         self.code = """

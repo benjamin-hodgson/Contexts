@@ -104,16 +104,15 @@ class AssertionRewriter(ast.NodeTransformer):
         if assert_node.msg is not None:
             return assert_node
 
-        statements, assert_node.msg = AssertionTestVisitor().visit(assert_node.test)
+        statements = AssertionChildVisitor().visit(assert_node.test)
 
-        statements.append(assert_node)
         for s in statements:
             ast.copy_location(s, assert_node)
             ast.fix_missing_locations(s)  # apply the same location to children
         return statements
 
 
-class AssertionTestVisitor(ast.NodeVisitor):
+class AssertionChildVisitor(ast.NodeVisitor):
     def visit(self, node):
         ret = super().visit(node)
         if ret is None:  # then it's not a node we know about
@@ -128,22 +127,29 @@ class AssertionTestVisitor(ast.NodeVisitor):
         else:
             return None
 
-        return_nodes = []
+        statements = []
         format_params = []
         for i, comparator in enumerate([compare_node.left] + compare_node.comparators):
             name = '@contexts_assertion_var' + str(i)
-            return_nodes.append(ast.Assign([ast.Name(name, ast.Store())], comparator))
+            statements.append(ast.Assign([ast.Name(name, ast.Store())], comparator))
 
             load_name = ast.Name(name, ast.Load())
+            if i == 0:
+                compare_node.left = load_name
+            else:
+                compare_node.comparators[i-1] = load_name
             format_params.append(ast.Call(func=ast.Name('repr', ast.Load()), args=[load_name], keywords=[]))
 
         msg = ast.Call(func=ast.Attribute(value=ast.Str(format_string), attr='format', ctx=ast.Load()), args=format_params, keywords=[])
 
-        return return_nodes, msg
+        statements.append(ast.Assert(compare_node, msg))
 
-    def visit_Name(self, node):
-        if node.id == 'False':
-            return [], ast.Str("Explicitly asserted False")
+        return statements
+
+    def visit_Name(self, name_node):
+        if name_node.id == 'False':
+            msg = ast.Str("Explicitly asserted False")
+            return [ast.Assert(name_node, msg)]
 
     def visit_unknown_node(self, node):
         format_string = "Asserted {} but found it not to be truthy"
@@ -153,4 +159,5 @@ class AssertionTestVisitor(ast.NodeVisitor):
         format_params = [ast.Call(func=ast.Name('repr', ast.Load()), args=[load_name], keywords=[])]
         msg = ast.Call(func=ast.Attribute(value=ast.Str(format_string), attr='format', ctx=ast.Load()), args=format_params, keywords=[])
 
-        return [ast.Assign([ast.Name(name, ast.Store())], node)], msg
+        statements = [ast.Assign([ast.Name(name, ast.Store())], node), ast.Assert(ast.Name(name, ast.Load()), msg)]
+        return statements
