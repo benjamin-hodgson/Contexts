@@ -91,25 +91,38 @@ def same_file(path1, path2):
 
 
 class AssertionRewriter(ast.NodeTransformer):
-    def visit_Assert(self, node):
-        if node.msg:
-            return node
-        msg = AssertionMessageGenerator().visit(node.test)
-        node.msg = ast.Str(msg)
-        return ast.fix_missing_locations(node)
+    def visit_Assert(self, assert_node):
+        if assert_node.msg is not None:
+            return assert_node
+
+        statements, assert_node.msg = AssertionTestVisitor().visit(assert_node.test)
+
+        statements.append(assert_node)
+        for s in statements:
+            ast.copy_location(s, assert_node)
+            ast.fix_missing_locations(s)  # apply the same location to children
+        return statements
 
 
-class AssertionMessageGenerator(ast.NodeVisitor):
-    def visit_Compare(self, node):
-        if isinstance(node.left, ast.Num):
-            left = node.left.n
+class AssertionTestVisitor(ast.NodeVisitor):
+    def visit_Compare(self, compare_node):
+        if isinstance(compare_node.ops[0], ast.NotEq):
+            format_string = 'Asserted {0} != {1} but found them to be equal'
         else:
-            left = node.left.s
-        if isinstance(node.comparators[0], ast.Num):
-            right = node.comparators[0].n
-        else:
-            right = node.comparators[0].s
-        return "Asserted {0} == {1} but found {0} != {1}.".format(repr(left), repr(right))
+            format_string = 'Asserted {0} == {1} but found them not to be equal'
+
+        return_nodes = []
+        format_params = []
+        for i, comparator in enumerate([compare_node.left] + compare_node.comparators):
+            name = '@contexts_assertion_var' + str(i)
+            return_nodes.append(ast.Assign([ast.Name(name, ast.Store())], comparator))
+
+            load_name = ast.Name(name, ast.Load())
+            format_params.append(ast.Call(func=ast.Name('repr', ast.Load()), args=[load_name], keywords=[]))
+
+        msg = ast.Call(func=ast.Attribute(value=ast.Str(format_string), attr='format', ctx=ast.Load()), args=format_params, keywords=[])
+
+        return return_nodes, msg
 
     def visit_Name(self, node):
-        return "Explicitly asserted False"
+        return [], ast.Str("Explicitly asserted False")
