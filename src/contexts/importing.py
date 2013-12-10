@@ -20,47 +20,37 @@ def import_from_file(file_path):
 
 def import_module(dir_path, module_name):
     """
-    Load specified module from the specified directory
+    Import the specified module from the specified directory, rewriting
+    assert statements where necessary.
     """
-    requested_file = resolve_file(dir_path, module_name)
-    prune_sys_dot_modules(module_name, requested_file)
-
+    filename = resolve_filename(dir_path, module_name)
+    prune_sys_dot_modules(module_name, filename)
     if module_name in sys.modules:
         return sys.modules[module_name]
 
-    with open(requested_file, 'r') as f:
+    with open(filename, 'r') as f:
         source = f.read()
 
     parsed = ast.parse(source)
     transformer = AssertionRewriter()
     transformer.visit(parsed)
 
-    code = compile(parsed, requested_file, 'exec', dont_inherit=True, optimize=0)
+    code = compile(parsed, filename, 'exec', dont_inherit=True, optimize=0)
 
-    module = types.ModuleType(module_name)
-    module.__file__ = requested_file
-
-    if '__init__.py' in requested_file:
-        module.__package__ = module_name
-        module.__path__ = [os.path.dirname(requested_file)]
-    else:
-        if '.' in module_name:
-            module.__package__, _ = module_name.rsplit('.', 1)
-        else:
-            module.__package__ = ''
+    module = create_module_object(module_name, filename)
 
     exec(code, module.__dict__)
     sys.modules[module_name] = module
     return module
 
 
-def resolve_file(dir_path, module_name):
-    requested_file = os.path.join(dir_path, *module_name.split('.'))
-    if os.path.isdir(requested_file):  # it's a package
-        requested_file = os.path.join(requested_file, '__init__.py')
+def resolve_filename(dir_path, module_name):
+    filename = os.path.join(dir_path, *module_name.split('.'))
+    if os.path.isdir(filename):  # it's a package
+        filename = os.path.join(filename, '__init__.py')
     else:
-        requested_file += '.py'
-    return requested_file
+        filename += '.py'
+    return filename
 
 
 def prune_sys_dot_modules(module_name, module_location):
@@ -69,6 +59,21 @@ def prune_sys_dot_modules(module_name, module_location):
         if not same_file(existing_module.__file__, module_location):
             del sys.modules[module_name]
 
+
+def create_module_object(module_name, filename):
+    module = types.ModuleType(module_name)
+    module.__file__ = filename
+
+    if '__init__.py' in filename:
+        module.__package__ = module_name
+        module.__path__ = [os.path.dirname(filename)]
+    else:
+        if '.' in module_name:
+            module.__package__, _ = module_name.rsplit('.', 1)
+        else:
+            module.__package__ = ''
+
+    return module
 
 
 @contextlib.contextmanager
@@ -91,6 +96,7 @@ class AssertionRewriter(ast.NodeTransformer):
         msg = AssertionMessageGenerator().visit(node.test)
         node.msg = ast.Str(msg)
         return ast.fix_missing_locations(node)
+
 
 class AssertionMessageGenerator(ast.NodeVisitor):
     def visit_Compare(self, node):
