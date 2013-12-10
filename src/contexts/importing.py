@@ -5,7 +5,6 @@ import sys
 import types
 
 
-# http://en.wikipedia.org/wiki/Greenspun's_tenth_rule applied to the import system :|
 
 
 def import_from_file(file_path):
@@ -23,6 +22,8 @@ def import_module(dir_path, module_name):
     Import the specified module from the specified directory, rewriting
     assert statements where necessary.
     """
+    # http://en.wikipedia.org/wiki/Greenspun's_tenth_rule applied to the import system :|
+
     filename = resolve_filename(dir_path, module_name)
     prune_sys_dot_modules(module_name, filename)
     if module_name in sys.modules:

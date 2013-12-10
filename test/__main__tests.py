@@ -58,9 +58,8 @@ class WhenRunningFromCommandLineWithArguments(MainSharedContext):
         yield ['--no-random'], [os.getcwd(), (cli.DotsReporter, cli.ColouredSummarisingCapturingReporter, cli.TimedReporter), False]
         yield [os.path.join(os.getcwd(),'made','up','path')], [os.path.join(os.getcwd(),'made','up','path'), (cli.DotsReporter, cli.ColouredSummarisingCapturingReporter, cli.TimedReporter), True]
 
-    def establish_arguments(self, example):
-        argv, self.expected = example
-        self.expected[1] = tuple(cls(sys.stdout) for cls in self.expected[1])
+    def establish_arguments(self, argv, expected):
+        self.expected = (expected[0], tuple(cls(sys.stdout) for cls in expected[1]), expected[2])
         sys.argv = ['run-contexts'] + argv
 
     def because_we_call_cmd(self):
@@ -79,8 +78,8 @@ class WhenArgumentsSpecifyMutuallyExclusiveOptions(MainSharedContext):
         yield ['-q', '--verbose']
         yield ['--verbose', '-q']
 
-    def establish_that_user_wants_verbose_and_quiet(self, example):
-        sys.argv = ['run-contexts'] + example
+    def establish_that_user_wants_verbose_and_quiet(self, argv):
+        sys.argv = ['run-contexts'] + argv
         self.exception = None
 
         # argparse will try and print to stderr,

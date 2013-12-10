@@ -21,11 +21,8 @@ class WhenMakingANameHumanReadable:
         yield "CamelCaseWithASingleLetterWord", "Camel case with a single letter word"
         yield "Does.EverythingAT_once.TOBe100Percent_Certain", "Does everything AT once TO be 100 percent certain"
 
-    def context(self, example):
-        self.input, self.expected = example
+    def because_we_make_the_string_readable(self, input, _):
+        self.result = reporting.shared.make_readable(input)
 
-    def because_we_make_the_string_readable(self):
-        self.result = reporting.shared.make_readable(self.input)
-
-    def it_should_return_a_string_with_appropriate_spaces(self):
-        self.result.should.equal(self.expected)
+    def it_should_return_a_string_with_appropriate_spaces(self, _, expected):
+        self.result.should.equal(expected)

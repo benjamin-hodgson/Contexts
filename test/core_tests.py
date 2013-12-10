@@ -322,14 +322,14 @@ class WhenWeRunSpecsWithAlternatelyNamedMethods:
         yield MoreAlternativeNames, "act assert "
         yield EvenMoreAlternativeNames, "act assert "
 
-    def context(self, example):
-        self.spec, self.expected_log = example
+    def context(self, spec, _):
+        self.spec = spec
 
-    def because_we_run_the_spec(self, example):
+    def because_we_run_the_spec(self):
         contexts.run(self.spec, [])
 
-    def it_should_run_the_methods_in_the_correct_order(self):
-        self.spec.log.should.equal(self.expected_log)
+    def it_should_run_the_methods_in_the_correct_order(self, _, expected_log):
+        self.spec.log.should.equal(expected_log)
 
 
 class WhenRunningAmbiguouslyNamedMethods:
