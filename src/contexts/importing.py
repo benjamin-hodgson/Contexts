@@ -1,9 +1,10 @@
 import contextlib
-import importlib
-import importlib.abc
 import os
 import sys
 import types
+
+
+# http://en.wikipedia.org/wiki/Greenspun's_tenth_rule applied to the import system :|
 
 
 def import_from_file(file_path):
@@ -13,33 +14,55 @@ def import_from_file(file_path):
     folder = os.path.dirname(file_path)
     filename = os.path.basename(file_path)
     module_name = os.path.splitext(filename)[0]
-    prune_sys_dot_modules(folder, module_name)
-    with prepend_folder_to_sys_dot_path(folder):
-        return importlib.import_module(module_name)
+    return import_module(folder, module_name)
 
 
 def import_module(dir_path, module_name):
     """
     Load specified module from the specified directory
     """
-    prune_sys_dot_modules(dir_path, module_name)
-    with prepend_folder_to_sys_dot_path(dir_path):
-        return importlib.import_module(module_name)
+    requested_file = resolve_file(dir_path, module_name)
+    prune_sys_dot_modules(module_name, requested_file)
+
+    if module_name in sys.modules:
+        return sys.modules[module_name]
+
+    with open(requested_file, 'r') as f:
+        source = f.read()
+    code = compile(source, requested_file, 'exec', dont_inherit=True, optimize=0)
+
+    module = types.ModuleType(module_name)
+    module.__file__ = requested_file
+
+    if '__init__.py' in requested_file:
+        module.__package__ = module_name
+        module.__path__ = [os.path.dirname(requested_file)]
+    else:
+        if '.' in module_name:
+            module.__package__, _ = module_name.rsplit('.', 1)
+        else:
+            module.__package__ = ''
+
+    exec(code, module.__dict__)
+    sys.modules[module_name] = module
+    return module
 
 
-def prune_sys_dot_modules(dir_path, module_name):
+def resolve_file(dir_path, module_name):
     requested_file = os.path.join(dir_path, *module_name.split('.'))
-
     if os.path.isdir(requested_file):  # it's a package
         requested_file = os.path.join(requested_file, '__init__.py')
     else:
         requested_file += '.py'
+    return requested_file
 
+
+def prune_sys_dot_modules(module_name, module_location):
     if module_name in sys.modules:
         existing_module = sys.modules[module_name]
-        if not same_file(existing_module.__file__, requested_file):
+        if not same_file(existing_module.__file__, module_location):
             del sys.modules[module_name]
-            importlib.invalidate_caches()
+
 
 
 @contextlib.contextmanager
