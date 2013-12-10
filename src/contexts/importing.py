@@ -28,7 +28,13 @@ def import_module(dir_path, module_name):
 
 
 def prune_sys_dot_modules(dir_path, module_name):
-    requested_file = os.path.join(dir_path, *module_name.split('.')) + '.py'
+    requested_file = os.path.join(dir_path, *module_name.split('.'))
+
+    if os.path.isdir(requested_file):  # it's a package
+        requested_file = os.path.join(requested_file, '__init__.py')
+    else:
+        requested_file += '.py'
+
     if module_name in sys.modules:
         existing_module = sys.modules[module_name]
         if not same_file(existing_module.__file__, requested_file):

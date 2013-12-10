@@ -357,6 +357,113 @@ class TestSpec:
             f.write(self.code)
 
 
+class WhenAPackageHasAlreadyBeenImported:
+    def establish_that_we_have_already_imported_the_package(self):
+        self.code = """
+module_ran = False
+is_fake = False
+
+class TestSpec:
+    def it(self):
+        global module_ran
+        module_ran = True
+"""
+        self.old_sys_dot_path = sys.path[:]
+        self.package_name = 'already_imported_package'
+        self.create_folder()
+        self.write_files()
+        self.create_fake_module()
+
+    def because_we_run_the_package(self):
+        contexts.run(self.folder_path, [])
+
+    def it_should_not_re_import_the_module(self):
+        sys.modules[self.package_name].is_fake.should.be.true
+
+    def it_should_not_re_run_the_module(self):
+        sys.modules[self.package_name].module_ran.should.be.false
+
+    def it_should_not_modify_sys_dot_path(self):
+        sys.path.should.equal(self.old_sys_dot_path)
+
+    def cleanup_the_file_system_and_sys_dot_modules(self):
+        shutil.rmtree(self.folder_path)
+        del sys.modules[self.package_name]
+        importlib.invalidate_caches()
+
+    def create_fake_module(self):
+        class TestSpec:
+            def it(self):
+                global module_ran
+                module_ran = True
+        test = types.ModuleType(self.package_name)
+        test.is_fake = True
+        test.module_ran = False
+        test.__file__ = self.filename
+        test.TestSpec = TestSpec
+        sys.modules[self.package_name] = test
+
+    def create_folder(self):
+        self.folder_path = os.path.join(TEST_DATA_DIR, self.package_name)
+        os.mkdir(self.folder_path)
+
+    def write_files(self):
+        self.filename = os.path.join(self.folder_path, '__init__.py')
+        with open(self.filename, 'w') as f:
+            f.write(self.code)
+
+
+class WhenAPackageHasTheSameNameAsAnAlreadyImportedModule:
+    def establish_that_we_have_imported_a_module_with_the_same_name(self):
+        self.code = """
+module_ran = False
+is_fake = False
+
+class TestSpec:
+    def it(self):
+        global module_ran
+        module_ran = True
+"""
+        self.old_sys_dot_path = sys.path[:]
+        self.package_name = 'package_folder_coincidence'
+        self.create_folder()
+        self.write_files()
+        self.create_fake_module()
+
+    def because_we_run_the_folder(self):
+        contexts.run(self.folder_path, [])
+
+    def it_should_import_the_new_module_and_overwrite_the_old_one(self):
+        sys.modules[self.package_name].is_fake.should.be.false
+
+    def it_should_run_the_first_module(self):
+        sys.modules[self.package_name].module_ran.should.be.true
+
+    def it_should_not_modify_sys_dot_path(self):
+        sys.path.should.equal(self.old_sys_dot_path)
+
+    def cleanup_the_file_system_and_sys_dot_modules(self):
+        shutil.rmtree(self.folder_path)
+        del sys.modules[self.package_name]
+        importlib.invalidate_caches()
+
+    def create_fake_module(self):
+        test = types.ModuleType(self.package_name)
+        test.is_fake = True
+        test.module_ran = False
+        test.__file__ = os.path.join("fake", "file.py")
+        sys.modules[self.package_name] = test
+
+    def create_folder(self):
+        self.folder_path = os.path.join(TEST_DATA_DIR, self.package_name)
+        os.mkdir(self.folder_path)
+
+    def write_files(self):
+        self.filename = os.path.join(self.folder_path, '__init__.py')
+        with open(self.filename, 'w') as f:
+            f.write(self.code)
+
+
 class WhenAPackageContainsAnAlreadyImportedFile:
     def establish_that_we_have_already_imported_the_module(self):
         self.code = """
