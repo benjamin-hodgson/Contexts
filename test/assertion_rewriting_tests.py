@@ -1,7 +1,6 @@
 import os
 import shutil
 import sys
-import sure
 from .tools import SpyReporter
 import contexts
 
@@ -40,11 +39,11 @@ class TestSpec:
         contexts.run(self.filename, [self.reporter])
 
     def it_should_call_assertion_failed(self):
-        [call[0] for call in self.reporter.calls].should.contain('assertion_failed')
+        assert 'assertion_failed' in [call[0] for call in self.reporter.calls]
 
     def the_exception_should_contain_the_supplied_message(self):
         the_call, = [call for call in self.reporter.calls if call[0] == 'assertion_failed']
-        str(the_call[2]).should.equal(self.message)
+        assert str(the_call[2]) == self.message
 
 
 class WhenUserExpicitlyAssertsFalse(AssertionRewritingSharedContext):
@@ -61,11 +60,11 @@ class TestSpec:
         contexts.run(self.filename, [self.reporter])
 
     def it_should_call_assertion_failed(self):
-        [call[0] for call in self.reporter.calls].should.contain('assertion_failed')
+        assert 'assertion_failed' in [call[0] for call in self.reporter.calls]
 
     def the_exception_should_contain_a_generated_message(self):
         the_call, = [call for call in self.reporter.calls if call[0] == 'assertion_failed']
-        str(the_call[2]).should.equal("Explicitly asserted False")
+        assert str(the_call[2]) == "Explicitly asserted False"
 
 
 class WhenUserAssertsOnSomethingFalsy(AssertionRewritingSharedContext):
@@ -91,11 +90,11 @@ class TestSpec:
         contexts.run(self.filename, [self.reporter])
 
     def it_should_call_assertion_failed(self):
-        [call[0] for call in self.reporter.calls].should.contain('assertion_failed')
+        assert 'assertion_failed' in [call[0] for call in self.reporter.calls]
 
     def the_exception_should_contain_a_generated_message(self, x):
         the_call, = [call for call in self.reporter.calls if call[0] == 'assertion_failed']
-        str(the_call[2]).should.equal("Asserted {} but found it to be falsy".format(repr(x)))
+        assert str(the_call[2]) == "Asserted {} but found it to be falsy".format(repr(x))
 
 
 
@@ -120,12 +119,12 @@ class TestSpec:
         contexts.run(self.filename, [self.reporter])
 
     def it_should_call_assertion_failed(self):
-        [call[0] for call in self.reporter.calls].should.contain('assertion_failed')
+        assert 'assertion_failed' in [call[0] for call in self.reporter.calls]
 
     def the_exception_should_contain_a_generated_message(self):
         a_thing = sys.modules[self.module_name].a_thing
         the_call, = [call for call in self.reporter.calls if call[0] == 'assertion_failed']
-        str(the_call[2]).should.equal("Asserted {} but found it to be falsy".format(repr(a_thing)))
+        assert str(the_call[2]) == "Asserted {} but found it to be falsy".format(repr(a_thing))
 
 
 class WhenUserAssertsNot(AssertionRewritingSharedContext):
@@ -151,11 +150,11 @@ class TestSpec:
         contexts.run(self.filename, [self.reporter])
 
     def it_should_call_assertion_failed(self):
-        [call[0] for call in self.reporter.calls].should.contain('assertion_failed')
+        assert 'assertion_failed' in [call[0] for call in self.reporter.calls]
 
     def the_exception_should_contain_a_generated_message(self, x):
         the_call, = [call for call in self.reporter.calls if call[0] == 'assertion_failed']
-        str(the_call[2]).should.equal("Asserted not {} but found it to be truthy".format(repr(x)))
+        assert str(the_call[2]) == "Asserted not {} but found it to be truthy".format(repr(x))
 
 
 class WhenUserAssertsOnAFunctionCall(AssertionRewritingSharedContext):
@@ -181,11 +180,11 @@ class TestSpec:
         mock.assert_called_once_with()
 
     def it_should_call_assertion_failed(self):
-        [call[0] for call in self.reporter.calls].should.contain('assertion_failed')
+        assert 'assertion_failed' in [call[0] for call in self.reporter.calls]
 
     def the_exception_should_contain_a_generated_message(self):
         the_call, = [call for call in self.reporter.calls if call[0] == 'assertion_failed']
-        str(the_call[2]).should.equal("Asserted {} but found it to be falsy".format(False))
+        assert str(the_call[2]) == "Asserted {} but found it to be falsy".format(False)
 
 
 class WhenUserAssertsEqual(AssertionRewritingSharedContext):
@@ -211,11 +210,11 @@ class TestSpec:
         contexts.run(self.filename, [self.reporter])
 
     def it_should_call_assertion_failed(self):
-        [call[0] for call in self.reporter.calls].should.contain('assertion_failed')
+        assert 'assertion_failed' in [call[0] for call in self.reporter.calls]
 
     def the_exception_should_contain_a_generated_message(self, x, y):
         the_call, = [call for call in self.reporter.calls if call[0] == 'assertion_failed']
-        str(the_call[2]).should.equal("Asserted {0} == {1} but found them not to be equal".format(repr(x), repr(y)))
+        assert str(the_call[2]) == "Asserted {0} == {1} but found them not to be equal".format(repr(x), repr(y))
 
 
 class WhenUserAssertsEqualOnACustomObject(AssertionRewritingSharedContext):
@@ -247,12 +246,12 @@ class TestSpec:
         contexts.run(self.filename, [self.reporter])
 
     def it_should_call_assertion_failed(self):
-        [call[0] for call in self.reporter.calls].should.contain('assertion_failed')
+        assert 'assertion_failed' in [call[0] for call in self.reporter.calls]
 
     def the_exception_should_contain_a_generated_message(self, x):
         the_call, = [call for call in self.reporter.calls if call[0] == 'assertion_failed']
         never_equal = sys.modules[self.module_name].never_equal
-        str(the_call[2]).should.equal("Asserted {0} == {1} but found them not to be equal".format(repr(x), repr(never_equal)))
+        assert str(the_call[2]) == "Asserted {0} == {1} but found them not to be equal".format(repr(x), repr(never_equal))
 
 
 class WhenUserAssertsEqualOnAFunctionCallOnTheLeft(AssertionRewritingSharedContext):
@@ -285,11 +284,11 @@ class TestSpec:
         mock.assert_called_once_with()
 
     def it_should_call_assertion_failed(self):
-        [call[0] for call in self.reporter.calls].should.contain('assertion_failed')
+        assert 'assertion_failed' in [call[0] for call in self.reporter.calls]
 
     def the_exception_should_contain_a_generated_message(self, x, y):
         the_call, = [call for call in self.reporter.calls if call[0] == 'assertion_failed']
-        str(the_call[2]).should.equal("Asserted {0} == {1} but found them not to be equal".format(repr(x), repr(y)))
+        assert str(the_call[2]) == "Asserted {0} == {1} but found them not to be equal".format(repr(x), repr(y))
 
 
 class WhenUserAssertsEqualOnAFunctionCallOnTheRight(AssertionRewritingSharedContext):
@@ -322,11 +321,11 @@ class TestSpec:
         mock.assert_called_once_with()
 
     def it_should_call_assertion_failed(self):
-        [call[0] for call in self.reporter.calls].should.contain('assertion_failed')
+        assert 'assertion_failed' in [call[0] for call in self.reporter.calls]
 
     def the_exception_should_contain_a_generated_message(self, x, y):
         the_call, = [call for call in self.reporter.calls if call[0] == 'assertion_failed']
-        str(the_call[2]).should.equal("Asserted {0} == {1} but found them not to be equal".format(repr(y), repr(x)))
+        assert str(the_call[2]) == "Asserted {0} == {1} but found them not to be equal".format(repr(y), repr(x))
 
 
 class WhenUserAssertsNotEqual(AssertionRewritingSharedContext):
@@ -352,11 +351,11 @@ class TestSpec:
         contexts.run(self.filename, [self.reporter])
 
     def it_should_call_assertion_failed(self):
-        [call[0] for call in self.reporter.calls].should.contain('assertion_failed')
+        assert 'assertion_failed' in [call[0] for call in self.reporter.calls]
 
     def the_exception_should_contain_a_generated_message(self, x):
         the_call, = [call for call in self.reporter.calls if call[0] == 'assertion_failed']
-        str(the_call[2]).should.equal("Asserted {0} != {0} but found them to be equal".format(repr(x)))
+        assert str(the_call[2]) == "Asserted {0} != {0} but found them to be equal".format(repr(x))
 
 
 class WhenUserAssertsLessThanButItIsGreater(AssertionRewritingSharedContext):
@@ -382,11 +381,11 @@ class TestSpec:
         contexts.run(self.filename, [self.reporter])
 
     def it_should_call_assertion_failed(self):
-        [call[0] for call in self.reporter.calls].should.contain('assertion_failed')
+        assert 'assertion_failed' in [call[0] for call in self.reporter.calls]
 
     def the_exception_should_contain_a_generated_message(self, x, y):
         the_call, = [call for call in self.reporter.calls if call[0] == 'assertion_failed']
-        str(the_call[2]).should.equal("Asserted {0} < {1} but found it to be greater".format(repr(x), repr(y)))
+        assert str(the_call[2]) == "Asserted {0} < {1} but found it to be greater".format(repr(x), repr(y))
 
 
 class WhenUserAssertsLessThanButItIsEqual(AssertionRewritingSharedContext):
@@ -412,12 +411,11 @@ class TestSpec:
         contexts.run(self.filename, [self.reporter])
 
     def it_should_call_assertion_failed(self):
-        print(self.reporter.calls[1])
-        [call[0] for call in self.reporter.calls].should.contain('assertion_failed')
+        assert 'assertion_failed' in [call[0] for call in self.reporter.calls]
 
     def the_exception_should_contain_a_generated_message(self, x):
         the_call, = [call for call in self.reporter.calls if call[0] == 'assertion_failed']
-        str(the_call[2]).should.equal("Asserted {0} < {0} but found them to be equal".format(repr(x)))
+        assert str(the_call[2]) == "Asserted {0} < {0} but found them to be equal".format(repr(x))
 
 
 class WhenUserAssertsLessThanOrEqual(AssertionRewritingSharedContext):
@@ -443,11 +441,11 @@ class TestSpec:
         contexts.run(self.filename, [self.reporter])
 
     def it_should_call_assertion_failed(self):
-        [call[0] for call in self.reporter.calls].should.contain('assertion_failed')
+        assert 'assertion_failed' in [call[0] for call in self.reporter.calls]
 
     def the_exception_should_contain_a_generated_message(self, x, y):
         the_call, = [call for call in self.reporter.calls if call[0] == 'assertion_failed']
-        str(the_call[2]).should.equal("Asserted {0} <= {1} but found it to be greater".format(repr(x), repr(y)))
+        assert str(the_call[2]) == "Asserted {0} <= {1} but found it to be greater".format(repr(x), repr(y))
 
 
 class WhenUserAssertsGreaterThanButItIsLess(AssertionRewritingSharedContext):
@@ -473,11 +471,11 @@ class TestSpec:
         contexts.run(self.filename, [self.reporter])
 
     def it_should_call_assertion_failed(self):
-        [call[0] for call in self.reporter.calls].should.contain('assertion_failed')
+        assert 'assertion_failed' in [call[0] for call in self.reporter.calls]
 
     def the_exception_should_contain_a_generated_message(self, x, y):
         the_call, = [call for call in self.reporter.calls if call[0] == 'assertion_failed']
-        str(the_call[2]).should.equal("Asserted {0} > {1} but found it to be less".format(repr(x), repr(y)))
+        assert str(the_call[2]) == "Asserted {0} > {1} but found it to be less".format(repr(x), repr(y))
 
 
 class WhenUserAssertsGreaterThanButItIsEqual(AssertionRewritingSharedContext):
@@ -503,12 +501,11 @@ class TestSpec:
         contexts.run(self.filename, [self.reporter])
 
     def it_should_call_assertion_failed(self):
-        print(self.reporter.calls[1])
-        [call[0] for call in self.reporter.calls].should.contain('assertion_failed')
+        assert 'assertion_failed' in [call[0] for call in self.reporter.calls]
 
     def the_exception_should_contain_a_generated_message(self, x):
         the_call, = [call for call in self.reporter.calls if call[0] == 'assertion_failed']
-        str(the_call[2]).should.equal("Asserted {0} > {0} but found them to be equal".format(repr(x)))
+        assert str(the_call[2]) == "Asserted {0} > {0} but found them to be equal".format(repr(x))
 
 
 class WhenUserAssertsGreaterThanOrEqual(AssertionRewritingSharedContext):
@@ -534,11 +531,11 @@ class TestSpec:
         contexts.run(self.filename, [self.reporter])
 
     def it_should_call_assertion_failed(self):
-        [call[0] for call in self.reporter.calls].should.contain('assertion_failed')
+        assert 'assertion_failed' in [call[0] for call in self.reporter.calls]
 
     def the_exception_should_contain_a_generated_message(self, x, y):
         the_call, = [call for call in self.reporter.calls if call[0] == 'assertion_failed']
-        str(the_call[2]).should.equal("Asserted {0} >= {1} but found it to be less".format(repr(x), repr(y)))
+        assert str(the_call[2]) == "Asserted {0} >= {1} but found it to be less".format(repr(x), repr(y))
 
 
 class WhenUserAssertsIn(AssertionRewritingSharedContext):
@@ -564,11 +561,11 @@ class TestSpec:
         contexts.run(self.filename, [self.reporter])
 
     def it_should_call_assertion_failed(self):
-        [call[0] for call in self.reporter.calls].should.contain('assertion_failed')
+        assert 'assertion_failed' in [call[0] for call in self.reporter.calls]
 
     def the_exception_should_contain_a_generated_message(self, x, y):
         the_call, = [call for call in self.reporter.calls if call[0] == 'assertion_failed']
-        str(the_call[2]).should.equal("Asserted {0} in {1} but found it not to be present".format(repr(x), repr(y)))
+        assert str(the_call[2]) == "Asserted {0} in {1} but found it not to be present".format(repr(x), repr(y))
 
 
 class WhenUserAssertsNotIn(AssertionRewritingSharedContext):
@@ -594,11 +591,11 @@ class TestSpec:
         contexts.run(self.filename, [self.reporter])
 
     def it_should_call_assertion_failed(self):
-        [call[0] for call in self.reporter.calls].should.contain('assertion_failed')
+        assert 'assertion_failed' in [call[0] for call in self.reporter.calls]
 
     def the_exception_should_contain_a_generated_message(self, x, y):
         the_call, = [call for call in self.reporter.calls if call[0] == 'assertion_failed']
-        str(the_call[2]).should.equal("Asserted {0} not in {1} but found it to be present".format(repr(x), repr(y)))
+        assert str(the_call[2]) == "Asserted {0} not in {1} but found it to be present".format(repr(x), repr(y))
 
 
 class WhenUserAssertsIs(AssertionRewritingSharedContext):
@@ -625,11 +622,11 @@ class TestSpec:
         contexts.run(self.filename, [self.reporter])
 
     def it_should_call_assertion_failed(self):
-        [call[0] for call in self.reporter.calls].should.contain('assertion_failed')
+        assert 'assertion_failed' in [call[0] for call in self.reporter.calls]
 
     def the_exception_should_contain_a_generated_message(self, x, y):
         the_call, = [call for call in self.reporter.calls if call[0] == 'assertion_failed']
-        str(the_call[2]).should.equal("Asserted {0} is {1} but found them not to be the same".format(repr(x), repr(y)))
+        assert str(the_call[2]) == "Asserted {0} is {1} but found them not to be the same".format(repr(x), repr(y))
 
 
 class WhenUserAssertsIsNot(AssertionRewritingSharedContext):
@@ -655,8 +652,8 @@ class TestSpec:
         contexts.run(self.filename, [self.reporter])
 
     def it_should_call_assertion_failed(self):
-        [call[0] for call in self.reporter.calls].should.contain('assertion_failed')
+        assert 'assertion_failed' in [call[0] for call in self.reporter.calls]
 
     def the_exception_should_contain_a_generated_message(self, x):
         the_call, = [call for call in self.reporter.calls if call[0] == 'assertion_failed']
-        str(the_call[2]).should.equal("Asserted {0} is not {0} but found them to be the same".format(repr(x)))
+        assert str(the_call[2]) == "Asserted {0} is not {0} but found them to be the same".format(repr(x))
