@@ -115,7 +115,7 @@ class TestSpec:
     def because_we_run_the_spec(self):
         contexts.run(self.filename, [self.reporter])
 
-    def it_should_only_call_the_mock_once(self):
+    def it_should_only_call_the_function_once(self):
         mock = sys.modules[self.module_name].m
         mock.assert_called_once_with()
 
@@ -182,7 +182,7 @@ class TestSpec:
     def because_we_run_the_spec(self):
         contexts.run(self.filename, [self.reporter])
 
-    def it_should_only_call_the_mock_once(self):
+    def it_should_only_call_the_function_once(self):
         mock = sys.modules[self.module_name].m
         mock.assert_called_once_with()
 
@@ -219,7 +219,7 @@ class TestSpec:
     def because_we_run_the_spec(self):
         contexts.run(self.filename, [self.reporter])
 
-    def it_should_only_call_the_mock_once(self):
+    def it_should_only_call_the_function_once(self):
         mock = sys.modules[self.module_name].m
         mock.assert_called_once_with()
 
