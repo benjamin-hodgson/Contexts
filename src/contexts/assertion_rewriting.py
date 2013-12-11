@@ -53,6 +53,14 @@ class AssertionChildVisitor(ast.NodeVisitor):
             format_string = "Asserted {0} > {1} but found {2}"
         elif isinstance(compare_node.ops[0], ast.GtE):
             format_string = "Asserted {0} >= {1} but found it to be less"
+        elif isinstance(compare_node.ops[0], ast.In):
+            format_string = "Asserted {0} in {1} but found it not to be present"
+        elif isinstance(compare_node.ops[0], ast.NotIn):
+            format_string = "Asserted {0} not in {1} but found it to be present"
+        elif isinstance(compare_node.ops[0], ast.Is):
+            format_string = "Asserted {0} is {1} but found them not to be the same"
+        elif isinstance(compare_node.ops[0], ast.IsNot):
+            format_string = "Asserted {0} is not {1} but found them to be the same"
         else:
             return None
 
@@ -89,14 +97,25 @@ class AssertionChildVisitor(ast.NodeVisitor):
             msg = ast.Str("Explicitly asserted False")
             return [ast.Assert(name_node, msg)]
 
+    def visit_UnaryOp(self, unaryop_node):
+        if isinstance(unaryop_node.op, ast.Not):
+            format_string = "Asserted not {} but found it to be truthy"
+
+            name = '@contexts_assertion_var'
+            load_name = ast.Name(name, ast.Load())
+            msg = self.format(format_string, [self.repr(load_name)])
+
+            statements = [self.assign(name, unaryop_node.operand), ast.Assert(ast.UnaryOp(ast.Not(), load_name), msg)]
+            return statements
+
     def visit_unknown_node(self, node):
-        format_string = "Asserted {} but found it not to be truthy"
+        format_string = "Asserted {} but found it to be falsy"
 
         name = '@contexts_assertion_var'
         load_name = ast.Name(name, ast.Load())
         msg = self.format(format_string, [self.repr(load_name)])
 
-        statements = [self.assign(name, node), ast.Assert(ast.Name(name, ast.Load()), msg)]
+        statements = [self.assign(name, node), ast.Assert(load_name, msg)]
         return statements
 
     def assign(self, name, expr_node):
