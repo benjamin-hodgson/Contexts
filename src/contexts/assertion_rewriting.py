@@ -45,6 +45,14 @@ class AssertionChildVisitor(ast.NodeVisitor):
             format_string = 'Asserted {0} != {1} but found them to be equal'
         elif isinstance(compare_node.ops[0], ast.Eq):
             format_string = 'Asserted {0} == {1} but found them not to be equal'
+        elif isinstance(compare_node.ops[0], ast.Lt):
+            format_string = "Asserted {0} < {1} but found {2}"
+        elif isinstance(compare_node.ops[0], ast.LtE):
+            format_string = "Asserted {0} <= {1} but found it to be greater"
+        elif isinstance(compare_node.ops[0], ast.Gt):
+            format_string = "Asserted {0} > {1} but found {2}"
+        elif isinstance(compare_node.ops[0], ast.GtE):
+            format_string = "Asserted {0} >= {1} but found it to be less"
         else:
             return None
 
@@ -59,11 +67,21 @@ class AssertionChildVisitor(ast.NodeVisitor):
             new_comparators.append(load_name)
             format_params.append(self.repr(load_name))
 
+        if isinstance(compare_node.ops[0], ast.Lt):
+            name = '@contexts_formatparam'
+            ternary_expression = ast.IfExp(ast.Compare(new_comparators[0], [ast.Gt()], [new_comparators[1]]), ast.Str('it to be greater'), ast.Str('them to be equal'))
+            statements.append(self.assign(name, ternary_expression))
+            format_params.append(ast.Name(name, ast.Load()))
+        if isinstance(compare_node.ops[0], ast.Gt):
+            name = '@contexts_formatparam'
+            ternary_expression = ast.IfExp(ast.Compare(new_comparators[0], [ast.Lt()], [new_comparators[1]]), ast.Str('it to be less'), ast.Str('them to be equal'))
+            statements.append(self.assign(name, ternary_expression))
+            format_params.append(ast.Name(name, ast.Load()))
+
         compare_node.left, *compare_node.comparators = new_comparators
         msg = self.format(format_string, format_params)
 
         statements.append(ast.Assert(compare_node, msg))
-
         return statements
 
     def visit_Name(self, name_node):
