@@ -1,8 +1,7 @@
 import ast
-import contextlib
+import importlib.abc
 import os
 import sys
-import types
 
 
 def import_from_file(file_path):
@@ -20,38 +19,12 @@ def import_module(dir_path, module_name):
     Import the specified module from the specified directory, rewriting
     assert statements where necessary.
     """
-    # http://en.wikipedia.org/wiki/Greenspun's_tenth_rule applied to the import system :|
-
     filename = resolve_filename(dir_path, module_name)
     prune_sys_dot_modules(module_name, filename)
     if module_name in sys.modules:
         return sys.modules[module_name]
 
-    module = create_module_object(module_name, filename)
-    sys.modules[module_name] = module
-
-    try:
-        with open(filename, 'r', encoding='utf-8') as f:
-            source = f.read()
-    except ImportError:
-        raise
-    except Exception as e:
-        del sys.modules[module_name]
-        raise ImportError from e
-
-    parsed = ast.parse(source)
-    transformer = AssertionRewriter()
-    transformer.visit(parsed)
-
-    code = compile(parsed, filename, 'exec', dont_inherit=True, optimize=0)
-
-    try:
-        exec(code, module.__dict__)
-    except:
-        del sys.modules[module_name]
-        raise
-
-    return module
+    return AssertionRewritingLoader(module_name, filename).load_module(module_name)
 
 
 def resolve_filename(dir_path, module_name):
@@ -70,33 +43,28 @@ def prune_sys_dot_modules(module_name, module_location):
             del sys.modules[module_name]
 
 
-def create_module_object(module_name, filename):
-    module = types.ModuleType(module_name)
-    module.__file__ = filename
-
-    if '__init__.py' in filename:
-        module.__package__ = module_name
-        module.__path__ = [os.path.dirname(filename)]
-    else:
-        if '.' in module_name:
-            module.__package__, _ = module_name.rsplit('.', 1)
-        else:
-            module.__package__ = ''
-
-    return module
-
-
-@contextlib.contextmanager
-def prepend_folder_to_sys_dot_path(folder_path):
-    sys.path.insert(0, folder_path)
-    try:
-        yield
-    finally:
-        sys.path.pop(0)
-
-
 def same_file(path1, path2):
     return os.path.realpath(path1) == os.path.realpath(path2)
+
+
+class AssertionRewritingLoader(importlib.abc.FileLoader, importlib.abc.SourceLoader):
+    # in Python 3.4, implementing get_code won't be necessary -
+    # I could just override source_to_code.
+    # When 3.4 gets officially released, maybe wrap this def in an if
+    def get_code(self, fullname):
+        source = self.get_source(fullname)
+        path = self.get_filename(fullname)
+        return self.source_to_code(source, path)
+
+    def source_to_code(self, source, path='<string>'):
+        parsed = ast.parse(source)
+        transformer = AssertionRewriter()
+        transformer.visit(parsed)
+
+        return compile(parsed, path, 'exec', dont_inherit=True, optimize=0)
+
+    def module_repr(self, module):
+        return '<module {!r} from {!r}>'.format(module.__name__, module.__file__)
 
 
 class AssertionRewriter(ast.NodeTransformer):
