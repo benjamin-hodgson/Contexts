@@ -1,7 +1,7 @@
 from io import StringIO
 import contexts
 from contexts import reporting
-from .. import tools
+from . import tools
 
 
 class ColouredReporterSharedContext:
@@ -36,7 +36,7 @@ class WhenColouringOutputAndAnAssertionFails(ColouredReporterSharedContext):
         frame1
       File "made_up_file_11.py", line 2, in made_up_function_2
         frame2
-    test.tools.FakeAssertionError: you fail
+    test.reporting_tests.tools.FakeAssertionError: you fail
 \x1b[39m""")
 
 
@@ -58,7 +58,7 @@ class WhenColouringOutputAndAnAssertionErrors(ColouredReporterSharedContext):
         frame3
       File "made_up_file_13.py", line 4, in made_up_function_4
         frame4
-    test.tools.FakeException: no
+    test.reporting_tests.tools.FakeException: no
 \x1b[39m""")
 
 
@@ -80,7 +80,7 @@ class WhenColouringOutputAndAContextErrors(ColouredReporterSharedContext):
       frame3
     File "made_up_file_15.py", line 4, in made_up_function_4
       frame4
-  test.tools.FakeException: out
+  test.reporting_tests.tools.FakeException: out
 \x1b[39m""")
 
 
@@ -100,5 +100,5 @@ class WhenColouringOutputAndAnUnexpectedErrorOccurs(ColouredReporterSharedContex
     frame3
   File "made_up_file_17.py", line 4, in made_up_function_4
     frame4
-test.tools.FakeException: out
+test.reporting_tests.tools.FakeException: out
 \x1b[39m""")

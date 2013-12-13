@@ -1,7 +1,7 @@
 from io import StringIO
 import contexts
 from contexts import reporting
-from .. import tools
+from . import tools
 
 
 class VerboseReporterSharedContext:
@@ -52,7 +52,7 @@ class WhenPrintingVerboselyAndAnAssertionFails(VerboseReporterSharedContext):
         frame1
       File "made_up_file_11.py", line 2, in made_up_function_2
         frame2
-    test.tools.FakeAssertionError: you fail
+    test.reporting_tests.tools.FakeAssertionError: you fail
 """)
 
 class WhenPrintingVerboselyAndAnAssertionErrors(VerboseReporterSharedContext):
@@ -73,7 +73,7 @@ class WhenPrintingVerboselyAndAnAssertionErrors(VerboseReporterSharedContext):
         frame3
       File "made_up_file_13.py", line 4, in made_up_function_4
         frame4
-    test.tools.FakeException: no
+    test.reporting_tests.tools.FakeException: no
 """)
 
 class WhenPrintingVerboselyAndAContextErrors(VerboseReporterSharedContext):
@@ -94,7 +94,7 @@ class WhenPrintingVerboselyAndAContextErrors(VerboseReporterSharedContext):
       frame3
     File "made_up_file_15.py", line 4, in made_up_function_4
       frame4
-  test.tools.FakeException: out
+  test.reporting_tests.tools.FakeException: out
 """)
 
 class WhenPrintingVerboselyAndAnUnexpectedErrorOccurs(VerboseReporterSharedContext):
@@ -111,5 +111,5 @@ class WhenPrintingVerboselyAndAnUnexpectedErrorOccurs(VerboseReporterSharedConte
     frame3
   File "made_up_file_17.py", line 4, in made_up_function_4
     frame4
-test.tools.FakeException: out
+test.reporting_tests.tools.FakeException: out
 """)

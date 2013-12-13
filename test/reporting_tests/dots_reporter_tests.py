@@ -1,6 +1,6 @@
 from io import StringIO
 from contexts import reporting
-from .. import tools
+from . import tools
 
 
 class DotsReporterSharedContext:

@@ -3,7 +3,7 @@ from io import StringIO
 import re
 import contexts
 from contexts.reporting import teamcity
-from .. import tools
+from . import tools
 
 
 class TeamCitySharedContext:
@@ -147,7 +147,7 @@ class WhenAnAssertionFailsInTeamCity(TeamCitySharedContext):
 '    frame1|n'
 '  File "another_made_up_file.py", line 2, in another_made_up_function|n'
 '    frame2|n'
-'test.tools.FakeAssertionError: Gotcha')
+'test.reporting_tests.tools.FakeAssertionError: Gotcha')
 
         self.reporter.context_started(context)
 
@@ -159,7 +159,7 @@ class WhenAnAssertionFailsInTeamCity(TeamCitySharedContext):
             "testFailed",
             {
                 'name':'Fake context -> Fake assertion',
-                'message':'test.tools.FakeAssertionError: Gotcha',
+                'message':'test.reporting_tests.tools.FakeAssertionError: Gotcha',
                 'details':self.formatted_tb
             })
     def it_should_tell_team_city_it_finished(self):
@@ -229,7 +229,7 @@ class WhenAnAssertionErrorsInTeamCity(TeamCitySharedContext):
 '    frame1|n'
 '  File "another_made_up_file.py", line 2, in another_made_up_function|n'
 '    frame2|n'
-'test.tools.FakeAssertionError: Gotcha')
+'test.reporting_tests.tools.FakeAssertionError: Gotcha')
 
         self.reporter.context_started(context)
 
@@ -241,7 +241,7 @@ class WhenAnAssertionErrorsInTeamCity(TeamCitySharedContext):
             "testFailed",
             {
                 'name':'Fake context -> Fake assertion',
-                'message':'test.tools.FakeAssertionError: Gotcha',
+                'message':'test.reporting_tests.tools.FakeAssertionError: Gotcha',
                 'details':self.formatted_tb
             })
     def it_should_tell_team_city_it_finished(self):
@@ -310,7 +310,7 @@ class WhenAContextErrorsInTeamCity(TeamCitySharedContext):
 '    frame1|n'
 '  File "another_made_up_file.py", line 2, in another_made_up_function|n'
 '    frame2|n'
-'test.tools.FakeException: Gotcha')
+'test.reporting_tests.tools.FakeException: Gotcha')
 
         self.reporter.context_started(self.context)
 
@@ -324,7 +324,7 @@ class WhenAContextErrorsInTeamCity(TeamCitySharedContext):
             "testFailed",
             {
                 'name':'Fake context',
-                'message':'test.tools.FakeException: Gotcha',
+                'message':'test.reporting_tests.tools.FakeException: Gotcha',
                 'details':self.formatted_tb
             })
     def it_should_tell_team_city_the_test_finished(self):
@@ -390,7 +390,7 @@ class WhenAnUnexpectedErrorOccursInTeamCity(TeamCitySharedContext):
 '    frame7|n'
 '  File "made_up_file_8.py", line 2, in made_up_function_8|n'
 '    frame8|n'
-'test.tools.FakeException: another exception')
+'test.reporting_tests.tools.FakeException: another exception')
 
     def because_an_unexpected_error_occurs(self):
         self.reporter.unexpected_error(self.exception)
@@ -402,7 +402,7 @@ class WhenAnUnexpectedErrorOccursInTeamCity(TeamCitySharedContext):
             "testFailed",
             {
                 'name':'Test error',
-                'message':'test.tools.FakeException: another exception',
+                'message':'test.reporting_tests.tools.FakeException: another exception',
                 'details':self.formatted_tb
             })
     def it_should_tell_team_city_the_test_finished(self):
