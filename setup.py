@@ -13,7 +13,6 @@ setup(
     package_dir = {'':'src'},
     packages = find_packages('src'),
     install_requires = ["setuptools >= 1.0"],
-    tests_require = ["sure >= 1.2.2"],
     extras_require = {'colour': ["colorama >= 0.2.7"]},
     entry_points = {
     	'console_scripts': ['run-contexts = contexts.__main__:cmd']
