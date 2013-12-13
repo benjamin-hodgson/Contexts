@@ -97,7 +97,6 @@ class TestSpec:
         global module_ran
         module_ran = True
 """
-        self.old_sys_dot_path = sys.path[:]
         self.module_name = "test_file"
         self.write_file()
         self.reporter = SpyReporter()
@@ -123,9 +122,6 @@ class TestSpec:
     def it_should_pass_the_suite_object_into_suite_ended(self):
         self.reporter.calls[-2][1].name.should.equal(self.module_name)
 
-    def it_should_not_modify_sys_dot_path(self):
-        sys.path.should.equal(self.old_sys_dot_path)
-
     def cleanup_the_file_system_and_sys_dot_modules(self):
         os.remove(self.filename)
         del sys.modules[self.module_name]
@@ -149,7 +145,6 @@ class TestSpec:
 
 raise ZeroDivisionError("bogus error message")
 """
-        self.old_sys_dot_path = sys.path[:]
         self.module_name = "broken_test_file"
         self.write_file()
         self.reporter = SpyReporter()
@@ -165,9 +160,6 @@ raise ZeroDivisionError("bogus error message")
 
     def it_should_pass_in_the_exception(self):
         self.reporter.calls[1][1].should.be.a(ZeroDivisionError)
-
-    def it_should_not_modify_sys_dot_path(self):
-        sys.path.should.equal(self.old_sys_dot_path)
 
     def cleanup_the_file_system_and_sys_dot_modules(self):
         os.remove(self.filename)
@@ -189,7 +181,6 @@ class TestSpec:
         global module_ran
         module_ran = True
 """
-        self.old_sys_dot_path = sys.path[:]
         self.module_names = ["test_file1", "test_file2", "an_innocent_module"]
         self.create_folder()
         self.write_files()
@@ -230,9 +221,6 @@ class TestSpec:
         names = {call[1].name for call in self.reporter.calls if call[0] == 'suite_ended'}
         names.should.equal({'test_file1', 'test_file2'})
 
-    def it_should_not_modify_sys_dot_path(self):
-        sys.path.should.equal(self.old_sys_dot_path)
-
     def cleanup_the_file_system_and_sys_dot_modules(self):
         shutil.rmtree(self.folder_path)
         del sys.modules[self.module_names[0]]
@@ -261,7 +249,6 @@ class TestSpec:
         global module_ran
         module_ran = True
 """
-        self.old_sys_dot_path = sys.path[:]
         self.module_name = "test1"
         self.create_folder()
         self.write_files()
@@ -275,9 +262,6 @@ class TestSpec:
 
     def it_should_not_re_run_the_module(self):
         sys.modules[self.module_name].module_ran.should.be.false
-
-    def it_should_not_modify_sys_dot_path(self):
-        sys.path.should.equal(self.old_sys_dot_path)
 
     def cleanup_the_file_system_and_sys_dot_modules(self):
         shutil.rmtree(self.folder_path)
@@ -317,7 +301,6 @@ class TestSpec:
         global module_ran
         module_ran = True
 """
-        self.old_sys_dot_path = sys.path[:]
         self.module_name = "test2"
         self.create_folder()
         self.write_files()
@@ -331,9 +314,6 @@ class TestSpec:
 
     def it_should_run_the_first_module(self):
         sys.modules[self.module_name].module_ran.should.be.true
-
-    def it_should_not_modify_sys_dot_path(self):
-        sys.path.should.equal(self.old_sys_dot_path)
 
     def cleanup_the_file_system_and_sys_dot_modules(self):
         shutil.rmtree(self.folder_path)
@@ -368,7 +348,6 @@ class TestSpec:
         global module_ran
         module_ran = True
 """
-        self.old_sys_dot_path = sys.path[:]
         self.package_name = 'already_imported_package'
         self.create_folder()
         self.write_files()
@@ -382,9 +361,6 @@ class TestSpec:
 
     def it_should_not_re_run_the_module(self):
         sys.modules[self.package_name].module_ran.should.be.false
-
-    def it_should_not_modify_sys_dot_path(self):
-        sys.path.should.equal(self.old_sys_dot_path)
 
     def cleanup_the_file_system_and_sys_dot_modules(self):
         shutil.rmtree(self.folder_path)
@@ -424,7 +400,6 @@ class TestSpec:
         global module_ran
         module_ran = True
 """
-        self.old_sys_dot_path = sys.path[:]
         self.package_name = 'package_folder_coincidence'
         self.create_folder()
         self.write_files()
@@ -438,9 +413,6 @@ class TestSpec:
 
     def it_should_run_the_first_module(self):
         sys.modules[self.package_name].module_ran.should.be.true
-
-    def it_should_not_modify_sys_dot_path(self):
-        sys.path.should.equal(self.old_sys_dot_path)
 
     def cleanup_the_file_system_and_sys_dot_modules(self):
         shutil.rmtree(self.folder_path)
@@ -475,7 +447,6 @@ class TestSpec:
         global module_ran
         module_ran = True
 """
-        self.old_sys_dot_path = sys.path[:]
         self.package_name = 'package_folder_with_already_imported_file'
         self.module_name = "already_imported_test"
         self.qualified_name = self.package_name + '.' + self.module_name
@@ -491,9 +462,6 @@ class TestSpec:
 
     def it_should_not_re_run_the_module(self):
         sys.modules[self.qualified_name].module_ran.should.be.false
-
-    def it_should_not_modify_sys_dot_path(self):
-        sys.path.should.equal(self.old_sys_dot_path)
 
     def cleanup_the_file_system_and_sys_dot_modules(self):
         shutil.rmtree(self.folder_path)
@@ -535,7 +503,6 @@ class TestSpec:
         global module_ran
         module_ran = True
 """
-        self.old_sys_dot_path = sys.path[:]
         self.package_name = 'package_folder_with_matching_filename'
         self.module_name = "maybe_imported_test"
         self.qualified_name = self.package_name + '.' + self.module_name
@@ -551,9 +518,6 @@ class TestSpec:
 
     def it_should_run_the_first_module(self):
         sys.modules[self.qualified_name].module_ran.should.be.true
-
-    def it_should_not_modify_sys_dot_path(self):
-        sys.path.should.equal(self.old_sys_dot_path)
 
     def cleanup_the_file_system_and_sys_dot_modules(self):
         shutil.rmtree(self.folder_path)
@@ -589,7 +553,6 @@ class TestSpec:
         global module_ran
         module_ran = True
 """
-        self.old_sys_dot_path = sys.path[:]
         self.package_name = 'package_folder'
         self.module_names = ["__init__", "test_file1", "test_file2", "an_innocent_module"]
         self.create_folder()
@@ -650,9 +613,6 @@ class TestSpec:
         names = {call[1].name for call in self.reporter.calls if call[0] == 'suite_ended'}
         names.should.equal({'package_folder', 'package_folder.test_file1', 'package_folder.test_file2'})
 
-    def it_should_not_modify_sys_dot_path(self):
-        sys.path.should.equal(self.old_sys_dot_path)
-
     def cleanup_the_file_system_and_sys_dot_modules(self):
         shutil.rmtree(self.folder_path)
         del sys.modules[self.package_name + '.' + self.module_names[1]]
@@ -681,7 +641,6 @@ class TestSpec:
         global module_ran
         module_ran = True
 """
-        self.old_sys_dot_path = sys.path[:]
         self.folder_name = 'folder3'
         self.tree = {
             "test_subfolder": ["test_file1"],
@@ -750,9 +709,6 @@ class TestSpec:
         names = {call[1].name for call in self.reporter.calls if call[0] == 'suite_ended'}
         names.should.equal({'test_file1', 'test_subpackage', 'test_subpackage.test_file2'})
 
-    def it_should_not_modify_sys_dot_path(self):
-        sys.path.should.equal(self.old_sys_dot_path)
-
     def cleanup_the_file_system_and_sys_dot_modules(self):
         shutil.rmtree(self.folder_path)
         del sys.modules["test_file1"]
@@ -782,7 +738,6 @@ class TestSpec:
         global module_ran
         module_ran = True
 """
-        self.old_sys_dot_path = sys.path[:]
         self.folder_name = 'package4'
         self.tree = {
             "test_subfolder": ["test_file1"],
@@ -866,9 +821,6 @@ class TestSpec:
         names = {call[1].name for call in self.reporter.calls if call[0] == 'suite_ended'}
         names.should.equal({'package4', 'package4.test_subpackage', 'package4.test_subpackage.test_file2', 'test_file1'})
 
-    def it_should_not_modify_sys_dot_path(self):
-        sys.path.should.equal(self.old_sys_dot_path)
-
     def cleanup_the_file_system_and_sys_dot_modules(self):
         shutil.rmtree(self.folder_path)
         del sys.modules["test_file1"]
@@ -911,7 +863,6 @@ class TestSpec:
         global module_ran
         module_ran = True
 """
-        self.old_sys_dot_path = sys.path[:]
         self.module_names = ["test_file1", "test_file2"]
         self.create_folder()
         self.write_files()
@@ -934,9 +885,6 @@ class TestSpec:
 
     def it_should_run_the_second_module(self):
         sys.modules[self.module_names[1]].module_ran.should.be.true
-
-    def it_should_not_modify_sys_dot_path(self):
-        sys.path.should.equal(self.old_sys_dot_path)
 
     def cleanup_the_file_system_and_sys_dot_modules(self):
         shutil.rmtree(self.folder_path)
