@@ -187,6 +187,37 @@ class TestSpec:
         assert str(the_call[2]) == "Asserted {} but found it to be falsy".format(False)
 
 
+class WhenUserAssertsOnAMethodCall(AssertionRewritingSharedContext):
+    def context(self):
+        self.module_name = "assert_method_call"
+        self.filename = os.path.join(TEST_DATA_DIR, self.module_name + ".py")
+        self.code = """
+from unittest import mock
+
+m = mock.Mock()
+m.meth.return_value = False
+
+class TestSpec:
+    def it(self):
+        assert m.meth()
+"""
+        self.write_file()
+
+    def because_we_run_the_spec(self):
+        contexts.run(self.filename, [self.reporter])
+
+    def it_should_only_call_the_function_once(self):
+        mock = sys.modules[self.module_name].m
+        mock.meth.assert_called_once_with()
+
+    def it_should_call_assertion_failed(self):
+        assert 'assertion_failed' in [call[0] for call in self.reporter.calls]
+
+    def the_exception_should_contain_a_generated_message(self):
+        the_call, = [call for call in self.reporter.calls if call[0] == 'assertion_failed']
+        assert str(the_call[2]) == "Asserted {} but found it to be falsy".format(False)
+
+
 class WhenUserAssertsEqual(AssertionRewritingSharedContext):
     @classmethod
     def examples_of_things_that_are_not_equal(cls):

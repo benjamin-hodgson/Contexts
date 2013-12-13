@@ -80,7 +80,7 @@ class AssertionChildVisitor(ast.NodeVisitor):
 
     def visit_Call(self, call_node):
         func_name = call_node.func
-        if func_name.id == "isinstance":
+        if hasattr(func_name, 'id') and func_name.id == "isinstance":
             return [
                 self.assign('@contexts_assertion_var1', call_node.args[0]),
                 self.assign('@contexts_assertion_var2', call_node.args[1]),
