@@ -41,6 +41,9 @@ class AssertionChildVisitor(ast.NodeVisitor):
         return ret if ret is not None else self.visit_unknown_node(node)
 
     def visit_Compare(self, compare_node):
+        if len(compare_node.comparators) > 1:
+            return
+
         format_string = self.formatstring_for_comparison(compare_node)
         if format_string is None:
             return

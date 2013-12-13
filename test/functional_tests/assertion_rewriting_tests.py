@@ -722,9 +722,9 @@ class TestSpec:
 class WhenUserAssertsIsinstanceWithATuple(AssertionRewritingSharedContext):
     @classmethod
     def examples_of_things_that_are_not_instances_of_their_partners(self):
-        yield 12.3, (int, complex)
-        yield {'abc'}, (list, dict)
-        yield "hello", (set, bytes)
+        yield 12.3, "(int, complex)"
+        yield {'abc'}, "(list, dict)"
+        yield "hello", "(set, bytes, float)"
 
     def context(self, x, tup):
         self.filename = os.path.join(TEST_DATA_DIR, "assert_isinstance_tuple.py")
@@ -732,9 +732,9 @@ class WhenUserAssertsIsinstanceWithATuple(AssertionRewritingSharedContext):
 class TestSpec:
     def it(self):
         a = {}
-        b = ({},{})
+        b = {}
         assert isinstance(a, b)
-""".format(repr(x), tup[0].__name__, tup[1].__name__)
+""".format(repr(x), tup)
         self.write_file()
 
     def because_we_run_the_spec(self):
@@ -745,4 +745,29 @@ class TestSpec:
 
     def the_exception_should_contain_a_generated_message(self, x, tup):
         the_call, = [call for call in self.reporter.calls if call[0] == 'assertion_failed']
-        assert str(the_call[2]) == "Asserted isinstance({0}, ({1}, {2})) but found it to be a {3}".format(repr(x), tup[0].__name__, tup[1].__name__, type(x).__name__)
+        assert str(the_call[2]) == "Asserted isinstance({0}, {1}) but found it to be a {2}".format(repr(x), tup, type(x).__name__)
+
+
+class WhenUserAssertsOnAChainedComparison(AssertionRewritingSharedContext):
+    def context(self):
+        self.filename = os.path.join(TEST_DATA_DIR, "assert_chained_comparison.py")
+        self.code = """
+class TestSpec:
+    def it(self):
+        a = 3
+        b = 1.1
+        assert a < b < 12
+"""
+        self.write_file()
+
+    def because_we_run_the_spec(self):
+        contexts.run(self.filename, [self.reporter])
+
+    def it_should_call_assertion_failed(self):
+        assert 'assertion_failed' in [call[0] for call in self.reporter.calls]
+
+    def the_exception_should_contain_a_generated_message(self):
+        the_call, = [call for call in self.reporter.calls if call[0] == 'assertion_failed']
+        # FIXME: this should have a more useful message.
+        # At the moment, the test is just making sure that the message doesn't lie outright.
+        assert str(the_call[2]) == "Asserted False but found it to be falsy"
