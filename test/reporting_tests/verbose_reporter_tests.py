@@ -1,5 +1,4 @@
 from io import StringIO
-import sure
 import contexts
 from contexts import reporting
 from .. import tools
@@ -15,7 +14,7 @@ class WhenPrintingVerboselyAndATestRunEnds(VerboseReporterSharedContext):
     def because_a_test_run_ends(self):
         self.reporter.test_run_ended(tools.create_test_run())
     def it_should_output_a_summary(self):
-        self.stringio.getvalue().should.equal("""
+        assert self.stringio.getvalue() == ("""
 ----------------------------------------------------------------------
 PASSED!
 0 contexts, 0 assertions
@@ -27,13 +26,13 @@ class WhenPrintingVerboselyAndAContextStarts(VerboseReporterSharedContext):
     def because_a_context_starts(self):
         self.reporter.context_started(tools.create_context("made.up_context_1"))
     def it_should_print_its_name(self):
-        self.stringio.getvalue().should.equal("made up context 1\n")
+        assert self.stringio.getvalue() == "made up context 1\n"
 
 class WhenPrintingVerboselyAndAnAssertionPasses(VerboseReporterSharedContext):
     def because_an_assertion_passes(self):
         self.reporter.assertion_passed(tools.create_assertion("assertion1"))
     def it_should_say_the_assertion_passed(self):
-        self.stringio.getvalue().should.equal('  PASS: assertion 1\n')
+        assert self.stringio.getvalue() == '  PASS: assertion 1\n'
 
 class WhenPrintingVerboselyAndAnAssertionFails(VerboseReporterSharedContext):
     def context(self):
@@ -46,7 +45,7 @@ class WhenPrintingVerboselyAndAnAssertionFails(VerboseReporterSharedContext):
         self.reporter.assertion_failed(self.assertion, self.exception)
 
     def it_should_output_a_stack_trace(self):
-        self.stringio.getvalue().should.equal(
+        assert self.stringio.getvalue() == (
 """  FAIL: assertion 2
     Traceback (most recent call last):
       File "made_up_file_10.py", line 1, in made_up_function_1
@@ -67,7 +66,7 @@ class WhenPrintingVerboselyAndAnAssertionErrors(VerboseReporterSharedContext):
         self.reporter.assertion_errored(self.assertion, self.exception)
 
     def it_should_output_a_stack_trace(self):
-        self.stringio.getvalue().should.equal(
+        assert self.stringio.getvalue() == (
 """  ERROR: assertion 3
     Traceback (most recent call last):
       File "made_up_file_12.py", line 3, in made_up_function_3
@@ -89,7 +88,7 @@ class WhenPrintingVerboselyAndAContextErrors(VerboseReporterSharedContext):
         self.reporter.context_errored(self.context, self.exception)
 
     def it_should_output_a_stack_trace(self):
-        self.stringio.getvalue().should.equal(
+        assert self.stringio.getvalue() == (
 """  Traceback (most recent call last):
     File "made_up_file_14.py", line 3, in made_up_function_3
       frame3
@@ -106,7 +105,7 @@ class WhenPrintingVerboselyAndAnUnexpectedErrorOccurs(VerboseReporterSharedConte
     def because_an_unexpected_error_occurs(self):
         self.reporter.unexpected_error(self.exception)
     def it_should_output_a_stack_trace(self):
-        self.stringio.getvalue().should.equal(
+        assert self.stringio.getvalue() == (
 """Traceback (most recent call last):
   File "made_up_file_16.py", line 3, in made_up_function_3
     frame3

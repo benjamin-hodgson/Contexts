@@ -1,7 +1,6 @@
 import datetime
 from io import StringIO
 from unittest import mock
-import sure
 from contexts import reporting
 from .. import tools
 
@@ -33,7 +32,7 @@ class WhenPrintingASuccessSummary:
         self.reporter.test_run_ended(tools.create_test_run())
 
     def it_should_print_the_summary_to_the_stream(self):
-        self.stringio.getvalue().should.equal(
+        assert self.stringio.getvalue() == (
 """
 ----------------------------------------------------------------------
 PASSED!
@@ -41,7 +40,7 @@ PASSED!
 """)
 
     def it_should_say_it_passed(self):
-        self.reporter.failed.should.be.false
+        assert not self.reporter.failed
 
 
 class WhenPrintingAFailureSummary:
@@ -64,7 +63,7 @@ class WhenPrintingAFailureSummary:
         self.reporter.test_run_ended(tools.create_test_run())
 
     def it_should_print_the_failure_tracebacks(self):
-        self.stringio.getvalue().should.equal("""
+        assert self.stringio.getvalue() == ("""
 ----------------------------------------------------------------------
 made up context
   FAIL: made up assertion 1
@@ -80,7 +79,7 @@ FAILED!
 """)
 
     def it_should_say_it_failed(self):
-        self.reporter.failed.should.be.true
+        assert self.reporter.failed
 
 class WhenTimingATestRun:
     def context(self):
@@ -102,4 +101,4 @@ class WhenTimingATestRun:
             self.reporter.test_run_ended(self.test_run)
 
     def it_should_report_the_total_time_for_the_test_run(self):
-        self.stringio.getvalue().should.equal("(10.5 seconds)\n")
+        assert self.stringio.getvalue() == "(10.5 seconds)\n"

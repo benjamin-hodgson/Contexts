@@ -1,5 +1,4 @@
 from contexts import reporting
-import sure
 
 
 class WhenMakingANameHumanReadable:
@@ -25,4 +24,4 @@ class WhenMakingANameHumanReadable:
         self.result = reporting.shared.make_readable(input)
 
     def it_should_return_a_string_with_appropriate_spaces(self, _, expected):
-        self.result.should.equal(expected)
+        assert self.result == expected

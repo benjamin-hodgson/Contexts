@@ -1,7 +1,6 @@
 import sys
 from io import StringIO
 import re
-import sure
 import contexts
 from contexts.reporting import teamcity
 from .. import tools
@@ -29,7 +28,7 @@ class WhenASuiteStartsInTeamCity(TeamCitySharedContext):
     def because_the_suite_starts(self):
         self.reporter.suite_started(tools.create_suite(self.suite_name))
     def it_should_tell_team_city_the_suite_started(self):
-        teamcity_parse(self.stringio.getvalue()).should.equal(("testSuiteStarted", {'name':self.suite_name}))
+        assert teamcity_parse(self.stringio.getvalue()) == ("testSuiteStarted", {'name':self.suite_name})
 
 
 class WhenASuiteEndsInTeamCity(TeamCitySharedContext):
@@ -38,7 +37,7 @@ class WhenASuiteEndsInTeamCity(TeamCitySharedContext):
     def because_the_suite_ends(self):
         self.reporter.suite_ended(tools.create_suite(self.suite_name))
     def it_should_tell_team_city_the_suite_ended(self):
-        teamcity_parse(self.stringio.getvalue()).should.equal(("testSuiteFinished", {'name':self.suite_name}))
+        assert teamcity_parse(self.stringio.getvalue()) == ("testSuiteFinished", {'name':self.suite_name})
 
 
 ###########################################################
@@ -55,7 +54,7 @@ class WhenAnAssertionStartsInTeamCity(TeamCitySharedContext):
         self.reporter.assertion_started(self.assertion)
 
     def it_should_tell_team_city_it_started(self):
-        self.parse_line(0).should.equal(("testStarted", {'name':'My nice context -> a lovely assertion'}))
+        assert self.parse_line(0) == ("testStarted", {'name':'My nice context -> a lovely assertion'})
 
 
 class WhenAnAssertionInAContextWithExamplesStartsInTeamCity(TeamCitySharedContext):
@@ -70,7 +69,7 @@ class WhenAnAssertionInAContextWithExamplesStartsInTeamCity(TeamCitySharedContex
 
     @contexts.assertion
     def it_should_report_the_example(self):
-        self.parse_line(0)[1]['name'].should.equal('Context with examples -> 12.3 -> a lovely assertion')
+        assert self.parse_line(0)[1]['name'] == 'Context with examples -> 12.3 -> a lovely assertion'
 
 
 ###########################################################
@@ -85,7 +84,7 @@ class WhenAnAssertionPassesInTeamCity(TeamCitySharedContext):
     def because_the_assertion_ends(self):
         self.reporter.assertion_passed(self.assertion)
     def it_should_tell_team_city_it_passed(self):
-        self.parse_line(0).should.equal(("testFinished", {'name':'My nice context -> a lovely assertion'}))
+        assert self.parse_line(0) == ("testFinished", {'name':'My nice context -> a lovely assertion'})
 
 
 class WhenAnAssertionInAContextWithExamplesPassesInTeamCity(TeamCitySharedContext):
@@ -98,7 +97,7 @@ class WhenAnAssertionInAContextWithExamplesPassesInTeamCity(TeamCitySharedContex
         self.reporter.assertion_passed(self.assertion)
     @contexts.assertion
     def it_should_report_the_example(self):
-        self.parse_line(0)[1]['name'].should.equal('Context with examples -> 12.3 -> a lovely assertion')
+        assert self.parse_line(0)[1]['name'] == 'Context with examples -> 12.3 -> a lovely assertion'
 
 
 class WhenSomethingGetsPrintedDuringAPassingAssertionInTeamCity(TeamCitySharedContext):
@@ -117,14 +116,14 @@ class WhenSomethingGetsPrintedDuringAPassingAssertionInTeamCity(TeamCitySharedCo
         self.reporter.assertion_passed(self.assertion)
 
     def it_should_not_print_anything_to_stdout(self):
-        self.fake_stdout.getvalue().should.be.empty
+        assert self.fake_stdout.getvalue() == ''
     def it_should_not_print_anything_to_stderr(self):
-        self.fake_stderr.getvalue().should.be.empty
+        assert self.fake_stderr.getvalue() == ''
 
     def it_should_report_what_went_to_stdout(self):
-        self.parse_line(0).should.equal(("testStdOut", {'name':'Context -> assertion', 'out':'to stdout|n'}))
+        assert self.parse_line(0) == ("testStdOut", {'name':'Context -> assertion', 'out':'to stdout|n'})
     def it_should_report_what_went_to_stderr(self):
-        self.parse_line(1).should.equal(("testStdErr", {'name':'Context -> assertion', 'out':'to stderr|n'}))
+        assert self.parse_line(1) == ("testStdErr", {'name':'Context -> assertion', 'out':'to stderr|n'})
 
     def cleanup_stdout_and_stderr(self):
         sys.stdout, sys.stderr = self.real_stdout, self.real_stderr
@@ -156,15 +155,15 @@ class WhenAnAssertionFailsInTeamCity(TeamCitySharedContext):
         self.reporter.assertion_failed(self.assertion, self.exception)
 
     def it_should_tell_team_city_it_failed(self):
-        self.parse_line(0).should.equal((
+        assert self.parse_line(0) == (
             "testFailed",
             {
                 'name':'Fake context -> Fake assertion',
                 'message':'test.tools.FakeAssertionError: Gotcha',
                 'details':self.formatted_tb
-            }))
+            })
     def it_should_tell_team_city_it_finished(self):
-        self.parse_line(1).should.equal(("testFinished", {'name':'Fake context -> Fake assertion'}))
+        assert self.parse_line(1) == ("testFinished", {'name':'Fake context -> Fake assertion'})
 
 
 class WhenAnAssertionInAContextWithExamplesFailsInTeamCity(TeamCitySharedContext):
@@ -180,7 +179,7 @@ class WhenAnAssertionInAContextWithExamplesFailsInTeamCity(TeamCitySharedContext
 
     @contexts.assertion
     def it_should_report_the_example(self):
-        self.parse_line(0)[1]['name'].should.equal('Context with examples -> 12.3 -> a lovely assertion')
+        assert self.parse_line(0)[1]['name'] == 'Context with examples -> 12.3 -> a lovely assertion'
 
 
 class WhenSomethingGetsPrintedDuringAFailingAssertionInTeamCity(TeamCitySharedContext):
@@ -199,14 +198,14 @@ class WhenSomethingGetsPrintedDuringAFailingAssertionInTeamCity(TeamCitySharedCo
         self.reporter.assertion_failed(self.assertion, Exception())
 
     def it_should_not_print_anything_to_stdout(self):
-        self.fake_stdout.getvalue().should.be.empty
+        assert self.fake_stdout.getvalue() == ''
     def it_should_not_print_anything_to_stderr(self):
-        self.fake_stderr.getvalue().should.be.empty
+        assert self.fake_stderr.getvalue() == ''
 
     def it_should_report_what_went_to_stdout(self):
-        self.parse_line(0).should.equal(("testStdOut", {'name':'Context -> assertion', 'out':'to stdout|n'}))
+        assert self.parse_line(0) == ("testStdOut", {'name':'Context -> assertion', 'out':'to stdout|n'})
     def it_should_report_what_went_to_stderr(self):
-        self.parse_line(1).should.equal(("testStdErr", {'name':'Context -> assertion', 'out':'to stderr|n'}))
+        assert self.parse_line(1) == ("testStdErr", {'name':'Context -> assertion', 'out':'to stderr|n'})
 
     def cleanup_stdout_and_stderr(self):
         sys.stdout, sys.stderr = self.real_stdout, self.real_stderr
@@ -238,15 +237,15 @@ class WhenAnAssertionErrorsInTeamCity(TeamCitySharedContext):
         self.reporter.assertion_errored(self.assertion, self.exception)
 
     def it_should_tell_team_city_it_failed(self):
-        self.parse_line(0).should.equal((
+        assert self.parse_line(0) == (
             "testFailed",
             {
                 'name':'Fake context -> Fake assertion',
                 'message':'test.tools.FakeAssertionError: Gotcha',
                 'details':self.formatted_tb
-            }))
+            })
     def it_should_tell_team_city_it_finished(self):
-        self.parse_line(1).should.equal(("testFinished", {'name':'Fake context -> Fake assertion'}))
+        assert self.parse_line(1) == ("testFinished", {'name':'Fake context -> Fake assertion'})
 
 
 class WhenAnAssertionInAContextWithExamplesErrorsInTeamCity(TeamCitySharedContext):
@@ -262,7 +261,7 @@ class WhenAnAssertionInAContextWithExamplesErrorsInTeamCity(TeamCitySharedContex
 
     @contexts.assertion
     def it_should_report_the_example(self):
-        self.parse_line(0)[1]['name'].should.equal('Context with examples -> 12.3 -> a lovely assertion')
+        assert self.parse_line(0)[1]['name'] == 'Context with examples -> 12.3 -> a lovely assertion'
 
 
 class WhenSomethingGetsPrintedDuringAnErroringAssertionInTeamCity(TeamCitySharedContext):
@@ -281,14 +280,14 @@ class WhenSomethingGetsPrintedDuringAnErroringAssertionInTeamCity(TeamCityShared
         self.reporter.assertion_errored(self.assertion, Exception())
 
     def it_should_not_print_anything_to_the_real_stdout(self):
-        self.fake_stdout.getvalue().should.be.empty
+        assert self.fake_stdout.getvalue() == ''
     def it_should_not_print_anything_to_the_real_stderr(self):
-        self.fake_stdout.getvalue().should.be.empty
+        assert self.fake_stdout.getvalue() == ''
 
     def it_should_tell_team_city_what_went_to_stdout(self):
-        self.parse_line(0).should.equal(("testStdOut", {'name':'Fake context -> Fake assertion 4', 'out':'to stdout|n'}))
+        assert self.parse_line(0) == ("testStdOut", {'name':'Fake context -> Fake assertion 4', 'out':'to stdout|n'})
     def it_should_tell_team_city_what_went_to_stderr(self):
-        self.parse_line(1).should.equal(("testStdErr", {'name':'Fake context -> Fake assertion 4', 'out':'to stderr|n'}))
+        assert self.parse_line(1) == ("testStdErr", {'name':'Fake context -> Fake assertion 4', 'out':'to stderr|n'})
 
     def cleanup_stdout_and_stderr(self):
         sys.stdout, sys.stderr = self.real_stdout, self.real_stderr
@@ -319,17 +318,17 @@ class WhenAContextErrorsInTeamCity(TeamCitySharedContext):
         self.reporter.context_errored(self.context, self.exception)
 
     def it_should_tell_team_city_a_test_started(self):
-        self.parse_line(0).should.equal(("testStarted", {'name':'Fake context'}))
+        assert self.parse_line(0) == ("testStarted", {'name':'Fake context'})
     def it_should_tell_team_city_the_test_failed(self):
-        self.parse_line(1).should.equal((
+        assert self.parse_line(1) == (
             "testFailed",
             {
                 'name':'Fake context',
                 'message':'test.tools.FakeException: Gotcha',
                 'details':self.formatted_tb
-            }))
+            })
     def it_should_tell_team_city_the_test_finished(self):
-        self.parse_line(2).should.equal(("testFinished", {'name':'Fake context'}))
+        assert self.parse_line(2) == ("testFinished", {'name':'Fake context'})
 
 
 class WhenAContextWithExamplesErrorsInTeamCity(TeamCitySharedContext):
@@ -344,7 +343,7 @@ class WhenAContextWithExamplesErrorsInTeamCity(TeamCitySharedContext):
 
     @contexts.assertion
     def it_should_report_the_example(self):
-        self.parse_line(0)[1]['name'].should.equal('Context with examples -> 12.3')
+        assert self.parse_line(0)[1]['name'] == 'Context with examples -> 12.3'
 
 
 class WhenSomethingGetsPrintedDuringAnErroringContextInTeamCity(TeamCitySharedContext):
@@ -362,14 +361,14 @@ class WhenSomethingGetsPrintedDuringAnErroringContextInTeamCity(TeamCitySharedCo
         self.reporter.context_errored(self.context, Exception())
 
     def it_should_not_print_anything_to_the_real_stdout(self):
-        self.fake_stdout.getvalue().should.be.empty
+        assert self.fake_stdout.getvalue() == ''
     def it_should_not_print_anything_to_the_real_stderr(self):
-        self.fake_stdout.getvalue().should.be.empty
+        assert self.fake_stdout.getvalue() == ''
 
     def it_should_tell_team_city_what_went_to_stdout(self):
-        self.parse_line(1).should.equal(("testStdOut", {'name':'Fake context', 'out':'to stdout|n'}))
+        assert self.parse_line(1) == ("testStdOut", {'name':'Fake context', 'out':'to stdout|n'})
     def it_should_tell_team_city_what_went_to_stderr(self):
-        self.parse_line(2).should.equal(("testStdErr", {'name':'Fake context', 'out':'to stderr|n'}))
+        assert self.parse_line(2) == ("testStdErr", {'name':'Fake context', 'out':'to stderr|n'})
 
     def cleanup_stdout_and_stderr(self):
         sys.stdout, sys.stderr = self.real_stdout, self.real_stderr
@@ -397,17 +396,17 @@ class WhenAnUnexpectedErrorOccursInTeamCity(TeamCitySharedContext):
         self.reporter.unexpected_error(self.exception)
 
     def it_should_tell_team_city_a_test_started(self):
-        self.parse_line(0).should.equal(("testStarted", {'name':'Test error'}))
+        assert self.parse_line(0) == ("testStarted", {'name':'Test error'})
     def it_should_tell_team_city_the_test_failed(self):
-        self.parse_line(1).should.equal((
+        assert self.parse_line(1) == (
             "testFailed",
             {
                 'name':'Test error',
                 'message':'test.tools.FakeException: another exception',
                 'details':self.formatted_tb
-            }))
+            })
     def it_should_tell_team_city_the_test_finished(self):
-        self.parse_line(2).should.equal(("testFinished", {'name':'Test error'}))
+        assert self.parse_line(2) == ("testFinished", {'name':'Test error'})
 
 
 ###########################################################
@@ -433,7 +432,7 @@ class WhenASecondContextRuns(TeamCitySharedContext):
 
     @contexts.assertion
     def it_should_report_the_name_of_the_current_context(self):
-        self.parse_line(0)[1]['name'].should.equal('the second context -> a lovely assertion')
+        assert self.parse_line(0)[1]['name'] == 'the second context -> a lovely assertion'
 
 
 class WhenASecondContextRunsAfterAnError(TeamCitySharedContext):
@@ -453,7 +452,7 @@ class WhenASecondContextRunsAfterAnError(TeamCitySharedContext):
 
     @contexts.assertion
     def it_should_report_the_name_of_the_current_context(self):
-        self.parse_line(-1)[1]['name'].should.equal('the second context -> a lovely assertion')
+        assert self.parse_line(-1)[1]['name'] == 'the second context -> a lovely assertion'
 
 
 class WhenEscapingForTeamCity:
@@ -477,7 +476,7 @@ class WhenEscapingForTeamCity:
         self.result = teamcity.escape(self.input)
 
     def it_should_escape_the_chars_correctly(self):
-        self.result.should.equal(self.expected)
+        assert self.result == self.expected
 
 
 class WhenParsingATeamCityMessage:
@@ -497,10 +496,10 @@ class WhenParsingATeamCityMessage:
         self.name, self.values = teamcity_parse(self.msg)
 
     def it_should_return_the_correct_name(self):
-        self.name.should.equal(self.expected_name)
+        assert self.name == self.expected_name
 
     def it_should_return_the_correct_values(self):
-        self.values.should.equal(self.expected_values)
+        assert self.values == self.expected_values
 
 
 def teamcity_parse(string):

@@ -1,5 +1,4 @@
 from io import StringIO
-import sure
 import contexts
 from contexts import reporting
 from .. import tools
@@ -16,7 +15,7 @@ class WhenColouringOutputAndAnAssertionPasses(ColouredReporterSharedContext):
         self.reporter.assertion_passed(tools.create_assertion("assertion"))
 
     def it_should_output_the_name_in_green(self):
-        self.stringio.getvalue().should.equal('\x1b[32m  PASS: assertion\n\x1b[39m')
+        assert self.stringio.getvalue() == '\x1b[32m  PASS: assertion\n\x1b[39m'
 
 
 class WhenColouringOutputAndAnAssertionFails(ColouredReporterSharedContext):
@@ -30,7 +29,7 @@ class WhenColouringOutputAndAnAssertionFails(ColouredReporterSharedContext):
         self.reporter.assertion_failed(self.assertion, self.exception)
 
     def it_should_output_a_red_stack_trace_for_the_failed_assertion(self):
-        self.stringio.getvalue().should.equal(
+        assert self.stringio.getvalue() == (
 """\x1b[31m  FAIL: assertion
     Traceback (most recent call last):
       File "made_up_file_10.py", line 1, in made_up_function_1
@@ -52,7 +51,7 @@ class WhenColouringOutputAndAnAssertionErrors(ColouredReporterSharedContext):
         self.reporter.assertion_errored(self.assertion, self.exception)
 
     def it_should_output_a_red_stack_trace(self):
-        self.stringio.getvalue().should.equal(
+        assert self.stringio.getvalue() == (
 """\x1b[31m  ERROR: assertion
     Traceback (most recent call last):
       File "made_up_file_12.py", line 3, in made_up_function_3
@@ -75,7 +74,7 @@ class WhenColouringOutputAndAContextErrors(ColouredReporterSharedContext):
         self.reporter.context_errored(self.context, self.exception)
 
     def it_should_output_a_red_stack_trace(self):
-        self.stringio.getvalue().should.equal(
+        assert self.stringio.getvalue() == (
 """\x1b[31m  Traceback (most recent call last):
     File "made_up_file_14.py", line 3, in made_up_function_3
       frame3
@@ -95,7 +94,7 @@ class WhenColouringOutputAndAnUnexpectedErrorOccurs(ColouredReporterSharedContex
         self.reporter.unexpected_error(self.exception)
 
     def it_should_output_a_red_stack_trace(self):
-        self.stringio.getvalue().should.equal(
+        assert self.stringio.getvalue() == (
 """\x1b[31mTraceback (most recent call last):
   File "made_up_file_16.py", line 3, in made_up_function_3
     frame3

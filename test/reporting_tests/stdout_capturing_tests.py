@@ -1,6 +1,5 @@
 import sys
 from io import StringIO
-import sure
 import contexts
 from contexts import reporting
 from .. import tools
@@ -35,13 +34,13 @@ class WhenCapturingStdOutAndATestPasses(StdOutCapturingSharedContext):
         self.reporter.context_ended(self.ctx)
 
     def it_should_not_print_anything_to_stdout(self):
-        self.fake_stdout.getvalue().should.be.empty
+        assert self.fake_stdout.getvalue() == ''
 
     def it_should_let_stderr_through(self):
-        self.fake_stderr.getvalue().should.equal("to stderr\n")
+        assert self.fake_stderr.getvalue() == "to stderr\n"
 
     def it_should_not_output_the_captured_stdout(self):
-        self.stringio.getvalue().should.equal("""\
+        assert self.stringio.getvalue() == ("""\
 context
   PASS: assertion
 """)
@@ -60,10 +59,10 @@ class WhenCapturingStdOutAndATestFails(StdOutCapturingSharedContext):
         self.reporter.context_ended(self.ctx)
 
     def it_should_not_print_anything_to_stdout(self):
-        self.fake_stdout.getvalue().should.be.empty
+        assert self.fake_stdout.getvalue() == ''
 
     def it_should_output_the_captured_stdout(self):
-        self.stringio.getvalue().should.equal("""\
+        assert self.stringio.getvalue() == ("""\
 context
   FAIL: assertion
     test.tools.FakeAssertionError
@@ -87,10 +86,10 @@ class WhenCapturingStdOutAndATestErrors(StdOutCapturingSharedContext):
         self.reporter.context_ended(self.ctx)
 
     def it_should_not_print_anything_to_stdout(self):
-        self.fake_stdout.getvalue().should.be.empty
+        assert self.fake_stdout.getvalue() == ''
 
     def it_should_output_the_captured_stdout(self):
-        self.stringio.getvalue().should.equal("""\
+        assert self.stringio.getvalue() == ("""\
 context
   ERROR: assertion
     test.tools.FakeException
@@ -115,10 +114,10 @@ class WhenCapturingStdOutAndAContextErrors(StdOutCapturingSharedContext):
         self.reporter.context_errored(self.ctx, tools.FakeException())
 
     def it_should_not_print_anything_to_stdout(self):
-        self.fake_stdout.getvalue().should.be.empty
+        assert self.fake_stdout.getvalue() == ''
 
     def it_should_output_the_captured_stdout(self):
-        self.stringio.getvalue().should.equal("""\
+        assert self.stringio.getvalue() == ("""\
 context
   PASS: assertion
   test.tools.FakeException
@@ -141,10 +140,10 @@ class WhenCapturingStdOutButNotPrinting(StdOutCapturingSharedContext):
         self.reporter.context_ended(self.ctx)
 
     def it_should_not_print_anything_to_stdout(self):
-        self.fake_stdout.getvalue().should.be.empty
+        assert self.fake_stdout.getvalue() == ''
 
     def it_should_not_output_the_delimiters(self):
-        self.stringio.getvalue().should.equal("""\
+        assert self.stringio.getvalue() == ("""\
 context
   FAIL: assertion
     test.tools.FakeAssertionError
