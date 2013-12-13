@@ -72,7 +72,7 @@ made up context
         frame1
       File "another_made_up_file.py", line 2, in another_made_up_function
         frame2
-    test.reporting_tests.tools.FakeAssertionError: Gotcha
+    reporting_tests.tools.FakeAssertionError: Gotcha
 ----------------------------------------------------------------------
 FAILED!
 1 context, 1 assertion: 1 failed, 0 errors

@@ -65,7 +65,7 @@ class WhenCapturingStdOutAndATestFails(StdOutCapturingSharedContext):
         assert self.stringio.getvalue() == ("""\
 context
   FAIL: assertion
-    test.reporting_tests.tools.FakeAssertionError
+    reporting_tests.tools.FakeAssertionError
     ------------------ >> begin captured stdout << -------------------
     failing context
     failing assertion
@@ -92,7 +92,7 @@ class WhenCapturingStdOutAndATestErrors(StdOutCapturingSharedContext):
         assert self.stringio.getvalue() == ("""\
 context
   ERROR: assertion
-    test.reporting_tests.tools.FakeException
+    reporting_tests.tools.FakeException
     ------------------ >> begin captured stdout << -------------------
     failing context
     erroring assertion
@@ -120,7 +120,7 @@ class WhenCapturingStdOutAndAContextErrors(StdOutCapturingSharedContext):
         assert self.stringio.getvalue() == ("""\
 context
   PASS: assertion
-  test.reporting_tests.tools.FakeException
+  reporting_tests.tools.FakeException
   ------------------- >> begin captured stdout << --------------------
   erroring context
   assertion in erroring context
@@ -146,5 +146,5 @@ class WhenCapturingStdOutButNotPrinting(StdOutCapturingSharedContext):
         assert self.stringio.getvalue() == ("""\
 context
   FAIL: assertion
-    test.reporting_tests.tools.FakeAssertionError
+    reporting_tests.tools.FakeAssertionError
 """)
