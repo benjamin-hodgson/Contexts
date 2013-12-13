@@ -82,7 +82,7 @@ def build_fake_assertion_error(*args):
 
 
 def create_test_run():
-    return contexts.core.TestRun('', True)
+    return contexts.core.TestRun('', True, True)
 
 
 def create_suite(name=''):

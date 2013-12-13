@@ -40,25 +40,26 @@ class MainSharedContext:
 class WhenRunningFromCommandLineWithArguments(MainSharedContext):
     @classmethod
     def examples(self):
-        yield [], [os.getcwd(), (cli.DotsReporter, cli.ColouredSummarisingCapturingReporter, cli.TimedReporter), True]
-        yield ['-v'], [os.getcwd(), (cli.ColouredVerboseCapturingReporter,), True]
-        yield ['--verbose'], [os.getcwd(), (cli.ColouredVerboseCapturingReporter,), True]
-        yield ['--verbose', '--no-colour'], [os.getcwd(), (cli.StdOutCapturingReporter,), True]
-        yield ['--verbose', '--no-capture'], [os.getcwd(), (cli.ColouredVerboseReporter,), True]
-        yield ['--verbose', '--no-colour', '--no-capture'], [os.getcwd(), (cli.VerboseReporter,), True]
-        yield ['-vs'], [os.getcwd(), (cli.ColouredVerboseReporter,), True]
-        yield ['-q'], [os.getcwd(), (QuietReporterResemblance,), True]
-        yield ['--quiet'], [os.getcwd(), (QuietReporterResemblance,), True]
-        yield ['-s'], [os.getcwd(), (cli.DotsReporter, cli.ColouredSummarisingReporter, cli.TimedReporter), True]
-        yield ['--no-capture'], [os.getcwd(), (cli.DotsReporter, cli.ColouredSummarisingReporter, cli.TimedReporter), True]
-        yield ['--no-colour'], [os.getcwd(), (cli.DotsReporter, cli.SummarisingCapturingReporter, cli.TimedReporter), True]
-        yield ['--no-capture', '--no-colour'], [os.getcwd(), (cli.DotsReporter, cli.SummarisingReporter, cli.TimedReporter), True]
-        yield ['--teamcity'], [os.getcwd(), (contexts.reporting.teamcity.TeamCityReporter,), True]
-        yield ['--no-random'], [os.getcwd(), (cli.DotsReporter, cli.ColouredSummarisingCapturingReporter, cli.TimedReporter), False]
-        yield [os.path.join(os.getcwd(),'made','up','path')], [os.path.join(os.getcwd(),'made','up','path'), (cli.DotsReporter, cli.ColouredSummarisingCapturingReporter, cli.TimedReporter), True]
+        yield [], [os.getcwd(), (cli.DotsReporter, cli.ColouredSummarisingCapturingReporter, cli.TimedReporter), True, True]
+        yield ['-v'], [os.getcwd(), (cli.ColouredVerboseCapturingReporter,), True, True]
+        yield ['--verbose'], [os.getcwd(), (cli.ColouredVerboseCapturingReporter,), True, True]
+        yield ['--verbose', '--no-colour'], [os.getcwd(), (cli.StdOutCapturingReporter,), True, True]
+        yield ['--verbose', '--no-capture'], [os.getcwd(), (cli.ColouredVerboseReporter,), True, True]
+        yield ['--verbose', '--no-colour', '--no-capture'], [os.getcwd(), (cli.VerboseReporter,), True, True]
+        yield ['-vs'], [os.getcwd(), (cli.ColouredVerboseReporter,), True, True]
+        yield ['-q'], [os.getcwd(), (QuietReporterResemblance,), True, True]
+        yield ['--quiet'], [os.getcwd(), (QuietReporterResemblance,), True, True]
+        yield ['-s'], [os.getcwd(), (cli.DotsReporter, cli.ColouredSummarisingReporter, cli.TimedReporter), True, True]
+        yield ['--no-capture'], [os.getcwd(), (cli.DotsReporter, cli.ColouredSummarisingReporter, cli.TimedReporter), True, True]
+        yield ['--no-colour'], [os.getcwd(), (cli.DotsReporter, cli.SummarisingCapturingReporter, cli.TimedReporter), True, True]
+        yield ['--no-capture', '--no-colour'], [os.getcwd(), (cli.DotsReporter, cli.SummarisingReporter, cli.TimedReporter), True, True]
+        yield ['--no-assert'], [os.getcwd(), (cli.DotsReporter, cli.ColouredSummarisingCapturingReporter, cli.TimedReporter), True, False]
+        yield ['--teamcity'], [os.getcwd(), (contexts.reporting.teamcity.TeamCityReporter,), True, True]
+        yield ['--no-random'], [os.getcwd(), (cli.DotsReporter, cli.ColouredSummarisingCapturingReporter, cli.TimedReporter), False, True]
+        yield [os.path.join(os.getcwd(),'made','up','path')], [os.path.join(os.getcwd(),'made','up','path'), (cli.DotsReporter, cli.ColouredSummarisingCapturingReporter, cli.TimedReporter), True, True]
 
     def establish_arguments(self, argv, expected):
-        self.expected = (expected[0], tuple(cls(sys.stdout) for cls in expected[1]), expected[2])
+        self.expected = (expected[0], tuple(cls(sys.stdout) for cls in expected[1]), expected[2], expected[3])
         sys.argv = ['run-contexts'] + argv
 
     def because_we_call_cmd(self):
@@ -115,7 +116,7 @@ class WhenColoramaIsNotInstalled(MainSharedContext):
         __main__.cmd()
 
     def it_should_not_send_a_coloured_reporter_to_main(self):
-        self.mock_main.assert_called_once_with(os.getcwd(), (cli.DotsReporter(sys.stdout), cli.SummarisingCapturingReporter(sys.stdout), cli.TimedReporter(sys.stdout)), True)
+        self.mock_main.assert_called_once_with(os.getcwd(), (cli.DotsReporter(sys.stdout), cli.SummarisingCapturingReporter(sys.stdout), cli.TimedReporter(sys.stdout)), True, True)
 
     def cleanup_import(self):
         builtins.__import__ = self.real_import
@@ -129,7 +130,7 @@ class WhenStdOutIsAPipe(MainSharedContext):
         __main__.cmd()
 
     def it_should_not_send_a_coloured_reporter_to_main(self):
-        self.mock_main.assert_called_once_with(os.getcwd(), (cli.DotsReporter(sys.stdout), cli.SummarisingCapturingReporter(sys.stdout), cli.TimedReporter(sys.stdout)), True)
+        self.mock_main.assert_called_once_with(os.getcwd(), (cli.DotsReporter(sys.stdout), cli.SummarisingCapturingReporter(sys.stdout), cli.TimedReporter(sys.stdout)), True, True)
 
 
 ###########################################################

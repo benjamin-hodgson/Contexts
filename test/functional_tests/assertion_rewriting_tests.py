@@ -46,6 +46,27 @@ class TestSpec:
         assert str(the_call[2]) == self.message
 
 
+class WhenAssertionRewritingIsDisabled(AssertionRewritingSharedContext):
+    def establish_that_there_is_a_test_file(self):
+        self.filename = os.path.join(TEST_DATA_DIR, "disabled.py")
+        self.code = """
+class TestSpec:
+    def it(self):
+        assert False
+"""
+        self.write_file()
+
+    def because_we_run_the_spec(self):
+        contexts.run(self.filename, [self.reporter], rewriting=False)
+
+    def it_should_call_assertion_failed(self):
+        assert 'assertion_failed' in [call[0] for call in self.reporter.calls]
+
+    def the_exception_should_contain_an_empty_message(self):
+        the_call, = [call for call in self.reporter.calls if call[0] == 'assertion_failed']
+        assert str(the_call[2]) == ''
+
+
 class WhenUserExpicitlyAssertsFalse(AssertionRewritingSharedContext):
     def context(self):
         self.filename = os.path.join(TEST_DATA_DIR, "assert_false.py")

@@ -9,7 +9,7 @@ from . import reporting
 def cmd():
     args = parse_args(sys.argv[1:])
     reporters = create_reporters(args)
-    main(os.path.realpath(args.path), reporters, args.shuffle)
+    main(os.path.realpath(args.path), reporters, args.shuffle, args.assertion)
 
 
 def parse_args(args):
@@ -34,6 +34,11 @@ def parse_args(args):
         dest='colour',
         default=True,
         help='Disable coloured output.')
+    parser.add_argument('--no-assert',
+        action='store_false',
+        dest='assertion',
+        default=True,
+        help='Disable assertion rewriting.')
     parser.add_argument('path',
         action='store',
         nargs='?',
