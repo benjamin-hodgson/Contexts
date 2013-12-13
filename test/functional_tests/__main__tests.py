@@ -3,7 +3,6 @@ import os
 import sys
 from io import StringIO
 from unittest import mock
-import sure
 import colorama
 import contexts
 from contexts import __main__
@@ -94,10 +93,10 @@ class WhenArgumentsSpecifyMutuallyExclusiveOptions(MainSharedContext):
             self.exception = e
 
     def it_should_not_call_main(self):
-        self.mock_main.mock_calls.should.be.empty
+        assert not self.mock_main.called
 
     def it_should_quit(self):
-        self.exception.should.be.a('SystemExit')
+        assert isinstance(self.exception, SystemExit)
 
     def cleanup_stderr_and_argv(self):
         sys.stderr = self.real_stderr

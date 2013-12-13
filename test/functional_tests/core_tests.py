@@ -1,4 +1,3 @@
-import sure
 import contexts
 from .tools import SpyReporter
 
@@ -37,38 +36,38 @@ class WhenRunningASpec:
         contexts.run(self.spec, [self.reporter1, self.reporter2])
 
     def it_should_run_the_methods_in_the_correct_order(self):
-        self.spec.log.should.equal("arrange act assert assert assert teardown ")
+        assert self.spec.log == "arrange act assert assert assert teardown "
 
     def it_should_call_test_run_started_first(self):
-        self.reporter1.calls[0][0].should.equal('test_run_started')
+        assert self.reporter1.calls[0][0] == 'test_run_started'
 
     def it_should_call_suite_started(self):
-        self.reporter1.calls[1][0].should.equal('suite_started')
+        assert self.reporter1.calls[1][0] == 'suite_started'
 
     @contexts.assertion
     def it_should_call_context_started_next(self):
-        self.reporter1.calls[2][0].should.equal('context_started')
+        assert self.reporter1.calls[2][0] == 'context_started'
 
     @contexts.assertion
     def it_should_pass_in_the_context(self):
-        self.reporter1.calls[2][1].name.should.equal('TestSpec')
+        assert self.reporter1.calls[2][1].name == 'TestSpec'
 
     def it_should_call_assertion_started_three_times(self):
-        self.reporter1.calls[3][0].should.equal('assertion_started')
-        self.reporter1.calls[5][0].should.equal('assertion_started')
-        self.reporter1.calls[7][0].should.equal('assertion_started')
+        assert self.reporter1.calls[3][0] == 'assertion_started'
+        assert self.reporter1.calls[5][0] == 'assertion_started'
+        assert self.reporter1.calls[7][0] == 'assertion_started'
 
     def it_should_call_assertion_passed_and_failed_and_errored(self):
         calls = [self.reporter1.calls[i][0] for i in (4,6,8)]
-        calls.should.contain('assertion_passed')
-        calls.should.contain('assertion_failed')
-        calls.should.contain('assertion_errored')
+        assert 'assertion_passed' in calls
+        assert 'assertion_failed' in calls
+        assert 'assertion_errored' in calls
 
     def the_assertions_should_have_the_right_names(self):
         names = [self.reporter1.calls[i][1].name for i in (4,6,8)]
-        names.should.contain('method_with_should_in_the_name')
-        names.should.contain('failing_method_with_should_in_the_name')
-        names.should.contain('erroring_method_with_should_in_the_name')
+        assert 'method_with_should_in_the_name' in names
+        assert 'failing_method_with_should_in_the_name' in names
+        assert 'erroring_method_with_should_in_the_name' in names
 
     def it_should_pass_in_the_exceptions(self):
         exceptions = {}
@@ -79,31 +78,31 @@ class WhenRunningASpec:
             if call_name == 'assertion_errored':
                 exceptions['error'] = self.reporter1.calls[i][2]
 
-        exceptions['fail'].should.equal(self.assertion_err)
-        exceptions['error'].should.equal(self.value_err)
+        assert exceptions['fail'] is self.assertion_err
+        assert exceptions['error'] is self.value_err
 
     @contexts.assertion
     def it_should_call_context_ended_next(self):
-        self.reporter1.calls[9][0].should.equal('context_ended')
+        assert self.reporter1.calls[9][0] == 'context_ended'
 
     @contexts.assertion
     def it_should_pass_in_the_context_again(self):
-        self.reporter1.calls[9][1].should.equal(self.reporter1.calls[2][1])
+        assert self.reporter1.calls[9][1] == self.reporter1.calls[2][1]
 
     def it_should_call_suite_ended(self):
-        self.reporter1.calls[10][0].should.equal('suite_ended')
+        assert self.reporter1.calls[10][0] == 'suite_ended'
 
     def it_should_call_test_run_ended_last(self):
-        self.reporter1.calls[11][0].should.equal('test_run_ended')
+        assert self.reporter1.calls[11][0] == 'test_run_ended'
 
     def it_should_pass_in_the_same_test_run_as_at_the_start(self):
-        self.reporter1.calls[11][1].should.equal(self.reporter1.calls[0][1])
+        assert self.reporter1.calls[11][1] == self.reporter1.calls[0][1]
 
     def it_should_not_make_any_more_calls(self):
-        self.reporter1.calls.should.have.length_of(12)
+        assert len(self.reporter1.calls) == 12
 
     def it_should_do_exactly_the_same_to_the_second_reporter(self):
-        self.reporter2.calls.should.equal(self.reporter1.calls)
+        assert self.reporter2.calls == self.reporter1.calls
 
 
 # break up this test too
@@ -152,39 +151,39 @@ class WhenAContextErrors:
 
     @contexts.assertion
     def it_should_call_context_errored_for_the_first_error(self):
-        self.reporters[0].calls[3][0].should.equal("context_errored")
+        assert self.reporters[0].calls[3][0] == "context_errored"
 
     def it_should_pass_in_the_first_exception(self):
-        self.reporters[0].calls[3][2].should.equal(self.value_err)
+        assert self.reporters[0].calls[3][2] is self.value_err
 
     def it_should_not_run_the_first_action(self):
-        self.specs[0].ran_because.should.be.false
+        assert not self.specs[0].ran_because
 
     def it_should_not_run_the_first_assertion(self):
-        self.specs[0].ran_assertion.should.be.false
+        assert not self.specs[0].ran_assertion
 
     def it_should_still_run_the_teardown_despite_the_setup_error(self):
-        self.specs[0].ran_cleanup.should.be.true
+        assert self.specs[0].ran_cleanup
 
     @contexts.assertion
     def it_should_call_context_errored_for_the_second_error(self):
-        self.reporters[1].calls[3][0].should.equal("context_errored")
+        assert self.reporters[1].calls[3][0] == "context_errored"
 
     def it_should_pass_in_the_second_exception(self):
-        self.reporters[1].calls[3][2].should.equal(self.type_err)
+        assert self.reporters[1].calls[3][2] == self.type_err
 
     def it_should_not_run_the_second_assertion(self):
-        self.specs[1].ran_assertion.should.be.false
+        assert not self.specs[1].ran_assertion
 
     def it_should_still_run_the_teardown_despite_the_action_error(self):
-        self.specs[1].ran_cleanup.should.be.true
+        assert self.specs[1].ran_cleanup
 
     @contexts.assertion
     def it_should_call_context_errored_for_the_third_error(self):
-        self.reporters[2].calls[5][0].should.equal("context_errored")
+        assert self.reporters[2].calls[5][0] == "context_errored"
 
     def it_should_pass_in_the_third_exception(self):
-        self.reporters[2].calls[5][2].should.equal(self.assertion_err)
+        assert self.reporters[2].calls[5][2] == self.assertion_err
 
 
 class MultipleRunsSharedContext:
@@ -211,7 +210,7 @@ class WhenRunningTheSameClassMultipleTimes(MultipleRunsSharedContext):
     def it_should_run_the_assertions_in_a_different_order(self):
         first_order = [call[1].name for call in self.reporter1.calls if call[0] == "assertion_started"]
         second_order = [call[1].name for call in self.reporter2.calls if call[0] == "assertion_started"]
-        first_order.should_not.equal(second_order)
+        assert first_order != second_order
 
 class WhenRunningTheSameClassMultipleTimesWithShuffleDisabled(MultipleRunsSharedContext):
     def because_we_run_the_class_twice_with_shuffle_disabled(self):
@@ -221,7 +220,7 @@ class WhenRunningTheSameClassMultipleTimesWithShuffleDisabled(MultipleRunsShared
     def it_should_run_the_assertions_in_the_same_order(self):
         first_order = [call[1].name for call in self.reporter1.calls if call[0] == "assertion_started"]
         second_order = [call[1].name for call in self.reporter2.calls if call[0] == "assertion_started"]
-        first_order.should.equal(second_order)
+        assert first_order == second_order
 
 
 class WhenASpecHasASuperclass:
@@ -255,32 +254,31 @@ class WhenASpecHasASuperclass:
         contexts.run(self.spec, [self.reporter])
 
     def it_should_run_the_superclass_setup_first(self):
-        self.log[:19].should.equal("superclass arrange ")
+        assert self.log[:19] == "superclass arrange "
 
     def it_should_run_the_subclass_setup_next(self):
-        self.log[19:36].should.equal("subclass arrange ")
+        assert self.log[19:36] == "subclass arrange "
 
     def it_should_run_the_subclass_action_next(self):
-        self.log[36:52].should.equal("subclass action ")
+        assert self.log[36:52] == "subclass action "
 
     def it_should_not_run_the_superclass_action(self):
-        self.log.should_not.contain("superclass action ")
+        assert "superclass action " not in self.log
 
     def it_should_run_both_assertions(self):
         # We don't care what order the two assertions get run in
-        self.log[52:92].should.contain("superclass assertion ")
-        self.log[52:92].should.contain("subclass assertion ")
+        assert "superclass assertion " in self.log[52:92]
+        assert "subclass assertion " in self.log[52:92]
 
     def it_should_run_the_subclass_teardown_first(self):
-        self.log[92:109].should.equal("subclass cleanup ")
+        assert self.log[92:109] == "subclass cleanup "
 
     def it_should_run_the_superclass_teardown_second(self):
-        self.log[109:238].should.equal("superclass cleanup ")
+        assert self.log[109:238] == "superclass cleanup "
 
     @contexts.assertion
     def it_should_only_call_context_started_on_the_reporter_once(self):
-        calls = [call for call in self.reporter.calls if call[0] == "context_started"]
-        calls.should.have.length_of(1)
+        assert len([call for call in self.reporter.calls if call[0] == "context_started"]) == 1
 
 
 class WhenWeRunSpecsWithAlternatelyNamedMethods:
@@ -328,7 +326,7 @@ class WhenWeRunSpecsWithAlternatelyNamedMethods:
         contexts.run(self.spec, [])
 
     def it_should_run_the_methods_in_the_correct_order(self, _, expected_log):
-        self.spec.log.should.equal(expected_log)
+        assert self.spec.log == expected_log
 
 
 class WhenRunningAmbiguouslyNamedMethods:
@@ -360,19 +358,16 @@ class WhenRunningAmbiguouslyNamedMethods:
         self.reporter = SpyReporter()
 
     def because_we_try_to_run_the_spec(self, example):
-        self.exception = contexts.catch(contexts.run, example, [self.reporter])
-
-    def it_should_not_throw_an_exception(self):
-        self.exception.should.be.none
+        contexts.run(example, [self.reporter])
 
     def it_should_call_unexpected_error_on_the_reporter(self):
-        self.reporter.calls[2][0].should.equal("unexpected_error")
+        assert self.reporter.calls[2][0] == "unexpected_error"
 
     def it_should_pass_in_a_MethodNamingError(self):
-        self.reporter.calls[2][1].should.be.a(contexts.errors.MethodNamingError)
+        assert isinstance(self.reporter.calls[2][1], contexts.errors.MethodNamingError)
 
     def it_should_finish_the_test_run(self):
-        self.reporter.calls[-1][0].should.equal("test_run_ended")
+        assert self.reporter.calls[-1][0] == "test_run_ended"
 
 
 class WhenRunningNotSoAmbiguouslyNamedMethods:
@@ -400,7 +395,7 @@ class WhenRunningNotSoAmbiguouslyNamedMethods:
         self.exception = contexts.catch(contexts.run, example, [])
 
     def it_should_not_raise_any_exceptions(self):
-        self.exception.should.be.none
+        assert self.exception is None
 
 
 class WhenRunningSpecsWithTooManySpecialMethods:
@@ -437,19 +432,16 @@ class WhenRunningSpecsWithTooManySpecialMethods:
         self.reporter = SpyReporter()
 
     def because_we_try_to_run_the_spec(self, example):
-        self.exception = contexts.catch(contexts.run, example, [self.reporter])
-
-    def it_should_not_raise_an_exception(self):
-        self.exception.should.be.none
+        contexts.run(example, [self.reporter])
 
     def it_should_call_unexpected_error_on_the_reporter(self):
-        self.reporter.calls[2][0].should.equal("unexpected_error")
+        assert self.reporter.calls[2][0] == "unexpected_error"
 
     def it_should_pass_in_a_TooManySpecialMethodsError(self):
-        self.reporter.calls[2][1].should.be.a(contexts.errors.TooManySpecialMethodsError)
+        assert isinstance(self.reporter.calls[2][1], contexts.errors.TooManySpecialMethodsError)
 
     def it_should_finish_the_test_run(self):
-        self.reporter.calls[-1][0].should.equal("test_run_ended")
+        assert self.reporter.calls[-1][0] == "test_run_ended"
 
 
 class WhenRunningAClassContainingNoAssertions:
@@ -468,14 +460,8 @@ class WhenRunningAClassContainingNoAssertions:
     def because_we_run_the_spec(self):
         contexts.run(self.spec, [self.reporter])
 
-    def it_should_not_run_any_assertions(self):
-        self.spec.log.should.be.empty
-
-    def it_should_call_test_run_started(self):
-        self.reporter.calls[0][0].should.equal('test_run_started')
-
-    def then_it_should_call_test_run_ended(self):
-        self.reporter.calls[-1][0].should.equal('test_run_ended')
+    def it_should_not_run_the_class(self):
+        assert self.spec.log == []
 
 
 if __name__ == "__main__":

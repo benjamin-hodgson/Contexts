@@ -1,5 +1,4 @@
 import types
-import sure
 import contexts
 from .tools import SpyReporter
 
@@ -32,19 +31,19 @@ class WhenRunningAParametrisedSpec:
         contexts.run(self.ParametrisedSpec, [])
 
     def it_should_instantiate_the_class_twice(self):
-        self.ParametrisedSpec.initialised.should.equal(2)
+        assert self.ParametrisedSpec.initialised == 2
 
     def it_should_run_the_setup_twice(self):
-        self.ParametrisedSpec.setups.should.equal([1,2])
+        assert self.ParametrisedSpec.setups == [1,2]
 
     def it_should_run_the_assertion_twice(self):
-        self.ParametrisedSpec.assertions.should.equal([1,2])
+        assert self.ParametrisedSpec.assertions == [1,2]
 
     def it_should_run_the_action_twice(self):
-        self.ParametrisedSpec.actions.should.equal([1,2])
+        assert self.ParametrisedSpec.actions == [1,2]
 
     def it_should_run_the_teardown_twice(self):
-        self.ParametrisedSpec.teardowns.should.equal([1,2])
+        assert self.ParametrisedSpec.teardowns == [1,2]
 
 
 class WhenRunningAParametrisedSpecAndExamplesYieldsTuples:
@@ -64,7 +63,7 @@ class WhenRunningAParametrisedSpecAndExamplesYieldsTuples:
         contexts.run(self.ParametrisedSpec, [])
 
     def it_should_unpack_the_tuples(self):
-        self.ParametrisedSpec.params.should.equal([1,2,3,4])
+        assert self.ParametrisedSpec.params == [1,2,3,4]
 
 
 class WhenRunningAParametrisedSpecAndExamplesYieldsTuplesButTheMethodsOnlyAcceptOneArgument:
@@ -83,7 +82,7 @@ class WhenRunningAParametrisedSpecAndExamplesYieldsTuplesButTheMethodsOnlyAccept
         contexts.run(self.ParametrisedSpec, [])
 
     def it_should_run_the_setup_twice(self):
-        self.ParametrisedSpec.params.should.equal([(1,2),(3,4)])
+        assert self.ParametrisedSpec.params == [(1,2),(3,4)]
 
 
 class WhenRunningAParametrisedSpecWithNonParametrisedMethods:
@@ -114,19 +113,19 @@ class WhenRunningAParametrisedSpecWithNonParametrisedMethods:
         contexts.run(self.ParametrisedSpec, [])
 
     def it_should_instantiate_the_class_twice(self):
-        self.ParametrisedSpec.initialised.should.equal(2)
+        assert self.ParametrisedSpec.initialised == 2
 
     def it_should_run_the_setup_twice(self):
-        self.ParametrisedSpec.setups.should.equal(2)
+        assert self.ParametrisedSpec.setups == 2
 
     def it_should_run_the_action_twice(self):
-        self.ParametrisedSpec.actions.should.equal(2)
+        assert self.ParametrisedSpec.actions == 2
 
     def it_should_run_the_assertion_twice(self):
-        self.ParametrisedSpec.assertions.should.equal(2)
+        assert self.ParametrisedSpec.assertions == 2
 
     def it_should_run_the_teardown_twice(self):
-        self.ParametrisedSpec.teardowns.should.equal(2)
+        assert self.ParametrisedSpec.teardowns == 2
 
 
 class WhenRunningAModuleWithParametrisedSpecs:
@@ -159,19 +158,19 @@ class WhenRunningAModuleWithParametrisedSpecs:
         contexts.run(self.module, [])
 
     def it_should_instantiate_the_class_twice(self):
-        self.ParametrisedSpec.initialised.should.equal(2)
+        assert self.ParametrisedSpec.initialised == 2
 
     def it_should_run_the_setup_twice(self):
-        self.ParametrisedSpec.setups.should.equal([1,2])
+        assert self.ParametrisedSpec.setups == [1,2]
 
     def it_should_run_the_action_twice(self):
-        self.ParametrisedSpec.actions.should.equal([1,2])
+        assert self.ParametrisedSpec.actions == [1,2]
 
     def it_should_run_the_assertion_twice(self):
-        self.ParametrisedSpec.assertions.should.equal([1,2])
+        assert self.ParametrisedSpec.assertions == [1,2]
 
     def it_should_run_the_teardown_twice(self):
-        self.ParametrisedSpec.teardowns.should.equal([1,2])
+        assert self.ParametrisedSpec.teardowns == [1,2]
 
 
 class WhenExamplesRaisesAnException:
@@ -192,13 +191,13 @@ class WhenExamplesRaisesAnException:
         contexts.run(self.spec, [self.reporter])
 
     def it_should_run_the_first_one(self):
-        self.spec.total.should.equal(3)
+        assert self.spec.total == 3
 
     def it_should_call_unexpected_error_on_the_reporter(self):
-        self.reporter.calls[-3][0].should.equal("unexpected_error")
+        assert self.reporter.calls[-3][0] == "unexpected_error"
 
     def it_should_pass_in_the_exception(self):
-        self.reporter.calls[-3][1].should.equal(self.exception)
+        assert self.reporter.calls[-3][1] == self.exception
 
 
 class WhenUserFailsToMakeExamplesAClassmethod:
@@ -213,13 +212,13 @@ class WhenUserFailsToMakeExamplesAClassmethod:
         contexts.run(self.spec, [self.reporter])
 
     def it_should_call_unexpected_error_on_the_reporter(self):
-        self.reporter.calls[2][0].should.equal("unexpected_error")
+        assert self.reporter.calls[2][0] == "unexpected_error"
 
     def it_should_pass_in_a_TypeError(self):
-        self.reporter.calls[2][1].should.be.a(TypeError)
+        assert isinstance(self.reporter.calls[2][1], TypeError)
 
     def it_should_finish_the_test_run(self):
-        self.reporter.calls[-1][0].should.equal("test_run_ended")
+        assert self.reporter.calls[-1][0] == "test_run_ended"
 
 
 class WhenExamplesReturnsNone:
@@ -234,13 +233,10 @@ class WhenExamplesReturnsNone:
         self.spec = Spec
 
     def because_we_run_the_spec(self):
-        self.exception = contexts.catch(contexts.run, self.spec, [])
-
-    def it_should_not_throw_an_exception(self):
-        self.exception.should.be.none
+        contexts.run(self.spec, [])
 
     def it_should_run_the_spec_once(self):
-        self.spec.times_run.should.equal(1)
+        assert self.spec.times_run == 1
 
 
 if __name__ == "__main__":

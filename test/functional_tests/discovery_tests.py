@@ -3,7 +3,6 @@ import os
 import shutil
 import sys
 import types
-import sure
 import contexts
 from .tools import SpyReporter
 
@@ -37,25 +36,25 @@ class WhenRunningAModule:
         contexts.run(self.module, [self.reporter])
 
     def it_should_run_the_spec(self):
-        self.module.HasSpecInTheName.was_run.should.be.true
+        assert self.module.HasSpecInTheName.was_run
 
     def it_should_run_the_other_spec(self):
-        self.module.HasWhenInTheName.was_run.should.be.true
+        assert self.module.HasWhenInTheName.was_run
 
     def it_should_not_instantiate_the_normal_class(self):
-        self.module.NormalClass.was_instantiated.should.be.false
+        assert not self.module.NormalClass.was_instantiated
 
     def it_should_call_suite_started(self):
-        self.reporter.calls[1][0].should.equal("suite_started")
+        assert self.reporter.calls[1][0] == "suite_started"
 
     def it_should_pass_the_suite_object_into_suite_started(self):
-        self.reporter.calls[1][1].name.should.equal('fake_specs')
+        assert self.reporter.calls[1][1].name == 'fake_specs'
 
     def it_should_call_suite_ended(self):
-        self.reporter.calls[-2][0].should.equal("suite_ended")
+        assert self.reporter.calls[-2][0] == "suite_ended"
 
     def it_should_pass_the_suite_object_into_suite_ended(self):
-        self.reporter.calls[-2][1].name.should.equal('fake_specs')
+        assert self.reporter.calls[-2][1].name == 'fake_specs'
 
 
 class WhenRunningTheSameModuleMultipleTimes:
@@ -74,7 +73,7 @@ class WhenRunningTheSameModuleMultipleTimes:
     def it_should_run_the_contexts_in_a_different_order(self):
         first_order = [call[1].name for call in self.reporter1.calls if call[0] == "context_started"]
         second_order = [call[1].name for call in self.reporter2.calls if call[0] == "context_started"]
-        first_order.should_not.equal(second_order)
+        assert first_order != second_order
 
     def create_module(self):
         self.module = types.ModuleType("specs")
@@ -105,22 +104,22 @@ class TestSpec:
         contexts.run(self.filename, [self.reporter])
 
     def it_should_import_the_file(self):
-        sys.modules.should.contain(self.module_name)
+        assert self.module_name in sys.modules
 
     def it_should_run_the_specs(self):
-        sys.modules[self.module_name].module_ran.should.be.true
+        assert sys.modules[self.module_name].module_ran
 
     def it_should_call_suite_started(self):
-        self.reporter.calls[1][0].should.equal("suite_started")
+        assert self.reporter.calls[1][0] == "suite_started"
 
     def it_should_pass_the_suite_object_into_suite_started(self):
-        self.reporter.calls[1][1].name.should.equal(self.module_name)
+        assert self.reporter.calls[1][1].name == self.module_name
 
     def it_should_call_suite_ended(self):
-        self.reporter.calls[-2][0].should.equal("suite_ended")
+        assert self.reporter.calls[-2][0] == "suite_ended"
 
     def it_should_pass_the_suite_object_into_suite_ended(self):
-        self.reporter.calls[-2][1].name.should.equal(self.module_name)
+        assert self.reporter.calls[-2][1].name == self.module_name
 
     def cleanup_the_file_system_and_sys_dot_modules(self):
         os.remove(self.filename)
@@ -150,16 +149,13 @@ raise ZeroDivisionError("bogus error message")
         self.reporter = SpyReporter()
 
     def because_we_run_the_file(self):
-        self.exception = contexts.catch(contexts.run, self.filename, [self.reporter])
-
-    def it_should_not_throw_an_exception(self):
-        self.exception.should.be.none
+        contexts.run(self.filename, [self.reporter])
 
     def it_should_call_unexpected_error_on_the_reporter(self):
-        self.reporter.calls[1][0].should.equal("unexpected_error")
+        assert self.reporter.calls[1][0] == "unexpected_error"
 
     def it_should_pass_in_the_exception(self):
-        self.reporter.calls[1][1].should.be.a(ZeroDivisionError)
+        assert isinstance(self.reporter.calls[1][1], ZeroDivisionError)
 
     def cleanup_the_file_system_and_sys_dot_modules(self):
         os.remove(self.filename)
@@ -191,35 +187,35 @@ class TestSpec:
         contexts.run(self.folder_path, [self.reporter])
 
     def it_should_import_the_first_module(self):
-        sys.modules.should.contain(self.module_names[0])
+        assert self.module_names[0] in sys.modules
 
     def it_should_import_the_second_module(self):
-        sys.modules.should.contain(self.module_names[1])
+        assert self.module_names[1] in sys.modules
 
     def it_should_run_the_first_module(self):
-        sys.modules[self.module_names[0]].module_ran.should.be.true
+        assert sys.modules[self.module_names[0]].module_ran
 
     def it_should_run_the_second_module(self):
-        sys.modules[self.module_names[1]].module_ran.should.be.true
+        assert sys.modules[self.module_names[1]].module_ran
 
     def it_should_not_run_the_non_test_module(self):
-        sys.modules.should_not.contain(self.module_names[2])
+        assert self.module_names[2] not in sys.modules
 
     def it_should_call_suite_started_for_both_modules(self):
-        self.reporter.calls[1][0].should.equal('suite_started')
-        self.reporter.calls[7][0].should.equal('suite_started')
+        assert self.reporter.calls[1][0] == 'suite_started'
+        assert self.reporter.calls[7][0] == 'suite_started'
 
     def it_should_pass_the_suites_into_suite_started(self):
         names = {call[1].name for call in self.reporter.calls if call[0] == 'suite_started'}
-        names.should.equal({'test_file1', 'test_file2'})
+        assert names == {'test_file1', 'test_file2'}
 
     def it_should_call_suite_ended_for_both_modules(self):
-        self.reporter.calls[6][0].should.equal('suite_ended')
-        self.reporter.calls[12][0].should.equal('suite_ended')
+        assert self.reporter.calls[6][0] == 'suite_ended'
+        assert self.reporter.calls[12][0] == 'suite_ended'
 
     def it_should_pass_the_suites_into_suite_ended(self):
         names = {call[1].name for call in self.reporter.calls if call[0] == 'suite_ended'}
-        names.should.equal({'test_file1', 'test_file2'})
+        assert names == {'test_file1', 'test_file2'}
 
     def cleanup_the_file_system_and_sys_dot_modules(self):
         shutil.rmtree(self.folder_path)
@@ -258,10 +254,10 @@ class TestSpec:
         contexts.run(self.folder_path, [])
 
     def it_should_not_re_import_the_module(self):
-        sys.modules[self.module_name].is_fake.should.be.true
+        assert sys.modules[self.module_name].is_fake
 
     def it_should_not_re_run_the_module(self):
-        sys.modules[self.module_name].module_ran.should.be.false
+        assert not sys.modules[self.module_name].module_ran
 
     def cleanup_the_file_system_and_sys_dot_modules(self):
         shutil.rmtree(self.folder_path)
@@ -310,10 +306,10 @@ class TestSpec:
         contexts.run(self.folder_path, [])
 
     def it_should_import_the_new_module_and_overwrite_the_old_one(self):
-        sys.modules[self.module_name].is_fake.should.be.false
+        assert not sys.modules[self.module_name].is_fake
 
     def it_should_run_the_first_module(self):
-        sys.modules[self.module_name].module_ran.should.be.true
+        assert sys.modules[self.module_name].module_ran
 
     def cleanup_the_file_system_and_sys_dot_modules(self):
         shutil.rmtree(self.folder_path)
@@ -357,10 +353,10 @@ class TestSpec:
         contexts.run(self.folder_path, [])
 
     def it_should_not_re_import_the_module(self):
-        sys.modules[self.package_name].is_fake.should.be.true
+        assert sys.modules[self.package_name].is_fake
 
     def it_should_not_re_run_the_module(self):
-        sys.modules[self.package_name].module_ran.should.be.false
+        assert not sys.modules[self.package_name].module_ran
 
     def cleanup_the_file_system_and_sys_dot_modules(self):
         shutil.rmtree(self.folder_path)
@@ -409,10 +405,10 @@ class TestSpec:
         contexts.run(self.folder_path, [])
 
     def it_should_import_the_new_module_and_overwrite_the_old_one(self):
-        sys.modules[self.package_name].is_fake.should.be.false
+        assert not sys.modules[self.package_name].is_fake
 
     def it_should_run_the_first_module(self):
-        sys.modules[self.package_name].module_ran.should.be.true
+        assert sys.modules[self.package_name].module_ran
 
     def cleanup_the_file_system_and_sys_dot_modules(self):
         shutil.rmtree(self.folder_path)
@@ -458,10 +454,10 @@ class TestSpec:
         contexts.run(self.folder_path, [])
 
     def it_should_not_re_import_the_module(self):
-        sys.modules[self.qualified_name].is_fake.should.be.true
+        assert sys.modules[self.qualified_name].is_fake
 
     def it_should_not_re_run_the_module(self):
-        sys.modules[self.qualified_name].module_ran.should.be.false
+        assert not sys.modules[self.qualified_name].module_ran
 
     def cleanup_the_file_system_and_sys_dot_modules(self):
         shutil.rmtree(self.folder_path)
@@ -514,10 +510,10 @@ class TestSpec:
         contexts.run(self.folder_path, [])
 
     def it_should_import_the_new_module_and_overwrite_the_old_one(self):
-        sys.modules[self.qualified_name].is_fake.should.be.false
+        assert not sys.modules[self.qualified_name].is_fake
 
     def it_should_run_the_first_module(self):
-        sys.modules[self.qualified_name].module_ran.should.be.true
+        assert sys.modules[self.qualified_name].module_ran
 
     def cleanup_the_file_system_and_sys_dot_modules(self):
         shutil.rmtree(self.folder_path)
@@ -564,54 +560,54 @@ class TestSpec:
         contexts.run(self.folder_path, [self.reporter])
 
     def it_should_import_the_package(self):
-        sys.modules.should.contain(self.package_name)
+        assert self.package_name in sys.modules
 
     def it_should_import_the_first_module(self):
-        sys.modules.should.contain(self.package_name + '.' + self.module_names[1])
+        assert self.package_name + '.' + self.module_names[1] in sys.modules
 
     def it_should_only_import_the_first_module_using_its_full_name(self):
-        sys.modules.should_not.contain(self.module_names[1])
+        assert self.module_names[1] not in sys.modules
 
     def it_should_import_the_second_module(self):
-        sys.modules.should.contain(self.package_name + '.' + self.module_names[2])
+        assert self.package_name + '.' + self.module_names[2] in sys.modules
 
     def it_should_only_import_the_second_module_using_its_full_name(self):
-        sys.modules.should_not.contain(self.module_names[1])
+        assert self.module_names[1] not in sys.modules
 
     def it_should_not_import_the_third_module(self):
-        sys.modules.should_not.contain(self.package_name + '.' + self.module_names[3])
-        sys.modules.should_not.contain(self.module_names[3])
+        assert self.package_name + '.' + self.module_names[3] not in sys.modules
+        assert self.module_names[3] not in sys.modules
 
-    def it_should_not_import_init(self):
-        sys.modules.should_not.contain("__init__")
-        sys.modules.should_not.contain("package_folder.__init__")
+    def it_should_not_import_something_called_init(self):
+        assert "__init__" not in sys.modules
+        assert "package_folder.__init__" not in sys.modules
 
     def it_should_run_the_package(self):
-        sys.modules[self.package_name].module_ran.should.be.true
+        assert sys.modules[self.package_name].module_ran
 
     def it_should_run_the_first_module(self):
-        sys.modules[self.package_name + '.' + self.module_names[1]].module_ran.should.be.true
+        assert sys.modules[self.package_name + '.' + self.module_names[1]].module_ran
 
     def it_should_run_the_second_module(self):
-        sys.modules[self.package_name + '.' + self.module_names[2]].module_ran.should.be.true
+        assert sys.modules[self.package_name + '.' + self.module_names[2]].module_ran
 
     def it_should_call_suite_started_for_three_modules(self):
-        self.reporter.calls[1][0].should.equal('suite_started')
-        self.reporter.calls[7][0].should.equal('suite_started')
-        self.reporter.calls[13][0].should.equal('suite_started')
+        assert self.reporter.calls[1][0] == 'suite_started'
+        assert self.reporter.calls[7][0] == 'suite_started'
+        assert self.reporter.calls[13][0] == 'suite_started'
 
     def it_should_pass_the_suites_into_suite_started(self):
         names = {call[1].name for call in self.reporter.calls if call[0] == 'suite_started'}
-        names.should.equal({'package_folder', 'package_folder.test_file1', 'package_folder.test_file2'})
+        assert names == {'package_folder', 'package_folder.test_file1', 'package_folder.test_file2'}
 
     def it_should_call_suite_ended_for_three_modules(self):
-        self.reporter.calls[6][0].should.equal('suite_ended')
-        self.reporter.calls[12][0].should.equal('suite_ended')
-        self.reporter.calls[18][0].should.equal('suite_ended')
+        assert self.reporter.calls[6][0] == 'suite_ended'
+        assert self.reporter.calls[12][0] == 'suite_ended'
+        assert self.reporter.calls[18][0] == 'suite_ended'
 
     def it_should_pass_the_suites_into_suite_ended(self):
         names = {call[1].name for call in self.reporter.calls if call[0] == 'suite_ended'}
-        names.should.equal({'package_folder', 'package_folder.test_file1', 'package_folder.test_file2'})
+        assert names == {'package_folder', 'package_folder.test_file1', 'package_folder.test_file2'}
 
     def cleanup_the_file_system_and_sys_dot_modules(self):
         shutil.rmtree(self.folder_path)
@@ -656,58 +652,58 @@ class TestSpec:
         contexts.run(self.folder_path, [self.reporter])
 
     def it_should_import_the_file_in_the_test_folder(self):
-        sys.modules.should.contain("test_file1")
+        assert "test_file1" in sys.modules
 
     def it_should_run_the_file_in_the_test_folder(self):
-        sys.modules["test_file1"].module_ran.should.be.true
+        assert sys.modules["test_file1"].module_ran
 
     def it_should_not_import_the_file_in_the_non_test_folder(self):
-        sys.modules.should_not.contain("test_file3")
+        assert "test_file3" not in sys.modules
 
     def it_should_import_the_test_package(self):
-        sys.modules.should.contain("test_subpackage")
+        assert "test_subpackage" in sys.modules
 
     def it_should_run_the_test_package(self):
-        sys.modules["test_subpackage"].module_ran.should.be.true
+        assert sys.modules["test_subpackage"].module_ran
 
     def it_should_import_the_file_in_the_test_package(self):
-        sys.modules.should.contain("test_subpackage.test_file2")
+        assert "test_subpackage.test_file2" in sys.modules
 
     def it_should_only_import_the_file_in_the_test_package_using_its_full_name(self):
-        sys.modules.should_not.contain("test_file2")
+        assert "test_file2" not in sys.modules
 
     def it_should_run_the_file_in_the_test_package(self):
-        sys.modules["test_subpackage.test_file2"].module_ran.should.be.true
+        assert sys.modules["test_subpackage.test_file2"].module_ran
 
     def it_should_not_import_the_non_test_package(self):
-        sys.modules.should_not.contain("another_subpackage")
+        assert "another_subpackage" not in sys.modules
 
     def it_should_not_import_the_file_in_the_non_test_package(self):
-        sys.modules.should_not.contain("another_subpackage.test_file4")
-        sys.modules.should_not.contain("test_file4")
+        assert "another_subpackage.test_file4" not in sys.modules
+        assert "test_file4" not in sys.modules
 
-    def it_should_not_import_any_init_files(self):
-        sys.modules.should_not.contain("__init__")
-        sys.modules.should_not.contain("test_subpackage.__init__")
-        sys.modules.should_not.contain("another_subpackage.__init__")
+    def it_should_not_import_anything_called_init(self):
+        assert "__init__" not in sys.modules
+        assert "test_subpackage.__init__" not in sys.modules
+        assert "another_subpackage.__init__" not in sys.modules
 
     def it_should_call_suite_started_for_three_modules(self):
-        self.reporter.calls[1][0].should.equal('suite_started')
-        self.reporter.calls[7][0].should.equal('suite_started')
-        self.reporter.calls[13][0].should.equal('suite_started')
+        assert self.reporter.calls[1][0] == 'suite_started'
+        assert self.reporter.calls[7][0] == 'suite_started'
+        assert self.reporter.calls[13][0] == 'suite_started'
 
     def it_should_pass_the_suites_into_suite_started(self):
         names = {call[1].name for call in self.reporter.calls if call[0] == 'suite_started'}
-        names.should.equal({'test_file1', 'test_subpackage', 'test_subpackage.test_file2'})
+        assert names == {'test_file1', 'test_subpackage', 'test_subpackage.test_file2'}
 
     def it_should_call_suite_ended_for_three_modules(self):
-        self.reporter.calls[6][0].should.equal('suite_ended')
-        self.reporter.calls[12][0].should.equal('suite_ended')
-        self.reporter.calls[18][0].should.equal('suite_ended')
+        assert self.reporter.calls[6][0] == 'suite_ended'
+        assert self.reporter.calls[12][0] == 'suite_ended'
+        assert self.reporter.calls[18][0] == 'suite_ended'
 
     def it_should_pass_the_suites_into_suite_ended(self):
         names = {call[1].name for call in self.reporter.calls if call[0] == 'suite_ended'}
-        names.should.equal({'test_file1', 'test_subpackage', 'test_subpackage.test_file2'})
+        assert names == {'test_file1', 'test_subpackage', 'test_subpackage.test_file2'}
 
     def cleanup_the_file_system_and_sys_dot_modules(self):
         shutil.rmtree(self.folder_path)
@@ -753,73 +749,73 @@ class TestSpec:
         contexts.run(self.folder_path, [self.reporter])
 
     def it_should_import_the_file_in_the_test_folder(self):
-        sys.modules.should.contain("test_file1")
+        assert "test_file1" in sys.modules
 
     def it_should_not_import_the_file_in_the_test_folder_using_the_package_name(self):
-        sys.modules.should_not.contain("package4.test_file1")
+        assert "package4.test_file1" not in sys.modules
 
     def it_should_run_the_file_in_the_test_folder(self):
-        sys.modules["test_file1"].module_ran.should.be.true
+        assert sys.modules["test_file1"].module_ran
 
     def it_should_not_import_the_file_in_the_non_test_folder(self):
-        sys.modules.should_not.contain("test_file3")
-        sys.modules.should_not.contain("package4.test_file3")
+        assert "test_file3" not in sys.modules
+        assert "package4.test_file3" not in sys.modules
 
     def it_should_import_the_test_package(self):
-        sys.modules.should.contain("package4.test_subpackage")
+        assert "package4.test_subpackage" in sys.modules
 
     def it_should_only_import_the_test_package_using_its_full_name(self):
-        sys.modules.should_not.contain("test_subpackage")
+        assert "test_subpackage" not in sys.modules
 
     def it_should_run_the_test_package(self):
-        sys.modules["package4.test_subpackage"].module_ran.should.be.true
+        assert sys.modules["package4.test_subpackage"].module_ran
 
     def it_should_import_the_file_in_the_test_package(self):
-        sys.modules.should.contain("package4.test_subpackage.test_file2")
+        assert "package4.test_subpackage.test_file2" in sys.modules
 
     def it_should_only_import_the_file_in_the_test_package_using_its_full_name(self):
-        sys.modules.should_not.contain("test_file2")
-        sys.modules.should_not.contain("test_subpackage.test_file2")
+        assert "test_file2" not in sys.modules
+        assert "test_subpackage.test_file2" not in sys.modules
 
     def it_should_run_the_file_in_the_test_package(self):
-        sys.modules["package4.test_subpackage.test_file2"].module_ran.should.be.true
+        assert sys.modules["package4.test_subpackage.test_file2"].module_ran
 
     def it_should_not_import_the_non_test_package(self):
-        sys.modules.should_not.contain("package4.another_subpackage")
+        assert "package4.another_subpackage" not in sys.modules
 
     def it_should_not_import_the_file_in_the_non_test_package(self):
-        sys.modules.should_not.contain("package4.another_subpackage.test_file4")
-        sys.modules.should_not.contain("another_subpackage.test_file4")
-        sys.modules.should_not.contain("package4.test_file4")
-        sys.modules.should_not.contain("test_file4")
+        assert "package4.another_subpackage.test_file4" not in sys.modules
+        assert "another_subpackage.test_file4" not in sys.modules
+        assert "package4.test_file4" not in sys.modules
+        assert "test_file4" not in sys.modules
 
     def it_should_not_import_any_init_files(self):
-        sys.modules.should_not.contain("__init__")
-        sys.modules.should_not.contain("package4.__init__")
-        sys.modules.should_not.contain("test_subpackage.__init__")
-        sys.modules.should_not.contain("package4.test_subpackage.__init__")
-        sys.modules.should_not.contain("another_subpackage.__init__")
-        sys.modules.should_not.contain("package4.another_subpackage.__init__")
+        assert "__init__" not in sys.modules
+        assert "package4.__init__" not in sys.modules
+        assert "test_subpackage.__init__" not in sys.modules
+        assert "package4.test_subpackage.__init__" not in sys.modules
+        assert "another_subpackage.__init__" not in sys.modules
+        assert "package4.another_subpackage.__init__" not in sys.modules
 
     def it_should_call_suite_started_for_four_modules(self):
-        self.reporter.calls[1][0].should.equal('suite_started')
-        self.reporter.calls[7][0].should.equal('suite_started')
-        self.reporter.calls[13][0].should.equal('suite_started')
-        self.reporter.calls[19][0].should.equal('suite_started')
+        assert self.reporter.calls[1][0] == 'suite_started'
+        assert self.reporter.calls[7][0] == 'suite_started'
+        assert self.reporter.calls[13][0] == 'suite_started'
+        assert self.reporter.calls[19][0] == 'suite_started'
 
     def it_should_pass_the_suites_into_suite_started(self):
         names = {call[1].name for call in self.reporter.calls if call[0] == 'suite_started'}
-        names.should.equal({'package4', 'package4.test_subpackage', 'package4.test_subpackage.test_file2', 'test_file1'})
+        assert names == {'package4', 'package4.test_subpackage', 'package4.test_subpackage.test_file2', 'test_file1'}
 
     def it_should_call_suite_ended_for_four_modules(self):
-        self.reporter.calls[6][0].should.equal('suite_ended')
-        self.reporter.calls[12][0].should.equal('suite_ended')
-        self.reporter.calls[18][0].should.equal('suite_ended')
-        self.reporter.calls[24][0].should.equal('suite_ended')
+        assert self.reporter.calls[6][0] == 'suite_ended'
+        assert self.reporter.calls[12][0] == 'suite_ended'
+        assert self.reporter.calls[18][0] == 'suite_ended'
+        assert self.reporter.calls[24][0] == 'suite_ended'
 
     def it_should_pass_the_suites_into_suite_ended(self):
         names = {call[1].name for call in self.reporter.calls if call[0] == 'suite_ended'}
-        names.should.equal({'package4', 'package4.test_subpackage', 'package4.test_subpackage.test_file2', 'test_file1'})
+        assert names == {'package4', 'package4.test_subpackage', 'package4.test_subpackage.test_file2', 'test_file1'}
 
     def cleanup_the_file_system_and_sys_dot_modules(self):
         shutil.rmtree(self.folder_path)
@@ -869,22 +865,19 @@ class TestSpec:
         self.reporter = SpyReporter()
 
     def because_we_run_the_folder(self):
-        self.exception = contexts.catch(contexts.run, self.folder_path, [self.reporter])
-
-    def it_should_not_throw_an_exception(self):
-        self.exception.should.be.none
+        contexts.run(self.folder_path, [self.reporter])
 
     def it_should_report_an_unexpected_error(self):
-        self.reporter.calls[1][0].should.equal("unexpected_error")
+        assert self.reporter.calls[1][0] == "unexpected_error"
 
     def it_should_pass_in_an_exception(self):
-        self.reporter.calls[1][1].should.be.a(TypeError)
+        assert isinstance(self.reporter.calls[1][1], TypeError)
 
     def it_should_import_the_second_module(self):
-        sys.modules.should.contain(self.module_names[1])
+        assert self.module_names[1] in sys.modules
 
     def it_should_run_the_second_module(self):
-        sys.modules[self.module_names[1]].module_ran.should.be.true
+        assert sys.modules[self.module_names[1]].module_ran
 
     def cleanup_the_file_system_and_sys_dot_modules(self):
         shutil.rmtree(self.folder_path)

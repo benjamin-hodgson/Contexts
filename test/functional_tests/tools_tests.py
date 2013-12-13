@@ -1,6 +1,5 @@
 import types
 from unittest import mock
-import sure
 import contexts
 
 
@@ -23,7 +22,7 @@ class WhenMarkingAnUnrelatedMethodAsSetup:
         contexts.run(self.spec, [])
 
     def it_should_treat_the_marked_method_as_setup(self):
-        self.spec.log.should.equal("arrange act assert teardown ")
+        assert self.spec.log == "arrange act assert teardown "
 
 class WhenMarkingAnOtherwiseNamedMethodAsSetup:
     def context(self):
@@ -44,7 +43,7 @@ class WhenMarkingAnOtherwiseNamedMethodAsSetup:
         contexts.run(self.spec, [])
 
     def it_should_treat_the_marked_method_as_setup(self):
-        self.spec.log.should.equal("arrange act assert teardown ")
+        assert self.spec.log == "arrange act assert teardown "
 
 
 class WhenMarkingAnUnrelatedMethodAsAction:
@@ -66,7 +65,7 @@ class WhenMarkingAnUnrelatedMethodAsAction:
         contexts.run(self.spec, [])
 
     def it_should_treat_the_marked_method_as_action(self):
-        self.spec.log.should.equal("arrange act assert teardown ")
+        assert self.spec.log == "arrange act assert teardown "
 
 class WhenMarkingAnOtherwiseNamedMethodAsAction:
     def context(self):
@@ -87,7 +86,7 @@ class WhenMarkingAnOtherwiseNamedMethodAsAction:
         contexts.run(self.spec, [])
 
     def it_should_treat_the_marked_method_as_action(self):
-        self.spec.log.should.equal("arrange act assert teardown ")
+        assert self.spec.log == "arrange act assert teardown "
 
 
 class WhenMarkingAnUnrelatedMethodAsAssertion:
@@ -109,7 +108,7 @@ class WhenMarkingAnUnrelatedMethodAsAssertion:
         contexts.run(self.spec, [])
 
     def it_should_treat_the_marked_method_as_assertion(self):
-        self.spec.log.should.equal("arrange act assert teardown ")
+        assert self.spec.log == "arrange act assert teardown "
 
 class WhenMarkingAnOtherwiseNamedMethodAsAssertion:
     def context(self):
@@ -130,7 +129,7 @@ class WhenMarkingAnOtherwiseNamedMethodAsAssertion:
         contexts.run(self.spec, [])
 
     def it_should_treat_the_marked_method_as_assertion(self):
-        self.spec.log.should.equal("arrange act assert teardown ")
+        assert self.spec.log == "arrange act assert teardown "
 
 
 class WhenMarkingAnUnrelatedMethodAsTeardown:
@@ -152,7 +151,7 @@ class WhenMarkingAnUnrelatedMethodAsTeardown:
         contexts.run(self.spec, [])
 
     def it_should_treat_the_marked_method_as_teardown(self):
-        self.spec.log.should.equal("arrange act assert teardown ")
+        assert self.spec.log == "arrange act assert teardown "
 
 class WhenMarkingAnOtherwiseNamedMethodAsTeardown:
     def context(self):
@@ -173,7 +172,7 @@ class WhenMarkingAnOtherwiseNamedMethodAsTeardown:
         contexts.run(self.spec, [])
 
     def it_should_treat_the_marked_method_as_teardown(self):
-        self.spec.log.should.equal("arrange act assert teardown ")
+        assert self.spec.log == "arrange act assert teardown "
 
 
 class WhenMarkingAnUnrelatedMethodAsExamples:
@@ -193,7 +192,7 @@ class WhenMarkingAnUnrelatedMethodAsExamples:
         contexts.run(self.spec, [])
 
     def it_should_treat_the_marked_method_as_teardown(self):
-        self.spec.log.should.equal([1,2])
+        assert self.spec.log == [1,2]
 
 class WhenMarkingAnOtherwiseNamedMethodAsExamples:
     def context(self):
@@ -212,7 +211,7 @@ class WhenMarkingAnOtherwiseNamedMethodAsExamples:
         contexts.run(self.spec, [])
 
     def it_should_treat_the_marked_method_as_teardown(self):
-        self.spec.log.should.equal([1,2])
+        assert self.spec.log == [1,2]
 
 
 class WhenMarkingAClassAsASpec:
@@ -236,7 +235,7 @@ class WhenMarkingAClassAsASpec:
         contexts.run(self.module, [])
 
     def it_should_treat_the_marked_class_as_a_spec(self):
-        self.spec.log.should.equal("arrange act assert teardown ")
+        assert self.spec.log == "arrange act assert teardown "
 
 class WhenMarkingAClassAsAContext:
     def context(self):
@@ -259,7 +258,7 @@ class WhenMarkingAClassAsAContext:
         contexts.run(self.module, [])
 
     def it_should_treat_the_marked_class_as_a_spec(self):
-        self.spec.log.should.equal("arrange act assert teardown ")
+        assert self.spec.log == "arrange act assert teardown "
 
 
 class WhenCatchingAnException:
@@ -282,10 +281,10 @@ class WhenCatchingAnException:
         contexts.run(self.spec, [])
 
     def it_should_catch_and_return_the_exception(self):
-        self.spec.exception.should.equal(self.exception)
+        assert self.spec.exception == self.exception
 
     def it_should_call_it_with_the_supplied_arguments(self):
-        self.spec.call_args.should.equal((3, None, 'yes', []))
+        assert self.spec.call_args == (3, None, 'yes', [])
 
 
 class WhenTimingSomething:
@@ -302,7 +301,7 @@ class WhenTimingSomething:
             self.result = contexts.time(self.slow_function, 3, c='yes', b=None)
 
     def it_should_call_the_function_with_the_supplied_arguments(self):
-        self.call_args.should.equal((3, None, 'yes', []))
+        assert self.call_args == (3, None, 'yes', [])
 
     def it_should_return_the_time_difference_in_seconds(self):
-        self.result.should.equal(self.time_diff)
+        assert self.result == self.time_diff
