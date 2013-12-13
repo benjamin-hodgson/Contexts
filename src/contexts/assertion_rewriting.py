@@ -41,28 +41,9 @@ class AssertionChildVisitor(ast.NodeVisitor):
         return ret if ret is not None else self.visit_unknown_node(node)
 
     def visit_Compare(self, compare_node):
-        if isinstance(compare_node.ops[0], ast.NotEq):
-            format_string = 'Asserted {0} != {1} but found them to be equal'
-        elif isinstance(compare_node.ops[0], ast.Eq):
-            format_string = 'Asserted {0} == {1} but found them not to be equal'
-        elif isinstance(compare_node.ops[0], ast.Lt):
-            format_string = "Asserted {0} < {1} but found {2}"
-        elif isinstance(compare_node.ops[0], ast.LtE):
-            format_string = "Asserted {0} <= {1} but found it to be greater"
-        elif isinstance(compare_node.ops[0], ast.Gt):
-            format_string = "Asserted {0} > {1} but found {2}"
-        elif isinstance(compare_node.ops[0], ast.GtE):
-            format_string = "Asserted {0} >= {1} but found it to be less"
-        elif isinstance(compare_node.ops[0], ast.In):
-            format_string = "Asserted {0} in {1} but found it not to be present"
-        elif isinstance(compare_node.ops[0], ast.NotIn):
-            format_string = "Asserted {0} not in {1} but found it to be present"
-        elif isinstance(compare_node.ops[0], ast.Is):
-            format_string = "Asserted {0} is {1} but found them not to be the same"
-        elif isinstance(compare_node.ops[0], ast.IsNot):
-            format_string = "Asserted {0} is not {1} but found them to be the same"
-        else:
-            return None
+        format_string = self.formatstring_for_comparison(compare_node)
+        if format_string is None:
+            return
 
         statements = []
         format_params = []
@@ -70,27 +51,63 @@ class AssertionChildVisitor(ast.NodeVisitor):
         for i, comparator in enumerate([compare_node.left] + compare_node.comparators):
             name = '@contexts_assertion_var' + str(i)
             statements.append(self.assign(name, comparator))
+            new_comparators.append(self.load(name))
+            format_params.append(self.repr(self.load(name)))
 
-            load_name = ast.Name(name, ast.Load())
-            new_comparators.append(load_name)
-            format_params.append(self.repr(load_name))
-
+        name = '@contexts_formatparam'
         if isinstance(compare_node.ops[0], ast.Lt):
-            name = '@contexts_formatparam'
-            ternary_expression = ast.IfExp(ast.Compare(new_comparators[0], [ast.Gt()], [new_comparators[1]]), ast.Str('it to be greater'), ast.Str('them to be equal'))
+            ternary_expression = ast.IfExp(
+                ast.Compare(new_comparators[0], [ast.Gt()],[new_comparators[1]]),
+                ast.Str('it to be greater'),
+                ast.Str('them to be equal')
+            )
+        elif isinstance(compare_node.ops[0], ast.Gt):
+            ternary_expression = ast.IfExp(
+                ast.Compare(new_comparators[0], [ast.Lt()], [new_comparators[1]]),
+                ast.Str('it to be less'),
+                ast.Str('them to be equal')
+            )
+
+        if isinstance(compare_node.ops[0], (ast.Lt, ast.Gt)):
             statements.append(self.assign(name, ternary_expression))
-            format_params.append(ast.Name(name, ast.Load()))
-        if isinstance(compare_node.ops[0], ast.Gt):
-            name = '@contexts_formatparam'
-            ternary_expression = ast.IfExp(ast.Compare(new_comparators[0], [ast.Lt()], [new_comparators[1]]), ast.Str('it to be less'), ast.Str('them to be equal'))
-            statements.append(self.assign(name, ternary_expression))
-            format_params.append(ast.Name(name, ast.Load()))
+            format_params.append(self.load(name))
 
         compare_node.left, *compare_node.comparators = new_comparators
         msg = self.format(format_string, format_params)
 
         statements.append(ast.Assert(compare_node, msg))
         return statements
+
+    def visit_Call(self, call_node):
+        func_name = call_node.func
+        if func_name.id == "isinstance":
+            return [
+                self.assign('@contexts_assertion_var1', call_node.args[0]),
+                self.assign('@contexts_assertion_var2', call_node.args[1]),
+                self.assign('@contexts_assertion_var3', self.clsname(self.getattr(self.load('@contexts_assertion_var1'), '__class__'))),
+                self.assign('@contexts_assertion_var4', ast.IfExp(
+                    ast.Call(func=self.load('isinstance'), args=[
+                        self.load('@contexts_assertion_var2'),
+                        self.load('tuple'),
+                      ], keywords=[]),
+                    ast.Call(func=self.load('tuple'), args=[
+                        ast.GeneratorExp(self.clsname(self.load('@x')), [
+                            ast.comprehension(ast.Name('@x', ast.Store()), self.load('@contexts_assertion_var2'), []),
+                          ]),
+                      ], keywords=[]),
+                    self.clsname(self.load('@contexts_assertion_var2'))
+                )),
+                ast.Assert(
+                    ast.Call(func=ast.Name(id='isinstance', ctx=ast.Load()), args=[
+                        self.load('@contexts_assertion_var1'),
+                        self.load('@contexts_assertion_var2'),
+                    ], keywords=[]),
+                    self.format('Asserted isinstance({0}, {1}) but found it to be a {2}', [
+                        self.repr(self.load('@contexts_assertion_var1')),
+                        ast.Call(func=self.getattr(self.repr(self.load('@contexts_assertion_var4')), 'replace'), args=[ast.Str("'"), ast.Str("")], keywords=[]),
+                        self.load('@contexts_assertion_var3'),
+                ])),
+            ]
 
     def visit_Name(self, name_node):
         if name_node.id == 'False':
@@ -100,23 +117,41 @@ class AssertionChildVisitor(ast.NodeVisitor):
     def visit_UnaryOp(self, unaryop_node):
         if isinstance(unaryop_node.op, ast.Not):
             format_string = "Asserted not {} but found it to be truthy"
-
             name = '@contexts_assertion_var'
-            load_name = ast.Name(name, ast.Load())
-            msg = self.format(format_string, [self.repr(load_name)])
-
-            statements = [self.assign(name, unaryop_node.operand), ast.Assert(ast.UnaryOp(ast.Not(), load_name), msg)]
+            statements = [self.assign(name, unaryop_node.operand)]
+            msg = self.format(format_string, [self.repr(self.load(name))])
+            statements.append(ast.Assert(ast.UnaryOp(ast.Not(), self.load(name)), msg))
             return statements
 
     def visit_unknown_node(self, node):
         format_string = "Asserted {} but found it to be falsy"
-
         name = '@contexts_assertion_var'
-        load_name = ast.Name(name, ast.Load())
-        msg = self.format(format_string, [self.repr(load_name)])
-
-        statements = [self.assign(name, node), ast.Assert(load_name, msg)]
+        statements = [self.assign(name, node)]
+        msg = self.format(format_string, [self.repr(self.load(name))])
+        statements.append(ast.Assert(self.load(name), msg))
         return statements
+
+    def formatstring_for_comparison(self, compare_node):
+        if isinstance(compare_node.ops[0], ast.NotEq):
+            return 'Asserted {0} != {1} but found them to be equal'
+        if isinstance(compare_node.ops[0], ast.Eq):
+            return 'Asserted {0} == {1} but found them not to be equal'
+        if isinstance(compare_node.ops[0], ast.Lt):
+            return "Asserted {0} < {1} but found {2}"
+        if isinstance(compare_node.ops[0], ast.LtE):
+            return "Asserted {0} <= {1} but found it to be greater"
+        if isinstance(compare_node.ops[0], ast.Gt):
+            return "Asserted {0} > {1} but found {2}"
+        if isinstance(compare_node.ops[0], ast.GtE):
+            return "Asserted {0} >= {1} but found it to be less"
+        if isinstance(compare_node.ops[0], ast.In):
+            return "Asserted {0} in {1} but found it not to be present"
+        if isinstance(compare_node.ops[0], ast.NotIn):
+            return "Asserted {0} not in {1} but found it to be present"
+        if isinstance(compare_node.ops[0], ast.Is):
+            return "Asserted {0} is {1} but found them not to be the same"
+        if isinstance(compare_node.ops[0], ast.IsNot):
+            return "Asserted {0} is not {1} but found them to be the same"
 
     def assign(self, name, expr_node):
         return ast.Assign([ast.Name(name, ast.Store())], expr_node)
@@ -125,4 +160,13 @@ class AssertionChildVisitor(ast.NodeVisitor):
         return ast.Call(func=ast.Name('repr', ast.Load()), args=[load_name_node], keywords=[])
 
     def format(self, string, format_params):
-        return ast.Call(func=ast.Attribute(value=ast.Str(string), attr='format', ctx=ast.Load()), args=format_params, keywords=[])
+        return ast.Call(func=self.getattr(ast.Str(string), 'format'), args=format_params, keywords=[])
+
+    def clsname(self, node):
+        return self.getattr(node, "__name__")
+
+    def load(self, name):
+        return ast.Name(name, ast.Load())
+
+    def getattr(self, node, name):
+        return ast.Attribute(node, name, ast.Load())

@@ -657,3 +657,61 @@ class TestSpec:
     def the_exception_should_contain_a_generated_message(self, x):
         the_call, = [call for call in self.reporter.calls if call[0] == 'assertion_failed']
         assert str(the_call[2]) == "Asserted {0} is not {0} but found them to be the same".format(repr(x))
+
+
+class WhenUserAssertsIsinstance(AssertionRewritingSharedContext):
+    @classmethod
+    def examples_of_things_that_are_not_instances_of_their_partners(self):
+        yield 12.3, int
+        yield {'abc'}, list
+        yield "hello", set
+
+    def context(self, x, cls):
+        self.filename = os.path.join(TEST_DATA_DIR, "assert_isinstance.py")
+        self.code = """
+class TestSpec:
+    def it(self):
+        a = {}
+        b = {}
+        assert isinstance(a, b)
+""".format(repr(x), cls.__name__)
+        self.write_file()
+
+    def because_we_run_the_spec(self):
+        contexts.run(self.filename, [self.reporter])
+
+    def it_should_call_assertion_failed(self):
+        assert 'assertion_failed' in [call[0] for call in self.reporter.calls]
+
+    def the_exception_should_contain_a_generated_message(self, x, cls):
+        the_call, = [call for call in self.reporter.calls if call[0] == 'assertion_failed']
+        assert str(the_call[2]) == "Asserted isinstance({0}, {1}) but found it to be a {2}".format(repr(x), cls.__name__, type(x).__name__)
+
+
+class WhenUserAssertsIsinstanceWithATuple(AssertionRewritingSharedContext):
+    @classmethod
+    def examples_of_things_that_are_not_instances_of_their_partners(self):
+        yield 12.3, (int, complex)
+        yield {'abc'}, (list, dict)
+        yield "hello", (set, bytes)
+
+    def context(self, x, tup):
+        self.filename = os.path.join(TEST_DATA_DIR, "assert_isinstance_tuple.py")
+        self.code = """
+class TestSpec:
+    def it(self):
+        a = {}
+        b = ({},{})
+        assert isinstance(a, b)
+""".format(repr(x), tup[0].__name__, tup[1].__name__)
+        self.write_file()
+
+    def because_we_run_the_spec(self):
+        contexts.run(self.filename, [self.reporter])
+
+    def it_should_call_assertion_failed(self):
+        assert 'assertion_failed' in [call[0] for call in self.reporter.calls]
+
+    def the_exception_should_contain_a_generated_message(self, x, tup):
+        the_call, = [call for call in self.reporter.calls if call[0] == 'assertion_failed']
+        assert str(the_call[2]) == "Asserted isinstance({0}, ({1}, {2})) but found it to be a {3}".format(repr(x), tup[0].__name__, tup[1].__name__, type(x).__name__)

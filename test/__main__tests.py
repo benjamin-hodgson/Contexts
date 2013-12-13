@@ -14,7 +14,7 @@ class WhenLoadingUpTheModule:
     # this test is just to balance
     # the fact that we're mocking it everywhere else
     def it_should_get_main_from_init(self):
-        __main__.main.should.equal(contexts.main)
+        assert __main__.main is contexts.main
 
 
 class MainSharedContext:

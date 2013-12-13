@@ -1,4 +1,3 @@
-from unittest import mock
 import sure
 import contexts
 from .tools import SpyReporter
