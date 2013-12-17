@@ -15,18 +15,19 @@ class AssertionRewritingSharedContext:
         self.reporter = SpyReporter()
 
     def write_file(self):
+        self.filename = os.path.join(TEST_DATA_DIR, self.module_name + ".py")
         os.mkdir(TEST_DATA_DIR)
         with open(self.filename, 'w') as f:
             f.write(self.code)
 
     def cleanup_the_filesystem_and_sys_dot_modules(self):
-        sys.modules = self.old_sys_dot_modules
+        del sys.modules[self.module_name]
         shutil.rmtree(TEST_DATA_DIR)
 
 
 class WhenUserSuppliesAnAssertionMessage(AssertionRewritingSharedContext):
     def establish_that_there_is_a_test_file(self):
-        self.filename = os.path.join(TEST_DATA_DIR, "explicit_message_test.py")
+        self.module_name = "explicit_message_test"
         self.message = "i asserted false :("
         self.code = """
 class TestSpec:
@@ -48,7 +49,7 @@ class TestSpec:
 
 class WhenAssertionRewritingIsDisabled(AssertionRewritingSharedContext):
     def establish_that_there_is_a_test_file(self):
-        self.filename = os.path.join(TEST_DATA_DIR, "disabled.py")
+        self.module_name = "disabled"
         self.code = """
 class TestSpec:
     def it(self):
@@ -69,7 +70,7 @@ class TestSpec:
 
 class WhenUserExpicitlyAssertsFalse(AssertionRewritingSharedContext):
     def context(self):
-        self.filename = os.path.join(TEST_DATA_DIR, "assert_false.py")
+        self.module_name = "assert_false"
         self.code = """
 class TestSpec:
     def it(self):
@@ -90,7 +91,7 @@ class TestSpec:
 
 class WhenUserAssertsOnSomethingFalsy(AssertionRewritingSharedContext):
     @classmethod
-    def examples_of_things_that_are_falsy(self):
+    def examples_of_things_that_are_falsy(cls):
         yield 0
         yield 0 + 0j
         yield ''
@@ -98,7 +99,7 @@ class WhenUserAssertsOnSomethingFalsy(AssertionRewritingSharedContext):
         yield []
 
     def context(self, x):
-        self.filename = os.path.join(TEST_DATA_DIR, "assert_not_equal.py")
+        self.module_name = "assert_not_equal"
         self.code = """
 class TestSpec:
     def it(self):
@@ -122,7 +123,6 @@ class TestSpec:
 class WhenUserAssertsOnACustomObject(AssertionRewritingSharedContext):
     def context(self):
         self.module_name = "assert_object"
-        self.filename = os.path.join(TEST_DATA_DIR, self.module_name + ".py")
         self.code = """
 class Thing(object):
     def __bool__(self):
@@ -150,7 +150,7 @@ class TestSpec:
 
 class WhenUserAssertsNot(AssertionRewritingSharedContext):
     @classmethod
-    def examples_of_things_that_are_truthy(self):
+    def examples_of_things_that_are_truthy(cls):
         yield 1
         yield 12.3
         yield 'a'
@@ -158,7 +158,7 @@ class WhenUserAssertsNot(AssertionRewritingSharedContext):
         yield [{}]
 
     def context(self, x):
-        self.filename = os.path.join(TEST_DATA_DIR, "assert_not_equal.py")
+        self.module_name = "assert_not_equal"
         self.code = """
 class TestSpec:
     def it(self):
@@ -181,7 +181,6 @@ class TestSpec:
 class WhenUserAssertsOnAFunctionCall(AssertionRewritingSharedContext):
     def context(self):
         self.module_name = "assert_function_call"
-        self.filename = os.path.join(TEST_DATA_DIR, self.module_name + ".py")
         self.code = """
 from unittest import mock
 
@@ -211,7 +210,6 @@ class TestSpec:
 class WhenUserAssertsOnAMethodCall(AssertionRewritingSharedContext):
     def context(self):
         self.module_name = "assert_method_call"
-        self.filename = os.path.join(TEST_DATA_DIR, self.module_name + ".py")
         self.code = """
 from unittest import mock
 
@@ -248,7 +246,7 @@ class WhenUserAssertsEqual(AssertionRewritingSharedContext):
         yield {'fantastic':'wonderful'}, {'fantastic':['not equal']}
 
     def context(self, x, y):
-        self.filename = os.path.join(TEST_DATA_DIR, "assert_equal.py")
+        self.module_name = "assert_equal"
         self.code = """
 class TestSpec:
     def it(self):
@@ -279,7 +277,6 @@ class WhenUserAssertsEqualOnACustomObject(AssertionRewritingSharedContext):
 
     def context(self, x):
         self.module_name = "assert_equal_custom_object"
-        self.filename = os.path.join(TEST_DATA_DIR, self.module_name + ".py")
         self.code = """
 class NeverEqual(object):
     def __eq__(self, other):
@@ -316,7 +313,6 @@ class WhenUserAssertsEqualOnAFunctionCallOnTheLeft(AssertionRewritingSharedConte
 
     def context(self, x, y):
         self.module_name = "assert_equal_func_left"
-        self.filename = os.path.join(TEST_DATA_DIR, self.module_name + ".py")
         self.code = """
 from unittest import mock
 
@@ -353,7 +349,6 @@ class WhenUserAssertsEqualOnAFunctionCallOnTheRight(AssertionRewritingSharedCont
 
     def context(self, x, y):
         self.module_name = "assert_equal_func_right"
-        self.filename = os.path.join(TEST_DATA_DIR, self.module_name + ".py")
         self.code = """
 from unittest import mock
 
@@ -382,7 +377,7 @@ class TestSpec:
 
 class WhenUserAssertsNotEqual(AssertionRewritingSharedContext):
     @classmethod
-    def examples_of_things_that_equal_themselves(self):
+    def examples_of_things_that_equal_themselves(cls):
         yield 1
         yield 12.3
         yield 'a'
@@ -390,7 +385,7 @@ class WhenUserAssertsNotEqual(AssertionRewritingSharedContext):
         yield {'fantastic':'wonderful'}
 
     def context(self, x):
-        self.filename = os.path.join(TEST_DATA_DIR, "assert_not_equal.py")
+        self.module_name = "assert_not_equal"
         self.code = """
 class TestSpec:
     def it(self):
@@ -412,14 +407,14 @@ class TestSpec:
 
 class WhenUserAssertsLessThanButItIsGreater(AssertionRewritingSharedContext):
     @classmethod
-    def examples_of_things_that_are_greater_than_their_partners(self):
+    def examples_of_things_that_are_greater_than_their_partners(cls):
         yield 3, 1
         yield 52.9, 12.3
         yield 'z', 'a'
         yield (2, 1), (1, 3)
 
     def context(self, x, y):
-        self.filename = os.path.join(TEST_DATA_DIR, "assert_less_than_is_greater.py")
+        self.module_name = "assert_less_than_is_greater"
         self.code = """
 class TestSpec:
     def it(self):
@@ -442,14 +437,14 @@ class TestSpec:
 
 class WhenUserAssertsLessThanButItIsEqual(AssertionRewritingSharedContext):
     @classmethod
-    def examples_of_things_that_equal_themselves(self):
+    def examples_of_things_that_equal_themselves(cls):
         yield 3
         yield 52.9
         yield 'z'
         yield (2, 1)
 
     def context(self, x):
-        self.filename = os.path.join(TEST_DATA_DIR, "assert_less_than_is_equal.py")
+        self.module_name = "assert_less_than_is_equal"
         self.code = """
 class TestSpec:
     def it(self):
@@ -472,14 +467,14 @@ class TestSpec:
 
 class WhenUserAssertsLessThanOrEqual(AssertionRewritingSharedContext):
     @classmethod
-    def examples_of_things_that_are_greater_than_their_partners(self):
+    def examples_of_things_that_are_greater_than_their_partners(cls):
         yield 3, 1
         yield 52.9, 12.3
         yield 'z', 'a'
         yield (2, 1), (1, 3)
 
     def context(self, x, y):
-        self.filename = os.path.join(TEST_DATA_DIR, "assert_less_than_or_equal.py")
+        self.module_name = "assert_less_than_or_equal"
         self.code = """
 class TestSpec:
     def it(self):
@@ -502,14 +497,14 @@ class TestSpec:
 
 class WhenUserAssertsGreaterThanButItIsLess(AssertionRewritingSharedContext):
     @classmethod
-    def examples_of_things_that_are_less_than_their_partners(self):
+    def examples_of_things_that_are_less_than_their_partners(cls):
         yield 1, 2
         yield 12.3, 18.4
         yield 'a', 'z'
         yield (1, 3), (2, 1)
 
     def context(self, x, y):
-        self.filename = os.path.join(TEST_DATA_DIR, "assert_greater_than_is_less.py")
+        self.module_name = "assert_greater_than_is_less"
         self.code = """
 class TestSpec:
     def it(self):
@@ -532,14 +527,14 @@ class TestSpec:
 
 class WhenUserAssertsGreaterThanButItIsEqual(AssertionRewritingSharedContext):
     @classmethod
-    def examples_of_things_that_equal_themselves(self):
+    def examples_of_things_that_equal_themselves(cls):
         yield 3
         yield 52.9
         yield 'z'
         yield (2, 1)
 
     def context(self, x):
-        self.filename = os.path.join(TEST_DATA_DIR, "assert_greater_than_is_equal.py")
+        self.module_name = "assert_greater_than_is_equal"
         self.code = """
 class TestSpec:
     def it(self):
@@ -569,7 +564,7 @@ class WhenUserAssertsGreaterThanOrEqual(AssertionRewritingSharedContext):
         yield (1, 3), (2, 1)
 
     def context(self, x, y):
-        self.filename = os.path.join(TEST_DATA_DIR, "assert_greater_than_or_equal.py")
+        self.module_name = "assert_greater_than_or_equal"
         self.code = """
 class TestSpec:
     def it(self):
@@ -592,14 +587,14 @@ class TestSpec:
 
 class WhenUserAssertsIn(AssertionRewritingSharedContext):
     @classmethod
-    def examples_of_things_that_are_not_contained_by_their_partners(self):
+    def examples_of_things_that_are_not_contained_by_their_partners(cls):
         yield 1, [2]
         yield 12.3, {18.4: 'hello'}
         yield 'a', 'zbc'
         yield (1, 3), (2, 1)
 
     def context(self, x, y):
-        self.filename = os.path.join(TEST_DATA_DIR, "assert_in.py")
+        self.module_name = "assert_in"
         self.code = """
 class TestSpec:
     def it(self):
@@ -622,14 +617,14 @@ class TestSpec:
 
 class WhenUserAssertsNotIn(AssertionRewritingSharedContext):
     @classmethod
-    def examples_of_things_that_are_contained_by_their_partners(self):
+    def examples_of_things_that_are_contained_by_their_partners(cls):
         yield 1, [1,2,'z']
         yield 12.3, {18.4: 'hello', 12.3: 'there'}
         yield 'a', 'zabc'
         yield (1, 3), (2, 1, (1, 3))
 
     def context(self, x, y):
-        self.filename = os.path.join(TEST_DATA_DIR, "assert_not_in.py")
+        self.module_name = "assert_not_in"
         self.code = """
 class TestSpec:
     def it(self):
@@ -660,7 +655,7 @@ class WhenUserAssertsIs(AssertionRewritingSharedContext):
         yield {'fantastic':'wonderful'}, {'fantastic':'wonderful'}
 
     def context(self, x, y):
-        self.filename = os.path.join(TEST_DATA_DIR, "assert_is.py")
+        self.module_name = "assert_is"
         self.code = """
 class TestSpec:
     def it(self):
@@ -683,7 +678,7 @@ class TestSpec:
 
 class WhenUserAssertsIsNot(AssertionRewritingSharedContext):
     @classmethod
-    def examples_of_things_that_are_themselves(self):
+    def examples_of_things_that_are_themselves(cls):
         yield 1
         yield 12.3
         yield 'a'
@@ -691,7 +686,7 @@ class WhenUserAssertsIsNot(AssertionRewritingSharedContext):
         yield {'fantastic':'wonderful'}
 
     def context(self, x):
-        self.filename = os.path.join(TEST_DATA_DIR, "assert_is_not.py")
+        self.module_name = "assert_is_not"
         self.code = """
 class TestSpec:
     def it(self):
@@ -713,13 +708,13 @@ class TestSpec:
 
 class WhenUserAssertsIsinstance(AssertionRewritingSharedContext):
     @classmethod
-    def examples_of_things_that_are_not_instances_of_their_partners(self):
+    def examples_of_things_that_are_not_instances_of_their_partners(cls):
         yield 12.3, int
         yield {'abc'}, list
         yield "hello", set
 
     def context(self, x, cls):
-        self.filename = os.path.join(TEST_DATA_DIR, "assert_isinstance.py")
+        self.module_name = "assert_isinstance"
         self.code = """
 class TestSpec:
     def it(self):
@@ -742,13 +737,13 @@ class TestSpec:
 
 class WhenUserAssertsIsinstanceWithATuple(AssertionRewritingSharedContext):
     @classmethod
-    def examples_of_things_that_are_not_instances_of_their_partners(self):
+    def examples_of_things_that_are_not_instances_of_their_partners(cls):
         yield 12.3, "(int, complex)"
         yield {'abc'}, "(list, dict)"
         yield "hello", "(set, bytes, float)"
 
     def context(self, x, tup):
-        self.filename = os.path.join(TEST_DATA_DIR, "assert_isinstance_tuple.py")
+        self.module_name = "assert_isinstance_tuple"
         self.code = """
 class TestSpec:
     def it(self):
@@ -771,7 +766,7 @@ class TestSpec:
 
 class WhenUserAssertsOnAChainedComparison(AssertionRewritingSharedContext):
     def context(self):
-        self.filename = os.path.join(TEST_DATA_DIR, "assert_chained_comparison.py")
+        self.module_name = "assert_chained_comparison"
         self.code = """
 class TestSpec:
     def it(self):

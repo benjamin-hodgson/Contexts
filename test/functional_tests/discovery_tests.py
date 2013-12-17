@@ -48,13 +48,13 @@ class WhenRunningAModule:
         assert self.reporter.calls[1][0] == "suite_started"
 
     def it_should_pass_the_suite_object_into_suite_started(self):
-        assert self.reporter.calls[1][1].name == 'fake_specs'
+        assert self.reporter.calls[1][1].name == self.module.__name__
 
     def it_should_call_suite_ended(self):
         assert self.reporter.calls[-2][0] == "suite_ended"
 
     def it_should_pass_the_suite_object_into_suite_ended(self):
-        assert self.reporter.calls[-2][1].name == 'fake_specs'
+        assert self.reporter.calls[-2][1].name == self.module.__name__
 
 
 class WhenRunningTheSameModuleMultipleTimes:

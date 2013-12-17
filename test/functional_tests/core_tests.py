@@ -5,12 +5,8 @@ core_file = repr(contexts.core.__file__)[1:-1]
 this_file = repr(__file__)[1:-1]
 
 
-# this test is waaay too big
 class WhenRunningASpec:
     def context(self):
-        self.assertion_err = AssertionError()
-        self.value_err = ValueError()
-
         class TestSpec:
             log = ""
             def method_with_establish_in_the_name(s):
@@ -19,24 +15,58 @@ class WhenRunningASpec:
                 s.__class__.log += "act "
             def method_with_should_in_the_name(s):
                 s.__class__.log += "assert "
-            def failing_method_with_should_in_the_name(s):
+            def method_with_cleanup_in_the_name(s):
+                s.__class__.log += "teardown "
+
+        self.spec = TestSpec
+
+    def because_we_run_the_spec(self):
+        contexts.run(self.spec, [])
+
+    def it_should_run_the_methods_in_the_correct_order(self):
+        assert self.spec.log == "arrange act assert teardown "
+
+
+class WhenRunningASpecWithMultipleAssertions:
+    def context(self):
+        class TestSpec:
+            calls = 0
+            def method_with_should_in_the_name(self):
+                self.__class__.calls += 1
+            def another_should_method(self):
+                self.__class__.calls += 1
+            def third_should_method(self):
+                self.__class__.calls += 1
+
+        self.spec = TestSpec
+
+    def because_we_run_the_spec(self):
+        contexts.run(self.spec, [])
+
+    def it_should_run_all_three_assertion_methods(self):
+        assert self.spec.calls == 3
+
+
+class WhenRunningASpecWithReporters:
+    def context(self):
+        class TestSpec:
+            log = ""
+            def method_with_establish_in_the_name(s):
+                s.__class__.log += "arrange "
+            def method_with_because_in_the_name(s):
+                s.__class__.log += "act "
+            def method_with_should_in_the_name(s):
                 s.__class__.log += "assert "
-                raise self.assertion_err
-            def erroring_method_with_should_in_the_name(s):
-                s.__class__.log += "assert "
-                raise self.value_err
             def method_with_cleanup_in_the_name(s):
                 s.__class__.log += "teardown "
 
         self.spec = TestSpec
         self.reporter1 = SpyReporter()
         self.reporter2 = SpyReporter()
+        self.reporter3 = SpyReporter()
 
     def because_we_run_the_spec(self):
-        contexts.run(self.spec, [self.reporter1, self.reporter2])
-
-    def it_should_run_the_methods_in_the_correct_order(self):
-        assert self.spec.log == "arrange act assert assert assert teardown "
+        contexts.run(self.spec, [self.reporter1, self.reporter2, self.reporter3])
 
     def it_should_call_test_run_started_first(self):
         assert self.reporter1.calls[0][0] == 'test_run_started'
@@ -52,138 +82,231 @@ class WhenRunningASpec:
     def it_should_pass_in_the_context(self):
         assert self.reporter1.calls[2][1].name == 'TestSpec'
 
-    def it_should_call_assertion_started_three_times(self):
+    def it_should_call_assertion_started_for_the_first_assertion(self):
         assert self.reporter1.calls[3][0] == 'assertion_started'
-        assert self.reporter1.calls[5][0] == 'assertion_started'
-        assert self.reporter1.calls[7][0] == 'assertion_started'
 
-    def it_should_call_assertion_passed_and_failed_and_errored(self):
-        calls = [self.reporter1.calls[i][0] for i in (4,6,8)]
-        assert 'assertion_passed' in calls
-        assert 'assertion_failed' in calls
-        assert 'assertion_errored' in calls
+    def it_should_pass_the_first_assertion_into_assertion_started(self):
+        assert self.reporter1.calls[3][1].name == 'method_with_should_in_the_name'
 
-    def the_assertions_should_have_the_right_names(self):
-        names = [self.reporter1.calls[i][1].name for i in (4,6,8)]
-        assert 'method_with_should_in_the_name' in names
-        assert 'failing_method_with_should_in_the_name' in names
-        assert 'erroring_method_with_should_in_the_name' in names
+    def it_should_call_assertion_passed_for_the_first_assertion(self):
+        assert self.reporter1.calls[4][0] == 'assertion_passed'
 
-    def it_should_pass_in_the_exceptions(self):
-        exceptions = {}
-        for i in (4,6,8):
-            call_name = self.reporter1.calls[i][0]
-            if call_name == 'assertion_failed':
-                exceptions['fail'] = self.reporter1.calls[i][2]
-            if call_name == 'assertion_errored':
-                exceptions['error'] = self.reporter1.calls[i][2]
-
-        assert exceptions['fail'] is self.assertion_err
-        assert exceptions['error'] is self.value_err
+    def it_should_pass_the_first_assertion_into_assertion_passed(self):
+        assert self.reporter1.calls[4][1].name == 'method_with_should_in_the_name'
 
     @contexts.assertion
     def it_should_call_context_ended_next(self):
-        assert self.reporter1.calls[9][0] == 'context_ended'
+        assert self.reporter1.calls[5][0] == 'context_ended'
 
     @contexts.assertion
     def it_should_pass_in_the_context_again(self):
-        assert self.reporter1.calls[9][1] == self.reporter1.calls[2][1]
+        assert self.reporter1.calls[5][1] == self.reporter1.calls[2][1]
 
     def it_should_call_suite_ended(self):
-        assert self.reporter1.calls[10][0] == 'suite_ended'
+        assert self.reporter1.calls[6][0] == 'suite_ended'
 
     def it_should_call_test_run_ended_last(self):
-        assert self.reporter1.calls[11][0] == 'test_run_ended'
+        assert self.reporter1.calls[7][0] == 'test_run_ended'
 
     def it_should_pass_in_the_same_test_run_as_at_the_start(self):
-        assert self.reporter1.calls[11][1] == self.reporter1.calls[0][1]
-
-    def it_should_not_make_any_more_calls(self):
-        assert len(self.reporter1.calls) == 12
+        assert self.reporter1.calls[7][1] == self.reporter1.calls[0][1]
 
     def it_should_do_exactly_the_same_to_the_second_reporter(self):
         assert self.reporter2.calls == self.reporter1.calls
 
+    def it_should_do_exactly_the_same_to_the_third_reporter(self):
+        assert self.reporter3.calls == self.reporter1.calls
 
-# break up this test too
-class WhenAContextErrors:
+
+class WhenAnAssertionFails:
     def context(self):
-        self.value_err = ValueError("explode")
-        self.type_err = TypeError("oh no")
-        self.assertion_err = AssertionError("shut up")
+        self.exception = AssertionError()
+        class TestSpec:
+            ran_cleanup = False
+            def failing_should_method(s):
+                raise self.exception
+            def second_should_method(s):
+                s.__class__.ran_second = True
+            def cleanup(s):
+                s.__class__.ran_cleanup = True
+
+        self.spec = TestSpec
+        self.reporter = SpyReporter()
+
+    def because_we_run_the_spec(self):
+        contexts.run(self.spec, [self.reporter])
+
+    def it_should_call_assertion_failed(self):
+        assert "assertion_failed" in [c[0] for c in self.reporter.calls]
+
+    def it_should_pass_in_the_assertion_object(self):
+        assertion = [c for c in self.reporter.calls if c[0] == "assertion_failed"][0][1]
+        assert assertion.name == "failing_should_method"
+
+    def it_should_pass_in_the_assertion(self):
+        exception = [c for c in self.reporter.calls if c[0] == "assertion_failed"][0][2]
+        assert exception is self.exception
+
+    def it_should_still_run_the_other_assertion(self):
+        # not a great test - we can't guarantee that the second should method
+        # will get executed after the failing one. If this starts failing it may only fail
+        # sometimes.
+        assert self.spec.ran_second
+
+    @contexts.assertion
+    def it_should_still_run_the_cleanup(self):
+        assert self.spec.ran_cleanup
+
+
+class WhenAnAssertionErrors:
+    def context(self):
+        self.exception = Exception()
+        class TestSpec:
+            ran_cleanup = False
+            def erroring_should_method(s):
+                raise self.exception
+            def second_should_method(s):
+                s.__class__.ran_second = True
+            def cleanup(s):
+                s.__class__.ran_cleanup = True
+
+        self.spec = TestSpec
+        self.reporter = SpyReporter()
+
+    def because_we_run_the_spec(self):
+        contexts.run(self.spec, [self.reporter])
+
+    def it_should_call_assertion_failed(self):
+        assert "assertion_errored" in [c[0] for c in self.reporter.calls]
+
+    def it_should_pass_in_the_assertion_object(self):
+        assertion = [c for c in self.reporter.calls if c[0] == "assertion_errored"][0][1]
+        assert assertion.name == "erroring_should_method"
+
+    def it_should_pass_in_the_assertion(self):
+        exception = [c for c in self.reporter.calls if c[0] == "assertion_errored"][0][2]
+        assert exception is self.exception
+
+    def it_should_still_run_the_other_assertion(self):
+        # not a great test - we can't guarantee that the second should method
+        # will get executed after the failing one. If this starts failing it may only fail
+        # sometimes.
+        assert self.spec.ran_second
+
+    @contexts.assertion
+    def it_should_still_run_the_cleanup(self):
+        assert self.spec.ran_cleanup
+
+
+class WhenAContextErrorsDuringTheSetup:
+    def context(self):
+        self.exception = Exception()
         class ErrorInSetup:
             ran_cleanup = False
             ran_because = False
             ran_assertion = False
             def context(s):
-                raise self.value_err
+                raise self.exception
             def because(s):
                 s.__class__.ran_because = True
             def it(s):
                 s.__class__.ran_assertion = True
             def cleanup(s):
                 s.__class__.ran_cleanup = True
+
+        self.spec = ErrorInSetup
+        self.reporter = SpyReporter()
+
+    def because_we_run_the_specs(self):
+        contexts.run(self.spec, [self.reporter])
+
+    @contexts.assertion
+    def it_should_call_context_errored(self):
+        assert self.reporter.calls[3][0] == "context_errored"
+
+    @contexts.assertion
+    def it_should_pass_in_the_context(self):
+        assert self.reporter.calls[3][1].name == self.spec.__name__
+
+    def it_should_pass_in_the_exception(self):
+        assert self.reporter.calls[3][2] is self.exception
+
+    def it_should_not_run_the_action(self):
+        assert not self.spec.ran_because
+
+    def it_should_not_run_the_assertion(self):
+        assert not self.spec.ran_assertion
+
+    @contexts.assertion
+    def it_should_still_run_the_cleanup(self):
+        assert self.spec.ran_cleanup
+
+
+class WhenAContextErrorsDuringTheAction:
+    def context(self):
+        self.exception = Exception()
         class ErrorInAction:
             ran_cleanup = False
             ran_assertion = False
             def because(s):
-                raise self.type_err
+                raise self.exception
             def it(s):
                 s.__class__.ran_assertion = True
             def cleanup(s):
                 s.__class__.ran_cleanup = True
+
+        self.spec = ErrorInAction
+        self.reporter = SpyReporter()
+
+    def because_we_run_the_specs(self):
+        contexts.run(self.spec, [self.reporter])
+
+    @contexts.assertion
+    def it_should_call_context_errored(self):
+        assert self.reporter.calls[3][0] == "context_errored"
+
+    @contexts.assertion
+    def it_should_pass_in_the_context(self):
+        assert self.reporter.calls[3][1].name == self.spec.__name__
+
+    def it_should_pass_in_the_exception(self):
+        assert self.reporter.calls[3][2] is self.exception
+
+    def it_should_not_run_the_assertion(self):
+        assert not self.spec.ran_assertion
+
+    @contexts.assertion
+    def it_should_still_run_the_cleanup(self):
+        assert self.spec.ran_cleanup
+
+
+class WhenAContextErrorsDuringTheCleanup:
+    def context(self):
+        self.exception = Exception()
         class ErrorInTeardown:
             def it(s):
                 pass
             def cleanup(s):
                 # assertion errors that get raised outside of a
                 # 'should' method should be considered context errors
-                raise self.assertion_err
+                raise self.exception
 
-        self.specs = [ErrorInSetup, ErrorInAction, ErrorInTeardown]
+        self.spec = ErrorInTeardown
+        self.reporter = SpyReporter()
 
     def because_we_run_the_specs(self):
-        self.reporters = []
-        for spec in self.specs:
-            reporter = SpyReporter()
-            self.reporters.append(reporter)
-            contexts.run(spec, [reporter])
+        contexts.run(self.spec, [self.reporter])
 
     @contexts.assertion
-    def it_should_call_context_errored_for_the_first_error(self):
-        assert self.reporters[0].calls[3][0] == "context_errored"
-
-    def it_should_pass_in_the_first_exception(self):
-        assert self.reporters[0].calls[3][2] is self.value_err
-
-    def it_should_not_run_the_first_action(self):
-        assert not self.specs[0].ran_because
-
-    def it_should_not_run_the_first_assertion(self):
-        assert not self.specs[0].ran_assertion
-
-    def it_should_still_run_the_teardown_despite_the_setup_error(self):
-        assert self.specs[0].ran_cleanup
+    def it_should_call_context_errored(self):
+        assert self.reporter.calls[5][0] == "context_errored"
 
     @contexts.assertion
-    def it_should_call_context_errored_for_the_second_error(self):
-        assert self.reporters[1].calls[3][0] == "context_errored"
+    def it_should_pass_in_the_context(self):
+        assert self.reporter.calls[5][1].name == self.spec.__name__
 
-    def it_should_pass_in_the_second_exception(self):
-        assert self.reporters[1].calls[3][2] == self.type_err
-
-    def it_should_not_run_the_second_assertion(self):
-        assert not self.specs[1].ran_assertion
-
-    def it_should_still_run_the_teardown_despite_the_action_error(self):
-        assert self.specs[1].ran_cleanup
-
-    @contexts.assertion
-    def it_should_call_context_errored_for_the_third_error(self):
-        assert self.reporters[2].calls[5][0] == "context_errored"
-
-    def it_should_pass_in_the_third_exception(self):
-        assert self.reporters[2].calls[5][2] == self.assertion_err
+    def it_should_pass_in_the_exception(self):
+        assert self.reporter.calls[5][2] is self.exception
 
 
 class MultipleRunsSharedContext:

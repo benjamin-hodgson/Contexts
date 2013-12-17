@@ -1,4 +1,5 @@
 import time as time_module
+import pdb
 import sys
 
 
@@ -45,7 +46,6 @@ def time(func, *args, **kwargs):
 def set_trace():
     """Start a Pdb instance at the calling frame, with stdout routed to sys.__stdout__."""
     # https://github.com/nose-devs/nose/blob/master/nose/tools/nontrivial.py
-    import pdb
     pdb.Pdb(stdout=sys.__stdout__).set_trace(sys._getframe().f_back)
 
 
