@@ -262,7 +262,7 @@ class WhenMarkingAClassAsAContext:
 
 
 class WhenCatchingAnException:
-    def context(self):
+    def given_a_function_that_throws_an_exception(self):
         self.thrown = ValueError("test exception")
 
         def throwing_function(a, b, c, d=[]):
@@ -270,14 +270,14 @@ class WhenCatchingAnException:
             raise self.thrown
         self.throwing_function = throwing_function
 
-    def because_we_run_the_spec(self):
+    def because_we_call_catch(self):
         self.caught = contexts.catch(self.throwing_function, 3, c='yes', b=None)
+
+    def it_should_call_the_function_with_the_supplied_arguments(self):
+        assert self.call_args == (3, None, 'yes', [])
 
     def it_should_catch_and_return_the_exception(self):
         assert self.caught == self.thrown
-
-    def it_should_call_it_with_the_supplied_arguments(self):
-        assert self.call_args == (3, None, 'yes', [])
 
 
 class WhenTimingSomething:
