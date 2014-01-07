@@ -277,7 +277,7 @@ class WhenCatchingAnException:
         assert self.call_args == (3, None, 'yes', [])
 
     def it_should_catch_and_return_the_exception(self):
-        assert self.caught == self.thrown
+        assert self.caught is self.thrown
 
 
 class WhenTimingSomething:
