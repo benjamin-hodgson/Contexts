@@ -270,18 +270,6 @@ class WhenCatchingAnException:
             raise self.thrown
         self.throwing_function = throwing_function
 
-        class TestSpec:
-            exception = None
-            def context(s):
-                def throwing_function(a, b, c, d=[]):
-                    s.__class__.call_args = (a,b,c,d)
-                    raise self.thrown
-                s.throwing_function = throwing_function
-            def should(s):
-                s.__class__.exception = contexts.catch(s.throwing_function, 3, c='yes', b=None)
-
-        self.spec = TestSpec
-
     def because_we_run_the_spec(self):
         self.caught = contexts.catch(self.throwing_function, 3, c='yes', b=None)
 
