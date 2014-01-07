@@ -263,14 +263,19 @@ class WhenMarkingAClassAsAContext:
 
 class WhenCatchingAnException:
     def context(self):
-        self.exception = ValueError("test exception")
+        self.thrown = ValueError("test exception")
+
+        def throwing_function(a, b, c, d=[]):
+            self.call_args = (a,b,c,d)
+            raise self.thrown
+        self.throwing_function = throwing_function
 
         class TestSpec:
             exception = None
             def context(s):
                 def throwing_function(a, b, c, d=[]):
                     s.__class__.call_args = (a,b,c,d)
-                    raise self.exception
+                    raise self.thrown
                 s.throwing_function = throwing_function
             def should(s):
                 s.__class__.exception = contexts.catch(s.throwing_function, 3, c='yes', b=None)
@@ -278,13 +283,13 @@ class WhenCatchingAnException:
         self.spec = TestSpec
 
     def because_we_run_the_spec(self):
-        contexts.run(self.spec, [])
+        self.caught = contexts.catch(self.throwing_function, 3, c='yes', b=None)
 
     def it_should_catch_and_return_the_exception(self):
-        assert self.spec.exception == self.exception
+        assert self.caught == self.thrown
 
     def it_should_call_it_with_the_supplied_arguments(self):
-        assert self.spec.call_args == (3, None, 'yes', [])
+        assert self.call_args == (3, None, 'yes', [])
 
 
 class WhenTimingSomething:
