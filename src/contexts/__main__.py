@@ -86,11 +86,11 @@ def create_reporters(args):
     if args.verbosity == 'verbose':
         if not args.capture:
             if args.colour:
-                return (reporting.cli.ColouredVerboseReporter(sys.stdout),)
-            return (reporting.cli.VerboseReporter(sys.stdout),)
+                return (reporting.cli.ColouredVerboseReporter(sys.stdout), reporting.cli.TimedReporter(sys.stdout))
+            return (reporting.cli.VerboseReporter(sys.stdout), reporting.cli.TimedReporter(sys.stdout))
         if args.colour:
-            return (reporting.cli.ColouredVerboseCapturingReporter(sys.stdout),)
-        return (reporting.cli.StdOutCapturingReporter(sys.stdout),)
+            return (reporting.cli.ColouredVerboseCapturingReporter(sys.stdout), reporting.cli.TimedReporter(sys.stdout))
+        return (reporting.cli.StdOutCapturingReporter(sys.stdout), reporting.cli.TimedReporter(sys.stdout))
 
     if args.capture:
         if args.colour:

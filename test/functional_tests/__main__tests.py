@@ -41,12 +41,12 @@ class WhenRunningFromCommandLineWithArguments(MainSharedContext):
     @classmethod
     def examples(self):
         yield [], [os.getcwd(), (cli.DotsReporter, cli.ColouredSummarisingCapturingReporter, cli.TimedReporter), True, True]
-        yield ['-v'], [os.getcwd(), (cli.ColouredVerboseCapturingReporter,), True, True]
-        yield ['--verbose'], [os.getcwd(), (cli.ColouredVerboseCapturingReporter,), True, True]
-        yield ['--verbose', '--no-colour'], [os.getcwd(), (cli.StdOutCapturingReporter,), True, True]
-        yield ['--verbose', '--no-capture'], [os.getcwd(), (cli.ColouredVerboseReporter,), True, True]
-        yield ['--verbose', '--no-colour', '--no-capture'], [os.getcwd(), (cli.VerboseReporter,), True, True]
-        yield ['-vs'], [os.getcwd(), (cli.ColouredVerboseReporter,), True, True]
+        yield ['-v'], [os.getcwd(), (cli.ColouredVerboseCapturingReporter, cli.TimedReporter), True, True]
+        yield ['--verbose'], [os.getcwd(), (cli.ColouredVerboseCapturingReporter, cli.TimedReporter), True, True]
+        yield ['--verbose', '--no-colour'], [os.getcwd(), (cli.StdOutCapturingReporter, cli.TimedReporter), True, True]
+        yield ['--verbose', '--no-capture'], [os.getcwd(), (cli.ColouredVerboseReporter, cli.TimedReporter), True, True]
+        yield ['--verbose', '--no-colour', '--no-capture'], [os.getcwd(), (cli.VerboseReporter, cli.TimedReporter), True, True]
+        yield ['-vs'], [os.getcwd(), (cli.ColouredVerboseReporter, cli.TimedReporter), True, True]
         yield ['-q'], [os.getcwd(), (QuietReporterResemblance,), True, True]
         yield ['--quiet'], [os.getcwd(), (QuietReporterResemblance,), True, True]
         yield ['-s'], [os.getcwd(), (cli.DotsReporter, cli.ColouredSummarisingReporter, cli.TimedReporter), True, True]
