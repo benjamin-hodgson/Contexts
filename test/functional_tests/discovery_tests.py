@@ -234,6 +234,94 @@ class TestSpec:
                 f.write(self.code)
 
 
+class WhenRunningAFolderMultipleTimes:
+    def establish_that_there_is_a_folder_containing_modules(self):
+        self.code = """
+module_ran = False
+
+class TestSpec:
+    def it(self):
+        global module_ran
+        module_ran = True
+"""
+        self.module_names = ["test"+str(n) for n in range(100)]
+
+        self.create_folder()
+        self.write_files()
+
+        self.reporter1 = SpyReporter()
+        self.reporter2 = SpyReporter()
+
+    def because_we_run_the_folder_twice(self):
+        contexts.run(self.folder_path, [self.reporter1], shuffle=True)
+        contexts.run(self.folder_path, [self.reporter2], shuffle=True)
+
+    def it_should_not_run_the_files_in_the_same_order(self):
+        first_order = [call[1].name for call in self.reporter1.calls if call[0] == "suite_started"]
+        second_order = [call[1].name for call in self.reporter2.calls if call[0] == "suite_ended"]
+        assert first_order != second_order
+
+    def cleanup_the_file_system_and_sys_dot_modules(self):
+        shutil.rmtree(self.folder_path)
+        for module in self.module_names:
+            del sys.modules[module]
+        importlib.invalidate_caches()
+
+    def create_folder(self):
+        self.folder_path = os.path.join(TEST_DATA_DIR, 'non_package_folder_random')
+        os.mkdir(self.folder_path)
+
+    def write_files(self):
+        self.filenames = [os.path.join(self.folder_path, n+".py") for n in self.module_names]
+        for fn in self.filenames:
+            with open(fn, 'w+') as f:
+                f.write(self.code)
+
+
+class WhenRunningAFolderMultipleTimesWithShuffleDisabled:
+    def establish_that_there_is_a_folder_containing_modules(self):
+        self.code = """
+module_ran = False
+
+class TestSpec:
+    def it(self):
+        global module_ran
+        module_ran = True
+"""
+        self.module_names = ["test"+str(n) for n in range(100)]
+
+        self.create_folder()
+        self.write_files()
+
+        self.reporter1 = SpyReporter()
+        self.reporter2 = SpyReporter()
+
+    def because_we_run_the_folder_twice(self):
+        contexts.run(self.folder_path, [self.reporter1], shuffle=False)
+        contexts.run(self.folder_path, [self.reporter2], shuffle=False)
+
+    def it_should_run_the_files_in_the_same_order(self):
+        first_order = [call[1].name for call in self.reporter1.calls if call[0] == "suite_started"]
+        second_order = [call[1].name for call in self.reporter2.calls if call[0] == "suite_ended"]
+        assert first_order == second_order
+
+    def cleanup_the_file_system_and_sys_dot_modules(self):
+        shutil.rmtree(self.folder_path)
+        for module in self.module_names:
+            del sys.modules[module]
+        importlib.invalidate_caches()
+
+    def create_folder(self):
+        self.folder_path = os.path.join(TEST_DATA_DIR, 'non_package_folder_random')
+        os.mkdir(self.folder_path)
+
+    def write_files(self):
+        self.filenames = [os.path.join(self.folder_path, n+".py") for n in self.module_names]
+        for fn in self.filenames:
+            with open(fn, 'w+') as f:
+                f.write(self.code)
+
+
 class WhenAFolderContainsAnAlreadyImportedFile:
     def establish_that_we_have_already_imported_the_module(self):
         self.code = """

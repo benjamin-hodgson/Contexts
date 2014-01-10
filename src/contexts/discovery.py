@@ -1,6 +1,6 @@
-import itertools
 import os
 import re
+import random
 from collections import namedtuple
 
 
@@ -15,8 +15,10 @@ def module_specs(directory):
     """
     Return an iterable of ModuleSpecifications found in the folder
     """
-    finders = FinderGenerator(directory).generate_finders()
-    return itertools.chain.from_iterable(finder.module_specs() for finder in finders)
+    specs = []
+    for finder in FinderGenerator(directory).generate_finders():
+        specs.extend(finder.module_specs())
+    return specs
 
 
 class FinderGenerator(object):
@@ -46,11 +48,10 @@ class FolderModuleFinder(object):
         self.directory = directory
 
     def module_specs(self):
-        return (ModuleSpecification(self.directory, mod) for mod in self.get_module_names())
+        return [ModuleSpecification(self.directory, mod) for mod in self.get_module_names()]
 
     def get_module_names(self):
-        for filename in matching_filenames(self.directory):
-            yield remove_extension(filename)
+        return [remove_extension(f) for f in matching_filenames(self.directory)]
 
 
 class PackageModuleFinder(object):
@@ -60,8 +61,8 @@ class PackageModuleFinder(object):
 
     def module_specs(self):
         found_modules = self.get_module_names()
-        specs = (ModuleSpecification(self.package_spec[0], mod) for mod in found_modules)
-        return itertools.chain([self.package_spec], specs)
+        specs = [ModuleSpecification(self.package_spec[0], mod) for mod in found_modules]
+        return [self.package_spec] + specs
 
     def get_module_names(self):
         for filename in matching_filenames(self.directory):
