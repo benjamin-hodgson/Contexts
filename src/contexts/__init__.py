@@ -28,7 +28,7 @@ def main(*args, **kwargs):
     sys.exit(0)
 
 
-def run(to_run=None, reporters=None, shuffle=True, rewriting=True):
+def run(to_run=None, reporters=None, rewriting=True, config=None):
     """
     Polymorphic test-running function.
 
@@ -53,7 +53,7 @@ def run(to_run=None, reporters=None, shuffle=True, rewriting=True):
     if to_run is None:
         to_run = sys.modules['__main__']
 
-    test_run = core.TestRun(to_run, shuffle, rewriting)
+    test_run = core.TestRun(to_run, rewriting, config)
     test_run.run(notifier)
 
     return not notifier.failed

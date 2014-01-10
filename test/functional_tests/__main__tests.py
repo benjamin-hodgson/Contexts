@@ -7,6 +7,7 @@ import colorama
 import contexts
 from contexts import __main__
 from contexts.reporting import cli
+from contexts.configuration import Configuration
 
 
 class WhenLoadingUpTheModule:
@@ -40,23 +41,23 @@ class MainSharedContext:
 class WhenRunningFromCommandLineWithArguments(MainSharedContext):
     @classmethod
     def examples(self):
-        yield [], [os.getcwd(), (cli.DotsReporter, cli.ColouredSummarisingCapturingReporter, cli.TimedReporter), True, True]
-        yield ['-v'], [os.getcwd(), (cli.ColouredVerboseCapturingReporter, cli.TimedReporter), True, True]
-        yield ['--verbose'], [os.getcwd(), (cli.ColouredVerboseCapturingReporter, cli.TimedReporter), True, True]
-        yield ['--verbose', '--no-colour'], [os.getcwd(), (cli.StdOutCapturingReporter, cli.TimedReporter), True, True]
-        yield ['--verbose', '--no-capture'], [os.getcwd(), (cli.ColouredVerboseReporter, cli.TimedReporter), True, True]
-        yield ['--verbose', '--no-colour', '--no-capture'], [os.getcwd(), (cli.VerboseReporter, cli.TimedReporter), True, True]
-        yield ['-vs'], [os.getcwd(), (cli.ColouredVerboseReporter, cli.TimedReporter), True, True]
-        yield ['-q'], [os.getcwd(), (QuietReporterResemblance,), True, True]
-        yield ['--quiet'], [os.getcwd(), (QuietReporterResemblance,), True, True]
-        yield ['-s'], [os.getcwd(), (cli.DotsReporter, cli.ColouredSummarisingReporter, cli.TimedReporter), True, True]
-        yield ['--no-capture'], [os.getcwd(), (cli.DotsReporter, cli.ColouredSummarisingReporter, cli.TimedReporter), True, True]
-        yield ['--no-colour'], [os.getcwd(), (cli.DotsReporter, cli.SummarisingCapturingReporter, cli.TimedReporter), True, True]
-        yield ['--no-capture', '--no-colour'], [os.getcwd(), (cli.DotsReporter, cli.SummarisingReporter, cli.TimedReporter), True, True]
-        yield ['--no-assert'], [os.getcwd(), (cli.DotsReporter, cli.ColouredSummarisingCapturingReporter, cli.TimedReporter), True, False]
-        yield ['--teamcity'], [os.getcwd(), (contexts.reporting.teamcity.TeamCityReporter,), True, True]
-        yield ['--no-random'], [os.getcwd(), (cli.DotsReporter, cli.ColouredSummarisingCapturingReporter, cli.TimedReporter), False, True]
-        yield [os.path.join(os.getcwd(),'made','up','path')], [os.path.join(os.getcwd(),'made','up','path'), (cli.DotsReporter, cli.ColouredSummarisingCapturingReporter, cli.TimedReporter), True, True]
+        yield [], [os.getcwd(), (cli.DotsReporter, cli.ColouredSummarisingCapturingReporter, cli.TimedReporter), True, Configuration(True)]
+        yield ['-v'], [os.getcwd(), (cli.ColouredVerboseCapturingReporter, cli.TimedReporter), True, Configuration(True)]
+        yield ['--verbose'], [os.getcwd(), (cli.ColouredVerboseCapturingReporter, cli.TimedReporter), True, Configuration(True)]
+        yield ['--verbose', '--no-colour'], [os.getcwd(), (cli.StdOutCapturingReporter, cli.TimedReporter), True, Configuration(True)]
+        yield ['--verbose', '--no-capture'], [os.getcwd(), (cli.ColouredVerboseReporter, cli.TimedReporter), True, Configuration(True)]
+        yield ['--verbose', '--no-colour', '--no-capture'], [os.getcwd(), (cli.VerboseReporter, cli.TimedReporter), True, Configuration(True)]
+        yield ['-vs'], [os.getcwd(), (cli.ColouredVerboseReporter, cli.TimedReporter), True, Configuration(True)]
+        yield ['-q'], [os.getcwd(), (QuietReporterResemblance,), True, Configuration(True)]
+        yield ['--quiet'], [os.getcwd(), (QuietReporterResemblance,), True, Configuration(True)]
+        yield ['-s'], [os.getcwd(), (cli.DotsReporter, cli.ColouredSummarisingReporter, cli.TimedReporter), True, Configuration(True)]
+        yield ['--no-capture'], [os.getcwd(), (cli.DotsReporter, cli.ColouredSummarisingReporter, cli.TimedReporter), True, Configuration(True)]
+        yield ['--no-colour'], [os.getcwd(), (cli.DotsReporter, cli.SummarisingCapturingReporter, cli.TimedReporter), True, Configuration(True)]
+        yield ['--no-capture', '--no-colour'], [os.getcwd(), (cli.DotsReporter, cli.SummarisingReporter, cli.TimedReporter), True, Configuration(True)]
+        yield ['--no-assert'], [os.getcwd(), (cli.DotsReporter, cli.ColouredSummarisingCapturingReporter, cli.TimedReporter), False, Configuration(True)]
+        yield ['--teamcity'], [os.getcwd(), (contexts.reporting.teamcity.TeamCityReporter,), True, Configuration(True)]
+        yield ['--no-random'], [os.getcwd(), (cli.DotsReporter, cli.ColouredSummarisingCapturingReporter, cli.TimedReporter), True, Configuration(False)]
+        yield [os.path.join(os.getcwd(),'made','up','path')], [os.path.join(os.getcwd(),'made','up','path'), (cli.DotsReporter, cli.ColouredSummarisingCapturingReporter, cli.TimedReporter), True, Configuration(True)]
 
     def establish_arguments(self, argv, expected):
         self.expected = (expected[0], tuple(cls(sys.stdout) for cls in expected[1]), expected[2], expected[3])
@@ -116,7 +117,7 @@ class WhenColoramaIsNotInstalled(MainSharedContext):
         __main__.cmd()
 
     def it_should_not_send_a_coloured_reporter_to_main(self):
-        self.mock_main.assert_called_once_with(os.getcwd(), (cli.DotsReporter(sys.stdout), cli.SummarisingCapturingReporter(sys.stdout), cli.TimedReporter(sys.stdout)), True, True)
+        self.mock_main.assert_called_once_with(os.getcwd(), (cli.DotsReporter(sys.stdout), cli.SummarisingCapturingReporter(sys.stdout), cli.TimedReporter(sys.stdout)), True, Configuration(True))
 
     def cleanup_import(self):
         builtins.__import__ = self.real_import
@@ -130,7 +131,7 @@ class WhenStdOutIsAPipe(MainSharedContext):
         __main__.cmd()
 
     def it_should_not_send_a_coloured_reporter_to_main(self):
-        self.mock_main.assert_called_once_with(os.getcwd(), (cli.DotsReporter(sys.stdout), cli.SummarisingCapturingReporter(sys.stdout), cli.TimedReporter(sys.stdout)), True, True)
+        self.mock_main.assert_called_once_with(os.getcwd(), (cli.DotsReporter(sys.stdout), cli.SummarisingCapturingReporter(sys.stdout), cli.TimedReporter(sys.stdout)), True, Configuration(True))
 
 
 ###########################################################

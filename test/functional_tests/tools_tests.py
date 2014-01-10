@@ -1,6 +1,7 @@
 import types
 from unittest import mock
 import contexts
+from contexts.configuration import Configuration
 
 
 class WhenMarkingAnUnrelatedMethodAsSetup:
@@ -19,7 +20,7 @@ class WhenMarkingAnUnrelatedMethodAsSetup:
         self.spec = Spec
 
     def because_we_run_the_spec(self):
-        contexts.run(self.spec, [])
+        contexts.run(self.spec, [], config=Configuration(False))
 
     def it_should_treat_the_marked_method_as_setup(self):
         assert self.spec.log == "arrange act assert teardown "
@@ -40,7 +41,7 @@ class WhenMarkingAnOtherwiseNamedMethodAsSetup:
         self.spec = Spec
 
     def because_we_run_the_spec(self):
-        contexts.run(self.spec, [])
+        contexts.run(self.spec, [], config=Configuration(False))
 
     def it_should_treat_the_marked_method_as_setup(self):
         assert self.spec.log == "arrange act assert teardown "
@@ -62,7 +63,7 @@ class WhenMarkingAnUnrelatedMethodAsAction:
         self.spec = Spec
 
     def because_we_run_the_spec(self):
-        contexts.run(self.spec, [])
+        contexts.run(self.spec, [], config=Configuration(False))
 
     def it_should_treat_the_marked_method_as_action(self):
         assert self.spec.log == "arrange act assert teardown "
@@ -83,7 +84,7 @@ class WhenMarkingAnOtherwiseNamedMethodAsAction:
         self.spec = Spec
 
     def because_we_run_the_spec(self):
-        contexts.run(self.spec, [])
+        contexts.run(self.spec, [], config=Configuration(False))
 
     def it_should_treat_the_marked_method_as_action(self):
         assert self.spec.log == "arrange act assert teardown "
@@ -105,7 +106,7 @@ class WhenMarkingAnUnrelatedMethodAsAssertion:
         self.spec = Spec
 
     def because_we_run_the_spec(self):
-        contexts.run(self.spec, [])
+        contexts.run(self.spec, [], config=Configuration(False))
 
     def it_should_treat_the_marked_method_as_assertion(self):
         assert self.spec.log == "arrange act assert teardown "
@@ -126,7 +127,7 @@ class WhenMarkingAnOtherwiseNamedMethodAsAssertion:
         self.spec = Spec
 
     def because_we_run_the_spec(self):
-        contexts.run(self.spec, [])
+        contexts.run(self.spec, [], config=Configuration(False))
 
     def it_should_treat_the_marked_method_as_assertion(self):
         assert self.spec.log == "arrange act assert teardown "
@@ -148,7 +149,7 @@ class WhenMarkingAnUnrelatedMethodAsTeardown:
         self.spec = Spec
 
     def because_we_run_the_spec(self):
-        contexts.run(self.spec, [])
+        contexts.run(self.spec, [], config=Configuration(False))
 
     def it_should_treat_the_marked_method_as_teardown(self):
         assert self.spec.log == "arrange act assert teardown "
@@ -169,7 +170,7 @@ class WhenMarkingAnOtherwiseNamedMethodAsTeardown:
         self.spec = Spec
 
     def because_we_run_the_spec(self):
-        contexts.run(self.spec, [])
+        contexts.run(self.spec, [], config=Configuration(False))
 
     def it_should_treat_the_marked_method_as_teardown(self):
         assert self.spec.log == "arrange act assert teardown "
@@ -189,7 +190,7 @@ class WhenMarkingAnUnrelatedMethodAsExamples:
         self.spec = Spec
 
     def because_we_run_the_spec(self):
-        contexts.run(self.spec, [])
+        contexts.run(self.spec, [], config=Configuration(False))
 
     def it_should_treat_the_marked_method_as_teardown(self):
         assert self.spec.log == [1,2]
@@ -208,7 +209,7 @@ class WhenMarkingAnOtherwiseNamedMethodAsExamples:
         self.spec = Spec
 
     def because_we_run_the_spec(self):
-        contexts.run(self.spec, [])
+        contexts.run(self.spec, [], config=Configuration(False))
 
     def it_should_treat_the_marked_method_as_teardown(self):
         assert self.spec.log == [1,2]
@@ -232,7 +233,7 @@ class WhenMarkingAClassAsASpec:
         self.module.LovelyClass = LovelyClass
 
     def because_we_run_the_module(self):
-        contexts.run(self.module, [])
+        contexts.run(self.module, [], config=Configuration(False))
 
     def it_should_treat_the_marked_class_as_a_spec(self):
         assert self.spec.log == "arrange act assert teardown "
@@ -255,7 +256,7 @@ class WhenMarkingAClassAsAContext:
         self.module.LovelyClass = LovelyClass
 
     def because_we_run_the_module(self):
-        contexts.run(self.module, [])
+        contexts.run(self.module, [], config=Configuration(False))
 
     def it_should_treat_the_marked_class_as_a_spec(self):
         assert self.spec.log == "arrange act assert teardown "

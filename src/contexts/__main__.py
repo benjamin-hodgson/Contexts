@@ -4,12 +4,13 @@ import sys
 from io import StringIO
 from . import main
 from . import reporting
+from .configuration import Configuration
 
 
 def cmd():
     args = parse_args(sys.argv[1:])
     reporters = create_reporters(args)
-    main(os.path.realpath(args.path), reporters, args.shuffle, args.assertion)
+    main(os.path.realpath(args.path), reporters, args.rewriting, Configuration(args.shuffle))
 
 
 def parse_args(args):
@@ -36,7 +37,7 @@ def parse_args(args):
         help='Disable coloured output.')
     parser.add_argument('--no-assert',
         action='store_false',
-        dest='assertion',
+        dest='rewriting',
         default=True,
         help='Disable assertion rewriting.')
     parser.add_argument('path',
