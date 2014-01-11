@@ -19,8 +19,7 @@ class TestRun(object):
     def run(self, reporter_notifier):
         with reporter_notifier.run_test_run(self):
             modules = self.get_modules(reporter_notifier)
-            if self.config.shuffle:
-                random.shuffle(modules)
+            self.config.process_module_list(modules)
             for module in modules:
                 suite = Suite(module, self.config)
                 suite.run(reporter_notifier)
@@ -53,8 +52,7 @@ class Suite(object):
     def run(self, reporter_notifier):
         with reporter_notifier.run_suite(self):
             found_classes = list(finders.find_specs_in_module(self.module))
-            if self.config.shuffle:
-                random.shuffle(found_classes)
+            self.config.process_class_list(found_classes)
             for cls in found_classes:
                 self.run_class(cls, reporter_notifier)
 
@@ -77,9 +75,14 @@ class _NullExample(object):
 
 class Context(object):
     def __init__(self, instance, example, config):
+        self.config = config
+
         finder = finders.MethodFinder(instance)
         setups, actions, assertions, teardowns = finder.find_special_methods()
         assert_no_ambiguous_methods(setups, actions, assertions, teardowns)
+
+        self.config.process_assertion_list(assertions)
+
         self.instance = instance
         self.setups = setups
         self.actions = actions
@@ -87,10 +90,7 @@ class Context(object):
         self.teardowns = teardowns
         self.example = example
         self.name = instance.__class__.__name__
-        self.config = config
 
-        if self.config.shuffle:
-            random.shuffle(self.assertions)
 
     def run_setup(self):
         for setup in self.setups:

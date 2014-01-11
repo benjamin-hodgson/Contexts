@@ -41,23 +41,23 @@ class MainSharedContext:
 class WhenRunningFromCommandLineWithArguments(MainSharedContext):
     @classmethod
     def examples(self):
-        yield [], [os.getcwd(), (cli.DotsReporter, cli.ColouredSummarisingCapturingReporter, cli.TimedReporter), True, Configuration(True)]
-        yield ['-v'], [os.getcwd(), (cli.ColouredVerboseCapturingReporter, cli.TimedReporter), True, Configuration(True)]
-        yield ['--verbose'], [os.getcwd(), (cli.ColouredVerboseCapturingReporter, cli.TimedReporter), True, Configuration(True)]
-        yield ['--verbose', '--no-colour'], [os.getcwd(), (cli.StdOutCapturingReporter, cli.TimedReporter), True, Configuration(True)]
-        yield ['--verbose', '--no-capture'], [os.getcwd(), (cli.ColouredVerboseReporter, cli.TimedReporter), True, Configuration(True)]
-        yield ['--verbose', '--no-colour', '--no-capture'], [os.getcwd(), (cli.VerboseReporter, cli.TimedReporter), True, Configuration(True)]
-        yield ['-vs'], [os.getcwd(), (cli.ColouredVerboseReporter, cli.TimedReporter), True, Configuration(True)]
-        yield ['-q'], [os.getcwd(), (QuietReporterResemblance,), True, Configuration(True)]
-        yield ['--quiet'], [os.getcwd(), (QuietReporterResemblance,), True, Configuration(True)]
-        yield ['-s'], [os.getcwd(), (cli.DotsReporter, cli.ColouredSummarisingReporter, cli.TimedReporter), True, Configuration(True)]
-        yield ['--no-capture'], [os.getcwd(), (cli.DotsReporter, cli.ColouredSummarisingReporter, cli.TimedReporter), True, Configuration(True)]
-        yield ['--no-colour'], [os.getcwd(), (cli.DotsReporter, cli.SummarisingCapturingReporter, cli.TimedReporter), True, Configuration(True)]
-        yield ['--no-capture', '--no-colour'], [os.getcwd(), (cli.DotsReporter, cli.SummarisingReporter, cli.TimedReporter), True, Configuration(True)]
-        yield ['--no-assert'], [os.getcwd(), (cli.DotsReporter, cli.ColouredSummarisingCapturingReporter, cli.TimedReporter), False, Configuration(True)]
-        yield ['--teamcity'], [os.getcwd(), (contexts.reporting.teamcity.TeamCityReporter,), True, Configuration(True)]
-        yield ['--no-random'], [os.getcwd(), (cli.DotsReporter, cli.ColouredSummarisingCapturingReporter, cli.TimedReporter), True, Configuration(False)]
-        yield [os.path.join(os.getcwd(),'made','up','path')], [os.path.join(os.getcwd(),'made','up','path'), (cli.DotsReporter, cli.ColouredSummarisingCapturingReporter, cli.TimedReporter), True, Configuration(True)]
+        yield [], [os.getcwd(), (cli.DotsReporter, cli.ColouredSummarisingCapturingReporter, cli.TimedReporter), True, Configuration(shuffle=True)]
+        yield ['-v'], [os.getcwd(), (cli.ColouredVerboseCapturingReporter, cli.TimedReporter), True, Configuration(shuffle=True)]
+        yield ['--verbose'], [os.getcwd(), (cli.ColouredVerboseCapturingReporter, cli.TimedReporter), True, Configuration(shuffle=True)]
+        yield ['--verbose', '--no-colour'], [os.getcwd(), (cli.StdOutCapturingReporter, cli.TimedReporter), True, Configuration(shuffle=True)]
+        yield ['--verbose', '--no-capture'], [os.getcwd(), (cli.ColouredVerboseReporter, cli.TimedReporter), True, Configuration(shuffle=True)]
+        yield ['--verbose', '--no-colour', '--no-capture'], [os.getcwd(), (cli.VerboseReporter, cli.TimedReporter), True, Configuration(shuffle=True)]
+        yield ['-vs'], [os.getcwd(), (cli.ColouredVerboseReporter, cli.TimedReporter), True, Configuration(shuffle=True)]
+        yield ['-q'], [os.getcwd(), (QuietReporterResemblance,), True, Configuration(shuffle=True)]
+        yield ['--quiet'], [os.getcwd(), (QuietReporterResemblance,), True, Configuration(shuffle=True)]
+        yield ['-s'], [os.getcwd(), (cli.DotsReporter, cli.ColouredSummarisingReporter, cli.TimedReporter), True, Configuration(shuffle=True)]
+        yield ['--no-capture'], [os.getcwd(), (cli.DotsReporter, cli.ColouredSummarisingReporter, cli.TimedReporter), True, Configuration(shuffle=True)]
+        yield ['--no-colour'], [os.getcwd(), (cli.DotsReporter, cli.SummarisingCapturingReporter, cli.TimedReporter), True, Configuration(shuffle=True)]
+        yield ['--no-capture', '--no-colour'], [os.getcwd(), (cli.DotsReporter, cli.SummarisingReporter, cli.TimedReporter), True, Configuration(shuffle=True)]
+        yield ['--no-assert'], [os.getcwd(), (cli.DotsReporter, cli.ColouredSummarisingCapturingReporter, cli.TimedReporter), False, Configuration(shuffle=True)]
+        yield ['--teamcity'], [os.getcwd(), (contexts.reporting.teamcity.TeamCityReporter,), True, Configuration(shuffle=True)]
+        yield ['--no-random'], [os.getcwd(), (cli.DotsReporter, cli.ColouredSummarisingCapturingReporter, cli.TimedReporter), True, Configuration(shuffle=False)]
+        yield [os.path.join(os.getcwd(),'made','up','path')], [os.path.join(os.getcwd(),'made','up','path'), (cli.DotsReporter, cli.ColouredSummarisingCapturingReporter, cli.TimedReporter), True, Configuration(shuffle=True)]
 
     def establish_arguments(self, argv, expected):
         self.expected = (expected[0], tuple(cls(sys.stdout) for cls in expected[1]), expected[2], expected[3])
@@ -117,7 +117,7 @@ class WhenColoramaIsNotInstalled(MainSharedContext):
         __main__.cmd()
 
     def it_should_not_send_a_coloured_reporter_to_main(self):
-        self.mock_main.assert_called_once_with(os.getcwd(), (cli.DotsReporter(sys.stdout), cli.SummarisingCapturingReporter(sys.stdout), cli.TimedReporter(sys.stdout)), True, Configuration(True))
+        self.mock_main.assert_called_once_with(os.getcwd(), (cli.DotsReporter(sys.stdout), cli.SummarisingCapturingReporter(sys.stdout), cli.TimedReporter(sys.stdout)), True, Configuration(shuffle=True))
 
     def cleanup_import(self):
         builtins.__import__ = self.real_import
@@ -131,7 +131,7 @@ class WhenStdOutIsAPipe(MainSharedContext):
         __main__.cmd()
 
     def it_should_not_send_a_coloured_reporter_to_main(self):
-        self.mock_main.assert_called_once_with(os.getcwd(), (cli.DotsReporter(sys.stdout), cli.SummarisingCapturingReporter(sys.stdout), cli.TimedReporter(sys.stdout)), True, Configuration(True))
+        self.mock_main.assert_called_once_with(os.getcwd(), (cli.DotsReporter(sys.stdout), cli.SummarisingCapturingReporter(sys.stdout), cli.TimedReporter(sys.stdout)), True, Configuration(shuffle=True))
 
 
 ###########################################################

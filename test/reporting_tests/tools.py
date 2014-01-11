@@ -83,17 +83,17 @@ def build_fake_assertion_error(*args):
 
 
 def create_test_run():
-    return contexts.core.TestRun('', True, Configuration(True))
+    return contexts.core.TestRun('', True, Configuration(shuffle=True))
 
 
 def create_suite(name=''):
-    return contexts.core.Suite(types.ModuleType(name), Configuration(True))
+    return contexts.core.Suite(types.ModuleType(name), Configuration(shuffle=True))
 
 
 def create_context(name='context', example=contexts.core._NullExample()):
     instance = type(name, (), {})()
     instance._contexts_test_data = None
-    return contexts.core.Context(instance, example, Configuration(True))
+    return contexts.core.Context(instance, example, Configuration(shuffle=True))
 
 
 def create_assertion(name='context'):

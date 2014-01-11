@@ -34,3 +34,14 @@ class SpyReporter(object):
 
     def unexpected_error(self, exception):
         self.calls.append(('unexpected_error', exception))
+
+
+class NullConfiguration(object):
+    def process_module_list(self, l):
+        pass
+    def process_class_list(self, l):
+        pass
+    def process_assertion_list(self, l):
+        pass
+    def shuffle_list(self, l):
+        pass

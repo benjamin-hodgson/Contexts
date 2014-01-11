@@ -1,11 +1,13 @@
+import collections.abc
 import importlib
 import os
 import shutil
 import sys
 import types
 import contexts
+from unittest import mock
 from contexts.configuration import Configuration
-from .tools import SpyReporter
+from .tools import SpyReporter, NullConfiguration
 
 
 THIS_FILE = os.path.realpath(__file__)
@@ -34,7 +36,7 @@ class WhenRunningAModule:
         self.reporter = SpyReporter()
 
     def because_we_run_the_module(self):
-        contexts.run(self.module, [self.reporter], config=Configuration(False))
+        contexts.run(self.module, [self.reporter], config=NullConfiguration())
 
     def it_should_run_the_spec(self):
         assert self.module.HasSpecInTheName.was_run
@@ -58,60 +60,47 @@ class WhenRunningAModule:
         assert self.reporter.calls[-2][1].name == self.module.__name__
 
 
-class WhenRunningTheSameModuleMultipleTimes:
+class WhenConfigModifiesAClassList:
     def context(self):
-        self.create_module()
+        self.ran_reals = False
+        class HasSpecInTheName:
+            def it_should_run_this(s):
+                self.ran_reals = True
+        class HasWhenInTheName:
+            def it_should_run_this(s):
+                self.ran_reals = True
 
-        self.reporter1 = SpyReporter()
-        self.reporter2 = SpyReporter()
+        self.ran_spies = []
+        class NormalClass1:
+            def it_should_run_this(s):
+                self.ran_spies.append('NormalClass1')
+        class NormalClass2:
+            def it_should_run_this(s):
+                self.ran_spies.append('NormalClass2')
+        self.module = types.ModuleType('fake_specs')
+        self.module.HasSpecInTheName = HasSpecInTheName
+        self.module.HasWhenInTheName = HasWhenInTheName
+        self.NormalClass1 = NormalClass1
+        self.NormalClass2 = NormalClass2
 
-    def because_we_run_the_module_twice(self):
-        contexts.run(self.module, [self.reporter1], config=Configuration(True))
-        contexts.run(self.module, [self.reporter2], config=Configuration(True))
+        def modify_list(l):
+            self.called_with = l.copy()
+            l[:] = [NormalClass1, NormalClass2]
+        self.config = mock.Mock()
+        self.config.process_class_list = modify_list
 
-    @contexts.assertion
-    def it_should_run_the_contexts_in_a_different_order(self):
-        first_order = [call[1].name for call in self.reporter1.calls if call[0] == "context_started"]
-        second_order = [call[1].name for call in self.reporter2.calls if call[0] == "context_started"]
-        assert first_order != second_order
+    def because_we_run_the_module(self):
+        contexts.run(self.module, [], config=self.config)
 
-    def create_module(self):
-        self.module = types.ModuleType("specs")
+    def it_should_pass_a_list_of_the_found_classes_into_process_class_list(self):
+        assert isinstance(self.called_with, collections.abc.MutableSequence)
+        assert set(self.called_with) == {self.module.HasSpecInTheName, self.module.HasWhenInTheName}
 
-        for x in range(100):
-            class_name = "Spec" + str(x)
-            def it(self):
-                pass
-            cls = type(class_name, (object,), {'it': it})
-            setattr(self.module, class_name, cls)
+    def it_should_run_the_classes_in_the_list_that_the_config_modified(self):
+        assert self.ran_spies == ['NormalClass1', 'NormalClass2']
 
-
-class WhenRunningTheSameModuleMultipleTimesWithShuffleDisabled:
-    def context(self):
-        self.create_module()
-
-        self.reporter1 = SpyReporter()
-        self.reporter2 = SpyReporter()
-
-    def because_we_run_the_module_twice(self):
-        contexts.run(self.module, [self.reporter1], config=Configuration(False))
-        contexts.run(self.module, [self.reporter2], config=Configuration(False))
-
-    @contexts.assertion
-    def it_should_run_the_contexts_in_the_same_order(self):
-        first_order = [call[1].name for call in self.reporter1.calls if call[0] == "context_started"]
-        second_order = [call[1].name for call in self.reporter2.calls if call[0] == "context_started"]
-        assert first_order == second_order
-
-    def create_module(self):
-        self.module = types.ModuleType("specs")
-
-        for x in range(100):
-            class_name = "Spec" + str(x)
-            def it(self):
-                pass
-            cls = type(class_name, (object,), {'it': it})
-            setattr(self.module, class_name, cls)
+    def it_should_not_run_the_old_version_of_the_list(self):
+        assert not self.ran_reals
 
 
 class WhenRunningAFile:
@@ -129,7 +118,7 @@ class TestSpec:
         self.reporter = SpyReporter()
 
     def because_we_run_the_file(self):
-        contexts.run(self.filename, [self.reporter], config=Configuration(False))
+        contexts.run(self.filename, [self.reporter], config=NullConfiguration())
 
     def it_should_import_the_file(self):
         assert self.module_name in sys.modules
@@ -177,7 +166,7 @@ raise ZeroDivisionError("bogus error message")
         self.reporter = SpyReporter()
 
     def because_we_run_the_file(self):
-        contexts.run(self.filename, [self.reporter], config=Configuration(False))
+        contexts.run(self.filename, [self.reporter], config=NullConfiguration())
 
     def it_should_call_unexpected_error_on_the_reporter(self):
         assert self.reporter.calls[1][0] == "unexpected_error"
@@ -212,7 +201,7 @@ class TestSpec:
         self.reporter = SpyReporter()
 
     def because_we_run_the_folder(self):
-        contexts.run(self.folder_path, [self.reporter], config=Configuration(False))
+        contexts.run(self.folder_path, [self.reporter], config=NullConfiguration())
 
     def it_should_import_the_first_module(self):
         assert self.module_names[0] in sys.modules
@@ -262,7 +251,7 @@ class TestSpec:
                 f.write(self.code)
 
 
-class WhenRunningAFolderMultipleTimes:
+class WhenConfigModifiesAModuleList:
     def establish_that_there_is_a_folder_containing_modules(self):
         self.code = """
 module_ran = False
@@ -272,31 +261,44 @@ class TestSpec:
         global module_ran
         module_ran = True
 """
-        self.module_names = ["test"+str(n) for n in range(100)]
-
+        self.module_names = ["test_file1", "test_file2", "an_innocent_module"]
         self.create_folder()
         self.write_files()
 
-        self.reporter1 = SpyReporter()
-        self.reporter2 = SpyReporter()
+        self.ran_spies = []
+        class SpySpecInModule1:
+            def it_should_run_this(s):
+                self.ran_spies.append('module1')
+        class SpySpecInModule2:
+            def it_should_run_this(s):
+                self.ran_spies.append('module2')
+        module1 = types.ModuleType('module1')
+        module1.SpySpecInModule1 = SpySpecInModule1
+        module2 = types.ModuleType('module2')
+        module1.SpySpecInModule2 = SpySpecInModule2
 
-    def because_we_run_the_folder_twice(self):
-        contexts.run(self.folder_path, [self.reporter1], config=Configuration(True))
-        contexts.run(self.folder_path, [self.reporter2], config=Configuration(True))
+        def modify_list(l):
+            self.called_with = l.copy()
+            l[:] = [module1, module2]
+        self.config = mock.Mock()
+        self.config.process_module_list = modify_list
 
-    def it_should_not_run_the_files_in_the_same_order(self):
-        first_order = [call[1].name for call in self.reporter1.calls if call[0] == "suite_started"]
-        second_order = [call[1].name for call in self.reporter2.calls if call[0] == "suite_ended"]
-        assert first_order != second_order
+    def because_we_run_the_folder(self):
+        contexts.run(self.folder_path, [], config=self.config)
 
-    def cleanup_the_file_system_and_sys_dot_modules(self):
-        shutil.rmtree(self.folder_path)
-        for module in self.module_names:
-            del sys.modules[module]
-        importlib.invalidate_caches()
+    def it_should_pass_the_list_of_found_modules_to_process_module_list(self):
+        assert isinstance(self.called_with, collections.abc.MutableSequence)
+        assert set(self.called_with) == {sys.modules['test_file1'], sys.modules['test_file2']}
+
+    def it_should_run_the_modules_in_the_list_that_the_config_modified(self):
+        assert self.ran_spies == ['module1', 'module2']
+
+    def it_should_not_run_the_old_version_of_the_list(self):
+        assert not sys.modules['test_file1'].module_ran
+        assert not sys.modules['test_file2'].module_ran
 
     def create_folder(self):
-        self.folder_path = os.path.join(TEST_DATA_DIR, 'non_package_folder_random')
+        self.folder_path = os.path.join(TEST_DATA_DIR, 'shuffling_folder')
         os.mkdir(self.folder_path)
 
     def write_files(self):
@@ -305,49 +307,11 @@ class TestSpec:
             with open(fn, 'w+') as f:
                 f.write(self.code)
 
-
-class WhenRunningAFolderMultipleTimesWithShuffleDisabled:
-    def establish_that_there_is_a_folder_containing_modules(self):
-        self.code = """
-module_ran = False
-
-class TestSpec:
-    def it(self):
-        global module_ran
-        module_ran = True
-"""
-        self.module_names = ["test"+str(n) for n in range(100)]
-
-        self.create_folder()
-        self.write_files()
-
-        self.reporter1 = SpyReporter()
-        self.reporter2 = SpyReporter()
-
-    def because_we_run_the_folder_twice(self):
-        contexts.run(self.folder_path, [self.reporter1], config=Configuration(False))
-        contexts.run(self.folder_path, [self.reporter2], config=Configuration(False))
-
-    def it_should_run_the_files_in_the_same_order(self):
-        first_order = [call[1].name for call in self.reporter1.calls if call[0] == "suite_started"]
-        second_order = [call[1].name for call in self.reporter2.calls if call[0] == "suite_ended"]
-        assert first_order == second_order
-
     def cleanup_the_file_system_and_sys_dot_modules(self):
         shutil.rmtree(self.folder_path)
-        for module in self.module_names:
-            del sys.modules[module]
+        del sys.modules[self.module_names[0]]
+        del sys.modules[self.module_names[1]]
         importlib.invalidate_caches()
-
-    def create_folder(self):
-        self.folder_path = os.path.join(TEST_DATA_DIR, 'non_package_folder_random')
-        os.mkdir(self.folder_path)
-
-    def write_files(self):
-        self.filenames = [os.path.join(self.folder_path, n+".py") for n in self.module_names]
-        for fn in self.filenames:
-            with open(fn, 'w+') as f:
-                f.write(self.code)
 
 
 class WhenAFolderContainsAnAlreadyImportedFile:
@@ -367,7 +331,7 @@ class TestSpec:
         self.create_fake_module()
 
     def because_we_run_the_folder(self):
-        contexts.run(self.folder_path, [], config=Configuration(False))
+        contexts.run(self.folder_path, [], config=NullConfiguration())
 
     def it_should_not_re_import_the_module(self):
         assert sys.modules[self.module_name].is_fake
@@ -419,7 +383,7 @@ class TestSpec:
         self.create_fake_module()
 
     def because_we_run_the_folder(self):
-        contexts.run(self.folder_path, [], config=Configuration(False))
+        contexts.run(self.folder_path, [], config=NullConfiguration())
 
     def it_should_import_the_new_module_and_overwrite_the_old_one(self):
         assert not sys.modules[self.module_name].is_fake
@@ -466,7 +430,7 @@ class TestSpec:
         self.create_fake_module()
 
     def because_we_run_the_package(self):
-        contexts.run(self.folder_path, [], config=Configuration(False))
+        contexts.run(self.folder_path, [], config=NullConfiguration())
 
     def it_should_not_re_import_the_module(self):
         assert sys.modules[self.package_name].is_fake
@@ -518,7 +482,7 @@ class TestSpec:
         self.create_fake_module()
 
     def because_we_run_the_folder(self):
-        contexts.run(self.folder_path, [], config=Configuration(False))
+        contexts.run(self.folder_path, [], config=NullConfiguration())
 
     def it_should_import_the_new_module_and_overwrite_the_old_one(self):
         assert not sys.modules[self.package_name].is_fake
@@ -567,7 +531,7 @@ class TestSpec:
         self.create_fake_module()
 
     def because_we_run_the_package(self):
-        contexts.run(self.folder_path, [], config=Configuration(False))
+        contexts.run(self.folder_path, [], config=NullConfiguration())
 
     def it_should_not_re_import_the_module(self):
         assert sys.modules[self.qualified_name].is_fake
@@ -623,7 +587,7 @@ class TestSpec:
         self.create_fake_module()
 
     def because_we_run_the_folder(self):
-        contexts.run(self.folder_path, [], config=Configuration(False))
+        contexts.run(self.folder_path, [], config=NullConfiguration())
 
     def it_should_import_the_new_module_and_overwrite_the_old_one(self):
         assert not sys.modules[self.qualified_name].is_fake
@@ -673,7 +637,7 @@ class TestSpec:
         self.reporter = SpyReporter()
 
     def because_we_run_the_folder(self):
-        contexts.run(self.folder_path, [self.reporter], config=Configuration(False))
+        contexts.run(self.folder_path, [self.reporter], config=NullConfiguration())
 
     def it_should_import_the_package(self):
         assert self.package_name in sys.modules
@@ -765,7 +729,7 @@ class TestSpec:
         self.reporter = SpyReporter()
 
     def because_we_run_the_folder(self):
-        contexts.run(self.folder_path, [self.reporter], config=Configuration(False))
+        contexts.run(self.folder_path, [self.reporter], config=NullConfiguration())
 
     def it_should_import_the_file_in_the_test_folder(self):
         assert "test_file1" in sys.modules
@@ -862,7 +826,7 @@ class TestSpec:
 
 
     def because_we_run_the_package(self):
-        contexts.run(self.folder_path, [self.reporter], config=Configuration(False))
+        contexts.run(self.folder_path, [self.reporter], config=NullConfiguration())
 
     def it_should_import_the_file_in_the_test_folder(self):
         assert "test_file1" in sys.modules
@@ -981,7 +945,7 @@ class TestSpec:
         self.reporter = SpyReporter()
 
     def because_we_run_the_folder(self):
-        contexts.run(self.folder_path, [self.reporter], config=Configuration(False))
+        contexts.run(self.folder_path, [self.reporter], config=NullConfiguration())
 
     def it_should_report_an_unexpected_error(self):
         assert self.reporter.calls[1][0] == "unexpected_error"
