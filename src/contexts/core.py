@@ -14,6 +14,7 @@ class TestRun(object):
     def __init__(self, source, config):
         self.source = source
         self.config = config
+        self.importer = importing.Importer(self.config)
 
     def run(self, reporter_notifier):
         with reporter_notifier.run_test_run(self):
@@ -27,13 +28,13 @@ class TestRun(object):
         if isinstance(self.source, types.ModuleType):
             return [self.source]
         if isinstance(self.source, str) and os.path.isfile(self.source):
-            return [importing.import_from_file(self.source, self.config)]
+            return [self.importer.import_from_file(self.source)]
         if isinstance(self.source, str) and os.path.isdir(self.source):
             specifications = discovery.module_specs(self.source)
             modules = []
             for module_spec in specifications:
                 with reporter_notifier.importing(module_spec):
-                    modules.append(importing.import_module(*module_spec, config=self.config))
+                    modules.append(self.importer.import_module(*module_spec))
             return modules
 
         # if we got here, self.source is a class
