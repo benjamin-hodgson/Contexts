@@ -22,9 +22,11 @@ PASSED!
 # TODO: tests that make assertions about the counts
 
 class WhenPrintingVerboselyAndAContextStarts(VerboseReporterSharedContext):
+    def context(self):
+        self.ctx = tools.create_context("made.up_context_1")
     @contexts.action
     def because_a_context_starts(self):
-        self.reporter.context_started(tools.create_context("made.up_context_1"))
+        self.reporter.context_started(self.ctx.name, self.ctx.example)
     def it_should_print_its_name(self):
         assert self.stringio.getvalue() == "made up context 1\n"
 
@@ -81,11 +83,11 @@ class WhenPrintingVerboselyAndAContextErrors(VerboseReporterSharedContext):
         tb = [('made_up_file_14.py', 3, 'made_up_function_3', 'frame3'),
                ('made_up_file_15.py', 4, 'made_up_function_4', 'frame4')]
         self.exception = tools.build_fake_exception(tb, "out")
-        self.context = tools.create_context("made.up_context_2", ["abc", 123])
+        self.ctx = tools.create_context("made.up_context_2", ["abc", 123])
 
     @contexts.action
     def because_a_context_errors(self):
-        self.reporter.context_errored(self.context, self.exception)
+        self.reporter.context_errored(self.ctx.name, self.ctx.example, self.exception)
 
     def it_should_output_a_stack_trace(self):
         assert self.stringio.getvalue() == (

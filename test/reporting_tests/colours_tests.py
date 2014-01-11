@@ -71,7 +71,7 @@ class WhenColouringOutputAndAContextErrors(ColouredReporterSharedContext):
 
     @contexts.action
     def because_the_context_errors(self):
-        self.reporter.context_errored(self.context, self.exception)
+        self.reporter.context_errored(self.context.name, self.context.example, self.exception)
 
     def it_should_output_a_red_stack_trace(self):
         assert self.stringio.getvalue() == (

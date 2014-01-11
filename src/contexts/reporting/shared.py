@@ -24,12 +24,12 @@ class CountingReporter(Reporter):
         self.error_count = 0
         self.failed = False
 
-    def context_started(self, context):
-        super().context_started(context)
+    def context_started(self, name, example):
+        super().context_started(name, example)
         self.context_count += 1
 
-    def context_errored(self, context, exception):
-        super().context_errored(context, exception)
+    def context_errored(self, name, example, exception):
+        super().context_errored(name, example, exception)
         self.error_count += 1
         self.failed = True
 
@@ -69,11 +69,11 @@ def make_readable(string):
     return ' '.join(cased_words)
 
 
-def context_name(context):
-    if hasattr(context.example, "null_example"):
-        return make_readable(context.name)
+def context_name(name, example):
+    if hasattr(example, "null_example"):
+        return make_readable(name)
     else:
-        return make_readable(context.name) + " -> " + str(context.example)
+        return make_readable(name) + " -> " + str(example)
 
 
 def format_exception(exception):

@@ -15,12 +15,12 @@ class SpyReporter(object):
     def suite_ended(self, suite):
         self.calls.append(('suite_ended', suite))
 
-    def context_started(self, context):
-        self.calls.append(('context_started', context))
-    def context_ended(self, context):
-        self.calls.append(('context_ended', context))
-    def context_errored(self, context, exception):
-        self.calls.append(('context_errored', context, exception))
+    def context_started(self, name, example):
+        self.calls.append(('context_started', name, example))
+    def context_ended(self, name, example):
+        self.calls.append(('context_ended', name, example))
+    def context_errored(self, name, example, exception):
+        self.calls.append(('context_errored', name, example, exception))
 
     def assertion_started(self, assertion):
         self.calls.append(('assertion_started', assertion))

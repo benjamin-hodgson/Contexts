@@ -12,21 +12,21 @@ class TeamCityReporter(shared.StreamReporter):
         super().suite_ended(suite)
         self.teamcity_print("testSuiteFinished", name=suite.name)
 
-    def context_started(self, context):
-        super().context_started(context)
+    def context_started(self, name, example):
+        super().context_started(name, example)
         self.real_stdout, self.real_stderr = sys.stdout, sys.stderr
         sys.stdout, sys.stderr = self.stdout_buffer, self.stderr_buffer = StringIO(), StringIO()
-        self.context_name_prefix = shared.context_name(context) + ' -> '
+        self.context_name_prefix = shared.context_name(name, example) + ' -> '
 
-    def context_ended(self, context):
-        super().context_ended(context)
+    def context_ended(self, name, example):
+        super().context_ended(name, example)
         sys.stdout, sys.stderr = self.real_stdout, self.real_stderr
         self.context_name_prefix = ''
 
-    def context_errored(self, context, exception):
-        super().context_errored(context, exception)
+    def context_errored(self, name, example, exception):
+        super().context_errored(name, example, exception)
         self.context_name_prefix = ''
-        name = shared.context_name(context)
+        name = shared.context_name(name, example)
         error_summary = shared.format_exception(exception)
 
         self.teamcity_print("testStarted", name=name)

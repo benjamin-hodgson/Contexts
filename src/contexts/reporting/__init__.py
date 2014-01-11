@@ -17,13 +17,13 @@ class Reporter(object):
     def unexpected_error(self, exception):
         """Called when an error occurs outside of a Context or Assertion"""
 
-    def context_started(self, context):
+    def context_started(self, name, example):
         """Called when a test context begins its run"""
 
-    def context_ended(self, context):
+    def context_ended(self, name, example):
         """Called when a test context completes its run"""
 
-    def context_errored(self, context, exception):
+    def context_errored(self, name, example, exception):
         """Called when a test context (not an assertion) throws an exception"""
 
     def assertion_started(self, assertion):

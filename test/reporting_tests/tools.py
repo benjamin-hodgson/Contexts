@@ -1,3 +1,4 @@
+import collections
 import types
 import contexts
 from contexts.configuration import NullConfiguration
@@ -91,10 +92,9 @@ def create_suite(name=''):
     return contexts.core.Suite(types.ModuleType(name), NullConfiguration())
 
 
+context_spec = collections.namedtuple("context_spec", ["name", "example"])
 def create_context(name='context', example=contexts.core._NullExample()):
-    instance = type(name, (), {})()
-    instance._contexts_test_data = None
-    return contexts.core.Context(instance, example, NullConfiguration())
+    return context_spec(name, example)
 
 
 def create_assertion(name='context'):

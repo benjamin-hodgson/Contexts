@@ -159,10 +159,6 @@ class ReporterNotifier(object):
     def failed(self):
         return any(r.failed for r in self.reporters if hasattr(r, 'failed'))
 
-    def call_reporters(self, method, *args):
-        for reporter in self.reporters:
-            getattr(reporter, method)(*args)
-
     @contextmanager
     def run_test_run(self, test_run):
         self.call_reporters("test_run_started", test_run)
@@ -180,13 +176,13 @@ class ReporterNotifier(object):
 
     @contextmanager
     def run_context(self, context):
-        self.call_reporters("context_started", context)
+        self.call_reporters("context_started", context.name, context.example)
         try:
             yield
         except Exception as e:
-            self.call_reporters("context_errored", context, e)
+            self.call_reporters("context_errored", context.name, context.example, e)
         else:
-            self.call_reporters("context_ended", context)
+            self.call_reporters("context_ended", context.name, context.example)
 
     @contextmanager
     def run_assertion(self, assertion):
@@ -213,3 +209,7 @@ class ReporterNotifier(object):
             yield
         except Exception as e:
             self.call_reporters("unexpected_error", e)
+
+    def call_reporters(self, method, *args):
+        for reporter in self.reporters:
+            getattr(reporter, method)(*args)

@@ -29,12 +29,12 @@ class DotsReporter(shared.StreamReporter):
 
 class VerboseReporter(shared.CountingReporter, shared.StreamReporter):
     dashes = '-' * 70
-    def context_started(self, context):
-        super().context_started(context)
-        self._print(shared.context_name(context))
+    def context_started(self, name, example):
+        super().context_started(name, example)
+        self._print(shared.context_name(name, example))
 
-    def context_errored(self, context, exception):
-        super().context_errored(context, exception)
+    def context_errored(self, name, example, exception):
+        super().context_errored(name, example, exception)
         for line in shared.format_exception(exception):
             self._print('  ' + line)
 
@@ -93,9 +93,9 @@ class ColouredReporter(VerboseReporter):
         import colorama
         super().__init__(*args, **kwargs)
 
-    def context_errored(self, context, exception):
+    def context_errored(self, name, example, exception):
         with self.red():
-            super().context_errored(context, exception)
+            super().context_errored(name, example, exception)
 
     def assertion_passed(self, assertion):
         with self.green():
@@ -133,18 +133,17 @@ class SummarisingReporter(VerboseReporter):
         self.stream = StringIO()
         self.to_output_at_end = StringIO()
 
-    def context_started(self, context):
+    def context_started(self, name, example):
         self.current_context_failed = False
-        super().context_started(context)
+        super().context_started(name, example)
 
-    def context_ended(self, context):
-        super().context_ended(context)
+    def context_ended(self, name, example):
         if self.current_context_failed:
             self.to_output_at_end.write(self.stream.getvalue())
         self.stream = StringIO()
 
-    def context_errored(self, context, exception):
-        super().context_errored(context, exception)
+    def context_errored(self, name, example, exception):
+        super().context_errored(name, example, exception)
         self.to_output_at_end.write(self.stream.getvalue())
         self.stream = StringIO()
 
@@ -186,18 +185,18 @@ class StdOutCapturingReporter(VerboseReporter):
         num = str(70 - indentation)
         return ("{:-^"+num+"}").format(string)
 
-    def context_started(self, context):
+    def context_started(self, name, example):
         self.real_stdout = sys.stdout
         self.buffer = StringIO()
         sys.stdout = self.buffer
-        super().context_started(context)
+        super().context_started(name, example)
 
-    def context_ended(self, context):
+    def context_ended(self, name, example):
         sys.stdout = self.real_stdout
-        super().context_ended(context)
+        super().context_ended(name, example)
 
-    def context_errored(self, context, exception):
-        super().context_errored(context, exception)
+    def context_errored(self, name, example, exception):
+        super().context_errored(name, example, exception)
         sys.stdout = self.real_stdout
         self.add_buffer_to_summary(2)
 

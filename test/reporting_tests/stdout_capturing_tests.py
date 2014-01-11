@@ -25,13 +25,13 @@ class WhenCapturingStdOutAndATestPasses(StdOutCapturingSharedContext):
         self.assertion = tools.create_assertion("assertion")
 
     def because_the_assertion_passes(self):
-        self.reporter.context_started(self.ctx)
+        self.reporter.context_started(self.ctx.name, self.ctx.example)
         print("passing context")
         self.reporter.assertion_started(self.assertion)
         print("passing assertion")
         print("to stderr", file=sys.stderr)
         self.reporter.assertion_passed(self.assertion)
-        self.reporter.context_ended(self.ctx)
+        self.reporter.context_ended(self.ctx.name, self.ctx.example)
 
     def it_should_not_print_anything_to_stdout(self):
         assert self.fake_stdout.getvalue() == ''
@@ -51,12 +51,12 @@ class WhenCapturingStdOutAndATestFails(StdOutCapturingSharedContext):
         self.assertion = tools.create_assertion("assertion")
 
     def because_the_test_fails_and_we_print_something(self):
-        self.reporter.context_started(self.ctx)
+        self.reporter.context_started(self.ctx.name, self.ctx.example)
         print("failing context")
         self.reporter.assertion_started(self.assertion)
         print("failing assertion")
         self.reporter.assertion_failed(self.assertion, tools.FakeAssertionError())
-        self.reporter.context_ended(self.ctx)
+        self.reporter.context_ended(self.ctx.name, self.ctx.example)
 
     def it_should_not_print_anything_to_stdout(self):
         assert self.fake_stdout.getvalue() == ''
@@ -78,12 +78,12 @@ class WhenCapturingStdOutAndATestErrors(StdOutCapturingSharedContext):
         self.assertion = tools.create_assertion("assertion")
 
     def because_the_test_errors_and_we_print_something(self):
-        self.reporter.context_started(self.ctx)
+        self.reporter.context_started(self.ctx.name, self.ctx.example)
         print("failing context")
         self.reporter.assertion_started(self.assertion)
         print("erroring assertion")
         self.reporter.assertion_errored(self.assertion, tools.FakeException())
-        self.reporter.context_ended(self.ctx)
+        self.reporter.context_ended(self.ctx.name, self.ctx.example)
 
     def it_should_not_print_anything_to_stdout(self):
         assert self.fake_stdout.getvalue() == ''
@@ -106,12 +106,12 @@ class WhenCapturingStdOutAndAContextErrors(StdOutCapturingSharedContext):
 
     @contexts.action
     def because_the_context_errors_and_we_print_something(self):
-        self.reporter.context_started(self.ctx)
+        self.reporter.context_started(self.ctx.name, self.ctx.example)
         print("erroring context")
         self.reporter.assertion_started(self.assertion)
         print("assertion in erroring context")
         self.reporter.assertion_passed(self.assertion)
-        self.reporter.context_errored(self.ctx, tools.FakeException())
+        self.reporter.context_errored(self.ctx.name, self.ctx.example, tools.FakeException())
 
     def it_should_not_print_anything_to_stdout(self):
         assert self.fake_stdout.getvalue() == ''
@@ -133,11 +133,11 @@ class WhenCapturingStdOutButNotPrinting(StdOutCapturingSharedContext):
         self.assertion = tools.create_assertion("assertion")
 
     def because_an_assertion_fails_but_we_dont_print(self):
-        self.reporter.context_started(self.ctx)
+        self.reporter.context_started(self.ctx.name, self.ctx.example)
         self.reporter.assertion_started(self.assertion)
         # don't print anything
         self.reporter.assertion_failed(self.assertion, tools.FakeAssertionError())
-        self.reporter.context_ended(self.ctx)
+        self.reporter.context_ended(self.ctx.name, self.ctx.example)
 
     def it_should_not_print_anything_to_stdout(self):
         assert self.fake_stdout.getvalue() == ''

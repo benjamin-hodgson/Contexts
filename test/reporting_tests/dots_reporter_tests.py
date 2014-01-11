@@ -27,8 +27,10 @@ class WhenWatchingForDotsAndAnAssertionErrors(DotsReporterSharedContext):
         assert self.stringio.getvalue() == 'E'
 
 class WhenWatchingForDotsAndAContextErrors(DotsReporterSharedContext):
+    def context(self):
+        self.ctx = tools.create_context()
     def because_an_assertion_fails(self):
-        self.reporter.context_errored(tools.create_context(), Exception())
+        self.reporter.context_errored(self.ctx.name, self.ctx.example, Exception())
     def it_should_print_an_E_for_the_error(self):
         assert self.stringio.getvalue() == 'E'
 
