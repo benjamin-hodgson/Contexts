@@ -8,10 +8,10 @@ class Reporter(object):
     def test_run_ended(self):
         """Called at the end of a test run"""
 
-    def suite_started(self, suite):
+    def suite_started(self, name):
         """Called at the start of a test module"""
 
-    def suite_ended(self, suite):
+    def suite_ended(self, name):
         """Called at the end of a test module"""
 
     def unexpected_error(self, exception):

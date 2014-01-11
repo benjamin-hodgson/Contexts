@@ -10,10 +10,10 @@ class SpyReporter(object):
     def test_run_ended(self):
         self.calls.append(('test_run_ended',))
 
-    def suite_started(self, suite):
-        self.calls.append(('suite_started', suite))
-    def suite_ended(self, suite):
-        self.calls.append(('suite_ended', suite))
+    def suite_started(self, name):
+        self.calls.append(('suite_started', name))
+    def suite_ended(self, name):
+        self.calls.append(('suite_ended', name))
 
     def context_started(self, name, example):
         self.calls.append(('context_started', name, example))

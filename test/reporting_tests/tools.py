@@ -84,14 +84,6 @@ def build_fake_assertion_error(*args):
     return build_fake_exception(*args, cls=FakeAssertionError)
 
 
-def create_test_run():
-    return contexts.core.TestRun('', NullConfiguration())
-
-
-def create_suite(name=''):
-    return contexts.core.Suite(types.ModuleType(name), NullConfiguration())
-
-
 context_spec = collections.namedtuple("context_spec", ["name", "example"])
 def create_context(name='context', example=contexts.core._NullExample()):
     return context_spec(name, example)

@@ -50,14 +50,14 @@ class WhenRunningAModule:
     def it_should_call_suite_started(self):
         assert self.reporter.calls[1][0] == "suite_started"
 
-    def it_should_pass_the_suite_object_into_suite_started(self):
-        assert self.reporter.calls[1][1].name == self.module.__name__
+    def it_should_pass_the_name_into_suite_started(self):
+        assert self.reporter.calls[1][1] == self.module.__name__
 
     def it_should_call_suite_ended(self):
         assert self.reporter.calls[-2][0] == "suite_ended"
 
-    def it_should_pass_the_suite_object_into_suite_ended(self):
-        assert self.reporter.calls[-2][1].name == self.module.__name__
+    def it_should_pass_the_name_into_suite_ended(self):
+        assert self.reporter.calls[-2][1] == self.module.__name__
 
 
 class WhenConfigModifiesAClassList:
@@ -129,14 +129,14 @@ class TestSpec:
     def it_should_call_suite_started(self):
         assert self.reporter.calls[1][0] == "suite_started"
 
-    def it_should_pass_the_suite_object_into_suite_started(self):
-        assert self.reporter.calls[1][1].name == self.module_name
+    def it_should_pass_the_name_into_suite_started(self):
+        assert self.reporter.calls[1][1] == self.module_name
 
     def it_should_call_suite_ended(self):
         assert self.reporter.calls[-2][0] == "suite_ended"
 
-    def it_should_pass_the_suite_object_into_suite_ended(self):
-        assert self.reporter.calls[-2][1].name == self.module_name
+    def it_should_pass_the_name_into_suite_ended(self):
+        assert self.reporter.calls[-2][1] == self.module_name
 
     def cleanup_the_file_system_and_sys_dot_modules(self):
         os.remove(self.filename)
@@ -222,16 +222,16 @@ class TestSpec:
         assert self.reporter.calls[1][0] == 'suite_started'
         assert self.reporter.calls[7][0] == 'suite_started'
 
-    def it_should_pass_the_suites_into_suite_started(self):
-        names = {call[1].name for call in self.reporter.calls if call[0] == 'suite_started'}
+    def it_should_pass_the_names_into_suite_started(self):
+        names = {call[1] for call in self.reporter.calls if call[0] == 'suite_started'}
         assert names == {'test_file1', 'test_file2'}
 
     def it_should_call_suite_ended_for_both_modules(self):
         assert self.reporter.calls[6][0] == 'suite_ended'
         assert self.reporter.calls[12][0] == 'suite_ended'
 
-    def it_should_pass_the_suites_into_suite_ended(self):
-        names = {call[1].name for call in self.reporter.calls if call[0] == 'suite_ended'}
+    def it_should_pass_the_names_into_suite_ended(self):
+        names = {call[1] for call in self.reporter.calls if call[0] == 'suite_ended'}
         assert names == {'test_file1', 'test_file2'}
 
     def cleanup_the_file_system_and_sys_dot_modules(self):
@@ -676,8 +676,8 @@ class TestSpec:
         assert self.reporter.calls[7][0] == 'suite_started'
         assert self.reporter.calls[13][0] == 'suite_started'
 
-    def it_should_pass_the_suites_into_suite_started(self):
-        names = {call[1].name for call in self.reporter.calls if call[0] == 'suite_started'}
+    def it_should_pass_the_names_into_suite_started(self):
+        names = {call[1] for call in self.reporter.calls if call[0] == 'suite_started'}
         assert names == {'package_folder', 'package_folder.test_file1', 'package_folder.test_file2'}
 
     def it_should_call_suite_ended_for_three_modules(self):
@@ -685,8 +685,8 @@ class TestSpec:
         assert self.reporter.calls[12][0] == 'suite_ended'
         assert self.reporter.calls[18][0] == 'suite_ended'
 
-    def it_should_pass_the_suites_into_suite_ended(self):
-        names = {call[1].name for call in self.reporter.calls if call[0] == 'suite_ended'}
+    def it_should_pass_the_names_into_suite_ended(self):
+        names = {call[1] for call in self.reporter.calls if call[0] == 'suite_ended'}
         assert names == {'package_folder', 'package_folder.test_file1', 'package_folder.test_file2'}
 
     def cleanup_the_file_system_and_sys_dot_modules(self):
@@ -772,8 +772,8 @@ class TestSpec:
         assert self.reporter.calls[7][0] == 'suite_started'
         assert self.reporter.calls[13][0] == 'suite_started'
 
-    def it_should_pass_the_suites_into_suite_started(self):
-        names = {call[1].name for call in self.reporter.calls if call[0] == 'suite_started'}
+    def it_should_pass_the_names_into_suite_started(self):
+        names = {call[1] for call in self.reporter.calls if call[0] == 'suite_started'}
         assert names == {'test_file1', 'test_subpackage', 'test_subpackage.test_file2'}
 
     def it_should_call_suite_ended_for_three_modules(self):
@@ -781,8 +781,8 @@ class TestSpec:
         assert self.reporter.calls[12][0] == 'suite_ended'
         assert self.reporter.calls[18][0] == 'suite_ended'
 
-    def it_should_pass_the_suites_into_suite_ended(self):
-        names = {call[1].name for call in self.reporter.calls if call[0] == 'suite_ended'}
+    def it_should_pass_the_names_into_suite_ended(self):
+        names = {call[1] for call in self.reporter.calls if call[0] == 'suite_ended'}
         assert names == {'test_file1', 'test_subpackage', 'test_subpackage.test_file2'}
 
     def cleanup_the_file_system_and_sys_dot_modules(self):
@@ -883,8 +883,8 @@ class TestSpec:
         assert self.reporter.calls[13][0] == 'suite_started'
         assert self.reporter.calls[19][0] == 'suite_started'
 
-    def it_should_pass_the_suites_into_suite_started(self):
-        names = {call[1].name for call in self.reporter.calls if call[0] == 'suite_started'}
+    def it_should_pass_the_names_into_suite_started(self):
+        names = {call[1] for call in self.reporter.calls if call[0] == 'suite_started'}
         assert names == {'package4', 'package4.test_subpackage', 'package4.test_subpackage.test_file2', 'test_file1'}
 
     def it_should_call_suite_ended_for_four_modules(self):
@@ -893,8 +893,8 @@ class TestSpec:
         assert self.reporter.calls[18][0] == 'suite_ended'
         assert self.reporter.calls[24][0] == 'suite_ended'
 
-    def it_should_pass_the_suites_into_suite_ended(self):
-        names = {call[1].name for call in self.reporter.calls if call[0] == 'suite_ended'}
+    def it_should_pass_the_names_into_suite_ended(self):
+        names = {call[1] for call in self.reporter.calls if call[0] == 'suite_ended'}
         assert names == {'package4', 'package4.test_subpackage', 'package4.test_subpackage.test_file2', 'test_file1'}
 
     def cleanup_the_file_system_and_sys_dot_modules(self):

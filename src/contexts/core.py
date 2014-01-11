@@ -170,9 +170,9 @@ class ReporterNotifier(object):
 
     @contextmanager
     def run_suite(self, suite):
-        self.call_reporters("suite_started", suite)
+        self.call_reporters("suite_started", suite.name)
         yield
-        self.call_reporters("suite_ended", suite)
+        self.call_reporters("suite_ended", suite.name)
 
     @contextmanager
     def run_context(self, context):

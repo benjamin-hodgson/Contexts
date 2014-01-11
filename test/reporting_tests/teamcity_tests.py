@@ -26,7 +26,7 @@ class WhenASuiteStartsInTeamCity(TeamCitySharedContext):
     def context(self):
         self.suite_name = 'test_suite'
     def because_the_suite_starts(self):
-        self.reporter.suite_started(tools.create_suite(self.suite_name))
+        self.reporter.suite_started(self.suite_name)
     def it_should_tell_team_city_the_suite_started(self):
         assert teamcity_parse(self.stringio.getvalue()) == ("testSuiteStarted", {'name':self.suite_name})
 
@@ -35,7 +35,7 @@ class WhenASuiteEndsInTeamCity(TeamCitySharedContext):
     def context(self):
         self.suite_name = 'mah_suite'
     def because_the_suite_ends(self):
-        self.reporter.suite_ended(tools.create_suite(self.suite_name))
+        self.reporter.suite_ended(self.suite_name)
     def it_should_tell_team_city_the_suite_ended(self):
         assert teamcity_parse(self.stringio.getvalue()) == ("testSuiteFinished", {'name':self.suite_name})
 
@@ -382,7 +382,6 @@ class WhenAnUnexpectedErrorOccursInTeamCity(TeamCitySharedContext):
     def establish_the_exception(self):
         tb = [('made_up_file_7.py', 1, 'made_up_function_7', 'frame7'),
                ('made_up_file_8.py', 2, 'made_up_function_8', 'frame8')]
-        self.suite = tools.create_suite()
         self.exception = tools.build_fake_exception(tb, "another exception")
         self.formatted_tb = (
 'Traceback (most recent call last):|n'
