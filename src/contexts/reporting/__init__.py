@@ -2,10 +2,10 @@ class Reporter(object):
     """
     Interface for a reporter object
     """
-    def test_run_started(self, test_run):
+    def test_run_started(self):
         """Called at the beginning of a test run"""
 
-    def test_run_ended(self, test_run):
+    def test_run_ended(self):
         """Called at the end of a test run"""
 
     def suite_started(self, suite):

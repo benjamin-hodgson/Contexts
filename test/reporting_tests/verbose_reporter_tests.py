@@ -12,7 +12,7 @@ class VerboseReporterSharedContext:
 
 class WhenPrintingVerboselyAndATestRunEnds(VerboseReporterSharedContext):
     def because_a_test_run_ends(self):
-        self.reporter.test_run_ended(tools.create_test_run())
+        self.reporter.test_run_ended()
     def it_should_output_a_summary(self):
         assert self.stringio.getvalue() == ("""
 ----------------------------------------------------------------------

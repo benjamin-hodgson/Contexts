@@ -161,12 +161,12 @@ class ReporterNotifier(object):
 
     @contextmanager
     def run_test_run(self, test_run):
-        self.call_reporters("test_run_started", test_run)
+        self.call_reporters("test_run_started")
         try:
             yield
         except Exception as e:
             self.call_reporters("unexpected_error", e)
-        self.call_reporters("test_run_ended", test_run)
+        self.call_reporters("test_run_ended")
 
     @contextmanager
     def run_suite(self, suite):

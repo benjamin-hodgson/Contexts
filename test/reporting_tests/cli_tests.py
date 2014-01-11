@@ -29,7 +29,7 @@ class WhenPrintingASuccessSummary:
         self.reporter.context_ended(ctx2.name, ctx2.example)
 
     def because_the_test_run_ends(self):
-        self.reporter.test_run_ended(tools.create_test_run())
+        self.reporter.test_run_ended()
 
     def it_should_print_the_summary_to_the_stream(self):
         assert self.stringio.getvalue() == (
@@ -60,7 +60,7 @@ class WhenPrintingAFailureSummary:
         self.reporter.context_ended(context.name, context.example)
 
     def because_the_test_run_ends(self):
-        self.reporter.test_run_ended(tools.create_test_run())
+        self.reporter.test_run_ended()
 
     def it_should_print_the_failure_tracebacks(self):
         assert self.stringio.getvalue() == ("""
@@ -90,15 +90,14 @@ class WhenTimingATestRun:
             now = mock.Mock(return_value=self.fake_now)
         self.FakeDateTime = FakeDateTime
 
-        self.test_run = tools.create_test_run()
         self.stringio = StringIO()
         self.reporter = reporting.cli.TimedReporter(self.stringio)
 
     def because_we_run_a_test_run(self):
         with mock.patch('datetime.datetime', self.FakeDateTime):
-            self.reporter.test_run_started(self.test_run)
+            self.reporter.test_run_started()
             datetime.datetime.now.return_value += self.fake_soon
-            self.reporter.test_run_ended(self.test_run)
+            self.reporter.test_run_ended()
 
     def it_should_report_the_total_time_for_the_test_run(self):
         assert self.stringio.getvalue() == "(10.5 seconds)\n"

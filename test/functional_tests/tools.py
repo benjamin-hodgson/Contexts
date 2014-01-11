@@ -5,10 +5,10 @@ class SpyReporter(object):
         self.calls = []
         self.failed = False
 
-    def test_run_started(self, test_run):
-        self.calls.append(('test_run_started', test_run))
-    def test_run_ended(self, test_run):
-        self.calls.append(('test_run_ended', test_run))
+    def test_run_started(self):
+        self.calls.append(('test_run_started',))
+    def test_run_ended(self):
+        self.calls.append(('test_run_ended',))
 
     def suite_started(self, suite):
         self.calls.append(('suite_started', suite))

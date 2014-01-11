@@ -119,9 +119,6 @@ class WhenRunningASpecWithReporters:
     def it_should_call_test_run_ended_last(self):
         assert self.reporter1.calls[7][0] == 'test_run_ended'
 
-    def it_should_pass_in_the_same_test_run_as_at_the_start(self):
-        assert self.reporter1.calls[7][1] == self.reporter1.calls[0][1]
-
     def it_should_do_exactly_the_same_to_the_second_reporter(self):
         assert self.reporter2.calls == self.reporter1.calls
 
