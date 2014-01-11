@@ -22,15 +22,14 @@ class SpyReporter(object):
     def context_errored(self, name, example, exception):
         self.calls.append(('context_errored', name, example, exception))
 
-    def assertion_started(self, assertion):
-        self.calls.append(('assertion_started', assertion))
-    def assertion_passed(self, assertion):
-        self.calls.append(('assertion_passed', assertion))
-    def assertion_errored(self, assertion, exception):
-        self.calls.append(('assertion_errored', assertion, exception))
-
-    def assertion_failed(self, assertion, exception):
-        self.calls.append(('assertion_failed', assertion, exception))
+    def assertion_started(self, name):
+        self.calls.append(('assertion_started', name))
+    def assertion_passed(self, name):
+        self.calls.append(('assertion_passed', name))
+    def assertion_errored(self, name, exception):
+        self.calls.append(('assertion_errored', name, exception))
+    def assertion_failed(self, name, exception):
+        self.calls.append(('assertion_failed', name, exception))
 
     def unexpected_error(self, exception):
         self.calls.append(('unexpected_error', exception))

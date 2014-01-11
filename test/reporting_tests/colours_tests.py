@@ -12,7 +12,7 @@ class ColouredReporterSharedContext:
 
 class WhenColouringOutputAndAnAssertionPasses(ColouredReporterSharedContext):
     def because_the_assertion_passes(self):
-        self.reporter.assertion_passed(tools.create_assertion("assertion"))
+        self.reporter.assertion_passed("assertion")
 
     def it_should_output_the_name_in_green(self):
         assert self.stringio.getvalue() == '\x1b[32m  PASS: assertion\n\x1b[39m'
@@ -20,13 +20,12 @@ class WhenColouringOutputAndAnAssertionPasses(ColouredReporterSharedContext):
 
 class WhenColouringOutputAndAnAssertionFails(ColouredReporterSharedContext):
     def establish_the_exception(self):
-        self.assertion = tools.create_assertion("assertion")
         tb = [('made_up_file_10.py', 1, 'made_up_function_1', 'frame1'),
                ('made_up_file_11.py', 2, 'made_up_function_2', 'frame2')]
         self.exception = tools.build_fake_assertion_error(tb, "you fail")
 
     def because_the_assertion_fails(self):
-        self.reporter.assertion_failed(self.assertion, self.exception)
+        self.reporter.assertion_failed("assertion", self.exception)
 
     def it_should_output_a_red_stack_trace_for_the_failed_assertion(self):
         assert self.stringio.getvalue() == (
@@ -42,13 +41,12 @@ class WhenColouringOutputAndAnAssertionFails(ColouredReporterSharedContext):
 
 class WhenColouringOutputAndAnAssertionErrors(ColouredReporterSharedContext):
     def establish_the_exception(self):
-        self.assertion = tools.create_assertion("assertion")
         tb = [('made_up_file_12.py', 3, 'made_up_function_3', 'frame3'),
                ('made_up_file_13.py', 4, 'made_up_function_4', 'frame4')]
         self.exception = tools.build_fake_exception(tb, "no")
 
     def because_the_assertion_errors(self):
-        self.reporter.assertion_errored(self.assertion, self.exception)
+        self.reporter.assertion_errored("assertion", self.exception)
 
     def it_should_output_a_red_stack_trace(self):
         assert self.stringio.getvalue() == (

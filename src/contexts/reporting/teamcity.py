@@ -42,20 +42,20 @@ class TeamCityReporter(shared.StreamReporter):
         sys.stdout, sys.stderr = self.real_stdout, self.real_stderr
         self.failed = True
 
-    def assertion_started(self, assertion):
-        super().assertion_started(assertion)
-        name = self.context_name_prefix + shared.make_readable(assertion.name)
-        self.teamcity_print("testStarted", name=name)
+    def assertion_started(self, name):
+        super().assertion_started(name)
+        readable_name = self.context_name_prefix + shared.make_readable(name)
+        self.teamcity_print("testStarted", name=readable_name)
 
-    def assertion_passed(self, assertion):
-        super().assertion_passed(assertion)
-        name = self.context_name_prefix + shared.make_readable(assertion.name)
+    def assertion_passed(self, name):
+        super().assertion_passed(name)
+        name = self.context_name_prefix + shared.make_readable(name)
         self.output_buffers(name)
         self.teamcity_print("testFinished", name=name)
 
-    def assertion_failed(self, assertion, exception):
-        super().assertion_failed(assertion, exception)
-        name = self.context_name_prefix + shared.make_readable(assertion.name)
+    def assertion_failed(self, name, exception):
+        super().assertion_failed(name, exception)
+        name = self.context_name_prefix + shared.make_readable(name)
         error_summary = shared.format_exception(exception)
 
         self.output_buffers(name)
@@ -68,9 +68,9 @@ class TeamCityReporter(shared.StreamReporter):
         self.teamcity_print("testFinished", name=name)
         self.failed = True
 
-    def assertion_errored(self, assertion, exception):
-        super().assertion_errored(assertion, exception)
-        name = self.context_name_prefix + shared.make_readable(assertion.name)
+    def assertion_errored(self, name, exception):
+        super().assertion_errored(name, exception)
+        name = self.context_name_prefix + shared.make_readable(name)
         error_summary = shared.format_exception(exception)
 
         self.output_buffers(name)

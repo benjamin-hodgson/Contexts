@@ -186,15 +186,15 @@ class ReporterNotifier(object):
 
     @contextmanager
     def run_assertion(self, assertion):
-        self.call_reporters("assertion_started", assertion)
+        self.call_reporters("assertion_started", assertion.name)
         try:
             yield
         except AssertionError as e:
-            self.call_reporters("assertion_failed", assertion, e)
+            self.call_reporters("assertion_failed", assertion.name, e)
         except Exception as e:
-            self.call_reporters("assertion_errored", assertion, e)
+            self.call_reporters("assertion_errored", assertion.name, e)
         else:
-            self.call_reporters("assertion_passed", assertion)
+            self.call_reporters("assertion_passed", assertion.name)
 
     @contextmanager
     def run_class(self, cls):

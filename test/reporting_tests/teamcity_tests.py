@@ -47,11 +47,10 @@ class WhenASuiteEndsInTeamCity(TeamCitySharedContext):
 class WhenAnAssertionStartsInTeamCity(TeamCitySharedContext):
     def establish_that_a_context_is_running(self):
         context = tools.create_context('MyNiceContext')
-        self.assertion = tools.create_assertion('aLovelyAssertion')
         self.reporter.context_started(context.name, context.example)
 
     def because_the_assertion_starts(self):
-        self.reporter.assertion_started(self.assertion)
+        self.reporter.assertion_started('aLovelyAssertion')
 
     def it_should_tell_team_city_it_started(self):
         assert self.parse_line(0) == ("testStarted", {'name':'My nice context -> a lovely assertion'})
@@ -61,11 +60,10 @@ class WhenAnAssertionInAContextWithExamplesStartsInTeamCity(TeamCitySharedContex
     @contexts.setup
     def establish_that_a_context_with_an_example_is_running(self):
         context = tools.create_context('ContextWithExamples', 12.3)
-        self.assertion = tools.create_assertion('aLovelyAssertion')
         self.reporter.context_started(context.name, context.example)
 
     def because_the_assertion_starts(self):
-        self.reporter.assertion_started(self.assertion)
+        self.reporter.assertion_started('aLovelyAssertion')
 
     @contexts.assertion
     def it_should_report_the_example(self):
@@ -79,10 +77,9 @@ class WhenAnAssertionInAContextWithExamplesStartsInTeamCity(TeamCitySharedContex
 class WhenAnAssertionPassesInTeamCity(TeamCitySharedContext):
     def establish_that_a_context_is_running(self):
         context = tools.create_context('MyNiceContext')
-        self.assertion = tools.create_assertion('aLovelyAssertion')
         self.reporter.context_started(context.name, context.example)
     def because_the_assertion_ends(self):
-        self.reporter.assertion_passed(self.assertion)
+        self.reporter.assertion_passed('aLovelyAssertion')
     def it_should_tell_team_city_it_passed(self):
         assert self.parse_line(0) == ("testFinished", {'name':'My nice context -> a lovely assertion'})
 
@@ -91,10 +88,9 @@ class WhenAnAssertionInAContextWithExamplesPassesInTeamCity(TeamCitySharedContex
     @contexts.setup
     def establish_that_a_context_with_an_example_is_running(self):
         context = tools.create_context('ContextWithExamples', 12.3)
-        self.assertion = tools.create_assertion('aLovelyAssertion')
         self.reporter.context_started(context.name, context.example)
     def because_the_assertion_passes(self):
-        self.reporter.assertion_passed(self.assertion)
+        self.reporter.assertion_passed('aLovelyAssertion')
     @contexts.assertion
     def it_should_report_the_example(self):
         assert self.parse_line(0)[1]['name'] == 'Context with examples -> 12.3 -> a lovely assertion'
@@ -106,14 +102,13 @@ class WhenSomethingGetsPrintedDuringAPassingAssertionInTeamCity(TeamCitySharedCo
         sys.stdout, sys.stderr = self.fake_stdout, self.fake_stderr = StringIO(), StringIO()
 
         context = tools.create_context('Context')
-        self.assertion = tools.create_assertion('assertion')
 
         self.reporter.context_started(context.name, context.example)
         print("to stdout")
         print("to stderr", file=sys.stderr)
 
     def because_the_assertion_passes(self):
-        self.reporter.assertion_passed(self.assertion)
+        self.reporter.assertion_passed('assertion')
 
     def it_should_not_print_anything_to_stdout(self):
         assert self.fake_stdout.getvalue() == ''
@@ -136,7 +131,6 @@ class WhenSomethingGetsPrintedDuringAPassingAssertionInTeamCity(TeamCitySharedCo
 class WhenAnAssertionFailsInTeamCity(TeamCitySharedContext):
     def establish_that_a_context_is_running(self):
         context = tools.create_context('FakeContext')
-        self.assertion = tools.create_assertion('Fake_assertion')
 
         tb = [('made_up_file.py', 3, 'made_up_function', 'frame1'),
               ('another_made_up_file.py', 2, 'another_made_up_function', 'frame2')]
@@ -152,7 +146,7 @@ class WhenAnAssertionFailsInTeamCity(TeamCitySharedContext):
         self.reporter.context_started(context.name, context.example)
 
     def because_the_assertion_fails(self):
-        self.reporter.assertion_failed(self.assertion, self.exception)
+        self.reporter.assertion_failed('Fake_assertion', self.exception)
 
     def it_should_tell_team_city_it_failed(self):
         assert self.parse_line(0) == (
@@ -169,13 +163,10 @@ class WhenAnAssertionFailsInTeamCity(TeamCitySharedContext):
 class WhenAnAssertionInAContextWithExamplesFailsInTeamCity(TeamCitySharedContext):
     @contexts.setup
     def establish_that_a_context_with_an_example_is_running(self):
-        context = tools.create_context('ContextWithExamples', 12.3)
-        self.assertion = tools.create_assertion('aLovelyAssertion')
-
-        self.reporter.context_started(context.name, context.example)
+        self.reporter.context_started('ContextWithExamples', 12.3)
 
     def because_the_assertion_fails(self):
-        self.reporter.assertion_failed(self.assertion, Exception())
+        self.reporter.assertion_failed('aLovelyAssertion', Exception())
 
     @contexts.assertion
     def it_should_report_the_example(self):
@@ -187,15 +178,13 @@ class WhenSomethingGetsPrintedDuringAFailingAssertionInTeamCity(TeamCitySharedCo
         self.real_stdout, self.real_stderr = sys.stdout, sys.stderr
         sys.stdout, sys.stderr = self.fake_stdout, self.fake_stderr = StringIO(), StringIO()
 
-        context = tools.create_context('Context')
-        self.assertion = tools.create_assertion('assertion')
-
+        context = tools.create_context()
         self.reporter.context_started(context.name, context.example)
         print("to stdout")
         print("to stderr", file=sys.stderr)
 
     def because_the_assertion_fails(self):
-        self.reporter.assertion_failed(self.assertion, Exception())
+        self.reporter.assertion_failed('assertion', Exception())
 
     def it_should_not_print_anything_to_stdout(self):
         assert self.fake_stdout.getvalue() == ''
@@ -203,9 +192,9 @@ class WhenSomethingGetsPrintedDuringAFailingAssertionInTeamCity(TeamCitySharedCo
         assert self.fake_stderr.getvalue() == ''
 
     def it_should_report_what_went_to_stdout(self):
-        assert self.parse_line(0) == ("testStdOut", {'name':'Context -> assertion', 'out':'to stdout|n'})
+        assert self.parse_line(0) == ("testStdOut", {'name':'context -> assertion', 'out':'to stdout|n'})
     def it_should_report_what_went_to_stderr(self):
-        assert self.parse_line(1) == ("testStdErr", {'name':'Context -> assertion', 'out':'to stderr|n'})
+        assert self.parse_line(1) == ("testStdErr", {'name':'context -> assertion', 'out':'to stderr|n'})
 
     def cleanup_stdout_and_stderr(self):
         sys.stdout, sys.stderr = self.real_stdout, self.real_stderr
@@ -218,7 +207,6 @@ class WhenSomethingGetsPrintedDuringAFailingAssertionInTeamCity(TeamCitySharedCo
 class WhenAnAssertionErrorsInTeamCity(TeamCitySharedContext):
     def establish_that_a_context_is_running(self):
         context = tools.create_context('FakeContext')
-        self.assertion = tools.create_assertion('Fake_assertion')
 
         tb = [('made_up_file.py', 3, 'made_up_function', 'frame1'),
               ('another_made_up_file.py', 2, 'another_made_up_function', 'frame2')]
@@ -234,7 +222,7 @@ class WhenAnAssertionErrorsInTeamCity(TeamCitySharedContext):
         self.reporter.context_started(context.name, context.example)
 
     def because_the_assertion_errors(self):
-        self.reporter.assertion_errored(self.assertion, self.exception)
+        self.reporter.assertion_errored('Fake_assertion', self.exception)
 
     def it_should_tell_team_city_it_failed(self):
         assert self.parse_line(0) == (
@@ -252,12 +240,11 @@ class WhenAnAssertionInAContextWithExamplesErrorsInTeamCity(TeamCitySharedContex
     @contexts.setup
     def establish_that_a_context_with_an_example_is_running(self):
         context = tools.create_context('ContextWithExamples', 12.3)
-        self.assertion = tools.create_assertion('aLovelyAssertion')
 
         self.reporter.context_started(context.name, context.example)
 
     def because_the_assertion_errors(self):
-        self.reporter.assertion_errored(self.assertion, Exception())
+        self.reporter.assertion_errored('aLovelyAssertion', Exception())
 
     @contexts.assertion
     def it_should_report_the_example(self):
@@ -270,14 +257,13 @@ class WhenSomethingGetsPrintedDuringAnErroringAssertionInTeamCity(TeamCityShared
         sys.stdout, sys.stderr = self.fake_stdout, self.fake_stderr = StringIO(), StringIO()
 
         self.context = tools.create_context("FakeContext")
-        self.assertion = tools.create_assertion("FakeAssertion4")
 
         self.reporter.context_started(self.context.name, self.context.example)
         print("to stdout")
         print("to stderr", file=sys.stderr)
 
     def because_we_run_an_assertion(self):
-        self.reporter.assertion_errored(self.assertion, Exception())
+        self.reporter.assertion_errored("FakeAssertion4", Exception())
 
     def it_should_not_print_anything_to_the_real_stdout(self):
         assert self.fake_stdout.getvalue() == ''
@@ -422,12 +408,11 @@ class WhenASecondContextRuns(TeamCitySharedContext):
         self.reporter.context_ended(context1.name, context1.example)
 
         self.context2 = tools.create_context('the_second_context')
-        self.assertion = tools.create_assertion('aLovelyAssertion')
 
         self.reporter.context_started(self.context2.name, self.context2.example)
 
     def when_something_gets_sent_to_team_city(self):
-        self.reporter.assertion_started(self.assertion)
+        self.reporter.assertion_started('aLovelyAssertion')
 
     @contexts.assertion
     def it_should_report_the_name_of_the_current_context(self):
@@ -442,12 +427,11 @@ class WhenASecondContextRunsAfterAnError(TeamCitySharedContext):
         self.reporter.context_errored(context1.name, context1.example, Exception())
 
         self.context2 = tools.create_context('the_second_context')
-        self.assertion = tools.create_assertion('aLovelyAssertion')
 
         self.reporter.context_started(self.context2.name, self.context2.example)
 
     def when_something_gets_sent_to_team_city(self):
-        self.reporter.assertion_started(self.assertion)
+        self.reporter.assertion_started('aLovelyAssertion')
 
     @contexts.assertion
     def it_should_report_the_name_of_the_current_context(self):

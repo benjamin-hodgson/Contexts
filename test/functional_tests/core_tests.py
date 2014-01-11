@@ -89,17 +89,17 @@ class WhenRunningASpecWithReporters:
     def it_should_pass_in_a_null_example(self):
         assert hasattr(self.reporter1.calls[2][2], 'null_example')
 
-    def it_should_call_assertion_started_for_the_first_assertion(self):
+    def it_should_call_assertion_started_for_the_assertion(self):
         assert self.reporter1.calls[3][0] == 'assertion_started'
 
-    def it_should_pass_the_first_assertion_into_assertion_started(self):
-        assert self.reporter1.calls[3][1].name == 'method_with_should_in_the_name'
+    def it_should_pass_the_assertion_name_into_assertion_started(self):
+        assert self.reporter1.calls[3][1] == 'method_with_should_in_the_name'
 
-    def it_should_call_assertion_passed_for_the_first_assertion(self):
+    def it_should_call_assertion_passed_for_the_assertion(self):
         assert self.reporter1.calls[4][0] == 'assertion_passed'
 
-    def it_should_pass_the_first_assertion_into_assertion_passed(self):
-        assert self.reporter1.calls[4][1].name == 'method_with_should_in_the_name'
+    def it_should_pass_the_name_into_assertion_passed(self):
+        assert self.reporter1.calls[4][1] == 'method_with_should_in_the_name'
 
     @contexts.assertion
     def it_should_call_context_ended_next(self):
@@ -147,11 +147,11 @@ class WhenAnAssertionFails:
     def it_should_call_assertion_failed(self):
         assert "assertion_failed" in [c[0] for c in self.reporter.calls]
 
-    def it_should_pass_in_the_assertion_object(self):
-        assertion = [c for c in self.reporter.calls if c[0] == "assertion_failed"][0][1]
-        assert assertion.name == "failing_should_method"
+    def it_should_pass_in_the_assertion_name(self):
+        name = [c for c in self.reporter.calls if c[0] == "assertion_failed"][0][1]
+        assert name == "failing_should_method"
 
-    def it_should_pass_in_the_assertion(self):
+    def it_should_pass_in_the_exception(self):
         exception = [c for c in self.reporter.calls if c[0] == "assertion_failed"][0][2]
         assert exception is self.exception
 
@@ -184,14 +184,14 @@ class WhenAnAssertionErrors:
     def because_we_run_the_spec(self):
         contexts.run(self.spec, [self.reporter], config=NullConfiguration())
 
-    def it_should_call_assertion_failed(self):
+    def it_should_call_assertion_errored(self):
         assert "assertion_errored" in [c[0] for c in self.reporter.calls]
 
-    def it_should_pass_in_the_assertion_object(self):
-        assertion = [c for c in self.reporter.calls if c[0] == "assertion_errored"][0][1]
-        assert assertion.name == "erroring_should_method"
+    def it_should_pass_in_the_name(self):
+        name = [c for c in self.reporter.calls if c[0] == "assertion_errored"][0][1]
+        assert name == "erroring_should_method"
 
-    def it_should_pass_in_the_assertion(self):
+    def it_should_pass_in_the_exception(self):
         exception = [c for c in self.reporter.calls if c[0] == "assertion_errored"][0][2]
         assert exception is self.exception
 

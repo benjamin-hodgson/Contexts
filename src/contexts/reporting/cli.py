@@ -38,19 +38,19 @@ class VerboseReporter(shared.CountingReporter, shared.StreamReporter):
         for line in shared.format_exception(exception):
             self._print('  ' + line)
 
-    def assertion_passed(self, assertion):
-        super().assertion_passed(assertion)
-        self._print('  PASS: ' + shared.make_readable(assertion.name))
+    def assertion_passed(self, name):
+        super().assertion_passed(name)
+        self._print('  PASS: ' + shared.make_readable(name))
 
-    def assertion_failed(self, assertion, exception):
-        super().assertion_failed(assertion, exception)
-        self._print('  FAIL: ' + shared.make_readable(assertion.name))
+    def assertion_failed(self, name, exception):
+        super().assertion_failed(name, exception)
+        self._print('  FAIL: ' + shared.make_readable(name))
         for line in shared.format_exception(exception):
             self._print('    ' + line)
 
-    def assertion_errored(self, assertion, exception):
-        super().assertion_errored(assertion, exception)
-        self._print('  ERROR: ' + shared.make_readable(assertion.name))
+    def assertion_errored(self, name, exception):
+        super().assertion_errored(name, exception)
+        self._print('  ERROR: ' + shared.make_readable(name))
         for line in shared.format_exception(exception):
             self._print('    ' + line)
 
@@ -97,17 +97,17 @@ class ColouredReporter(VerboseReporter):
         with self.red():
             super().context_errored(name, example, exception)
 
-    def assertion_passed(self, assertion):
+    def assertion_passed(self, name):
         with self.green():
-            super().assertion_passed(assertion)
+            super().assertion_passed(name)
 
-    def assertion_failed(self, assertion, exception):
+    def assertion_failed(self, name, exception):
         with self.red():
-            super().assertion_failed(assertion, exception)
+            super().assertion_failed(name, exception)
 
-    def assertion_errored(self, assertion, exception):
+    def assertion_errored(self, name, exception):
         with self.red():
-            super().assertion_errored(assertion, exception)
+            super().assertion_errored(name, exception)
 
     def unexpected_error(self, exception):
         with self.red():
@@ -147,18 +147,18 @@ class SummarisingReporter(VerboseReporter):
         self.to_output_at_end.write(self.stream.getvalue())
         self.stream = StringIO()
 
-    def assertion_passed(self, assertion):
+    def assertion_passed(self, name):
         orig_stream = self.stream
         self.stream = StringIO()
-        super().assertion_passed(assertion)
+        super().assertion_passed(name)
         self.stream = orig_stream
 
-    def assertion_failed(self, assertion, exception):
-        super().assertion_failed(assertion, exception)
+    def assertion_failed(self, name, exception):
+        super().assertion_failed(name, exception)
         self.current_context_failed = True
 
-    def assertion_errored(self, assertion, exception):
-        super().assertion_errored(assertion, exception)
+    def assertion_errored(self, name, exception):
+        super().assertion_errored(name, exception)
         self.current_context_failed = True
 
     def unexpected_error(self, exception):
@@ -200,12 +200,12 @@ class StdOutCapturingReporter(VerboseReporter):
         sys.stdout = self.real_stdout
         self.add_buffer_to_summary(2)
 
-    def assertion_failed(self, assertion, exception):
-        super().assertion_failed(assertion, exception)
+    def assertion_failed(self, name, exception):
+        super().assertion_failed(name, exception)
         self.add_buffer_to_summary(4)
 
-    def assertion_errored(self, assertion, exception):
-        super().assertion_errored(assertion, exception)
+    def assertion_errored(self, name, exception):
+        super().assertion_errored(name, exception)
         self.add_buffer_to_summary(4)
 
     def add_buffer_to_summary(self, indentation):

@@ -33,17 +33,17 @@ class CountingReporter(Reporter):
         self.error_count += 1
         self.failed = True
 
-    def assertion_started(self, assertion):
-        super().assertion_started(assertion)
+    def assertion_started(self, name):
+        super().assertion_started(name)
         self.assertion_count += 1
 
-    def assertion_failed(self, assertion, exception):
-        super().assertion_failed(assertion, exception)
+    def assertion_failed(self, name, exception):
+        super().assertion_failed(name, exception)
         self.failure_count += 1
         self.failed = True
 
-    def assertion_errored(self, assertion, exception):
-        super().assertion_errored(assertion, exception)
+    def assertion_errored(self, name, exception):
+        super().assertion_errored(name, exception)
         self.error_count += 1
         self.failed = True
 

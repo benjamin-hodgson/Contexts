@@ -10,19 +10,19 @@ class DotsReporterSharedContext:
 
 class WhenWatchingForDotsAndAnAssertionPasses(DotsReporterSharedContext):
     def because_an_assertion_passes(self):
-        self.reporter.assertion_passed(tools.create_assertion())
+        self.reporter.assertion_passed("assertion")
     def it_should_print_a_dot(self):
         assert self.stringio.getvalue() == '.'
 
 class WhenWatchingForDotsAndAnAssertionFails(DotsReporterSharedContext):
     def because_an_assertion_fails(self):
-        self.reporter.assertion_failed(tools.create_assertion(), AssertionError())
+        self.reporter.assertion_failed("my_assertion", AssertionError())
     def it_should_print_an_F(self):
         assert self.stringio.getvalue() == 'F'
 
 class WhenWatchingForDotsAndAnAssertionErrors(DotsReporterSharedContext):
     def because_an_assertion_errors(self):
-        self.reporter.assertion_errored(tools.create_assertion(), Exception())
+        self.reporter.assertion_errored("assertion", Exception())
     def it_should_print_an_E_for_the_error(self):
         assert self.stringio.getvalue() == 'E'
 

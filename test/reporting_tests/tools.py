@@ -87,9 +87,3 @@ def build_fake_assertion_error(*args):
 context_spec = collections.namedtuple("context_spec", ["name", "example"])
 def create_context(name='context', example=contexts.core._NullExample()):
     return context_spec(name, example)
-
-
-def create_assertion(name='context'):
-    f = lambda: None
-    f.__name__ = name
-    return contexts.core.Assertion(f)
