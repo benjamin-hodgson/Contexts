@@ -3,12 +3,8 @@ from contexts.configuration import Configuration
 
 
 class WhenInstantiatingTheConfiguration:
-    def establish_that_we_have_some_arguments(self):
-        self.shuffle = object()
     def because_we_instantiate_the_configuration(self):
-        self.config = Configuration(shuffle=self.shuffle)
-    def config_dot_shuffle_should_be_whatever_we_passed_in(self):
-        assert self.config.shuffle is self.shuffle
+        self.config = Configuration(shuffle=None)
 
 
 class WhenTwoConfigurationsAreEqual:
