@@ -1,8 +1,8 @@
 import collections.abc
 from unittest import mock
 import contexts
-from contexts.configuration import Configuration
-from .tools import SpyReporter, NullConfiguration
+from contexts.configuration import Configuration, NullConfiguration
+from .tools import SpyReporter
 
 core_file = repr(contexts.core.__file__)[1:-1]
 this_file = repr(__file__)[1:-1]

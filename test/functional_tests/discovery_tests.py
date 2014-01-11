@@ -6,8 +6,8 @@ import sys
 import types
 import contexts
 from unittest import mock
-from contexts.configuration import Configuration
-from .tools import SpyReporter, NullConfiguration
+from contexts.configuration import Configuration, NullConfiguration
+from .tools import SpyReporter
 
 
 THIS_FILE = os.path.realpath(__file__)

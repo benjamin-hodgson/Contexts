@@ -4,17 +4,17 @@ import sys
 from .assertion_rewriting import AssertionRewritingLoader
 
 
-def import_from_file(file_path, rewriting):
+def import_from_file(file_path, config):
     """
     Import the specified file, with an unqualified module name.
     """
     folder = os.path.dirname(file_path)
     filename = os.path.basename(file_path)
     module_name = os.path.splitext(filename)[0]
-    return import_module(folder, module_name, rewriting)
+    return import_module(folder, module_name, config)
 
 
-def import_module(dir_path, module_name, rewriting):
+def import_module(dir_path, module_name, config):
     """
     Import the specified module from the specified directory, rewriting
     assert statements where necessary.
@@ -24,8 +24,7 @@ def import_module(dir_path, module_name, rewriting):
     if module_name in sys.modules:
         return sys.modules[module_name]
 
-    # TODO: when assertion rewriting is turned off, use an importlib.machinery.SourceFileLoader
-    loader = create_loader(module_name, filename, rewriting)
+    loader = create_loader(module_name, filename, config)
     return loader.load_module(module_name)
 
 
@@ -49,7 +48,7 @@ def same_file(path1, path2):
     return os.path.realpath(path1) == os.path.realpath(path2)
 
 
-def create_loader(module_name, filename, rewriting):
-    if rewriting:
+def create_loader(module_name, filename, config):
+    if config.rewriting:
         return AssertionRewritingLoader(module_name, filename)
     return importlib.machinery.SourceFileLoader(module_name, filename)

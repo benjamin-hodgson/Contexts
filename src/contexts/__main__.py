@@ -10,7 +10,7 @@ from .configuration import Configuration
 def cmd():
     args = parse_args(sys.argv[1:])
     reporters = create_reporters(args)
-    main(os.path.realpath(args.path), reporters, args.rewriting, Configuration(args.shuffle))
+    main(os.path.realpath(args.path), reporters, Configuration(shuffle=args.shuffle, rewriting=args.rewriting))
 
 
 def parse_args(args):

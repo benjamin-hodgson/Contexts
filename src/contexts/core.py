@@ -11,9 +11,8 @@ from . import importing
 
 
 class TestRun(object):
-    def __init__(self, source, rewriting, config):
+    def __init__(self, source, config):
         self.source = source
-        self.rewriting = rewriting
         self.config = config
 
     def run(self, reporter_notifier):
@@ -28,13 +27,13 @@ class TestRun(object):
         if isinstance(self.source, types.ModuleType):
             return [self.source]
         if isinstance(self.source, str) and os.path.isfile(self.source):
-            return [importing.import_from_file(self.source, self.rewriting)]
+            return [importing.import_from_file(self.source, self.config)]
         if isinstance(self.source, str) and os.path.isdir(self.source):
             specifications = discovery.module_specs(self.source)
             modules = []
             for module_spec in specifications:
                 with reporter_notifier.importing(module_spec):
-                    modules.append(importing.import_module(*module_spec, rewriting=self.rewriting))
+                    modules.append(importing.import_module(*module_spec, config=self.config))
             return modules
 
         # if we got here, self.source is a class
