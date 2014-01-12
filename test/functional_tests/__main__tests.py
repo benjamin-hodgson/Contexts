@@ -6,8 +6,8 @@ from unittest import mock
 import colorama
 import contexts
 from contexts import __main__
-from contexts.reporting import cli
-from contexts.reporting.other import Shuffler
+from contexts.plugins import cli
+from contexts.plugins.other import Shuffler
 
 
 class WhenLoadingUpTheModule:
@@ -56,7 +56,7 @@ class WhenRunningFromCommandLineWithArguments(MainSharedContext):
         yield ['--no-colour'], [os.getcwd(), (Shuffler, cli.DotsReporter, cli.SummarisingCapturingReporter, cli.TimedReporter), True]
         yield ['--no-capture', '--no-colour'], [os.getcwd(), (Shuffler, cli.DotsReporter, cli.SummarisingReporter, cli.TimedReporter), True]
         yield ['--no-assert'], [os.getcwd(), (Shuffler, cli.DotsReporter, cli.ColouredSummarisingCapturingReporter, cli.TimedReporter), False]
-        yield ['--teamcity'], [os.getcwd(), (Shuffler, contexts.reporting.teamcity.TeamCityReporter,), True]
+        yield ['--teamcity'], [os.getcwd(), (Shuffler, contexts.plugins.teamcity.TeamCityReporter,), True]
         yield ['--no-random'], [os.getcwd(), (cli.DotsReporter, cli.ColouredSummarisingCapturingReporter, cli.TimedReporter), True]
 
     def establish_arguments(self, argv, expected):

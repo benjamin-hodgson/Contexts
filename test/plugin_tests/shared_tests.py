@@ -1,4 +1,4 @@
-from contexts import reporting
+from contexts import plugins
 
 
 class WhenMakingANameHumanReadable:
@@ -21,7 +21,7 @@ class WhenMakingANameHumanReadable:
         yield "Does.EverythingAT_once.TOBe100Percent_Certain", "Does everything AT once TO be 100 percent certain"
 
     def because_we_make_the_string_readable(self, input, _):
-        self.result = reporting.shared.make_readable(input)
+        self.result = plugins.shared.make_readable(input)
 
     def it_should_return_a_string_with_appropriate_spaces(self, _, expected):
         assert self.result == expected

@@ -3,8 +3,8 @@ import os
 import sys
 from io import StringIO
 from . import main
-from . import reporting
-from .reporting.other import Shuffler
+from . import plugins
+from .plugins.other import Shuffler
 
 
 def cmd():
@@ -81,44 +81,44 @@ def create_reporters(args):
         colorama.init()
 
     if args.teamcity or "TEAMCITY_VERSION" in os.environ:
-        return [reporting.teamcity.TeamCityReporter(sys.stdout)]
+        return [plugins.teamcity.TeamCityReporter(sys.stdout)]
 
     if args.verbosity == 'quiet':
-        return [reporting.cli.StdOutCapturingReporter(StringIO())]
+        return [plugins.cli.StdOutCapturingReporter(StringIO())]
 
     if args.verbosity == 'verbose':
         if not args.capture:
             if args.colour:
-                return [reporting.cli.ColouredVerboseReporter(sys.stdout), reporting.cli.TimedReporter(sys.stdout)]
-            return [reporting.cli.VerboseReporter(sys.stdout), reporting.cli.TimedReporter(sys.stdout)]
+                return [plugins.cli.ColouredVerboseReporter(sys.stdout), plugins.cli.TimedReporter(sys.stdout)]
+            return [plugins.cli.VerboseReporter(sys.stdout), plugins.cli.TimedReporter(sys.stdout)]
         if args.colour:
-            return [reporting.cli.ColouredVerboseCapturingReporter(sys.stdout), reporting.cli.TimedReporter(sys.stdout)]
-        return [reporting.cli.StdOutCapturingReporter(sys.stdout), reporting.cli.TimedReporter(sys.stdout)]
+            return [plugins.cli.ColouredVerboseCapturingReporter(sys.stdout), plugins.cli.TimedReporter(sys.stdout)]
+        return [plugins.cli.StdOutCapturingReporter(sys.stdout), plugins.cli.TimedReporter(sys.stdout)]
 
     if args.capture:
         if args.colour:
             return [
-                reporting.cli.DotsReporter(sys.stdout),
-                reporting.cli.ColouredSummarisingCapturingReporter(sys.stdout),
-                reporting.cli.TimedReporter(sys.stdout)
+                plugins.cli.DotsReporter(sys.stdout),
+                plugins.cli.ColouredSummarisingCapturingReporter(sys.stdout),
+                plugins.cli.TimedReporter(sys.stdout)
             ]
         return [
-            reporting.cli.DotsReporter(sys.stdout),
-            reporting.cli.SummarisingCapturingReporter(sys.stdout),
-            reporting.cli.TimedReporter(sys.stdout)
+            plugins.cli.DotsReporter(sys.stdout),
+            plugins.cli.SummarisingCapturingReporter(sys.stdout),
+            plugins.cli.TimedReporter(sys.stdout)
         ]
 
     if not args.capture:
         if args.colour:
             return [
-                reporting.cli.DotsReporter(sys.stdout),
-                reporting.cli.ColouredSummarisingReporter(sys.stdout),
-                reporting.cli.TimedReporter(sys.stdout)
+                plugins.cli.DotsReporter(sys.stdout),
+                plugins.cli.ColouredSummarisingReporter(sys.stdout),
+                plugins.cli.TimedReporter(sys.stdout)
             ]
         return [
-            reporting.cli.DotsReporter(sys.stdout),
-            reporting.cli.SummarisingReporter(sys.stdout),
-            reporting.cli.TimedReporter(sys.stdout)
+            plugins.cli.DotsReporter(sys.stdout),
+            plugins.cli.SummarisingReporter(sys.stdout),
+            plugins.cli.TimedReporter(sys.stdout)
         ]
 
 

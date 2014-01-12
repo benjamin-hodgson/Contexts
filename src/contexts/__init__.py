@@ -1,6 +1,6 @@
 import sys
 from . import core
-from . import reporting
+from . import plugins
 from .tools import (
     catch, set_trace, time,
     setup, action, assertion, teardown, examples,
@@ -43,9 +43,9 @@ def run(to_run=None, reporters=None, rewriting=True):
     """
     if reporters is None:  # default list of reporters
         reporters = (
-            reporting.cli.DotsReporter(sys.stdout),
-            reporting.cli.StdOutCapturingReporter(sys.stdout),
-            reporting.cli.TimedReporter(sys.stdout)
+            plugins.cli.DotsReporter(sys.stdout),
+            plugins.cli.StdOutCapturingReporter(sys.stdout),
+            plugins.cli.TimedReporter(sys.stdout)
         )
 
     notifier = core.ReporterNotifier(*reporters)

@@ -1,7 +1,7 @@
 import sys
 from io import StringIO
 import contexts
-from contexts import reporting
+from contexts import plugins
 from . import tools
 
 
@@ -13,7 +13,7 @@ class StdOutCapturingSharedContext:
         sys.stderr = self.fake_stderr = StringIO()
 
         self.stringio = StringIO()
-        self.reporter = reporting.cli.StdOutCapturingReporter(self.stringio)
+        self.reporter = plugins.cli.StdOutCapturingReporter(self.stringio)
 
     def cleanup_stdout_and_stderr(self):
         sys.stdout = self.real_stdout
@@ -63,7 +63,7 @@ class WhenCapturingStdOutAndATestFails(StdOutCapturingSharedContext):
         assert self.stringio.getvalue() == ("""\
 context
   FAIL: assertion
-    reporting_tests.tools.FakeAssertionError
+    plugin_tests.tools.FakeAssertionError
     ------------------ >> begin captured stdout << -------------------
     failing context
     failing assertion
@@ -89,7 +89,7 @@ class WhenCapturingStdOutAndATestErrors(StdOutCapturingSharedContext):
         assert self.stringio.getvalue() == ("""\
 context
   ERROR: assertion
-    reporting_tests.tools.FakeException
+    plugin_tests.tools.FakeException
     ------------------ >> begin captured stdout << -------------------
     failing context
     erroring assertion
@@ -116,7 +116,7 @@ class WhenCapturingStdOutAndAContextErrors(StdOutCapturingSharedContext):
         assert self.stringio.getvalue() == ("""\
 context
   PASS: assertion
-  reporting_tests.tools.FakeException
+  plugin_tests.tools.FakeException
   ------------------- >> begin captured stdout << --------------------
   erroring context
   assertion in erroring context
@@ -142,5 +142,5 @@ class WhenCapturingStdOutButNotPrinting(StdOutCapturingSharedContext):
         assert self.stringio.getvalue() == ("""\
 context
   FAIL: assertion name
-    reporting_tests.tools.FakeAssertionError
+    plugin_tests.tools.FakeAssertionError
 """)
