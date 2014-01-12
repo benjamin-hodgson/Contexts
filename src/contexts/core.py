@@ -15,15 +15,15 @@ class TestRun(object):
         self.source = source
         self.importer = importing.Importer(rewriting)
 
-    def run(self, reporter_notifier):
-        with reporter_notifier.run_test_run(self):
-            modules = self.get_modules(reporter_notifier)
-            reporter_notifier.call_reporters('process_module_list', modules)
+    def run(self, plugin_notifier):
+        with plugin_notifier.run_test_run(self):
+            modules = self.get_modules(plugin_notifier)
+            plugin_notifier.call_reporters('process_module_list', modules)
             for module in modules:
                 suite = Suite(module)
-                suite.run(reporter_notifier)
+                suite.run(plugin_notifier)
 
-    def get_modules(self, reporter_notifier):
+    def get_modules(self, plugin_notifier):
         if isinstance(self.source, types.ModuleType):
             return [self.source]
         if isinstance(self.source, str) and os.path.isfile(self.source):
@@ -32,7 +32,7 @@ class TestRun(object):
             specifications = discovery.module_specs(self.source)
             modules = []
             for module_spec in specifications:
-                with reporter_notifier.importing(module_spec):
+                with plugin_notifier.importing(module_spec):
                     modules.append(self.importer.import_module(*module_spec))
             return modules
 
@@ -47,18 +47,18 @@ class Suite(object):
         self.module = module
         self.name = self.module.__name__
 
-    def run(self, reporter_notifier):
-        with reporter_notifier.run_suite(self):
+    def run(self, plugin_notifier):
+        with plugin_notifier.run_suite(self):
             found_classes = list(finders.find_specs_in_module(self.module))
-            reporter_notifier.call_reporters('process_class_list', found_classes)
+            plugin_notifier.call_reporters('process_class_list', found_classes)
             for cls in found_classes:
-                self.run_class(cls, reporter_notifier)
+                self.run_class(cls, plugin_notifier)
 
-    def run_class(self, cls, reporter_notifier):
-        with reporter_notifier.run_class(cls):
+    def run_class(self, cls, plugin_notifier):
+        with plugin_notifier.run_class(cls):
             for example in get_examples(cls):
                 context = Context(cls(), example)
-                context.run(reporter_notifier)
+                context.run(plugin_notifier)
 
 
 def get_examples(cls):
@@ -93,25 +93,25 @@ class Context(object):
         for action in self.actions:
             run_with_test_data(action, self.example)
 
-    def run_assertions(self, reporter_notifier):
+    def run_assertions(self, plugin_notifier):
         for assertion in self.assertions:
-            assertion.run(self.example, reporter_notifier)
+            assertion.run(self.example, plugin_notifier)
 
     def run_teardown(self):
         for teardown in self.teardowns:
             run_with_test_data(teardown, self.example)
 
-    def run(self, reporter_notifier):
-        reporter_notifier.call_reporters('process_assertion_list', self.assertions)
+    def run(self, plugin_notifier):
+        plugin_notifier.call_reporters('process_assertion_list', self.assertions)
         self.assertions = [Assertion(f) for f in self.assertions]
 
         if not self.assertions:
             return
-        with reporter_notifier.run_context(self):
+        with plugin_notifier.run_context(self):
             try:
                 self.run_setup()
                 self.run_action()
-                self.run_assertions(reporter_notifier)
+                self.run_assertions(plugin_notifier)
             finally:
                 self.run_teardown()
 
@@ -129,8 +129,8 @@ class Assertion(object):
         self.func = func
         self.name = func.__name__
 
-    def run(self, test_data, reporter_notifier):
-        with reporter_notifier.run_assertion(self):
+    def run(self, test_data, plugin_notifier):
+        with plugin_notifier.run_assertion(self):
             run_with_test_data(self.func, test_data)
 
 
@@ -145,7 +145,7 @@ def run_with_test_data(func, test_data):
         func()
 
 
-class ReporterNotifier(object):
+class PluginNotifier(object):
     def __init__(self, *reporters):
         self.reporters = []
         for reporter in reporters:

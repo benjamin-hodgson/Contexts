@@ -9,10 +9,10 @@ from .plugins.other import Shuffler
 
 def cmd():
     args = parse_args(sys.argv[1:])
-    reporters = create_reporters(args)
+    plugins = create_plugins(args)
     if args.shuffle:
-        reporters.insert(0, Shuffler())
-    main(os.path.realpath(args.path), reporters, args.rewriting)
+        plugins.insert(0, Shuffler())
+    main(os.path.realpath(args.path), plugins, args.rewriting)
 
 
 def parse_args(args):
@@ -65,10 +65,10 @@ def parse_args(args):
     return parser.parse_args(args)
 
 
-def create_reporters(args):
+def create_plugins(args):
     # Refactoring hint:
     # multiple inheritance is part of the reason this function is hard to test.
-    # Try to get the reporters to the point where they can be composed
+    # Try to get the plugins to the point where they can be composed
     # without inheritance.
     if not sys.stdout.isatty():
         args.colour = False

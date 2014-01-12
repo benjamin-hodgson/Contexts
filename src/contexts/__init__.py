@@ -28,7 +28,7 @@ def main(*args, **kwargs):
     sys.exit(0)
 
 
-def run(to_run=None, reporters=None, rewriting=True):
+def run(to_run=None, plugins=None, rewriting=True):
     """
     Polymorphic test-running function.
 
@@ -41,14 +41,14 @@ def run(to_run=None, reporters=None, rewriting=True):
 
     Returns: True if the test run passed, False if it failed.
     """
-    if reporters is None:  # default list of reporters
-        reporters = (
+    if plugins is None:  # default list of plugins
+        plugins = (
             plugins.cli.DotsReporter(sys.stdout),
             plugins.cli.StdOutCapturingReporter(sys.stdout),
             plugins.cli.TimedReporter(sys.stdout)
         )
 
-    notifier = core.ReporterNotifier(*reporters)
+    notifier = core.PluginNotifier(*plugins)
 
     if to_run is None:
         to_run = sys.modules['__main__']

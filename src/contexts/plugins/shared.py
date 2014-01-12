@@ -1,9 +1,9 @@
 import re
 import traceback
-from . import Reporter
+from . import Plugin
 
 
-class StreamReporter(Reporter):
+class StreamReporter(Plugin):
     def __init__(self, stream):
         super().__init__()
         self.stream = stream
@@ -15,7 +15,7 @@ class StreamReporter(Reporter):
         return type(self) == type(other) and self.stream == other.stream
 
 
-class CountingReporter(Reporter):
+class CountingReporter(Plugin):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.context_count = 0
