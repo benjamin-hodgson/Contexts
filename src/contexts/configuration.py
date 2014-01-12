@@ -2,26 +2,29 @@ import random
 
 
 class Configuration(object):
-    def __init__(self, shuffle, rewriting):
-        self.shuffle = shuffle
+    def __init__(self, shuffle=False, rewriting=False, plugins=()):
         self.rewriting = rewriting
+        self.plugins = []
+        self.plugins.extend(plugins)
 
-    def process_module_list(self, l):
-        self.shuffle_list(l)
-
-    def process_class_list(self, l):
-        self.shuffle_list(l)
-
-    def process_assertion_list(self, l):
-        self.shuffle_list(l)
-
-    def shuffle_list(self, l):
-        if self.shuffle:
-            random.shuffle(l)
+    def __getattr__(self, name):
+        return PluginProxy(self.plugins, name)
 
     def __eq__(self, other):
-        return (self.shuffle == other.shuffle
+        print(self.plugins, other.plugins)
+        return (self.plugins == other.plugins
             and self.rewriting == other.rewriting)
+
+
+class PluginProxy(object):
+    def __init__(self, plugins, name):
+        self.plugins = plugins
+        self.name = name
+
+    def __call__(self, *args, **kwargs):
+        for plugin in self.plugins:
+            getattr(plugin, self.name)(*args, **kwargs)
+
 
 class NullConfiguration(object):
     def __init__(self):
@@ -34,3 +37,17 @@ class NullConfiguration(object):
         pass
     def shuffle_list(self, l):
         pass
+
+
+class Shuffler(object):
+    def process_module_list(self, l):
+        self.shuffle_list(l)
+    def process_class_list(self, l):
+        self.shuffle_list(l)
+    def process_assertion_list(self, l):
+        self.shuffle_list(l)
+    def shuffle_list(self, l):
+        random.shuffle(l)
+
+    def __eq__(self, other):
+        return isinstance(other, Shuffler)

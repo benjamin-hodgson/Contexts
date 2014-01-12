@@ -169,10 +169,24 @@ class ReporterNotifier(object):
         self.call_reporters("test_run_ended")
 
     @contextmanager
+    def importing(self, module_spec):
+        try:
+            yield
+        except Exception as e:
+            self.call_reporters("unexpected_error", e)
+
+    @contextmanager
     def run_suite(self, suite):
         self.call_reporters("suite_started", suite.name)
         yield
         self.call_reporters("suite_ended", suite.name)
+
+    @contextmanager
+    def run_class(self, cls):
+        try:
+            yield
+        except Exception as e:
+            self.call_reporters("unexpected_error", e)
 
     @contextmanager
     def run_context(self, context):
@@ -195,20 +209,6 @@ class ReporterNotifier(object):
             self.call_reporters("assertion_errored", assertion.name, e)
         else:
             self.call_reporters("assertion_passed", assertion.name)
-
-    @contextmanager
-    def run_class(self, cls):
-        try:
-            yield
-        except Exception as e:
-            self.call_reporters("unexpected_error", e)
-
-    @contextmanager
-    def importing(self, module_spec):
-        try:
-            yield
-        except Exception as e:
-            self.call_reporters("unexpected_error", e)
 
     def call_reporters(self, method, *args):
         for reporter in self.reporters:

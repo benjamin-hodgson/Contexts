@@ -7,7 +7,7 @@ import colorama
 import contexts
 from contexts import __main__
 from contexts.reporting import cli
-from contexts.configuration import Configuration
+from contexts.configuration import Configuration, Shuffler
 
 
 class WhenLoadingUpTheModule:
@@ -41,23 +41,24 @@ class MainSharedContext:
 class WhenRunningFromCommandLineWithArguments(MainSharedContext):
     @classmethod
     def examples(self):
-        yield [], [os.getcwd(), (cli.DotsReporter, cli.ColouredSummarisingCapturingReporter, cli.TimedReporter), Configuration(shuffle=True, rewriting=True)]
-        yield ['-v'], [os.getcwd(), (cli.ColouredVerboseCapturingReporter, cli.TimedReporter), Configuration(shuffle=True, rewriting=True)]
-        yield ['--verbose'], [os.getcwd(), (cli.ColouredVerboseCapturingReporter, cli.TimedReporter), Configuration(shuffle=True, rewriting=True)]
-        yield ['--verbose', '--no-colour'], [os.getcwd(), (cli.StdOutCapturingReporter, cli.TimedReporter), Configuration(shuffle=True, rewriting=True)]
-        yield ['--verbose', '--no-capture'], [os.getcwd(), (cli.ColouredVerboseReporter, cli.TimedReporter), Configuration(shuffle=True, rewriting=True)]
-        yield ['--verbose', '--no-colour', '--no-capture'], [os.getcwd(), (cli.VerboseReporter, cli.TimedReporter), Configuration(shuffle=True, rewriting=True)]
-        yield ['-vs'], [os.getcwd(), (cli.ColouredVerboseReporter, cli.TimedReporter), Configuration(shuffle=True, rewriting=True)]
-        yield ['-q'], [os.getcwd(), (QuietReporterResemblance,), Configuration(shuffle=True, rewriting=True)]
-        yield ['--quiet'], [os.getcwd(), (QuietReporterResemblance,), Configuration(shuffle=True, rewriting=True)]
-        yield ['-s'], [os.getcwd(), (cli.DotsReporter, cli.ColouredSummarisingReporter, cli.TimedReporter), Configuration(shuffle=True, rewriting=True)]
-        yield ['--no-capture'], [os.getcwd(), (cli.DotsReporter, cli.ColouredSummarisingReporter, cli.TimedReporter), Configuration(shuffle=True, rewriting=True)]
-        yield ['--no-colour'], [os.getcwd(), (cli.DotsReporter, cli.SummarisingCapturingReporter, cli.TimedReporter), Configuration(shuffle=True, rewriting=True)]
-        yield ['--no-capture', '--no-colour'], [os.getcwd(), (cli.DotsReporter, cli.SummarisingReporter, cli.TimedReporter), Configuration(shuffle=True, rewriting=True)]
-        yield ['--no-assert'], [os.getcwd(), (cli.DotsReporter, cli.ColouredSummarisingCapturingReporter, cli.TimedReporter), Configuration(shuffle=True, rewriting=False)]
-        yield ['--teamcity'], [os.getcwd(), (contexts.reporting.teamcity.TeamCityReporter,), Configuration(shuffle=True, rewriting=True)]
-        yield ['--no-random'], [os.getcwd(), (cli.DotsReporter, cli.ColouredSummarisingCapturingReporter, cli.TimedReporter), Configuration(shuffle=False, rewriting=True)]
-        yield [os.path.join(os.getcwd(),'made','up','path')], [os.path.join(os.getcwd(),'made','up','path'), (cli.DotsReporter, cli.ColouredSummarisingCapturingReporter, cli.TimedReporter), Configuration(shuffle=True, rewriting=True)]
+        yield [], [os.getcwd(), (cli.DotsReporter, cli.ColouredSummarisingCapturingReporter, cli.TimedReporter), Configuration(rewriting=True, plugins=[Shuffler()])]
+        path = os.path.join(os.getcwd(),'made','up','path')
+        yield [path], [path, (cli.DotsReporter, cli.ColouredSummarisingCapturingReporter, cli.TimedReporter), Configuration(rewriting=True, plugins=[Shuffler()])]
+        yield ['-v'], [os.getcwd(), (cli.ColouredVerboseCapturingReporter, cli.TimedReporter), Configuration(rewriting=True, plugins=[Shuffler()])]
+        yield ['--verbose'], [os.getcwd(), (cli.ColouredVerboseCapturingReporter, cli.TimedReporter), Configuration(rewriting=True, plugins=[Shuffler()])]
+        yield ['--verbose', '--no-colour'], [os.getcwd(), (cli.StdOutCapturingReporter, cli.TimedReporter), Configuration(rewriting=True, plugins=[Shuffler()])]
+        yield ['--verbose', '--no-capture'], [os.getcwd(), (cli.ColouredVerboseReporter, cli.TimedReporter), Configuration(rewriting=True, plugins=[Shuffler()])]
+        yield ['--verbose', '--no-colour', '--no-capture'], [os.getcwd(), (cli.VerboseReporter, cli.TimedReporter), Configuration(rewriting=True, plugins=[Shuffler()])]
+        yield ['-vs'], [os.getcwd(), (cli.ColouredVerboseReporter, cli.TimedReporter), Configuration(rewriting=True, plugins=[Shuffler()])]
+        yield ['-q'], [os.getcwd(), (QuietReporterResemblance,), Configuration(rewriting=True, plugins=[Shuffler()])]
+        yield ['--quiet'], [os.getcwd(), (QuietReporterResemblance,), Configuration(rewriting=True, plugins=[Shuffler()])]
+        yield ['-s'], [os.getcwd(), (cli.DotsReporter, cli.ColouredSummarisingReporter, cli.TimedReporter), Configuration(rewriting=True, plugins=[Shuffler()])]
+        yield ['--no-capture'], [os.getcwd(), (cli.DotsReporter, cli.ColouredSummarisingReporter, cli.TimedReporter), Configuration(rewriting=True, plugins=[Shuffler()])]
+        yield ['--no-colour'], [os.getcwd(), (cli.DotsReporter, cli.SummarisingCapturingReporter, cli.TimedReporter), Configuration(rewriting=True, plugins=[Shuffler()])]
+        yield ['--no-capture', '--no-colour'], [os.getcwd(), (cli.DotsReporter, cli.SummarisingReporter, cli.TimedReporter), Configuration(rewriting=True, plugins=[Shuffler()])]
+        yield ['--no-assert'], [os.getcwd(), (cli.DotsReporter, cli.ColouredSummarisingCapturingReporter, cli.TimedReporter), Configuration(rewriting=False, plugins=[Shuffler()])]
+        yield ['--teamcity'], [os.getcwd(), (contexts.reporting.teamcity.TeamCityReporter,), Configuration(rewriting=True, plugins=[Shuffler()])]
+        yield ['--no-random'], [os.getcwd(), (cli.DotsReporter, cli.ColouredSummarisingCapturingReporter, cli.TimedReporter), Configuration(rewriting=True, plugins=[])]
 
     def establish_arguments(self, argv, expected):
         self.expected = (expected[0], tuple(cls(sys.stdout) for cls in expected[1]), expected[2])
@@ -117,7 +118,7 @@ class WhenColoramaIsNotInstalled(MainSharedContext):
         __main__.cmd()
 
     def it_should_not_send_a_coloured_reporter_to_main(self):
-        self.mock_main.assert_called_once_with(os.getcwd(), (cli.DotsReporter(sys.stdout), cli.SummarisingCapturingReporter(sys.stdout), cli.TimedReporter(sys.stdout)), Configuration(shuffle=True, rewriting=True))
+        self.mock_main.assert_called_once_with(os.getcwd(), (cli.DotsReporter(sys.stdout), cli.SummarisingCapturingReporter(sys.stdout), cli.TimedReporter(sys.stdout)), Configuration(rewriting=True, plugins=[Shuffler()]))
 
     def cleanup_import(self):
         builtins.__import__ = self.real_import
@@ -131,7 +132,7 @@ class WhenStdOutIsAPipe(MainSharedContext):
         __main__.cmd()
 
     def it_should_not_send_a_coloured_reporter_to_main(self):
-        self.mock_main.assert_called_once_with(os.getcwd(), (cli.DotsReporter(sys.stdout), cli.SummarisingCapturingReporter(sys.stdout), cli.TimedReporter(sys.stdout)), Configuration(shuffle=True, rewriting=True))
+        self.mock_main.assert_called_once_with(os.getcwd(), (cli.DotsReporter(sys.stdout), cli.SummarisingCapturingReporter(sys.stdout), cli.TimedReporter(sys.stdout)), Configuration(rewriting=True, plugins=[Shuffler()]))
 
 
 ###########################################################

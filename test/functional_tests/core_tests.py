@@ -340,9 +340,8 @@ class WhenConfigModifiesAnAssertionList:
             def not_an_assertion(s):
                 pass
             def __new__(cls):
-                if not hasattr(cls, 'instance'):
-                    cls.instance = super().__new__(cls)
-                return cls.instance
+                cls.last_instance = super().__new__(cls)
+                return cls.last_instance
         self.spec = SomeTestClass
 
         self.ran_spies = []
@@ -362,7 +361,7 @@ class WhenConfigModifiesAnAssertionList:
 
     def it_should_pass_a_list_of_the_found_assertions_into_process_assertion_list(self):
         assert isinstance(self.called_with, collections.abc.MutableSequence)
-        assert set(self.called_with) == {self.spec.instance.it_should_do_this, self.spec.instance.it_should_do_that}
+        assert set(self.called_with) == {self.spec.last_instance.it_should_do_this, self.spec.last_instance.it_should_do_that}
 
     def it_should_run_the_methods_in_the_list_that_the_config_modified(self):
         assert self.ran_spies == ['spy_assertion_method1', 'spy_assertion_method2']

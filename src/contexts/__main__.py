@@ -4,13 +4,16 @@ import sys
 from io import StringIO
 from . import main
 from . import reporting
-from .configuration import Configuration
+from .configuration import Configuration, Shuffler
 
 
 def cmd():
     args = parse_args(sys.argv[1:])
     reporters = create_reporters(args)
-    main(os.path.realpath(args.path), reporters, Configuration(shuffle=args.shuffle, rewriting=args.rewriting))
+    plugins = []
+    if args.shuffle:
+        plugins.append(Shuffler())
+    main(os.path.realpath(args.path), reporters, Configuration(rewriting=args.rewriting, plugins=plugins))
 
 
 def parse_args(args):
