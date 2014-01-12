@@ -6,7 +6,6 @@ import sys
 import types
 import contexts
 from unittest import mock
-from contexts.configuration import Configuration, NullConfiguration
 from .tools import SpyReporter
 
 
@@ -36,7 +35,7 @@ class WhenRunningAModule:
         self.reporter = SpyReporter()
 
     def because_we_run_the_module(self):
-        contexts.run(self.module, [self.reporter], config=NullConfiguration())
+        contexts.run(self.module, [self.reporter])
 
     def it_should_run_the_spec(self):
         assert self.module.HasSpecInTheName.was_run
@@ -60,8 +59,8 @@ class WhenRunningAModule:
         assert self.reporter.calls[-2][1] == self.module.__name__
 
 
-class WhenConfigModifiesAClassList:
-    def context(self):
+class WhenAPluginModifiesAClassList:
+    def establish_that_a_plugin_is_fiddling_with_the_list(self):
         self.ran_reals = False
         class HasSpecInTheName:
             def it_should_run_this(s):
@@ -86,17 +85,17 @@ class WhenConfigModifiesAClassList:
         def modify_list(l):
             self.called_with = l.copy()
             l[:] = [NormalClass1, NormalClass2]
-        self.config = mock.Mock()
-        self.config.process_class_list = modify_list
+        self.plugin = mock.Mock()
+        self.plugin.process_class_list = modify_list
 
     def because_we_run_the_module(self):
-        contexts.run(self.module, [], config=self.config)
+        contexts.run(self.module, [self.plugin])
 
     def it_should_pass_a_list_of_the_found_classes_into_process_class_list(self):
         assert isinstance(self.called_with, collections.abc.MutableSequence)
         assert set(self.called_with) == {self.module.HasSpecInTheName, self.module.HasWhenInTheName}
 
-    def it_should_run_the_classes_in_the_list_that_the_config_modified(self):
+    def it_should_run_the_classes_in_the_list_that_the_plugin_modified(self):
         assert self.ran_spies == ['NormalClass1', 'NormalClass2']
 
     def it_should_not_run_the_old_version_of_the_list(self):
@@ -118,7 +117,7 @@ class TestSpec:
         self.reporter = SpyReporter()
 
     def because_we_run_the_file(self):
-        contexts.run(self.filename, [self.reporter], config=NullConfiguration())
+        contexts.run(self.filename, [self.reporter])
 
     def it_should_import_the_file(self):
         assert self.module_name in sys.modules
@@ -166,7 +165,7 @@ raise ZeroDivisionError("bogus error message")
         self.reporter = SpyReporter()
 
     def because_we_run_the_file(self):
-        contexts.run(self.filename, [self.reporter], config=NullConfiguration())
+        contexts.run(self.filename, [self.reporter])
 
     def it_should_call_unexpected_error_on_the_reporter(self):
         assert self.reporter.calls[1][0] == "unexpected_error"
@@ -201,7 +200,7 @@ class TestSpec:
         self.reporter = SpyReporter()
 
     def because_we_run_the_folder(self):
-        contexts.run(self.folder_path, [self.reporter], config=NullConfiguration())
+        contexts.run(self.folder_path, [self.reporter])
 
     def it_should_import_the_first_module(self):
         assert self.module_names[0] in sys.modules
@@ -251,7 +250,7 @@ class TestSpec:
                 f.write(self.code)
 
 
-class WhenConfigModifiesAModuleList:
+class WhenAPluginModifiesAModuleList:
     def establish_that_there_is_a_folder_containing_modules(self):
         self.code = """
 module_ran = False
@@ -280,11 +279,11 @@ class TestSpec:
         def modify_list(l):
             self.called_with = l.copy()
             l[:] = [module1, module2]
-        self.config = mock.Mock()
-        self.config.process_module_list = modify_list
+        self.plugin = mock.Mock()
+        self.plugin.process_module_list = modify_list
 
     def because_we_run_the_folder(self):
-        contexts.run(self.folder_path, [], config=self.config)
+        contexts.run(self.folder_path, [self.plugin])
 
     def it_should_pass_the_list_of_found_modules_to_process_module_list(self):
         assert isinstance(self.called_with, collections.abc.MutableSequence)
@@ -331,7 +330,7 @@ class TestSpec:
         self.create_fake_module()
 
     def because_we_run_the_folder(self):
-        contexts.run(self.folder_path, [], config=NullConfiguration())
+        contexts.run(self.folder_path, [])
 
     def it_should_not_re_import_the_module(self):
         assert sys.modules[self.module_name].is_fake
@@ -383,7 +382,7 @@ class TestSpec:
         self.create_fake_module()
 
     def because_we_run_the_folder(self):
-        contexts.run(self.folder_path, [], config=NullConfiguration())
+        contexts.run(self.folder_path, [])
 
     def it_should_import_the_new_module_and_overwrite_the_old_one(self):
         assert not sys.modules[self.module_name].is_fake
@@ -430,7 +429,7 @@ class TestSpec:
         self.create_fake_module()
 
     def because_we_run_the_package(self):
-        contexts.run(self.folder_path, [], config=NullConfiguration())
+        contexts.run(self.folder_path, [])
 
     def it_should_not_re_import_the_module(self):
         assert sys.modules[self.package_name].is_fake
@@ -482,7 +481,7 @@ class TestSpec:
         self.create_fake_module()
 
     def because_we_run_the_folder(self):
-        contexts.run(self.folder_path, [], config=NullConfiguration())
+        contexts.run(self.folder_path, [])
 
     def it_should_import_the_new_module_and_overwrite_the_old_one(self):
         assert not sys.modules[self.package_name].is_fake
@@ -531,7 +530,7 @@ class TestSpec:
         self.create_fake_module()
 
     def because_we_run_the_package(self):
-        contexts.run(self.folder_path, [], config=NullConfiguration())
+        contexts.run(self.folder_path, [])
 
     def it_should_not_re_import_the_module(self):
         assert sys.modules[self.qualified_name].is_fake
@@ -587,7 +586,7 @@ class TestSpec:
         self.create_fake_module()
 
     def because_we_run_the_folder(self):
-        contexts.run(self.folder_path, [], config=NullConfiguration())
+        contexts.run(self.folder_path, [])
 
     def it_should_import_the_new_module_and_overwrite_the_old_one(self):
         assert not sys.modules[self.qualified_name].is_fake
@@ -637,7 +636,7 @@ class TestSpec:
         self.reporter = SpyReporter()
 
     def because_we_run_the_folder(self):
-        contexts.run(self.folder_path, [self.reporter], config=NullConfiguration())
+        contexts.run(self.folder_path, [self.reporter])
 
     def it_should_import_the_package(self):
         assert self.package_name in sys.modules
@@ -729,7 +728,7 @@ class TestSpec:
         self.reporter = SpyReporter()
 
     def because_we_run_the_folder(self):
-        contexts.run(self.folder_path, [self.reporter], config=NullConfiguration())
+        contexts.run(self.folder_path, [self.reporter])
 
     def it_should_import_the_file_in_the_test_folder(self):
         assert "test_file1" in sys.modules
@@ -826,7 +825,7 @@ class TestSpec:
 
 
     def because_we_run_the_package(self):
-        contexts.run(self.folder_path, [self.reporter], config=NullConfiguration())
+        contexts.run(self.folder_path, [self.reporter])
 
     def it_should_import_the_file_in_the_test_folder(self):
         assert "test_file1" in sys.modules
@@ -945,7 +944,7 @@ class TestSpec:
         self.reporter = SpyReporter()
 
     def because_we_run_the_folder(self):
-        contexts.run(self.folder_path, [self.reporter], config=NullConfiguration())
+        contexts.run(self.folder_path, [self.reporter])
 
     def it_should_report_an_unexpected_error(self):
         assert self.reporter.calls[1][0] == "unexpected_error"

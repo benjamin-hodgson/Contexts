@@ -5,8 +5,8 @@ from .assertion_rewriting import AssertionRewritingLoader
 
 
 class Importer:
-    def __init__(self, config):
-        self.config = config
+    def __init__(self, rewriting):
+        self.rewriting = rewriting
 
     def import_from_file(self, file_path):
         """
@@ -31,7 +31,7 @@ class Importer:
         return loader.load_module(module_name)
 
     def create_loader(self, module_name, filename):
-        if self.config.rewriting:
+        if self.rewriting:
             return AssertionRewritingLoader(module_name, filename)
         return importlib.machinery.SourceFileLoader(module_name, filename)
 

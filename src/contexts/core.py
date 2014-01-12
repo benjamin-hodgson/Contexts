@@ -11,17 +11,16 @@ from . import importing
 
 
 class TestRun(object):
-    def __init__(self, source, config):
+    def __init__(self, source, rewriting):
         self.source = source
-        self.config = config
-        self.importer = importing.Importer(self.config)
+        self.importer = importing.Importer(rewriting)
 
     def run(self, reporter_notifier):
         with reporter_notifier.run_test_run(self):
             modules = self.get_modules(reporter_notifier)
-            self.config.process_module_list(modules)
+            reporter_notifier.call_reporters('process_module_list', modules)
             for module in modules:
-                suite = Suite(module, self.config)
+                suite = Suite(module)
                 suite.run(reporter_notifier)
 
     def get_modules(self, reporter_notifier):
@@ -44,22 +43,21 @@ class TestRun(object):
 
 
 class Suite(object):
-    def __init__(self, module, config):
+    def __init__(self, module):
         self.module = module
         self.name = self.module.__name__
-        self.config = config
 
     def run(self, reporter_notifier):
         with reporter_notifier.run_suite(self):
             found_classes = list(finders.find_specs_in_module(self.module))
-            self.config.process_class_list(found_classes)
+            reporter_notifier.call_reporters('process_class_list', found_classes)
             for cls in found_classes:
                 self.run_class(cls, reporter_notifier)
 
     def run_class(self, cls, reporter_notifier):
         with reporter_notifier.run_class(cls):
             for example in get_examples(cls):
-                context = Context(cls(), example, self.config)
+                context = Context(cls(), example)
                 context.run(reporter_notifier)
 
 
@@ -74,23 +72,18 @@ class _NullExample(object):
 
 
 class Context(object):
-    def __init__(self, instance, example, config):
-        self.config = config
-
+    def __init__(self, instance, example):
         finder = finders.MethodFinder(instance)
         setups, actions, assertions, teardowns = finder.find_special_methods()
         assert_no_ambiguous_methods(setups, actions, assertions, teardowns)
 
-        self.config.process_assertion_list(assertions)
-
         self.instance = instance
         self.setups = setups
         self.actions = actions
-        self.assertions = [Assertion(f) for f in assertions]
+        self.assertions = assertions
         self.teardowns = teardowns
         self.example = example
         self.name = instance.__class__.__name__
-
 
     def run_setup(self):
         for setup in self.setups:
@@ -109,6 +102,9 @@ class Context(object):
             run_with_test_data(teardown, self.example)
 
     def run(self, reporter_notifier):
+        reporter_notifier.call_reporters('process_assertion_list', self.assertions)
+        self.assertions = [Assertion(f) for f in self.assertions]
+
         if not self.assertions:
             return
         with reporter_notifier.run_context(self):
@@ -212,4 +208,4 @@ class ReporterNotifier(object):
 
     def call_reporters(self, method, *args):
         for reporter in self.reporters:
-            getattr(reporter, method)(*args)
+            getattr(reporter, method, lambda *_: None)(*args)

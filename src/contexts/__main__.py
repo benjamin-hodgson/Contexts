@@ -4,16 +4,15 @@ import sys
 from io import StringIO
 from . import main
 from . import reporting
-from .configuration import Configuration, Shuffler
+from .reporting.other import Shuffler
 
 
 def cmd():
     args = parse_args(sys.argv[1:])
     reporters = create_reporters(args)
-    plugins = []
     if args.shuffle:
-        plugins.append(Shuffler())
-    main(os.path.realpath(args.path), reporters, Configuration(rewriting=args.rewriting, plugins=plugins))
+        reporters.insert(0, Shuffler())
+    main(os.path.realpath(args.path), reporters, args.rewriting)
 
 
 def parse_args(args):
@@ -82,45 +81,45 @@ def create_reporters(args):
         colorama.init()
 
     if args.teamcity or "TEAMCITY_VERSION" in os.environ:
-        return (reporting.teamcity.TeamCityReporter(sys.stdout),)
+        return [reporting.teamcity.TeamCityReporter(sys.stdout)]
 
     if args.verbosity == 'quiet':
-        return (reporting.cli.StdOutCapturingReporter(StringIO()),)
+        return [reporting.cli.StdOutCapturingReporter(StringIO())]
 
     if args.verbosity == 'verbose':
         if not args.capture:
             if args.colour:
-                return (reporting.cli.ColouredVerboseReporter(sys.stdout), reporting.cli.TimedReporter(sys.stdout))
-            return (reporting.cli.VerboseReporter(sys.stdout), reporting.cli.TimedReporter(sys.stdout))
+                return [reporting.cli.ColouredVerboseReporter(sys.stdout), reporting.cli.TimedReporter(sys.stdout)]
+            return [reporting.cli.VerboseReporter(sys.stdout), reporting.cli.TimedReporter(sys.stdout)]
         if args.colour:
-            return (reporting.cli.ColouredVerboseCapturingReporter(sys.stdout), reporting.cli.TimedReporter(sys.stdout))
-        return (reporting.cli.StdOutCapturingReporter(sys.stdout), reporting.cli.TimedReporter(sys.stdout))
+            return [reporting.cli.ColouredVerboseCapturingReporter(sys.stdout), reporting.cli.TimedReporter(sys.stdout)]
+        return [reporting.cli.StdOutCapturingReporter(sys.stdout), reporting.cli.TimedReporter(sys.stdout)]
 
     if args.capture:
         if args.colour:
-            return (
+            return [
                 reporting.cli.DotsReporter(sys.stdout),
                 reporting.cli.ColouredSummarisingCapturingReporter(sys.stdout),
                 reporting.cli.TimedReporter(sys.stdout)
-            )
-        return (
+            ]
+        return [
             reporting.cli.DotsReporter(sys.stdout),
             reporting.cli.SummarisingCapturingReporter(sys.stdout),
             reporting.cli.TimedReporter(sys.stdout)
-        )
+        ]
 
     if not args.capture:
         if args.colour:
-            return (
+            return [
                 reporting.cli.DotsReporter(sys.stdout),
                 reporting.cli.ColouredSummarisingReporter(sys.stdout),
                 reporting.cli.TimedReporter(sys.stdout)
-            )
-        return (
+            ]
+        return [
             reporting.cli.DotsReporter(sys.stdout),
             reporting.cli.SummarisingReporter(sys.stdout),
             reporting.cli.TimedReporter(sys.stdout)
-        )
+        ]
 
 
 if __name__ == "__main__":

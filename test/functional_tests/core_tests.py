@@ -1,7 +1,6 @@
 import collections.abc
 from unittest import mock
 import contexts
-from contexts.configuration import Configuration, NullConfiguration
 from .tools import SpyReporter
 
 core_file = repr(contexts.core.__file__)[1:-1]
@@ -24,7 +23,7 @@ class WhenRunningASpec:
         self.spec = TestSpec
 
     def because_we_run_the_spec(self):
-        contexts.run(self.spec, [], config=NullConfiguration())
+        contexts.run(self.spec, [])
 
     def it_should_run_the_methods_in_the_correct_order(self):
         assert self.spec.log == "arrange act assert teardown "
@@ -44,7 +43,7 @@ class WhenRunningASpecWithMultipleAssertions:
         self.spec = TestSpec
 
     def because_we_run_the_spec(self):
-        contexts.run(self.spec, [], config=NullConfiguration())
+        contexts.run(self.spec, [])
 
     def it_should_run_all_three_assertion_methods(self):
         assert self.spec.calls == 3
@@ -69,7 +68,7 @@ class WhenRunningASpecWithReporters:
         self.reporter3 = SpyReporter()
 
     def because_we_run_the_spec(self):
-        contexts.run(self.spec, [self.reporter1, self.reporter2, self.reporter3], config=NullConfiguration())
+        contexts.run(self.spec, [self.reporter1, self.reporter2, self.reporter3])
 
     def it_should_call_test_run_started_first(self):
         assert self.reporter1.calls[0][0] == 'test_run_started'
@@ -142,7 +141,7 @@ class WhenAnAssertionFails:
         self.reporter = SpyReporter()
 
     def because_we_run_the_spec(self):
-        contexts.run(self.spec, [self.reporter], config=NullConfiguration())
+        contexts.run(self.spec, [self.reporter])
 
     def it_should_call_assertion_failed(self):
         assert "assertion_failed" in [c[0] for c in self.reporter.calls]
@@ -182,7 +181,7 @@ class WhenAnAssertionErrors:
         self.reporter = SpyReporter()
 
     def because_we_run_the_spec(self):
-        contexts.run(self.spec, [self.reporter], config=NullConfiguration())
+        contexts.run(self.spec, [self.reporter])
 
     def it_should_call_assertion_errored(self):
         assert "assertion_errored" in [c[0] for c in self.reporter.calls]
@@ -226,7 +225,7 @@ class WhenAContextErrorsDuringTheSetup:
         self.reporter = SpyReporter()
 
     def because_we_run_the_specs(self):
-        contexts.run(self.spec, [self.reporter], config=NullConfiguration())
+        contexts.run(self.spec, [self.reporter])
 
     @contexts.assertion
     def it_should_call_context_errored(self):
@@ -271,7 +270,7 @@ class WhenAContextErrorsDuringTheAction:
         self.reporter = SpyReporter()
 
     def because_we_run_the_specs(self):
-        contexts.run(self.spec, [self.reporter], config=NullConfiguration())
+        contexts.run(self.spec, [self.reporter])
 
     @contexts.assertion
     def it_should_call_context_errored(self):
@@ -311,7 +310,7 @@ class WhenAContextErrorsDuringTheCleanup:
         self.reporter = SpyReporter()
 
     def because_we_run_the_specs(self):
-        contexts.run(self.spec, [self.reporter], config=NullConfiguration())
+        contexts.run(self.spec, [self.reporter])
 
     @contexts.assertion
     def it_should_call_context_errored(self):
@@ -329,7 +328,7 @@ class WhenAContextErrorsDuringTheCleanup:
         assert self.reporter.calls[5][3] is self.exception
 
 
-class WhenConfigModifiesAnAssertionList:
+class WhenAPluginModifiesAnAssertionList:
     def context(self):
         self.ran_reals = False
         class SomeTestClass:
@@ -353,17 +352,17 @@ class WhenConfigModifiesAnAssertionList:
         def modify_list(l):
             self.called_with = l.copy()
             l[:] = [spy_assertion_method1, spy_assertion_method2]
-        self.config = mock.Mock()
-        self.config.process_assertion_list = modify_list
+        self.plugin = mock.Mock()
+        self.plugin.process_assertion_list = modify_list
 
     def because_we_run_the_spec(self):
-        contexts.run(self.spec, [], config=self.config)
+        contexts.run(self.spec, [self.plugin])
 
     def it_should_pass_a_list_of_the_found_assertions_into_process_assertion_list(self):
         assert isinstance(self.called_with, collections.abc.MutableSequence)
         assert set(self.called_with) == {self.spec.last_instance.it_should_do_this, self.spec.last_instance.it_should_do_that}
 
-    def it_should_run_the_methods_in_the_list_that_the_config_modified(self):
+    def it_should_run_the_methods_in_the_list_that_the_plugin_modified(self):
         assert self.ran_spies == ['spy_assertion_method1', 'spy_assertion_method2']
 
     def it_should_not_run_the_old_version_of_the_list(self):
@@ -398,7 +397,7 @@ class WhenASpecHasASuperclass:
         self.reporter = SpyReporter()
 
     def because_we_run_the_spec(self):
-        contexts.run(self.spec, [self.reporter], config=NullConfiguration())
+        contexts.run(self.spec, [self.reporter])
 
     def it_should_run_the_superclass_setup_first(self):
         assert self.log[:19] == "superclass arrange "
@@ -470,7 +469,7 @@ class WhenWeRunSpecsWithAlternatelyNamedMethods:
         self.spec = spec
 
     def because_we_run_the_spec(self):
-        contexts.run(self.spec, [], config=NullConfiguration())
+        contexts.run(self.spec, [])
 
     def it_should_run_the_methods_in_the_correct_order(self, _, expected_log):
         assert self.spec.log == expected_log
@@ -505,7 +504,7 @@ class WhenRunningAmbiguouslyNamedMethods:
         self.reporter = SpyReporter()
 
     def because_we_try_to_run_the_spec(self, example):
-        contexts.run(example, [self.reporter], config=NullConfiguration())
+        contexts.run(example, [self.reporter])
 
     def it_should_call_unexpected_error_on_the_reporter(self):
         assert self.reporter.calls[2][0] == "unexpected_error"
@@ -579,7 +578,7 @@ class WhenRunningSpecsWithTooManySpecialMethods:
         self.reporter = SpyReporter()
 
     def because_we_try_to_run_the_spec(self, example):
-        contexts.run(example, [self.reporter], config=NullConfiguration())
+        contexts.run(example, [self.reporter])
 
     def it_should_call_unexpected_error_on_the_reporter(self):
         assert self.reporter.calls[2][0] == "unexpected_error"
@@ -605,7 +604,7 @@ class WhenRunningAClassContainingNoAssertions:
         self.reporter = SpyReporter()
 
     def because_we_run_the_spec(self):
-        contexts.run(self.spec, [self.reporter], config=NullConfiguration())
+        contexts.run(self.spec, [self.reporter])
 
     def it_should_not_run_the_class(self):
         assert self.spec.log == []

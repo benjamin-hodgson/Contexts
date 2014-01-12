@@ -3,7 +3,6 @@ import shutil
 import sys
 from .tools import SpyReporter
 import contexts
-from contexts.configuration import Configuration
 
 
 THIS_FILE = os.path.realpath(__file__)
@@ -22,8 +21,8 @@ class AssertionRewritingSharedContext:
             f.write(self.code)
 
     def cleanup_the_filesystem_and_sys_dot_modules(self):
-        del sys.modules[self.module_name]
         shutil.rmtree(TEST_DATA_DIR)
+        del sys.modules[self.module_name]
 
 
 class WhenUserSuppliesAnAssertionMessage(AssertionRewritingSharedContext):
@@ -38,7 +37,7 @@ class TestSpec:
         self.write_file()
 
     def because_we_run_the_spec(self):
-        contexts.run(self.filename, [self.reporter], config=Configuration(shuffle=False, rewriting=True))
+        contexts.run(self.filename, [self.reporter], True)
 
     def it_should_call_assertion_failed(self):
         assert 'assertion_failed' in [call[0] for call in self.reporter.calls]
@@ -59,7 +58,7 @@ class TestSpec:
         self.write_file()
 
     def because_we_run_the_spec(self):
-        contexts.run(self.filename, [self.reporter], config=Configuration(shuffle=False, rewriting=False))
+        contexts.run(self.filename, [self.reporter], False)
 
     def it_should_call_assertion_failed(self):
         assert 'assertion_failed' in [call[0] for call in self.reporter.calls]
@@ -80,7 +79,7 @@ class TestSpec:
         self.write_file()
 
     def because_we_run_the_spec(self):
-        contexts.run(self.filename, [self.reporter], config=Configuration(shuffle=False, rewriting=True))
+        contexts.run(self.filename, [self.reporter], True)
 
     def it_should_call_assertion_failed(self):
         assert 'assertion_failed' in [call[0] for call in self.reporter.calls]
@@ -110,7 +109,7 @@ class TestSpec:
         self.write_file()
 
     def because_we_run_the_spec(self):
-        contexts.run(self.filename, [self.reporter], config=Configuration(shuffle=False, rewriting=True))
+        contexts.run(self.filename, [self.reporter], True)
 
     def it_should_call_assertion_failed(self):
         assert 'assertion_failed' in [call[0] for call in self.reporter.calls]
@@ -138,7 +137,7 @@ class TestSpec:
         self.write_file()
 
     def because_we_run_the_spec(self):
-        contexts.run(self.filename, [self.reporter], config=Configuration(shuffle=False, rewriting=True))
+        contexts.run(self.filename, [self.reporter], True)
 
     def it_should_call_assertion_failed(self):
         assert 'assertion_failed' in [call[0] for call in self.reporter.calls]
@@ -169,7 +168,7 @@ class TestSpec:
         self.write_file()
 
     def because_we_run_the_spec(self):
-        contexts.run(self.filename, [self.reporter], config=Configuration(shuffle=False, rewriting=True))
+        contexts.run(self.filename, [self.reporter], True)
 
     def it_should_call_assertion_failed(self):
         assert 'assertion_failed' in [call[0] for call in self.reporter.calls]
@@ -194,7 +193,7 @@ class TestSpec:
         self.write_file()
 
     def because_we_run_the_spec(self):
-        contexts.run(self.filename, [self.reporter], config=Configuration(shuffle=False, rewriting=True))
+        contexts.run(self.filename, [self.reporter], True)
 
     def it_should_only_call_the_function_once(self):
         mock = sys.modules[self.module_name].m
@@ -224,7 +223,7 @@ class TestSpec:
         self.write_file()
 
     def because_we_run_the_spec(self):
-        contexts.run(self.filename, [self.reporter], config=Configuration(shuffle=False, rewriting=True))
+        contexts.run(self.filename, [self.reporter], True)
 
     def it_should_only_call_the_function_once(self):
         mock = sys.modules[self.module_name].m
@@ -258,7 +257,7 @@ class TestSpec:
         self.write_file()
 
     def because_we_run_the_spec(self):
-        contexts.run(self.filename, [self.reporter], config=Configuration(shuffle=False, rewriting=True))
+        contexts.run(self.filename, [self.reporter], True)
 
     def it_should_call_assertion_failed(self):
         assert 'assertion_failed' in [call[0] for call in self.reporter.calls]
@@ -293,7 +292,7 @@ class TestSpec:
         self.write_file()
 
     def because_we_run_the_spec(self):
-        contexts.run(self.filename, [self.reporter], config=Configuration(shuffle=False, rewriting=True))
+        contexts.run(self.filename, [self.reporter], True)
 
     def it_should_call_assertion_failed(self):
         assert 'assertion_failed' in [call[0] for call in self.reporter.calls]
@@ -326,7 +325,7 @@ class TestSpec:
         self.write_file()
 
     def because_we_run_the_spec(self):
-        contexts.run(self.filename, [self.reporter], config=Configuration(shuffle=False, rewriting=True))
+        contexts.run(self.filename, [self.reporter], True)
 
     def it_should_only_call_the_function_once(self):
         mock = sys.modules[self.module_name].m
@@ -362,7 +361,7 @@ class TestSpec:
         self.write_file()
 
     def because_we_run_the_spec(self):
-        contexts.run(self.filename, [self.reporter], config=Configuration(shuffle=False, rewriting=True))
+        contexts.run(self.filename, [self.reporter], True)
 
     def it_should_only_call_the_function_once(self):
         mock = sys.modules[self.module_name].m
@@ -396,7 +395,7 @@ class TestSpec:
         self.write_file()
 
     def because_we_run_the_spec(self):
-        contexts.run(self.filename, [self.reporter], config=Configuration(shuffle=False, rewriting=True))
+        contexts.run(self.filename, [self.reporter], True)
 
     def it_should_call_assertion_failed(self):
         assert 'assertion_failed' in [call[0] for call in self.reporter.calls]
@@ -426,7 +425,7 @@ class TestSpec:
         self.write_file()
 
     def because_we_run_the_spec(self):
-        contexts.run(self.filename, [self.reporter], config=Configuration(shuffle=False, rewriting=True))
+        contexts.run(self.filename, [self.reporter], True)
 
     def it_should_call_assertion_failed(self):
         assert 'assertion_failed' in [call[0] for call in self.reporter.calls]
@@ -456,7 +455,7 @@ class TestSpec:
         self.write_file()
 
     def because_we_run_the_spec(self):
-        contexts.run(self.filename, [self.reporter], config=Configuration(shuffle=False, rewriting=True))
+        contexts.run(self.filename, [self.reporter], True)
 
     def it_should_call_assertion_failed(self):
         assert 'assertion_failed' in [call[0] for call in self.reporter.calls]
@@ -486,7 +485,7 @@ class TestSpec:
         self.write_file()
 
     def because_we_run_the_spec(self):
-        contexts.run(self.filename, [self.reporter], config=Configuration(shuffle=False, rewriting=True))
+        contexts.run(self.filename, [self.reporter], True)
 
     def it_should_call_assertion_failed(self):
         assert 'assertion_failed' in [call[0] for call in self.reporter.calls]
@@ -516,7 +515,7 @@ class TestSpec:
         self.write_file()
 
     def because_we_run_the_spec(self):
-        contexts.run(self.filename, [self.reporter], config=Configuration(shuffle=False, rewriting=True))
+        contexts.run(self.filename, [self.reporter], True)
 
     def it_should_call_assertion_failed(self):
         assert 'assertion_failed' in [call[0] for call in self.reporter.calls]
@@ -546,7 +545,7 @@ class TestSpec:
         self.write_file()
 
     def because_we_run_the_spec(self):
-        contexts.run(self.filename, [self.reporter], config=Configuration(shuffle=False, rewriting=True))
+        contexts.run(self.filename, [self.reporter], True)
 
     def it_should_call_assertion_failed(self):
         assert 'assertion_failed' in [call[0] for call in self.reporter.calls]
@@ -576,7 +575,7 @@ class TestSpec:
         self.write_file()
 
     def because_we_run_the_spec(self):
-        contexts.run(self.filename, [self.reporter], config=Configuration(shuffle=False, rewriting=True))
+        contexts.run(self.filename, [self.reporter], True)
 
     def it_should_call_assertion_failed(self):
         assert 'assertion_failed' in [call[0] for call in self.reporter.calls]
@@ -606,7 +605,7 @@ class TestSpec:
         self.write_file()
 
     def because_we_run_the_spec(self):
-        contexts.run(self.filename, [self.reporter], config=Configuration(shuffle=False, rewriting=True))
+        contexts.run(self.filename, [self.reporter], True)
 
     def it_should_call_assertion_failed(self):
         assert 'assertion_failed' in [call[0] for call in self.reporter.calls]
@@ -636,7 +635,7 @@ class TestSpec:
         self.write_file()
 
     def because_we_run_the_spec(self):
-        contexts.run(self.filename, [self.reporter], config=Configuration(shuffle=False, rewriting=True))
+        contexts.run(self.filename, [self.reporter], True)
 
     def it_should_call_assertion_failed(self):
         assert 'assertion_failed' in [call[0] for call in self.reporter.calls]
@@ -667,7 +666,7 @@ class TestSpec:
         self.write_file()
 
     def because_we_run_the_spec(self):
-        contexts.run(self.filename, [self.reporter], config=Configuration(shuffle=False, rewriting=True))
+        contexts.run(self.filename, [self.reporter], True)
 
     def it_should_call_assertion_failed(self):
         assert 'assertion_failed' in [call[0] for call in self.reporter.calls]
@@ -697,7 +696,7 @@ class TestSpec:
         self.write_file()
 
     def because_we_run_the_spec(self):
-        contexts.run(self.filename, [self.reporter], config=Configuration(shuffle=False, rewriting=True))
+        contexts.run(self.filename, [self.reporter], True)
 
     def it_should_call_assertion_failed(self):
         assert 'assertion_failed' in [call[0] for call in self.reporter.calls]
@@ -726,7 +725,7 @@ class TestSpec:
         self.write_file()
 
     def because_we_run_the_spec(self):
-        contexts.run(self.filename, [self.reporter], config=Configuration(shuffle=False, rewriting=True))
+        contexts.run(self.filename, [self.reporter], True)
 
     def it_should_call_assertion_failed(self):
         assert 'assertion_failed' in [call[0] for call in self.reporter.calls]
@@ -755,7 +754,7 @@ class TestSpec:
         self.write_file()
 
     def because_we_run_the_spec(self):
-        contexts.run(self.filename, [self.reporter], config=Configuration(shuffle=False, rewriting=True))
+        contexts.run(self.filename, [self.reporter], True)
 
     def it_should_call_assertion_failed(self):
         assert 'assertion_failed' in [call[0] for call in self.reporter.calls]
@@ -778,7 +777,7 @@ class TestSpec:
         self.write_file()
 
     def because_we_run_the_spec(self):
-        contexts.run(self.filename, [self.reporter], config=Configuration(shuffle=False, rewriting=True))
+        contexts.run(self.filename, [self.reporter], True)
 
     def it_should_call_assertion_failed(self):
         assert 'assertion_failed' in [call[0] for call in self.reporter.calls]

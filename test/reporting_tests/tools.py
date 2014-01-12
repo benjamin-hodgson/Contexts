@@ -1,7 +1,6 @@
 import collections
 import types
 import contexts
-from contexts.configuration import NullConfiguration
 
 
 class FakeCode(object):

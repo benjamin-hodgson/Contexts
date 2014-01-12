@@ -1,7 +1,6 @@
 import types
 import contexts
 from .tools import SpyReporter
-from contexts.configuration import NullConfiguration
 
 
 class WhenRunningAParametrisedSpec:
@@ -29,7 +28,7 @@ class WhenRunningAParametrisedSpec:
         self.ParametrisedSpec = ParametrisedSpec
 
     def because_we_run_the_class(self):
-        contexts.run(self.ParametrisedSpec, [], config=NullConfiguration())
+        contexts.run(self.ParametrisedSpec, [])
 
     def it_should_instantiate_the_class_twice(self):
         assert self.ParametrisedSpec.initialised == 2
@@ -61,7 +60,7 @@ class WhenRunningAParametrisedSpecAndExamplesYieldsTuples:
         self.ParametrisedSpec = ParametrisedSpec
 
     def because_we_run_the_class(self):
-        contexts.run(self.ParametrisedSpec, [], config=NullConfiguration())
+        contexts.run(self.ParametrisedSpec, [])
 
     def it_should_unpack_the_tuples(self):
         assert self.ParametrisedSpec.params == [1,2,3,4]
@@ -80,7 +79,7 @@ class WhenRunningAParametrisedSpecAndExamplesYieldsTuplesButTheMethodsOnlyAccept
         self.ParametrisedSpec = ParametrisedSpec
 
     def because_we_run_the_class(self):
-        contexts.run(self.ParametrisedSpec, [], config=NullConfiguration())
+        contexts.run(self.ParametrisedSpec, [])
 
     def it_should_run_the_setup_twice(self):
         assert self.ParametrisedSpec.params == [(1,2),(3,4)]
@@ -111,7 +110,7 @@ class WhenRunningAParametrisedSpecWithNonParametrisedMethods:
         self.ParametrisedSpec = ParametrisedSpec
 
     def because_we_run_the_class(self):
-        contexts.run(self.ParametrisedSpec, [], config=NullConfiguration())
+        contexts.run(self.ParametrisedSpec, [])
 
     def it_should_instantiate_the_class_twice(self):
         assert self.ParametrisedSpec.initialised == 2
@@ -156,7 +155,7 @@ class WhenRunningAModuleWithParametrisedSpecs:
         self.module.ParametrisedSpec = ParametrisedSpec
 
     def because_we_run_the_module(self):
-        contexts.run(self.module, [], config=NullConfiguration())
+        contexts.run(self.module, [])
 
     def it_should_instantiate_the_class_twice(self):
         assert self.ParametrisedSpec.initialised == 2
@@ -189,7 +188,7 @@ class WhenExamplesRaisesAnException:
         self.reporter = SpyReporter()
 
     def because_we_run_the_spec(self):
-        contexts.run(self.spec, [self.reporter], config=NullConfiguration())
+        contexts.run(self.spec, [self.reporter])
 
     def it_should_run_the_first_one(self):
         assert self.spec.total == 3
@@ -210,7 +209,7 @@ class WhenUserFailsToMakeExamplesAClassmethod:
         self.reporter = SpyReporter()
 
     def because_we_run_the_spec(self):
-        contexts.run(self.spec, [self.reporter], config=NullConfiguration())
+        contexts.run(self.spec, [self.reporter])
 
     def it_should_call_unexpected_error_on_the_reporter(self):
         assert self.reporter.calls[2][0] == "unexpected_error"
@@ -234,7 +233,7 @@ class WhenExamplesReturnsNone:
         self.spec = Spec
 
     def because_we_run_the_spec(self):
-        contexts.run(self.spec, [], config=NullConfiguration())
+        contexts.run(self.spec, [])
 
     def it_should_run_the_spec_once(self):
         assert self.spec.times_run == 1
