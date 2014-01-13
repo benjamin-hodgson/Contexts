@@ -53,7 +53,7 @@ def run(to_run=None, plugins=None, rewriting=True):
     if to_run is None:
         to_run = sys.modules['__main__']
 
-    test_run = core.TestRun(to_run, rewriting)
-    test_run.run(notifier)
+    test_run = core.TestRun(to_run, rewriting, notifier)
+    test_run.run()
 
     return not notifier.failed
