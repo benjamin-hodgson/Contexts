@@ -1,6 +1,7 @@
 import re
 import traceback
 from . import Plugin
+from ..tools import NO_EXAMPLE
 
 
 class StreamReporter(Plugin):
@@ -70,7 +71,7 @@ def make_readable(string):
 
 
 def context_name(name, example):
-    if hasattr(example, "null_example"):
+    if example is NO_EXAMPLE:
         return make_readable(name)
     else:
         return make_readable(name) + " -> " + str(example)
@@ -78,5 +79,4 @@ def context_name(name, example):
 
 def format_exception(exception):
     ret = traceback.format_exception(type(exception), exception, exception.__traceback__)
-    # exception.__traceback__ = None
     return ''.join(ret).strip().split('\n')

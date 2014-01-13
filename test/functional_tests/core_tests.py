@@ -85,8 +85,8 @@ class WhenRunningASpecWithReporters:
         assert self.reporter1.calls[2][1] == 'TestSpec'
 
     @contexts.assertion
-    def it_should_pass_in_a_null_example(self):
-        assert hasattr(self.reporter1.calls[2][2], 'null_example')
+    def it_should_pass_in_no_example(self):
+        assert self.reporter1.calls[2][2] is contexts.tools.NO_EXAMPLE
 
     def it_should_call_assertion_started_for_the_assertion(self):
         assert self.reporter1.calls[3][0] == 'assertion_started'
@@ -109,8 +109,8 @@ class WhenRunningASpecWithReporters:
         assert self.reporter1.calls[5][1] == 'TestSpec'
 
     @contexts.assertion
-    def it_should_pass_in_a_null_example_again(self):
-        assert hasattr(self.reporter1.calls[5][2], 'null_example')
+    def it_should_pass_in_no_example_again(self):
+        assert self.reporter1.calls[5][2] is contexts.tools.NO_EXAMPLE
 
     def it_should_call_suite_ended(self):
         assert self.reporter1.calls[6][0] == 'suite_ended'
@@ -236,8 +236,8 @@ class WhenAContextErrorsDuringTheSetup:
         assert self.reporter.calls[3][1] == self.spec.__name__
 
     @contexts.assertion
-    def it_should_pass_in_a_null_example(self):
-        assert hasattr(self.reporter.calls[3][2], 'null_example')
+    def it_should_pass_in_no_example(self):
+        assert self.reporter.calls[3][2] is contexts.tools.NO_EXAMPLE
 
     def it_should_pass_in_the_exception(self):
         assert self.reporter.calls[3][3] is self.exception
@@ -281,8 +281,8 @@ class WhenAContextErrorsDuringTheAction:
         assert self.reporter.calls[3][1] == self.spec.__name__
 
     @contexts.assertion
-    def it_should_pass_in_a_null_example(self):
-        assert hasattr(self.reporter.calls[3][2], 'null_example')
+    def it_should_pass_in_no_example(self):
+        assert self.reporter.calls[3][2] is contexts.tools.NO_EXAMPLE
 
     def it_should_pass_in_the_exception(self):
         assert self.reporter.calls[3][3] is self.exception
@@ -321,8 +321,8 @@ class WhenAContextErrorsDuringTheCleanup:
         assert self.reporter.calls[5][1] == self.spec.__name__
 
     @contexts.assertion
-    def it_should_pass_in_a_null_example(self):
-        assert hasattr(self.reporter.calls[5][2], 'null_example')
+    def it_should_pass_in_no_example(self):
+        assert self.reporter.calls[5][2] is contexts.tools.NO_EXAMPLE
 
     def it_should_pass_in_the_exception(self):
         assert self.reporter.calls[5][3] is self.exception

@@ -8,6 +8,7 @@ from . import discovery
 from . import errors
 from . import finders
 from . import importing
+from .tools import NO_EXAMPLE
 
 
 class TestRun(object):
@@ -38,6 +39,7 @@ class TestRun(object):
             return modules
 
         # self.source is a class
+
         module = types.ModuleType("contexts_module")
         # use a hard-coded name that the finder will recognise (needs a better fix)
         module.Spec = self.source
@@ -67,7 +69,7 @@ class Suite(object):
 def get_examples(cls):
     examples_method = finders.find_examples_method(cls)
     examples = examples_method()
-    return examples if examples is not None else [_NullExample()]
+    return examples if examples is not None else [NO_EXAMPLE]
 
 
 class _NullExample(object):
@@ -142,7 +144,7 @@ class Assertion(object):
 
 def run_with_test_data(func, test_data):
     sig = inspect.signature(func)
-    if not isinstance(test_data, _NullExample) and sig.parameters:
+    if test_data is not NO_EXAMPLE and sig.parameters:
         if isinstance(test_data, tuple) and len(sig.parameters) == len(test_data):
             func(*test_data)
         else:
