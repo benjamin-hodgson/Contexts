@@ -1,5 +1,4 @@
 import collections.abc
-import importlib
 import os
 import shutil
 import sys
@@ -7,6 +6,7 @@ import types
 import contexts
 from unittest import mock
 from .tools import SpyReporter
+from contexts.plugins import Plugin
 from contexts.plugins.importing import Importer
 
 
@@ -141,7 +141,6 @@ class TestSpec:
     def cleanup_the_file_system_and_sys_dot_modules(self):
         os.remove(self.filename)
         del sys.modules[self.module_name]
-        importlib.invalidate_caches()
 
     def write_file(self):
         self.filename = os.path.join(TEST_DATA_DIR, self.module_name+".py")
@@ -176,7 +175,6 @@ raise ZeroDivisionError("bogus error message")
 
     def cleanup_the_file_system_and_sys_dot_modules(self):
         os.remove(self.filename)
-        importlib.invalidate_caches()
 
     def write_file(self):
         self.filename = os.path.join(TEST_DATA_DIR, self.module_name+".py")
@@ -238,7 +236,6 @@ class TestSpec:
         shutil.rmtree(self.folder_path)
         del sys.modules[self.module_names[0]]
         del sys.modules[self.module_names[1]]
-        importlib.invalidate_caches()
 
     def create_folder(self):
         self.folder_path = os.path.join(TEST_DATA_DIR, 'non_package_folder')
@@ -312,20 +309,19 @@ class TestSpec:
         shutil.rmtree(self.folder_path)
         del sys.modules[self.module_names[0]]
         del sys.modules[self.module_names[1]]
-        importlib.invalidate_caches()
 
 
 class WhenPluginsImportModules:
     def establish_that_we_have_a_bunch_of_plugins_and_a_file_in_the_filesystem(self):
         self.module_name = "test_module"
 
-        self.plugin_without_method = mock.Mock(spec=contexts.plugins.Plugin)
+        self.plugin_without_method = mock.Mock(spec=Plugin)
         del self.plugin_without_method.import_module
 
-        self.noop_plugin = mock.Mock(spec=contexts.plugins.Plugin)
+        self.noop_plugin = mock.Mock(spec=Plugin)
         self.noop_plugin.import_module.return_value = None
 
-        self.importer_plugin = mock.Mock(spec=contexts.plugins.Plugin)
+        self.importer_plugin = mock.Mock(spec=Plugin)
         module = types.ModuleType(self.module_name)
         self.ran_spies = set()
         class SpySpec1:
@@ -338,7 +334,7 @@ class WhenPluginsImportModules:
         module.SpySpec2 = SpySpec2
         self.importer_plugin.import_module.return_value = module
 
-        self.final_plugin = mock.Mock(spec=contexts.plugins.Plugin)
+        self.final_plugin = mock.Mock(spec=Plugin)
 
         self.plugins = [self.plugin_without_method, self.noop_plugin, self.importer_plugin, self.final_plugin]
         self.plugin_master = mock.Mock()
@@ -369,10 +365,37 @@ class WhenPluginsImportModules:
 
     def cleanup_the_file_system(self):
         shutil.rmtree(self.folder_path)
-        importlib.invalidate_caches()
 
     def setup_filesystem(self):
         self.folder_path = os.path.join(TEST_DATA_DIR, 'plugin_importing_folder')
+        os.mkdir(self.folder_path)
+
+        filename = os.path.join(self.folder_path, self.module_name+".py")
+        with open(filename, 'w+') as f:
+            f.write("")
+
+
+class WhenAModuleFailsToImport:
+    def establish_that_the_plugin_throws_an_exception(self):
+        self.exception = Exception()
+        self.plugin = mock.Mock(spec=Plugin)
+        self.plugin.import_module.side_effect = self.exception
+
+        self.module_name = 'accident_prone_test_module'
+
+        self.setup_filesystem()
+
+    def because_we_run_the_folder(self):
+        contexts.run(self.folder_path, [self.plugin])
+
+    def it_should_pass_the_exception_into_unexpected_error_on_the_plugin(self):
+        self.plugin.unexpected_error.assert_called_once_with(self.exception)
+
+    def cleanup_the_file_system(self):
+        shutil.rmtree(self.folder_path)
+
+    def setup_filesystem(self):
+        self.folder_path = os.path.join(TEST_DATA_DIR, 'plugin_failing_folder')
         os.mkdir(self.folder_path)
 
         filename = os.path.join(self.folder_path, self.module_name+".py")
@@ -408,7 +431,6 @@ class TestSpec:
     def cleanup_the_file_system_and_sys_dot_modules(self):
         shutil.rmtree(self.folder_path)
         del sys.modules[self.module_name]
-        importlib.invalidate_caches()
 
     def create_fake_module(self):
         class TestSpec:
@@ -460,7 +482,6 @@ class TestSpec:
     def cleanup_the_file_system_and_sys_dot_modules(self):
         shutil.rmtree(self.folder_path)
         del sys.modules[self.module_name]
-        importlib.invalidate_caches()
 
     def create_fake_module(self):
         test = types.ModuleType(self.module_name)
@@ -507,7 +528,6 @@ class TestSpec:
     def cleanup_the_file_system_and_sys_dot_modules(self):
         shutil.rmtree(self.folder_path)
         del sys.modules[self.package_name]
-        importlib.invalidate_caches()
 
     def create_fake_module(self):
         class TestSpec:
@@ -559,7 +579,6 @@ class TestSpec:
     def cleanup_the_file_system_and_sys_dot_modules(self):
         shutil.rmtree(self.folder_path)
         del sys.modules[self.package_name]
-        importlib.invalidate_caches()
 
     def create_fake_module(self):
         test = types.ModuleType(self.package_name)
@@ -608,7 +627,6 @@ class TestSpec:
     def cleanup_the_file_system_and_sys_dot_modules(self):
         shutil.rmtree(self.folder_path)
         del sys.modules[self.qualified_name]
-        importlib.invalidate_caches()
 
     def create_fake_module(self):
         class TestSpec:
@@ -664,7 +682,6 @@ class TestSpec:
     def cleanup_the_file_system_and_sys_dot_modules(self):
         shutil.rmtree(self.folder_path)
         del sys.modules[self.qualified_name]
-        importlib.invalidate_caches()
 
     def create_fake_module(self):
         test = types.ModuleType(self.qualified_name)
@@ -760,7 +777,6 @@ class TestSpec:
         del sys.modules[self.package_name + '.' + self.module_names[1]]
         del sys.modules[self.package_name + '.' + self.module_names[2]]
         del sys.modules[self.package_name]
-        importlib.invalidate_caches()
 
     def create_folder(self):
         self.folder_path = os.path.join(TEST_DATA_DIR, self.package_name)
@@ -856,7 +872,6 @@ class TestSpec:
         del sys.modules["test_file1"]
         del sys.modules["test_subpackage"]
         del sys.modules["test_subpackage.test_file2"]
-        importlib.invalidate_caches()
 
     def create_tree(self):
         self.folder_path = os.path.join(TEST_DATA_DIR, self.folder_name)
@@ -968,7 +983,6 @@ class TestSpec:
         del sys.modules["test_file1"]
         del sys.modules["package4.test_subpackage"]
         del sys.modules["package4.test_subpackage.test_file2"]
-        importlib.invalidate_caches()
 
     def create_tree(self):
         self.folder_path = os.path.join(TEST_DATA_DIR, self.folder_name)
@@ -1028,7 +1042,6 @@ class TestSpec:
     def cleanup_the_file_system_and_sys_dot_modules(self):
         shutil.rmtree(self.folder_path)
         del sys.modules[self.module_names[1]]
-        importlib.invalidate_caches()
 
     def create_folder(self):
         self.folder_path = os.path.join(TEST_DATA_DIR, 'problematic_folder')
