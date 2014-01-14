@@ -210,7 +210,7 @@ def ColouringDecorator(plugin_cls):
         return _ColouringDecorator(plugin_cls, stream)
     return instantiate
 
-class _ColouringDecorator(Plugin):
+class _ColouringDecorator:
     def __init__(self, plugin_cls, stream):
         global colorama
         import colorama
@@ -248,6 +248,9 @@ class _ColouringDecorator(Plugin):
         self.stream.write(colorama.Fore.GREEN)
         yield
         self.stream.write(colorama.Fore.RESET)
+
+    def __getattr__(self, name):
+        return getattr(self.plugin, name)
 
     def __eq__(self, other):
         return (type(self) == type(other)
