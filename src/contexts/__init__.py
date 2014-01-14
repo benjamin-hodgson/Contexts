@@ -22,10 +22,8 @@ def main(*args, **kwargs):
     exiting with code 0 if the test run was successful,
     code 1 if unsuccessful.
     """
-    passed = run(*args, **kwargs)
-    if not passed:
-        sys.exit(1)
-    sys.exit(0)
+    exit_code = run(*args, **kwargs)
+    sys.exit(exit_code)
 
 
 def run(to_run=None, plugin_list=None):
@@ -39,7 +37,9 @@ def run(to_run=None, plugin_list=None):
     run(folder_path:string) - run all the test classes found in the folder and subfolders
     run(package_path:string) - run all the test classes found in the package and subfolders
 
-    Returns: True if the test run passed, False if it failed.
+    Returns: exit code as an integer.
+        The default behaviour (which may be overridden by plugins) is to return a 0
+        exit code if the test run succeeded, and 1 if it failed.
     """
     if plugin_list is None:  # default list of plugins
         plugin_list = (
@@ -55,4 +55,4 @@ def run(to_run=None, plugin_list=None):
     test_run = core.TestRun(to_run, notifier)
     test_run.run()
 
-    return not notifier.failed
+    return notifier.call_plugins('get_exit_code')

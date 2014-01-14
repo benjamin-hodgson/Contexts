@@ -4,6 +4,7 @@ import sys
 from io import StringIO
 from . import main
 from . import plugins
+from .plugins.shared import ExitCodeReporter
 from .plugins.other import Shuffler
 from .plugins.importing import Importer
 from .plugins.assertion_rewriting import AssertionRewritingImporter
@@ -93,6 +94,9 @@ def create_plugins(args):
         plugin_list.append(Shuffler())
 
     plugin_list.extend(create_reporting_plugins(args))
+
+    plugin_list.append(ExitCodeReporter())
+
     return plugin_list
 
 

@@ -16,6 +16,23 @@ class StreamReporter(Plugin):
         return type(self) == type(other) and self.stream == other.stream
 
 
+class ExitCodeReporter(Plugin):
+    def __init__(self):
+        self.exit_code = 0
+    def get_exit_code(self):
+        return self.exit_code
+    def assertion_failed(self, name, exception):
+        self.exit_code = 1
+    def assertion_errored(self, name, exception):
+        self.exit_code = 1
+    def context_errored(self, name, example, exception):
+        self.exit_code = 1
+    def unexpected_error(self, exception):
+        self.exit_code = 1
+    def __eq__(self, other):
+        return type(self) == type(other)
+
+
 def make_readable(string):
     regex = re.compile(r'(_|\.|{}|{}|{})'.format(
         r'(?<=[^A-Z])(?=[A-Z])',

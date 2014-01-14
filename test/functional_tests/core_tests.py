@@ -1,6 +1,7 @@
 import collections.abc
 from unittest import mock
 import contexts
+from contexts.plugins import Plugin
 from .tools import SpyReporter
 
 core_file = repr(contexts.core.__file__)[1:-1]
@@ -123,6 +124,24 @@ class WhenRunningASpecWithReporters:
 
     def it_should_do_exactly_the_same_to_the_third_reporter(self):
         assert self.reporter3.calls == self.reporter1.calls
+
+
+class WhenAPluginSetsTheExitCode:
+    @classmethod
+    def examples_of_exit_codes(cls):
+        yield 0
+        yield 1
+        yield 99
+
+    def context(self, exitcode):
+        self.plugin = mock.Mock(spec=Plugin)
+        self.plugin.get_exit_code.return_value = exitcode
+
+    def because_we_run_something(self):
+        self.result = contexts.run(type('Spec', (), {}), [self.plugin])
+
+    def it_should_return_the_exit_code_from_the_plugin(self, exitcode):
+        assert self.result == exitcode
 
 
 class WhenAnAssertionFails:

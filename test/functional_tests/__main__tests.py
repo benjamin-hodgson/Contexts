@@ -7,6 +7,7 @@ import colorama
 import contexts
 from contexts import __main__
 from contexts.plugins import cli
+from contexts.plugins.shared import ExitCodeReporter
 from contexts.plugins.other import Shuffler
 from contexts.plugins.importing import Importer
 from contexts.plugins.assertion_rewriting import AssertionRewritingImporter
@@ -47,7 +48,8 @@ class WhenRunningFromCommandLineWithNoArguments(MainSharedContext):
             cli.DotsReporter(sys.stdout),
             cli.FailureOnlyDecorator(cli.ColouringDecorator(cli.StdOutCapturingReporter))(sys.stdout),
             cli.FinalCountsReporter(sys.stdout),
-            cli.TimedReporter(sys.stdout)
+            cli.TimedReporter(sys.stdout),
+            ExitCodeReporter()
         ]
         sys.argv = ['run-contexts']
 
@@ -66,8 +68,9 @@ class WhenSpecifyingAPath(MainSharedContext):
             cli.DotsReporter(sys.stdout),
             cli.FailureOnlyDecorator(cli.ColouringDecorator(cli.StdOutCapturingReporter))(sys.stdout),
             cli.FinalCountsReporter(sys.stdout),
-            cli.TimedReporter(sys.stdout)
-            ]
+            cli.TimedReporter(sys.stdout),
+            ExitCodeReporter()
+        ]
         self.path = os.path.join(os.getcwd(),'made','up','path')
         sys.argv = ['run-contexts', self.path]
 
@@ -90,8 +93,9 @@ class WhenUsingTheVerboseFlag(MainSharedContext):
             Shuffler(),
             cli.ColouringDecorator(cli.StdOutCapturingReporter)(sys.stdout),
             cli.FinalCountsReporter(sys.stdout),
-            cli.TimedReporter(sys.stdout)
-            ]
+            cli.TimedReporter(sys.stdout),
+            ExitCodeReporter()
+        ]
         sys.argv = ['run-contexts', flag]
 
     def because_we_call_cmd(self):
@@ -109,7 +113,8 @@ class WhenUserDisablesColour(MainSharedContext):
             cli.DotsReporter(sys.stdout),
             cli.FailureOnlyDecorator(cli.StdOutCapturingReporter)(sys.stdout),
             cli.FinalCountsReporter(sys.stdout),
-            cli.TimedReporter(sys.stdout)
+            cli.TimedReporter(sys.stdout),
+            ExitCodeReporter()
         ]
         sys.argv = ['run-contexts', '--no-colour']
 
@@ -132,7 +137,8 @@ class WhenDisablingColourInVerboseMode(MainSharedContext):
             Shuffler(),
             cli.StdOutCapturingReporter(sys.stdout),
             cli.FinalCountsReporter(sys.stdout),
-            cli.TimedReporter(sys.stdout)
+            cli.TimedReporter(sys.stdout),
+            ExitCodeReporter()
         ]
         sys.argv = ['run-contexts'] + args
 
@@ -156,7 +162,8 @@ class WhenUserDisablesStdOutCapturing(MainSharedContext):
             cli.DotsReporter(sys.stdout),
             cli.FailureOnlyDecorator(cli.ColouringDecorator(cli.VerboseReporter))(sys.stdout),
             cli.FinalCountsReporter(sys.stdout),
-            cli.TimedReporter(sys.stdout)
+            cli.TimedReporter(sys.stdout),
+            ExitCodeReporter()
         ]
         sys.argv = ['run-contexts', arg]
 
@@ -182,7 +189,8 @@ class WhenUserDisablesCapturingInVerboseMode(MainSharedContext):
             Shuffler(),
             cli.ColouringDecorator(cli.VerboseReporter)(sys.stdout),
             cli.FinalCountsReporter(sys.stdout),
-            cli.TimedReporter(sys.stdout)
+            cli.TimedReporter(sys.stdout),
+            ExitCodeReporter()
         ]
         sys.argv = ['run-contexts'] + args
 
@@ -206,7 +214,8 @@ class WhenUserDisablesColourAndCapturing(MainSharedContext):
             cli.DotsReporter(sys.stdout),
             cli.FailureOnlyDecorator(cli.VerboseReporter)(sys.stdout),
             cli.FinalCountsReporter(sys.stdout),
-            cli.TimedReporter(sys.stdout)
+            cli.TimedReporter(sys.stdout),
+            ExitCodeReporter()
         ]
         sys.argv = ['run-contexts'] + args
 
@@ -232,7 +241,8 @@ class WhenUserDisablesColourAndCapturingInVerboseMode(MainSharedContext):
             Shuffler(),
             cli.VerboseReporter(sys.stdout),
             cli.FinalCountsReporter(sys.stdout),
-            cli.TimedReporter(sys.stdout)
+            cli.TimedReporter(sys.stdout),
+            ExitCodeReporter()
         ]
         sys.argv = ['run-contexts'] + args
 
@@ -253,7 +263,8 @@ class WhenRunningInQuietMode(MainSharedContext):
         self.expected_plugins = [
             AssertionRewritingImporter(),
             Shuffler(),
-            QuietReporterResemblance(sys.stdout)
+            QuietReporterResemblance(sys.stdout),
+            ExitCodeReporter()
         ]
         sys.argv = ['run-contexts', flag]
 
@@ -272,7 +283,8 @@ class WhenDisablingAssertionRewriting(MainSharedContext):
             cli.DotsReporter(sys.stdout),
             cli.FailureOnlyDecorator(cli.ColouringDecorator(cli.StdOutCapturingReporter))(sys.stdout),
             cli.FinalCountsReporter(sys.stdout),
-            cli.TimedReporter(sys.stdout)
+            cli.TimedReporter(sys.stdout),
+            ExitCodeReporter()
         ]
         sys.argv = ['run-contexts', '--no-assert']
 
@@ -288,7 +300,8 @@ class WhenRunningOnTheCmdLineInTeamcityMode(MainSharedContext):
         self.expected_plugins = [
             AssertionRewritingImporter(),
             Shuffler(),
-            contexts.plugins.teamcity.TeamCityReporter(sys.stdout)
+            contexts.plugins.teamcity.TeamCityReporter(sys.stdout),
+            ExitCodeReporter()
         ]
         sys.argv = ['run-contexts', '--teamcity']
 
@@ -304,7 +317,8 @@ class WhenRunningInTeamcity(MainSharedContext):
         self.expected_plugins = [
             AssertionRewritingImporter(),
             Shuffler(),
-            contexts.plugins.teamcity.TeamCityReporter(sys.stdout)
+            contexts.plugins.teamcity.TeamCityReporter(sys.stdout),
+            ExitCodeReporter()
         ]
         os.environ["TEAMCITY_VERSION"] = "7.0"
         sys.argv = ['run-contexts']
@@ -323,7 +337,8 @@ class WhenUserDisablesShuffling(MainSharedContext):
             cli.DotsReporter(sys.stdout),
             cli.FailureOnlyDecorator(cli.ColouringDecorator(cli.StdOutCapturingReporter))(sys.stdout),
             cli.FinalCountsReporter(sys.stdout),
-            cli.TimedReporter(sys.stdout)
+            cli.TimedReporter(sys.stdout),
+            ExitCodeReporter()
         ]
         sys.argv = ['run-contexts', '--no-random']
 
@@ -387,8 +402,9 @@ class WhenColoramaIsNotInstalled(MainSharedContext):
             cli.DotsReporter(sys.stdout),
             cli.FailureOnlyDecorator(cli.StdOutCapturingReporter)(sys.stdout),
             cli.FinalCountsReporter(sys.stdout),
-            cli.TimedReporter(sys.stdout)
-            ])
+            cli.TimedReporter(sys.stdout),
+            ExitCodeReporter()
+        ])
 
     def cleanup_import(self):
         builtins.__import__ = self.real_import
@@ -408,8 +424,9 @@ class WhenStdOutIsAPipe(MainSharedContext):
             cli.DotsReporter(sys.stdout),
             cli.FailureOnlyDecorator(cli.StdOutCapturingReporter)(sys.stdout),
             cli.FinalCountsReporter(sys.stdout),
-            cli.TimedReporter(sys.stdout)
-            ])
+            cli.TimedReporter(sys.stdout),
+            ExitCodeReporter()
+        ])
 
 
 ###########################################################

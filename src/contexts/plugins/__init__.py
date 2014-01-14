@@ -48,4 +48,10 @@ class Plugin(object):
             name: string. Full name of the module, including dot-separated package names.
         """
 
+    def get_exit_code(self):
+        """
+        Called at the end of the test runner to obtain the exit code for the process.
+        Plugins may return an integer, or None if they do not want to override the default behaviour.
+        """
+
 from . import shared, cli, teamcity
