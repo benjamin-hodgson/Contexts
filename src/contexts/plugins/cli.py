@@ -27,16 +27,32 @@ class DotsReporter(shared.StreamReporter):
         self._print('E', end='')
 
 
-class VerboseReporter(shared.CountingReporter, shared.StreamReporter):
+class VerboseReporter(shared.StreamReporter):
     dashes = '-' * 70
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.context_count = 0
+        self.assertion_count = 0
+        self.failure_count = 0
+        self.error_count = 0
+        self.failed = False
+
     def context_started(self, name, example):
         super().context_started(name, example)
+        self.context_count += 1
         self._print(shared.context_name(name, example))
 
     def context_errored(self, name, example, exception):
         super().context_errored(name, example, exception)
+        self.error_count += 1
+        self.failed = True
         for line in shared.format_exception(exception):
             self._print('  ' + line)
+
+    def assertion_started(self, name):
+        super().assertion_started(name)
+        self.assertion_count += 1
 
     def assertion_passed(self, name):
         super().assertion_passed(name)
@@ -44,18 +60,24 @@ class VerboseReporter(shared.CountingReporter, shared.StreamReporter):
 
     def assertion_failed(self, name, exception):
         super().assertion_failed(name, exception)
+        self.failure_count += 1
+        self.failed = True
         self._print('  FAIL: ' + shared.make_readable(name))
         for line in shared.format_exception(exception):
             self._print('    ' + line)
 
     def assertion_errored(self, name, exception):
         super().assertion_errored(name, exception)
+        self.error_count += 1
+        self.failed = True
         self._print('  ERROR: ' + shared.make_readable(name))
         for line in shared.format_exception(exception):
             self._print('    ' + line)
 
     def unexpected_error(self, exception):
         super().unexpected_error(exception)
+        self.error_count += 1
+        self.failed = True
         for line in shared.format_exception(exception):
             self._print(line)
 
