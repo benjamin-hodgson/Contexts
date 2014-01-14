@@ -42,7 +42,7 @@ class WhenRunningFromCommandLineWithNoArguments(MainSharedContext):
         self.expected_reporters = [
             Shuffler(),
             cli.DotsReporter(sys.stdout),
-            cli.ColouredSummarisingCapturingReporter(sys.stdout),
+            cli.FailureOnlyDecorator(cli.ColouringDecorator(cli.StdOutCapturingReporter))(sys.stdout),
             cli.FinalCountsReporter(sys.stdout),
             cli.TimedReporter(sys.stdout)
         ]
@@ -61,7 +61,7 @@ class WhenSpecifyingAPath(MainSharedContext):
         self.expected_reporters = [
             Shuffler(),
             cli.DotsReporter(sys.stdout),
-            cli.ColouredSummarisingCapturingReporter(sys.stdout),
+            cli.FailureOnlyDecorator(cli.ColouringDecorator(cli.StdOutCapturingReporter))(sys.stdout),
             cli.FinalCountsReporter(sys.stdout),
             cli.TimedReporter(sys.stdout)
             ]
@@ -84,7 +84,7 @@ class WhenUsingTheVerboseFlag(MainSharedContext):
     def establish_arguments(self, flag):
         self.expected_reporters = [
             Shuffler(),
-            cli.ColouredVerboseCapturingReporter(sys.stdout),
+            cli.ColouringDecorator(cli.StdOutCapturingReporter)(sys.stdout),
             cli.FinalCountsReporter(sys.stdout),
             cli.TimedReporter(sys.stdout)
             ]
@@ -102,7 +102,7 @@ class WhenUserDisablesColour(MainSharedContext):
         self.expected_reporters = [
             Shuffler(),
             cli.DotsReporter(sys.stdout),
-            cli.SummarisingCapturingReporter(sys.stdout),
+            cli.FailureOnlyDecorator(cli.StdOutCapturingReporter)(sys.stdout),
             cli.FinalCountsReporter(sys.stdout),
             cli.TimedReporter(sys.stdout)
         ]
@@ -147,7 +147,7 @@ class WhenUserDisablesStdOutCapturing(MainSharedContext):
         self.expected_reporters = [
             Shuffler(),
             cli.DotsReporter(sys.stdout),
-            cli.ColouredSummarisingReporter(sys.stdout),
+            cli.FailureOnlyDecorator(cli.ColouringDecorator(cli.VerboseReporter))(sys.stdout),
             cli.FinalCountsReporter(sys.stdout),
             cli.TimedReporter(sys.stdout)
         ]
@@ -172,7 +172,7 @@ class WhenUserDisablesCapturingInVerboseMode(MainSharedContext):
     def establish_arguments(self, args):
         self.expected_reporters = [
             Shuffler(),
-            cli.ColouredVerboseReporter(sys.stdout),
+            cli.ColouringDecorator(cli.VerboseReporter)(sys.stdout),
             cli.FinalCountsReporter(sys.stdout),
             cli.TimedReporter(sys.stdout)
         ]
@@ -195,7 +195,7 @@ class WhenUserDisablesColourAndCapturing(MainSharedContext):
         self.expected_reporters = [
             Shuffler(),
             cli.DotsReporter(sys.stdout),
-            cli.SummarisingReporter(sys.stdout),
+            cli.FailureOnlyDecorator(cli.VerboseReporter)(sys.stdout),
             cli.FinalCountsReporter(sys.stdout),
             cli.TimedReporter(sys.stdout)
         ]
@@ -255,7 +255,7 @@ class WhenDisablingAssertionRewriting(MainSharedContext):
         self.expected_reporters = [
             Shuffler(),
             cli.DotsReporter(sys.stdout),
-            cli.ColouredSummarisingCapturingReporter(sys.stdout),
+            cli.FailureOnlyDecorator(cli.ColouringDecorator(cli.StdOutCapturingReporter))(sys.stdout),
             cli.FinalCountsReporter(sys.stdout),
             cli.TimedReporter(sys.stdout)
         ]
@@ -297,7 +297,7 @@ class WhenUserDisablesShuffling(MainSharedContext):
     def establish_arguments(self):
         self.expected_reporters = [
             cli.DotsReporter(sys.stdout),
-            cli.ColouredSummarisingCapturingReporter(sys.stdout),
+            cli.FailureOnlyDecorator(cli.ColouringDecorator(cli.StdOutCapturingReporter))(sys.stdout),
             cli.FinalCountsReporter(sys.stdout),
             cli.TimedReporter(sys.stdout)
         ]
@@ -360,7 +360,7 @@ class WhenColoramaIsNotInstalled(MainSharedContext):
         self.mock_main.assert_called_once_with(os.getcwd(), [
             Shuffler(),
             cli.DotsReporter(sys.stdout),
-            cli.SummarisingCapturingReporter(sys.stdout),
+            cli.FailureOnlyDecorator(cli.StdOutCapturingReporter)(sys.stdout),
             cli.FinalCountsReporter(sys.stdout),
             cli.TimedReporter(sys.stdout)
             ], True)
@@ -380,7 +380,7 @@ class WhenStdOutIsAPipe(MainSharedContext):
         self.mock_main.assert_called_once_with(os.getcwd(), [
             Shuffler(),
             cli.DotsReporter(sys.stdout),
-            cli.SummarisingCapturingReporter(sys.stdout),
+            cli.FailureOnlyDecorator(cli.StdOutCapturingReporter)(sys.stdout),
             cli.FinalCountsReporter(sys.stdout),
             cli.TimedReporter(sys.stdout)
             ], True)

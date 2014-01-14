@@ -149,32 +149,37 @@ class FinalCountsReporter(shared.StreamReporter):
             pluralise("error", self.error_count))
 
 
-# maybe this should be in a separate module?
-class ColouredReporter(VerboseReporter):
-    def __init__(self, *args, **kwargs):
+def ColouringDecorator(plugin_cls):
+    def instantiate(stream):
+        return _ColouringDecorator(plugin_cls, stream)
+    return instantiate
+
+class _ColouringDecorator(Plugin):
+    def __init__(self, plugin_cls, stream):
         global colorama
         import colorama
-        super().__init__(*args, **kwargs)
+        self.stream = stream
+        self.plugin = plugin_cls(self.stream)
 
     def context_errored(self, name, example, exception):
         with self.red():
-            super().context_errored(name, example, exception)
+            self.plugin.context_errored(name, example, exception)
 
     def assertion_passed(self, name):
         with self.green():
-            super().assertion_passed(name)
+            self.plugin.assertion_passed(name)
 
     def assertion_failed(self, name, exception):
         with self.red():
-            super().assertion_failed(name, exception)
+            self.plugin.assertion_failed(name, exception)
 
     def assertion_errored(self, name, exception):
         with self.red():
-            super().assertion_errored(name, exception)
+            self.plugin.assertion_errored(name, exception)
 
     def unexpected_error(self, exception):
         with self.red():
-            super().unexpected_error(exception)
+            self.plugin.unexpected_error(exception)
 
     @contextmanager
     def red(self):
@@ -188,59 +193,63 @@ class ColouredReporter(VerboseReporter):
         yield
         self.stream.write(colorama.Fore.RESET)
 
+    def __eq__(self, other):
+        return (type(self) == type(other)
+            and self.stream == other.stream
+            and type(self.plugin) == type(other.plugin))
 
-class SummarisingReporter(VerboseReporter):
-    def __init__(self, stream):
-        super().__init__(stream)
-        self.real_stream = stream
-        self.stream = StringIO()
-        self.to_output_at_end = StringIO()
+
+def FailureOnlyDecorator(plugin_cls):
+    def instantiate(stream):
+        return _FailureOnlyDecorator(plugin_cls, stream)
+    return instantiate
+
+class _FailureOnlyDecorator(Plugin):
+    dashes = '-' * 70
+
+    def __init__(self, plugin_cls, stream):
+        self.plugin = plugin_cls(StringIO())
+        self.stream = stream
+        self.final_report = StringIO()
 
     def context_started(self, name, example):
         self.current_context_failed = False
-        super().context_started(name, example)
-
+        self.plugin.context_started(name, example)
     def context_ended(self, name, example):
+        self.plugin.context_ended(name, example)
         if self.current_context_failed:
-            self.to_output_at_end.write(self.stream.getvalue())
-        self.stream = StringIO()
-
+            self.final_report.write(self.plugin.stream.getvalue())
+        self.plugin.stream = StringIO()
     def context_errored(self, name, example, exception):
-        super().context_errored(name, example, exception)
-        self.to_output_at_end.write(self.stream.getvalue())
-        self.stream = StringIO()
-
-    def assertion_passed(self, name):
-        orig_stream = self.stream
-        self.stream = StringIO()
-        super().assertion_passed(name)
-        self.stream = orig_stream
+        self.plugin.context_errored(name, example, exception)
+        self.final_report.write(self.plugin.stream.getvalue())
+        self.plugin.stream = StringIO()
 
     def assertion_failed(self, name, exception):
-        super().assertion_failed(name, exception)
+        # accumulate failures and errors and grab them at the end of the ctx
+        self.plugin.assertion_failed(name, exception)
         self.current_context_failed = True
-
     def assertion_errored(self, name, exception):
-        super().assertion_errored(name, exception)
+        self.plugin.assertion_errored(name, exception)
         self.current_context_failed = True
 
     def unexpected_error(self, exception):
-        orig_stream = self.stream
-        self.stream = self.to_output_at_end
-        super().unexpected_error(exception)
-        self.stream = orig_stream
+        # write the error directly to the report
+        orig_stream = self.plugin.stream
+        self.plugin.stream = self.final_report
+        self.plugin.unexpected_error(exception)
+        self.plugin.stream = orig_stream
 
     def test_run_ended(self):
-        output = self.to_output_at_end.getvalue()
+        output = self.final_report.getvalue()
         if output:
-            self.real_stream.write('\n' + self.dashes + '\n')
-            self.real_stream.write(output.strip())
-
-        self.stream = self.real_stream
-        super().test_run_ended()
+            self.stream.write('\n' + self.dashes + '\n')
+            self.stream.write(output.strip())
 
     def __eq__(self, other):
-        return type(self) == type(other) and self.real_stream == other.real_stream
+        return (type(self) == type(other)
+            and self.stream == other.stream
+            and type(self.plugin) == type(other.plugin))
 
 
 class StdOutCapturingReporter(VerboseReporter):
@@ -294,22 +303,6 @@ class TimedReporter(shared.StreamReporter):
         total_secs = (self.end_time - self.start_time).total_seconds()
         rounded = round(total_secs, 1)
         self._print("({} seconds)".format(rounded))
-
-
-class ColouredVerboseReporter(ColouredReporter, VerboseReporter):
-    pass
-
-class ColouredVerboseCapturingReporter(ColouredReporter, StdOutCapturingReporter):
-    pass
-
-class SummarisingCapturingReporter(StdOutCapturingReporter, SummarisingReporter):
-    pass
-
-class ColouredSummarisingReporter(ColouredReporter, SummarisingReporter):
-    pass
-
-class ColouredSummarisingCapturingReporter(ColouredReporter, StdOutCapturingReporter, SummarisingReporter):
-    pass
 
 
 def pluralise(noun, num):

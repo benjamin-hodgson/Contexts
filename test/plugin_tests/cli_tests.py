@@ -87,7 +87,7 @@ FAILED!
 class WhenOutputtingFailuresOnly:
     def in_the_contexts_of_a_partly_successful_run(self):
         self.stringio = StringIO()
-        self.reporter = plugins.cli.SummarisingReporter(self.stringio)
+        self.reporter = plugins.cli.FailureOnlyDecorator(plugins.cli.VerboseReporter)(self.stringio)
 
         context1 = tools.create_context('context1')
         context2 = tools.create_context('context2')

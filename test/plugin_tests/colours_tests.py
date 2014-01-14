@@ -7,7 +7,7 @@ from . import tools
 class ColouredReporterSharedContext:
     def shared_context(self):
         self.stringio = StringIO()
-        self.reporter = plugins.cli.ColouredReporter(self.stringio)
+        self.reporter = plugins.cli.ColouringDecorator(plugins.cli.VerboseReporter)(self.stringio)
 
 
 class WhenColouringOutputAndAnAssertionPasses(ColouredReporterSharedContext):

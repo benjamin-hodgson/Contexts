@@ -89,23 +89,23 @@ def create_plugins(args):
     if args.verbosity == 'verbose':
         if not args.capture:
             if args.colour:
-                return [plugins.cli.ColouredVerboseReporter(sys.stdout), plugins.cli.FinalCountsReporter(sys.stdout), plugins.cli.TimedReporter(sys.stdout)]
+                return [plugins.cli.ColouringDecorator(plugins.cli.VerboseReporter)(sys.stdout), plugins.cli.FinalCountsReporter(sys.stdout), plugins.cli.TimedReporter(sys.stdout)]
             return [plugins.cli.VerboseReporter(sys.stdout), plugins.cli.FinalCountsReporter(sys.stdout), plugins.cli.TimedReporter(sys.stdout)]
         if args.colour:
-            return [plugins.cli.ColouredVerboseCapturingReporter(sys.stdout), plugins.cli.FinalCountsReporter(sys.stdout), plugins.cli.TimedReporter(sys.stdout)]
+            return [plugins.cli.ColouringDecorator(plugins.cli.StdOutCapturingReporter)(sys.stdout), plugins.cli.FinalCountsReporter(sys.stdout), plugins.cli.TimedReporter(sys.stdout)]
         return [plugins.cli.StdOutCapturingReporter(sys.stdout), plugins.cli.FinalCountsReporter(sys.stdout), plugins.cli.TimedReporter(sys.stdout)]
 
     if args.capture:
         if args.colour:
             return [
                 plugins.cli.DotsReporter(sys.stdout),
-                plugins.cli.ColouredSummarisingCapturingReporter(sys.stdout),
+                plugins.cli.FailureOnlyDecorator(plugins.cli.ColouringDecorator(plugins.cli.StdOutCapturingReporter))(sys.stdout),
                 plugins.cli.FinalCountsReporter(sys.stdout),
                 plugins.cli.TimedReporter(sys.stdout)
             ]
         return [
             plugins.cli.DotsReporter(sys.stdout),
-            plugins.cli.SummarisingCapturingReporter(sys.stdout),
+            plugins.cli.FailureOnlyDecorator(plugins.cli.StdOutCapturingReporter)(sys.stdout),
             plugins.cli.FinalCountsReporter(sys.stdout),
             plugins.cli.TimedReporter(sys.stdout)
         ]
@@ -114,13 +114,13 @@ def create_plugins(args):
         if args.colour:
             return [
                 plugins.cli.DotsReporter(sys.stdout),
-                plugins.cli.ColouredSummarisingReporter(sys.stdout),
+                plugins.cli.FailureOnlyDecorator(plugins.cli.ColouringDecorator(plugins.cli.VerboseReporter))(sys.stdout),
                 plugins.cli.FinalCountsReporter(sys.stdout),
                 plugins.cli.TimedReporter(sys.stdout)
             ]
         return [
             plugins.cli.DotsReporter(sys.stdout),
-            plugins.cli.SummarisingReporter(sys.stdout),
+            plugins.cli.FailureOnlyDecorator(plugins.cli.VerboseReporter)(sys.stdout),
             plugins.cli.FinalCountsReporter(sys.stdout),
             plugins.cli.TimedReporter(sys.stdout)
         ]
