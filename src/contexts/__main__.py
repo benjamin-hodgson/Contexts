@@ -5,14 +5,16 @@ from io import StringIO
 from . import main
 from . import plugins
 from .plugins.other import Shuffler
+from .plugins.importing import Importer
 
 
 def cmd():
     args = parse_args(sys.argv[1:])
-    plugins = create_plugins(args)
+    plugin_list = [Importer(args.rewriting)]
     if args.shuffle:
-        plugins.insert(0, Shuffler())
-    main(os.path.realpath(args.path), plugins, args.rewriting)
+        plugin_list.append(Shuffler())
+    plugin_list.extend(create_plugins(args))
+    main(os.path.realpath(args.path), plugin_list, args.rewriting)
 
 
 def parse_args(args):
@@ -66,10 +68,7 @@ def parse_args(args):
 
 
 def create_plugins(args):
-    # Refactoring hint:
-    # multiple inheritance is part of the reason this function is hard to test.
-    # Try to get the plugins to the point where they can be composed
-    # without inheritance.
+    # SORT IT AHT
     if not sys.stdout.isatty():
         args.colour = False
 
@@ -89,11 +88,27 @@ def create_plugins(args):
     if args.verbosity == 'verbose':
         if not args.capture:
             if args.colour:
-                return [plugins.cli.ColouringDecorator(plugins.cli.VerboseReporter)(sys.stdout), plugins.cli.FinalCountsReporter(sys.stdout), plugins.cli.TimedReporter(sys.stdout)]
-            return [plugins.cli.VerboseReporter(sys.stdout), plugins.cli.FinalCountsReporter(sys.stdout), plugins.cli.TimedReporter(sys.stdout)]
+                return [
+                    plugins.cli.ColouringDecorator(plugins.cli.VerboseReporter)(sys.stdout),
+                    plugins.cli.FinalCountsReporter(sys.stdout),
+                    plugins.cli.TimedReporter(sys.stdout)
+                ]
+            return [
+                plugins.cli.VerboseReporter(sys.stdout),
+                plugins.cli.FinalCountsReporter(sys.stdout),
+                plugins.cli.TimedReporter(sys.stdout)
+            ]
         if args.colour:
-            return [plugins.cli.ColouringDecorator(plugins.cli.StdOutCapturingReporter)(sys.stdout), plugins.cli.FinalCountsReporter(sys.stdout), plugins.cli.TimedReporter(sys.stdout)]
-        return [plugins.cli.StdOutCapturingReporter(sys.stdout), plugins.cli.FinalCountsReporter(sys.stdout), plugins.cli.TimedReporter(sys.stdout)]
+            return [
+                plugins.cli.ColouringDecorator(plugins.cli.StdOutCapturingReporter)(sys.stdout),
+                plugins.cli.FinalCountsReporter(sys.stdout),
+                plugins.cli.TimedReporter(sys.stdout)
+            ]
+        return [
+            plugins.cli.StdOutCapturingReporter(sys.stdout),
+            plugins.cli.FinalCountsReporter(sys.stdout),
+            plugins.cli.TimedReporter(sys.stdout)
+        ]
 
     if args.capture:
         if args.colour:

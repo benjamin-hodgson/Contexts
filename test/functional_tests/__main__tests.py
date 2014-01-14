@@ -8,6 +8,7 @@ import contexts
 from contexts import __main__
 from contexts.plugins import cli
 from contexts.plugins.other import Shuffler
+from contexts.plugins.importing import Importer
 
 
 class WhenLoadingUpTheModule:
@@ -39,26 +40,28 @@ class MainSharedContext:
 
 class WhenRunningFromCommandLineWithNoArguments(MainSharedContext):
     def establish_arguments(self):
-        self.expected_reporters = [
+        self.expected_plugins = [
+            Importer(True),
             Shuffler(),
             cli.DotsReporter(sys.stdout),
             cli.FailureOnlyDecorator(cli.ColouringDecorator(cli.StdOutCapturingReporter))(sys.stdout),
             cli.FinalCountsReporter(sys.stdout),
             cli.TimedReporter(sys.stdout)
         ]
-        self.expected = (os.getcwd(), self.expected_reporters, True)
+        self.expected = (os.getcwd(), self.expected_plugins, True)
         sys.argv = ['run-contexts']
 
     def because_we_call_cmd(self):
         __main__.cmd()
 
     def it_should_call_main_with_the_default_plugins(self):
-        self.mock_main.assert_called_once_with(os.getcwd(), self.expected_reporters, True)
+        self.mock_main.assert_called_once_with(os.getcwd(), self.expected_plugins, True)
 
 
 class WhenSpecifyingAPath(MainSharedContext):
     def establish_arguments(self):
-        self.expected_reporters = [
+        self.expected_plugins = [
+            Importer(True),
             Shuffler(),
             cli.DotsReporter(sys.stdout),
             cli.FailureOnlyDecorator(cli.ColouringDecorator(cli.StdOutCapturingReporter))(sys.stdout),
@@ -72,7 +75,7 @@ class WhenSpecifyingAPath(MainSharedContext):
         __main__.cmd()
 
     def it_should_call_main_with_the_path(self):
-        self.mock_main.assert_called_once_with(self.path, self.expected_reporters, True)
+        self.mock_main.assert_called_once_with(self.path, self.expected_plugins, True)
 
 
 class WhenUsingTheVerboseFlag(MainSharedContext):
@@ -82,7 +85,8 @@ class WhenUsingTheVerboseFlag(MainSharedContext):
         yield '-v'
 
     def establish_arguments(self, flag):
-        self.expected_reporters = [
+        self.expected_plugins = [
+            Importer(True),
             Shuffler(),
             cli.ColouringDecorator(cli.StdOutCapturingReporter)(sys.stdout),
             cli.FinalCountsReporter(sys.stdout),
@@ -94,12 +98,13 @@ class WhenUsingTheVerboseFlag(MainSharedContext):
         __main__.cmd()
 
     def it_should_call_main_with_a_verbose_reporter(self):
-        self.mock_main.assert_called_once_with(os.getcwd(), self.expected_reporters, True)
+        self.mock_main.assert_called_once_with(os.getcwd(), self.expected_plugins, True)
 
 
 class WhenUserDisablesColour(MainSharedContext):
     def establish_arguments(self):
-        self.expected_reporters = [
+        self.expected_plugins = [
+            Importer(True),
             Shuffler(),
             cli.DotsReporter(sys.stdout),
             cli.FailureOnlyDecorator(cli.StdOutCapturingReporter)(sys.stdout),
@@ -112,7 +117,7 @@ class WhenUserDisablesColour(MainSharedContext):
         __main__.cmd()
 
     def it_should_call_main_with_a_non_coloured_reporter(self):
-        self.mock_main.assert_called_once_with(os.getcwd(), self.expected_reporters, True)
+        self.mock_main.assert_called_once_with(os.getcwd(), self.expected_plugins, True)
 
 
 class WhenDisablingColourInVerboseMode(MainSharedContext):
@@ -122,7 +127,8 @@ class WhenDisablingColourInVerboseMode(MainSharedContext):
         yield ['-v', '--no-colour']
 
     def establish_arguments(self, args):
-        self.expected_reporters = [
+        self.expected_plugins = [
+            Importer(True),
             Shuffler(),
             cli.StdOutCapturingReporter(sys.stdout),
             cli.FinalCountsReporter(sys.stdout),
@@ -134,7 +140,7 @@ class WhenDisablingColourInVerboseMode(MainSharedContext):
         __main__.cmd()
 
     def it_should_call_main_with_a_non_coloured_verbose_reporter(self):
-        self.mock_main.assert_called_once_with(os.getcwd(), self.expected_reporters, True)
+        self.mock_main.assert_called_once_with(os.getcwd(), self.expected_plugins, True)
 
 
 class WhenUserDisablesStdOutCapturing(MainSharedContext):
@@ -144,7 +150,8 @@ class WhenUserDisablesStdOutCapturing(MainSharedContext):
         yield '-s'
 
     def establish_arguments(self, arg):
-        self.expected_reporters = [
+        self.expected_plugins = [
+            Importer(True),
             Shuffler(),
             cli.DotsReporter(sys.stdout),
             cli.FailureOnlyDecorator(cli.ColouringDecorator(cli.VerboseReporter))(sys.stdout),
@@ -157,7 +164,7 @@ class WhenUserDisablesStdOutCapturing(MainSharedContext):
         __main__.cmd()
 
     def it_should_call_main_with_a_non_capturing_reporter(self):
-        self.mock_main.assert_called_once_with(os.getcwd(), self.expected_reporters, True)
+        self.mock_main.assert_called_once_with(os.getcwd(), self.expected_plugins, True)
 
 
 class WhenUserDisablesCapturingInVerboseMode(MainSharedContext):
@@ -170,7 +177,8 @@ class WhenUserDisablesCapturingInVerboseMode(MainSharedContext):
         yield ['-vs']
 
     def establish_arguments(self, args):
-        self.expected_reporters = [
+        self.expected_plugins = [
+            Importer(True),
             Shuffler(),
             cli.ColouringDecorator(cli.VerboseReporter)(sys.stdout),
             cli.FinalCountsReporter(sys.stdout),
@@ -182,7 +190,7 @@ class WhenUserDisablesCapturingInVerboseMode(MainSharedContext):
         __main__.cmd()
 
     def it_should_call_main_with_a_non_capturing_verbose_reporter(self):
-        self.mock_main.assert_called_once_with(os.getcwd(), self.expected_reporters, True)
+        self.mock_main.assert_called_once_with(os.getcwd(), self.expected_plugins, True)
 
 
 class WhenUserDisablesColourAndCapturing(MainSharedContext):
@@ -192,7 +200,8 @@ class WhenUserDisablesColourAndCapturing(MainSharedContext):
         yield ['-s', '--no-colour']
 
     def establish_arguments(self, args):
-        self.expected_reporters = [
+        self.expected_plugins = [
+            Importer(True),
             Shuffler(),
             cli.DotsReporter(sys.stdout),
             cli.FailureOnlyDecorator(cli.VerboseReporter)(sys.stdout),
@@ -205,7 +214,7 @@ class WhenUserDisablesColourAndCapturing(MainSharedContext):
         __main__.cmd()
 
     def it_should_call_main_with_a_non_coloured_non_capturing_reporter(self):
-        self.mock_main.assert_called_once_with(os.getcwd(), self.expected_reporters, True)
+        self.mock_main.assert_called_once_with(os.getcwd(), self.expected_plugins, True)
 
 
 class WhenUserDisablesColourAndCapturingInVerboseMode(MainSharedContext):
@@ -218,7 +227,8 @@ class WhenUserDisablesColourAndCapturingInVerboseMode(MainSharedContext):
         yield ['-vs', '--no-colour']
 
     def establish_arguments(self, args):
-        self.expected_reporters = [
+        self.expected_plugins = [
+            Importer(True),
             Shuffler(),
             cli.VerboseReporter(sys.stdout),
             cli.FinalCountsReporter(sys.stdout),
@@ -230,7 +240,7 @@ class WhenUserDisablesColourAndCapturingInVerboseMode(MainSharedContext):
         __main__.cmd()
 
     def it_should_call_main_with_a_non_coloured_non_capturing_verbose_reporter(self):
-        self.mock_main.assert_called_once_with(os.getcwd(), self.expected_reporters, True)
+        self.mock_main.assert_called_once_with(os.getcwd(), self.expected_plugins, True)
 
 
 class WhenRunningInQuietMode(MainSharedContext):
@@ -240,19 +250,24 @@ class WhenRunningInQuietMode(MainSharedContext):
         yield '--quiet'
 
     def establish_arguments(self, flag):
-        self.expected_reporters = [Shuffler(), QuietReporterResemblance(sys.stdout)]
+        self.expected_plugins = [
+            Importer(True),
+            Shuffler(),
+            QuietReporterResemblance(sys.stdout)
+        ]
         sys.argv = ['run-contexts', flag]
 
     def because_we_call_cmd(self):
         __main__.cmd()
 
     def it_should_call_main_with_a_quiet_reporter(self):
-        self.mock_main.assert_called_once_with(os.getcwd(), self.expected_reporters, True)
+        self.mock_main.assert_called_once_with(os.getcwd(), self.expected_plugins, True)
 
 
 class WhenDisablingAssertionRewriting(MainSharedContext):
     def establish_arguments(self):
-        self.expected_reporters = [
+        self.expected_plugins = [
+            Importer(False),
             Shuffler(),
             cli.DotsReporter(sys.stdout),
             cli.FailureOnlyDecorator(cli.ColouringDecorator(cli.StdOutCapturingReporter))(sys.stdout),
@@ -265,24 +280,32 @@ class WhenDisablingAssertionRewriting(MainSharedContext):
         __main__.cmd()
 
     def it_should_tell_main_to_disable_assertion_rewriting(self):
-        self.mock_main.assert_called_once_with(os.getcwd(), self.expected_reporters, False)
+        self.mock_main.assert_called_once_with(os.getcwd(), self.expected_plugins, False)
 
 
 class WhenRunningOnTheCmdLineInTeamcityMode(MainSharedContext):
     def establish_arguments(self):
-        self.expected_reporters = [Shuffler(), contexts.plugins.teamcity.TeamCityReporter(sys.stdout)]
+        self.expected_plugins = [
+            Importer(True),
+            Shuffler(),
+            contexts.plugins.teamcity.TeamCityReporter(sys.stdout)
+        ]
         sys.argv = ['run-contexts', '--teamcity']
 
     def because_we_call_cmd(self):
         __main__.cmd()
 
     def it_should_call_main_with_a_teamcity_reporter(self):
-        self.mock_main.assert_called_once_with(os.getcwd(), self.expected_reporters, True)
+        self.mock_main.assert_called_once_with(os.getcwd(), self.expected_plugins, True)
 
 
 class WhenRunningInTeamcity(MainSharedContext):
     def establish_that_teamcity_is_in_the_environment_variables(self):
-        self.expected_reporters = [Shuffler(), contexts.plugins.teamcity.TeamCityReporter(sys.stdout)]
+        self.expected_plugins = [
+            Importer(True),
+            Shuffler(),
+            contexts.plugins.teamcity.TeamCityReporter(sys.stdout)
+        ]
         os.environ["TEAMCITY_VERSION"] = "7.0"
         sys.argv = ['run-contexts']
 
@@ -290,12 +313,13 @@ class WhenRunningInTeamcity(MainSharedContext):
         __main__.cmd()
 
     def it_should_call_main_with_a_teamcity_reporter(self):
-        self.mock_main.assert_called_once_with(os.getcwd(), self.expected_reporters, True)
+        self.mock_main.assert_called_once_with(os.getcwd(), self.expected_plugins, True)
 
 
 class WhenUserDisablesShuffling(MainSharedContext):
     def establish_arguments(self):
-        self.expected_reporters = [
+        self.expected_plugins = [
+            Importer(True),
             cli.DotsReporter(sys.stdout),
             cli.FailureOnlyDecorator(cli.ColouringDecorator(cli.StdOutCapturingReporter))(sys.stdout),
             cli.FinalCountsReporter(sys.stdout),
@@ -307,7 +331,7 @@ class WhenUserDisablesShuffling(MainSharedContext):
         __main__.cmd()
 
     def it_should_call_main_without_a_shuffler(self):
-        self.mock_main.assert_called_once_with(os.getcwd(), self.expected_reporters, True)
+        self.mock_main.assert_called_once_with(os.getcwd(), self.expected_plugins, True)
 
 
 class WhenArgumentsSpecifyMutuallyExclusiveOptions(MainSharedContext):
@@ -358,6 +382,7 @@ class WhenColoramaIsNotInstalled(MainSharedContext):
 
     def it_should_not_send_a_coloured_reporter_to_main(self):
         self.mock_main.assert_called_once_with(os.getcwd(), [
+            Importer(True),
             Shuffler(),
             cli.DotsReporter(sys.stdout),
             cli.FailureOnlyDecorator(cli.StdOutCapturingReporter)(sys.stdout),
@@ -378,6 +403,7 @@ class WhenStdOutIsAPipe(MainSharedContext):
 
     def it_should_not_send_a_coloured_reporter_to_main(self):
         self.mock_main.assert_called_once_with(os.getcwd(), [
+            Importer(True),
             Shuffler(),
             cli.DotsReporter(sys.stdout),
             cli.FailureOnlyDecorator(cli.StdOutCapturingReporter)(sys.stdout),
