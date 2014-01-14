@@ -328,208 +328,6 @@ class WhenPluginsModifyAModuleList:
                 f.write('')
 
 
-class WhenAPackageHasAlreadyBeenImported:
-    def establish_that_we_have_already_imported_the_package(self):
-        self.code = """
-module_ran = False
-is_fake = False
-
-class TestSpec:
-    def it(self):
-        global module_ran
-        module_ran = True
-"""
-        self.package_name = 'already_imported_package'
-        self.create_folder()
-        self.write_files()
-        self.create_fake_module()
-
-    def because_we_run_the_package(self):
-        contexts.run(self.folder_path, [Importer()])
-
-    def it_should_not_re_import_the_module(self):
-        assert sys.modules[self.package_name].is_fake
-
-    def it_should_not_re_run_the_module(self):
-        assert not sys.modules[self.package_name].module_ran
-
-    def cleanup_the_file_system_and_sys_dot_modules(self):
-        shutil.rmtree(self.folder_path)
-        del sys.modules[self.package_name]
-
-    def create_fake_module(self):
-        class TestSpec:
-            def it(self):
-                global module_ran
-                module_ran = True
-        test = types.ModuleType(self.package_name)
-        test.is_fake = True
-        test.module_ran = False
-        test.__file__ = self.filename
-        test.TestSpec = TestSpec
-        sys.modules[self.package_name] = test
-
-    def create_folder(self):
-        self.folder_path = os.path.join(TEST_DATA_DIR, self.package_name)
-        os.mkdir(self.folder_path)
-
-    def write_files(self):
-        self.filename = os.path.join(self.folder_path, '__init__.py')
-        with open(self.filename, 'w') as f:
-            f.write(self.code)
-
-
-class WhenAPackageHasTheSameNameAsAnAlreadyImportedModule:
-    def establish_that_we_have_imported_a_module_with_the_same_name(self):
-        self.code = """
-module_ran = False
-is_fake = False
-
-class TestSpec:
-    def it(self):
-        global module_ran
-        module_ran = True
-"""
-        self.package_name = 'package_folder_coincidence'
-        self.create_folder()
-        self.write_files()
-        self.create_fake_module()
-
-    def because_we_run_the_folder(self):
-        contexts.run(self.folder_path, [Importer()])
-
-    def it_should_import_the_new_module_and_overwrite_the_old_one(self):
-        assert not sys.modules[self.package_name].is_fake
-
-    def it_should_run_the_first_module(self):
-        assert sys.modules[self.package_name].module_ran
-
-    def cleanup_the_file_system_and_sys_dot_modules(self):
-        shutil.rmtree(self.folder_path)
-        del sys.modules[self.package_name]
-
-    def create_fake_module(self):
-        test = types.ModuleType(self.package_name)
-        test.is_fake = True
-        test.module_ran = False
-        test.__file__ = os.path.join("fake", "file.py")
-        sys.modules[self.package_name] = test
-
-    def create_folder(self):
-        self.folder_path = os.path.join(TEST_DATA_DIR, self.package_name)
-        os.mkdir(self.folder_path)
-
-    def write_files(self):
-        self.filename = os.path.join(self.folder_path, '__init__.py')
-        with open(self.filename, 'w') as f:
-            f.write(self.code)
-
-
-class WhenAPackageContainsAnAlreadyImportedFile:
-    def establish_that_we_have_already_imported_the_module(self):
-        self.code = """
-module_ran = False
-is_fake = False
-
-class TestSpec:
-    def it(self):
-        global module_ran
-        module_ran = True
-"""
-        self.package_name = 'package_folder_with_already_imported_file'
-        self.module_name = "already_imported_test"
-        self.qualified_name = self.package_name + '.' + self.module_name
-        self.create_folder()
-        self.write_files()
-        self.create_fake_module()
-
-    def because_we_run_the_package(self):
-        contexts.run(self.folder_path, [Importer()])
-
-    def it_should_not_re_import_the_module(self):
-        assert sys.modules[self.qualified_name].is_fake
-
-    def it_should_not_re_run_the_module(self):
-        assert not sys.modules[self.qualified_name].module_ran
-
-    def cleanup_the_file_system_and_sys_dot_modules(self):
-        shutil.rmtree(self.folder_path)
-        del sys.modules[self.qualified_name]
-
-    def create_fake_module(self):
-        class TestSpec:
-            def it(self):
-                global module_ran
-                module_ran = True
-        test = types.ModuleType(self.qualified_name)
-        test.is_fake = True
-        test.module_ran = False
-        test.__file__ = self.filename
-        test.TestSpec = TestSpec
-        sys.modules[self.qualified_name] = test
-
-    def create_folder(self):
-        self.folder_path = os.path.join(TEST_DATA_DIR, self.package_name)
-        os.mkdir(self.folder_path)
-
-    def write_files(self):
-        self.filename = os.path.join(self.folder_path, self.module_name + '.py')
-        with open(os.path.join(self.folder_path, '__init__.py'), 'w') as f:
-            f.write('')
-        with open(self.filename, 'w+') as f:
-            f.write(self.code)
-
-
-class WhenAPackageContainsAFileWithTheSameNameAsAnAlreadyImportedModule:
-    def establish_that_we_have_imported_a_module_with_the_same_name(self):
-        self.code = """
-module_ran = False
-is_fake = False
-
-class TestSpec:
-    def it(self):
-        global module_ran
-        module_ran = True
-"""
-        self.package_name = 'package_folder_with_matching_filename'
-        self.module_name = "maybe_imported_test"
-        self.qualified_name = self.package_name + '.' + self.module_name
-        self.create_folder()
-        self.write_files()
-        self.create_fake_module()
-
-    def because_we_run_the_folder(self):
-        contexts.run(self.folder_path, [Importer()])
-
-    def it_should_import_the_new_module_and_overwrite_the_old_one(self):
-        assert not sys.modules[self.qualified_name].is_fake
-
-    def it_should_run_the_first_module(self):
-        assert sys.modules[self.qualified_name].module_ran
-
-    def cleanup_the_file_system_and_sys_dot_modules(self):
-        shutil.rmtree(self.folder_path)
-        del sys.modules[self.qualified_name]
-
-    def create_fake_module(self):
-        test = types.ModuleType(self.qualified_name)
-        test.is_fake = True
-        test.module_ran = False
-        test.__file__ = os.path.join("fake", "file.py")
-        sys.modules[self.qualified_name] = test
-
-    def create_folder(self):
-        self.folder_path = os.path.join(TEST_DATA_DIR, self.package_name)
-        os.mkdir(self.folder_path)
-
-    def write_files(self):
-        filename = os.path.join(self.folder_path, self.module_name + '.py')
-        with open(os.path.join(self.folder_path, '__init__.py'), 'w') as f:
-            f.write('')
-        with open(filename, 'w+') as f:
-            f.write(self.code)
-
-
 class WhenRunningAFolderWhichIsAPackage:
     def establish_that_there_is_a_folder_containing_modules(self):
         self.package_name = 'package_folder'
@@ -606,14 +404,6 @@ class WhenRunningAFolderWhichIsAPackage:
 
 class WhenRunningAFolderWithSubfolders:
     def establish_that_there_is_a_folder_containing_subfolders(self):
-        self.code = """
-module_ran = False
-
-class TestSpec:
-    def it(self):
-        global module_ran
-        module_ran = True
-"""
         self.folder_name = 'folder3'
         self.tree = {
             "test_subfolder": ["test_file1"],
@@ -622,71 +412,37 @@ class TestSpec:
             "another_subpackage": ["__init__", "test_file4"]
         }
         self.create_tree()
-
-        self.reporter = SpyReporter()
+        self.plugin = mock.Mock()
 
     def because_we_run_the_folder(self):
-        contexts.run(self.folder_path, [Importer(), self.reporter])
+        contexts.run(self.folder_path, [self.plugin])
 
     def it_should_import_the_file_in_the_test_folder(self):
-        assert "test_file1" in sys.modules
-
-    def it_should_run_the_file_in_the_test_folder(self):
-        assert sys.modules["test_file1"].module_ran
+        self.plugin.import_module.assert_any_call(os.path.join(self.folder_path, "test_subfolder"), "test_file1")
 
     def it_should_not_import_the_file_in_the_non_test_folder(self):
-        assert "test_file3" not in sys.modules
+        assert mock.call(mock.ANY, "test_file3") not in self.plugin.import_module.call_args_list
 
-    def it_should_import_the_test_package(self):
-        assert "test_subpackage" in sys.modules
-
-    def it_should_run_the_test_package(self):
-        assert sys.modules["test_subpackage"].module_ran
-
-    def it_should_import_the_file_in_the_test_package(self):
-        assert "test_subpackage.test_file2" in sys.modules
-
-    def it_should_only_import_the_file_in_the_test_package_using_its_full_name(self):
-        assert "test_file2" not in sys.modules
-
-    def it_should_run_the_file_in_the_test_package(self):
-        assert sys.modules["test_subpackage.test_file2"].module_ran
+    def it_should_import_the_test_package_followed_by_the_test_submodule(self):
+        self.plugin.import_module.assert_has_calls([
+            mock.call(self.folder_path, "test_subpackage"),
+            mock.call(self.folder_path, "test_subpackage.test_file2")
+            ])
 
     def it_should_not_import_the_non_test_package(self):
-        assert "another_subpackage" not in sys.modules
+        assert mock.call(mock.ANY, "another_subpackage") not in self.plugin.import_module.call_args_list
 
     def it_should_not_import_the_file_in_the_non_test_package(self):
-        assert "another_subpackage.test_file4" not in sys.modules
-        assert "test_file4" not in sys.modules
+        assert mock.call(mock.ANY, "another_subpackage.test_file4") not in self.plugin.import_module.call_args_list
+        assert mock.call(mock.ANY, "test_file4") not in self.plugin.import_module.call_args_list
 
     def it_should_not_import_anything_called_init(self):
-        assert "__init__" not in sys.modules
-        assert "test_subpackage.__init__" not in sys.modules
-        assert "another_subpackage.__init__" not in sys.modules
+        assert mock.call(mock.ANY, "__init__") not in self.plugin.import_module.call_args_list
+        assert mock.call(mock.ANY, "test_subpackage.__init__") not in self.plugin.import_module.call_args_list
+        assert mock.call(mock.ANY, "another_subpackage.__init__") not in self.plugin.import_module.call_args_list
 
-    def it_should_call_suite_started_for_three_modules(self):
-        assert self.reporter.calls[1][0] == 'suite_started'
-        assert self.reporter.calls[7][0] == 'suite_started'
-        assert self.reporter.calls[13][0] == 'suite_started'
-
-    def it_should_pass_the_names_into_suite_started(self):
-        names = {call[1] for call in self.reporter.calls if call[0] == 'suite_started'}
-        assert names == {'test_file1', 'test_subpackage', 'test_subpackage.test_file2'}
-
-    def it_should_call_suite_ended_for_three_modules(self):
-        assert self.reporter.calls[6][0] == 'suite_ended'
-        assert self.reporter.calls[12][0] == 'suite_ended'
-        assert self.reporter.calls[18][0] == 'suite_ended'
-
-    def it_should_pass_the_names_into_suite_ended(self):
-        names = {call[1] for call in self.reporter.calls if call[0] == 'suite_ended'}
-        assert names == {'test_file1', 'test_subpackage', 'test_subpackage.test_file2'}
-
-    def cleanup_the_file_system_and_sys_dot_modules(self):
+    def cleanup_the_file_system(self):
         shutil.rmtree(self.folder_path)
-        del sys.modules["test_file1"]
-        del sys.modules["test_subpackage"]
-        del sys.modules["test_subpackage.test_file2"]
 
     def create_tree(self):
         self.folder_path = os.path.join(TEST_DATA_DIR, self.folder_name)
@@ -697,20 +453,12 @@ class TestSpec:
             os.mkdir(folder_path)
             for module_name in self.tree[subfolder]:
                 with open(os.path.join(folder_path, module_name) + ".py", 'w+') as f:
-                    f.write(self.code)
+                    f.write('')
 
 
 class WhenRunningAPackageWithSubfolders:
     def establish_that_there_is_a_package_containing_subfolders(self):
-        self.code = """
-module_ran = False
-
-class TestSpec:
-    def it(self):
-        global module_ran
-        module_ran = True
-"""
-        self.folder_name = 'package4'
+        self.package_name = 'package4'
         self.tree = {
             "test_subfolder": ["test_file1"],
             "test_subpackage": ["__init__", "test_file2"],
@@ -718,156 +466,111 @@ class TestSpec:
             "another_subpackage": ["__init__", "test_file4"]
         }
         self.create_tree()
-        self.reporter = SpyReporter()
 
+        self.plugin = mock.Mock()
 
     def because_we_run_the_package(self):
-        contexts.run(self.folder_path, [Importer(), self.reporter])
+        contexts.run(self.folder_path, [self.plugin])
+
+    def it_should_import_the_package_first(self):
+        assert self.plugin.import_module.call_args_list[0] == mock.call(TEST_DATA_DIR, self.package_name)
 
     def it_should_import_the_file_in_the_test_folder(self):
-        assert "test_file1" in sys.modules
+        self.plugin.import_module.assert_any_call(os.path.join(self.folder_path, "test_subfolder"), "test_file1")
 
     def it_should_not_import_the_file_in_the_test_folder_using_the_package_name(self):
-        assert "package4.test_file1" not in sys.modules
-
-    def it_should_run_the_file_in_the_test_folder(self):
-        assert sys.modules["test_file1"].module_ran
+        assert mock.call(mock.ANY, "package4.test_file1") not in self.plugin.import_module.call_args_list
 
     def it_should_not_import_the_file_in_the_non_test_folder(self):
-        assert "test_file3" not in sys.modules
-        assert "package4.test_file3" not in sys.modules
+        assert mock.call(mock.ANY, "package4.test_file3") not in self.plugin.import_module.call_args_list
+        assert mock.call(mock.ANY, "test_file3") not in self.plugin.import_module.call_args_list
 
-    def it_should_import_the_test_package(self):
-        assert "package4.test_subpackage" in sys.modules
+    def it_should_import_the_test_subpackage_followed_by_the_test_submodule(self):
+        self.plugin.import_module.assert_has_calls([
+            mock.call(TEST_DATA_DIR, 'package4.test_subpackage'),
+            mock.call(TEST_DATA_DIR, 'package4.test_subpackage.test_file2'),
+        ])
 
     def it_should_only_import_the_test_package_using_its_full_name(self):
-        assert "test_subpackage" not in sys.modules
+        assert mock.call(mock.ANY, "test_subpackage") not in self.plugin.import_module.call_args_list
 
-    def it_should_run_the_test_package(self):
-        assert sys.modules["package4.test_subpackage"].module_ran
-
-    def it_should_import_the_file_in_the_test_package(self):
-        assert "package4.test_subpackage.test_file2" in sys.modules
-
-    def it_should_only_import_the_file_in_the_test_package_using_its_full_name(self):
-        assert "test_file2" not in sys.modules
-        assert "test_subpackage.test_file2" not in sys.modules
-
-    def it_should_run_the_file_in_the_test_package(self):
-        assert sys.modules["package4.test_subpackage.test_file2"].module_ran
+    def it_should_only_import_the_test_submodule_using_its_full_name(self):
+        assert mock.call(mock.ANY, "test_subpackage.test_file2") not in self.plugin.import_module.call_args_list
+        assert mock.call(mock.ANY, "test_file2") not in self.plugin.import_module.call_args_list
 
     def it_should_not_import_the_non_test_package(self):
-        assert "package4.another_subpackage" not in sys.modules
+        assert mock.call(mock.ANY, "package4.another_subpackage") not in self.plugin.import_module.call_args_list
+        assert mock.call(mock.ANY, "another_subpackage") not in self.plugin.import_module.call_args_list
 
     def it_should_not_import_the_file_in_the_non_test_package(self):
-        assert "package4.another_subpackage.test_file4" not in sys.modules
-        assert "another_subpackage.test_file4" not in sys.modules
-        assert "package4.test_file4" not in sys.modules
-        assert "test_file4" not in sys.modules
+        assert mock.call(mock.ANY, "package4.another_subpackage.test_file4") not in self.plugin.import_module.call_args_list
+        assert mock.call(mock.ANY, "another_subpackage.test_file4") not in self.plugin.import_module.call_args_list
+        assert mock.call(mock.ANY, "package4.test_file4") not in self.plugin.import_module.call_args_list
+        assert mock.call(mock.ANY, "test_file4") not in self.plugin.import_module.call_args_list
 
     def it_should_not_import_any_init_files(self):
-        assert "__init__" not in sys.modules
-        assert "package4.__init__" not in sys.modules
-        assert "test_subpackage.__init__" not in sys.modules
-        assert "package4.test_subpackage.__init__" not in sys.modules
-        assert "another_subpackage.__init__" not in sys.modules
-        assert "package4.another_subpackage.__init__" not in sys.modules
+        assert mock.call(mock.ANY, "__init__") not in self.plugin.import_module.call_args_list
+        assert mock.call(mock.ANY, "package4.__init__") not in self.plugin.import_module.call_args_list
+        assert mock.call(mock.ANY, "test_subpackage.__init__") not in self.plugin.import_module.call_args_list
+        assert mock.call(mock.ANY, "package4.test_subpackage.__init__") not in self.plugin.import_module.call_args_list
+        assert mock.call(mock.ANY, "another_subpackage.__init__") not in self.plugin.import_module.call_args_list
+        assert mock.call(mock.ANY, "package4.another_subpackage.__init__") not in self.plugin.import_module.call_args_list
 
-    def it_should_call_suite_started_for_four_modules(self):
-        assert self.reporter.calls[1][0] == 'suite_started'
-        assert self.reporter.calls[7][0] == 'suite_started'
-        assert self.reporter.calls[13][0] == 'suite_started'
-        assert self.reporter.calls[19][0] == 'suite_started'
-
-    def it_should_pass_the_names_into_suite_started(self):
-        names = {call[1] for call in self.reporter.calls if call[0] == 'suite_started'}
-        assert names == {'package4', 'package4.test_subpackage', 'package4.test_subpackage.test_file2', 'test_file1'}
-
-    def it_should_call_suite_ended_for_four_modules(self):
-        assert self.reporter.calls[6][0] == 'suite_ended'
-        assert self.reporter.calls[12][0] == 'suite_ended'
-        assert self.reporter.calls[18][0] == 'suite_ended'
-        assert self.reporter.calls[24][0] == 'suite_ended'
-
-    def it_should_pass_the_names_into_suite_ended(self):
-        names = {call[1] for call in self.reporter.calls if call[0] == 'suite_ended'}
-        assert names == {'package4', 'package4.test_subpackage', 'package4.test_subpackage.test_file2', 'test_file1'}
-
-    def cleanup_the_file_system_and_sys_dot_modules(self):
+    def cleanup_the_file_system(self):
         shutil.rmtree(self.folder_path)
-        del sys.modules["test_file1"]
-        del sys.modules["package4.test_subpackage"]
-        del sys.modules["package4.test_subpackage.test_file2"]
 
     def create_tree(self):
-        self.folder_path = os.path.join(TEST_DATA_DIR, self.folder_name)
+        self.folder_path = os.path.join(TEST_DATA_DIR, self.package_name)
         os.mkdir(self.folder_path)
 
         with open(os.path.join(self.folder_path, "__init__.py"), 'w+') as f:
-            f.write(self.code)
+            f.write('')
 
         for subfolder in self.tree:
             folder_path = os.path.join(self.folder_path, subfolder)
             os.mkdir(folder_path)
             for module_name in self.tree[subfolder]:
                 with open(os.path.join(folder_path, module_name) + ".py", 'w+') as f:
-                    f.write(self.code)
+                    f.write('')
 
 
 class WhenRunningAFolderWithAFileThatFailsToImport:
     def establish_that_there_is_a_folder_containing_modules(self):
-        self.bad_code = """
-module_ran = False
-
-class TestSpec:
-    def it(self):
-        global module_ran
-        module_ran = True
-
-raise TypeError("leave it aaaaht")
-"""
-        self.good_code = """
-module_ran = False
-
-class TestSpec:
-    def it(self):
-        global module_ran
-        module_ran = True
-"""
         self.module_names = ["test_file1", "test_file2"]
-        self.create_folder()
-        self.write_files()
-        self.reporter = SpyReporter()
+        self.setup_filesystem()
+
+        self.module = types.ModuleType(self.module_names[1])
+        class Spec:
+            ran = False
+            def it(self):
+                self.__class__.ran = True
+        self.module.Spec = Spec
+
+        self.exception = Exception()
+        self.plugin = mock.Mock()
+        self.plugin.import_module.side_effect = [self.exception, self.module]
 
     def because_we_run_the_folder(self):
-        contexts.run(self.folder_path, [Importer(), self.reporter])
+        contexts.run(self.folder_path, [self.plugin])
 
     def it_should_report_an_unexpected_error(self):
-        assert self.reporter.calls[1][0] == "unexpected_error"
+        self.plugin.unexpected_error.assert_called_once_with(self.exception)
 
-    def it_should_pass_in_an_exception(self):
-        assert isinstance(self.reporter.calls[1][1], TypeError)
-
-    def it_should_import_the_second_module(self):
-        assert self.module_names[1] in sys.modules
-
-    def it_should_run_the_second_module(self):
-        assert sys.modules[self.module_names[1]].module_ran
+    def it_should_still_import_the_second_module(self):
+        self.plugin.import_module.assert_called_with(self.folder_path, self.module_names[1])
 
     def cleanup_the_file_system_and_sys_dot_modules(self):
         shutil.rmtree(self.folder_path)
-        del sys.modules[self.module_names[1]]
 
-    def create_folder(self):
+    def setup_filesystem(self):
         self.folder_path = os.path.join(TEST_DATA_DIR, 'problematic_folder')
         os.mkdir(self.folder_path)
 
-    def write_files(self):
         self.filenames = [os.path.join(self.folder_path, n+".py") for n in self.module_names]
         with open(self.filenames[0], 'w+') as f:
-            f.write(self.bad_code)
+            f.write('')
         with open(self.filenames[1], 'w+') as f:
-            f.write(self.good_code)
+            f.write('')
 
 
 
