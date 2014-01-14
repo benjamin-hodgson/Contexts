@@ -105,137 +105,98 @@ class WhenAPluginModifiesAClassList:
 
 class WhenRunningAFile:
     def establish_that_there_is_a_file_in_the_filesystem(self):
-        self.code = """
-module_ran = False
-
-class TestSpec:
-    def it(self):
-        global module_ran
-        module_ran = True
-"""
         self.module_name = "test_file"
         self.write_file()
         self.reporter = SpyReporter()
 
-    def because_we_run_the_file(self):
-        contexts.run(self.filename, [Importer(), self.reporter])
+        self.module = types.ModuleType(self.module_name)
+        class When:
+            ran = False
+            def it(self):
+                self.__class__.ran = True
+        self.module.When = When
 
-    def it_should_import_the_file(self):
-        assert self.module_name in sys.modules
-
-    def it_should_run_the_specs(self):
-        assert sys.modules[self.module_name].module_ran
-
-    def it_should_call_suite_started(self):
-        assert self.reporter.calls[1][0] == "suite_started"
-
-    def it_should_pass_the_name_into_suite_started(self):
-        assert self.reporter.calls[1][1] == self.module_name
-
-    def it_should_call_suite_ended(self):
-        assert self.reporter.calls[-2][0] == "suite_ended"
-
-    def it_should_pass_the_name_into_suite_ended(self):
-        assert self.reporter.calls[-2][1] == self.module_name
-
-    def cleanup_the_file_system_and_sys_dot_modules(self):
-        os.remove(self.filename)
-        del sys.modules[self.module_name]
-
-    def write_file(self):
-        self.filename = os.path.join(TEST_DATA_DIR, self.module_name+".py")
-        with open(self.filename, 'w+') as f:
-            f.write(self.code)
-
-
-class WhenAFileFailsToImport:
-    def establish_that_there_is_a_broken_file_in_the_filesystem(self):
-        self.code = """
-module_ran = False
-
-class TestSpec:
-    def it(self):
-        global module_ran
-        module_ran = True
-
-raise ZeroDivisionError("bogus error message")
-"""
-        self.module_name = "broken_test_file"
-        self.write_file()
-        self.reporter = SpyReporter()
+        self.plugin = mock.Mock(spec=Plugin)
+        self.plugin.import_module.return_value = self.module
 
     def because_we_run_the_file(self):
-        contexts.run(self.filename, [Importer(), self.reporter])
+        contexts.run(self.filename, [self.plugin])
 
-    def it_should_call_unexpected_error_on_the_reporter(self):
-        assert self.reporter.calls[1][0] == "unexpected_error"
+    def it_should_ask_the_plugin_to_import_the_correct_file(self):
+        self.plugin.import_module.assert_called_once_with(TEST_DATA_DIR, self.module_name)
 
-    def it_should_pass_in_the_exception(self):
-        assert isinstance(self.reporter.calls[1][1], ZeroDivisionError)
+    def it_should_run_the_module_that_the_plugin_imported(self):
+        assert self.module.When.ran
 
-    def cleanup_the_file_system_and_sys_dot_modules(self):
+    def it_should_call_suite_started_with_the_module_name(self):
+        self.plugin.suite_started.assert_called_once_with(self.module_name)
+
+    def it_should_call_suite_ended_with_the_module_name(self):
+        self.plugin.suite_started.assert_called_once_with(self.module_name)
+
+    def cleanup_the_file_system(self):
         os.remove(self.filename)
 
     def write_file(self):
         self.filename = os.path.join(TEST_DATA_DIR, self.module_name+".py")
         with open(self.filename, 'w+') as f:
-            f.write(self.code)
+            f.write('')
 
 
 class WhenRunningAFolderWhichIsNotAPackage:
     def establish_that_there_is_a_folder_containing_modules(self):
-        self.code = """
-module_ran = False
-
-class TestSpec:
-    def it(self):
-        global module_ran
-        module_ran = True
-"""
         self.module_names = ["test_file1", "test_file2", "an_innocent_module"]
         self.create_folder()
         self.write_files()
 
-        self.reporter = SpyReporter()
+        self.module1 = types.ModuleType("test_file1")
+        class Spec1:
+            ran = False
+            def it(self):
+                self.__class__.ran = True
+        self.module1.Spec1 = Spec1
+        self.module2 = types.ModuleType("test_file2")
+        class Spec2:
+            ran = False
+            def it(self):
+                self.__class__.ran = True
+        self.module2.Spec2 = Spec2
+
+        self.plugin = mock.Mock(spec=Plugin)
+        self.plugin.import_module.side_effect = [self.module1, self.module2]
 
     def because_we_run_the_folder(self):
-        contexts.run(self.folder_path, [Importer(), self.reporter])
+        contexts.run(self.folder_path, [self.plugin])
 
-    def it_should_import_the_first_module(self):
-        assert self.module_names[0] in sys.modules
+    def it_should_ask_the_plugin_to_import_the_correct_files(self):
+        self.plugin.import_module.assert_has_calls([
+            mock.call(self.folder_path, self.module_names[0]),
+            mock.call(self.folder_path, self.module_names[1])
+            ], any_order=True)
 
-    def it_should_import_the_second_module(self):
-        assert self.module_names[1] in sys.modules
+    def it_should_not_import_the_non_test_module(self):
+        assert self.plugin.import_module.call_count == 2
 
     def it_should_run_the_first_module(self):
-        assert sys.modules[self.module_names[0]].module_ran
+        assert self.module1.Spec1.ran
 
     def it_should_run_the_second_module(self):
-        assert sys.modules[self.module_names[1]].module_ran
+        assert self.module2.Spec2.ran
 
-    def it_should_not_run_the_non_test_module(self):
-        assert self.module_names[2] not in sys.modules
+    def it_should_call_suite_started_with_the_name_of_each_module(self):
+        self.plugin.suite_started.assert_has_calls([
+            mock.call(self.module_names[0]),
+            mock.call(self.module_names[1])
+            ], any_order=True)
 
-    def it_should_call_suite_started_for_both_modules(self):
-        assert self.reporter.calls[1][0] == 'suite_started'
-        assert self.reporter.calls[7][0] == 'suite_started'
+    def it_should_call_suite_ended_with_the_name_of_each_module(self):
+        self.plugin.suite_ended.assert_has_calls([
+            mock.call(self.module_names[0]),
+            mock.call(self.module_names[1])
+            ], any_order=True)
 
-    def it_should_pass_the_names_into_suite_started(self):
-        names = {call[1] for call in self.reporter.calls if call[0] == 'suite_started'}
-        assert names == {'test_file1', 'test_file2'}
-
-    def it_should_call_suite_ended_for_both_modules(self):
-        assert self.reporter.calls[6][0] == 'suite_ended'
-        assert self.reporter.calls[12][0] == 'suite_ended'
-
-    def it_should_pass_the_names_into_suite_ended(self):
-        names = {call[1] for call in self.reporter.calls if call[0] == 'suite_ended'}
-        assert names == {'test_file1', 'test_file2'}
-
-    def cleanup_the_file_system_and_sys_dot_modules(self):
+    def cleanup_the_file_system(self):
         shutil.rmtree(self.folder_path)
-        del sys.modules[self.module_names[0]]
-        del sys.modules[self.module_names[1]]
 
     def create_folder(self):
         self.folder_path = os.path.join(TEST_DATA_DIR, 'non_package_folder')
@@ -245,7 +206,7 @@ class TestSpec:
         self.filenames = [os.path.join(self.folder_path, n+".py") for n in self.module_names]
         for fn in self.filenames:
             with open(fn, 'w+') as f:
-                f.write(self.code)
+                f.write('')
 
 
 class WhenAPluginModifiesAModuleList:
