@@ -6,7 +6,6 @@ from contextlib import contextmanager
 from . import discovery
 from . import errors
 from . import finders
-from . import importing
 from .tools import NO_EXAMPLE
 
 
@@ -14,7 +13,6 @@ class TestRun(object):
     def __init__(self, source, plugin_notifier):
         self.source = source
         self.plugin_notifier = plugin_notifier
-        self.importer = importing.Importer(self.plugin_notifier)
 
     def run(self):
         with self.plugin_notifier.run_test_run(self):
@@ -28,13 +26,13 @@ class TestRun(object):
         if isinstance(self.source, types.ModuleType):
             return [self.source]
         if isinstance(self.source, str) and os.path.isfile(self.source):
-            return [self.importer.import_from_file(self.source)]
+            return [self.import_from_file(self.source)]
         if isinstance(self.source, str) and os.path.isdir(self.source):
             specifications = discovery.module_specs(self.source)
             modules = []
             for module_spec in specifications:
                 with self.plugin_notifier.importing(module_spec):
-                    modules.append(self.importer.import_module(*module_spec))
+                    modules.append(self.import_module(*module_spec))
             return modules
 
         # self.source is a class
@@ -43,6 +41,15 @@ class TestRun(object):
         # use a hard-coded name that the finder will recognise (needs a better fix)
         module.Spec = self.source
         return [module]
+
+    def import_from_file(self, file_path):
+        folder = os.path.dirname(file_path)
+        filename = os.path.basename(file_path)
+        module_name = os.path.splitext(filename)[0]
+        return self.import_module(folder, module_name)
+
+    def import_module(self, dir_path, module_name):
+        return self.plugin_notifier.call_plugins('import_module', dir_path, module_name)
 
 
 class Suite(object):
