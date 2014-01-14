@@ -281,6 +281,7 @@ class TestSpec:
             l[:] = [module1, module2]
         self.plugin = mock.Mock()
         self.plugin.process_module_list = modify_list
+        del self.plugin.import_module
 
     def because_we_run_the_folder(self):
         contexts.run(self.folder_path, [self.plugin])
@@ -311,6 +312,71 @@ class TestSpec:
         del sys.modules[self.module_names[0]]
         del sys.modules[self.module_names[1]]
         importlib.invalidate_caches()
+
+
+class WhenPluginsImportModules:
+    def establish_that_we_have_a_bunch_of_plugins_and_a_file_in_the_filesystem(self):
+        self.module_name = "test_module"
+
+        self.plugin_without_method = mock.Mock(spec=contexts.plugins.Plugin)
+        del self.plugin_without_method.import_module
+
+        self.noop_plugin = mock.Mock(spec=contexts.plugins.Plugin)
+        self.noop_plugin.import_module.return_value = None
+
+        self.importer_plugin = mock.Mock(spec=contexts.plugins.Plugin)
+        module = types.ModuleType(self.module_name)
+        self.ran_spies = set()
+        class SpySpec1:
+            def it(s):
+                self.ran_spies.add('SpySpec1')
+        module.SpySpec1 = SpySpec1
+        class SpySpec2:
+            def it(s):
+                self.ran_spies.add('SpySpec2')
+        module.SpySpec2 = SpySpec2
+        self.importer_plugin.import_module.return_value = module
+
+        self.final_plugin = mock.Mock(spec=contexts.plugins.Plugin)
+
+        self.plugins = [self.plugin_without_method, self.noop_plugin, self.importer_plugin, self.final_plugin]
+        self.plugin_master = mock.Mock()
+        self.plugin_master.plugin_without_method = self.plugin_without_method
+        self.plugin_master.noop_plugin = self.noop_plugin
+        self.plugin_master.importer_plugin = self.importer_plugin
+        self.plugin_master.final_plugin = self.final_plugin
+
+        self.setup_filesystem()
+
+    def because_we_run_the_folder(self):
+        contexts.run(self.folder_path, self.plugins)
+
+    def it_should_call_import_module_on_the_first_plugin(self):
+        self.noop_plugin.import_module.assert_called_once_with(self.folder_path, self.module_name)
+
+    def it_should_call_import_module_on_the_second_plugin(self):
+        self.importer_plugin.import_module.assert_called_once_with(self.folder_path, self.module_name)
+
+    def it_should_not_call_import_module_on_the_plugin_following_the_one_that_returned(self):
+        assert not self.final_plugin.import_module.called
+
+    def it_should_not_import_the_real_file(self):
+        assert self.module_name not in sys.modules
+
+    def it_should_run_the_returned_module(self):
+        assert self.ran_spies == {'SpySpec1', 'SpySpec2'}
+
+    def cleanup_the_file_system(self):
+        shutil.rmtree(self.folder_path)
+        importlib.invalidate_caches()
+
+    def setup_filesystem(self):
+        self.folder_path = os.path.join(TEST_DATA_DIR, 'plugin_importing_folder')
+        os.mkdir(self.folder_path)
+
+        filename = os.path.join(self.folder_path, self.module_name+".py")
+        with open(filename, 'w+') as f:
+            f.write("")
 
 
 class WhenAFolderContainsAnAlreadyImportedFile:

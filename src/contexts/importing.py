@@ -5,8 +5,9 @@ from .assertion_rewriting import AssertionRewritingLoader
 
 
 class Importer:
-    def __init__(self, rewriting):
+    def __init__(self, rewriting, plugin_notifier):
         self.rewriting = rewriting
+        self.plugin_notifier = plugin_notifier
 
     def import_from_file(self, file_path):
         """
@@ -22,6 +23,9 @@ class Importer:
         Import the specified module from the specified directory, rewriting
         assert statements where necessary.
         """
+        from_plugs = self.plugin_notifier.call_plugins('import_module', dir_path, module_name)
+        if from_plugs is not None:
+            return from_plugs
         filename = resolve_filename(dir_path, module_name)
         prune_sys_dot_modules(module_name, filename)
         if module_name in sys.modules:

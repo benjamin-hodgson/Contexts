@@ -38,4 +38,14 @@ class Plugin(object):
     def process_assertion_list(self, modules):
         """Called with the list of assertion methods found in a class. Plugins may modify the list in-place."""
 
+    def import_module(self, location, name):
+        """
+        Called when the test runner wants a module imported.
+        Plugins may return an imported module object, or None if they do not want to import the module.
+
+        Arguments:
+            location: string. Path to the folder containing the module or package.
+            name: string. Full name of the module, including dot-separated package names.
+        """
+
 from . import shared, cli, teamcity

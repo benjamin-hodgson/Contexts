@@ -48,7 +48,7 @@ def run(to_run=None, plugins=None, rewriting=True):
             plugins.cli.TimedReporter(sys.stdout)
         )
 
-    notifier = core.PluginNotifier(*plugins)
+    notifier = core.PluginNotifier(plugins)
 
     if to_run is None:
         to_run = sys.modules['__main__']

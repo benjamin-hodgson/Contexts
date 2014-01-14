@@ -14,13 +14,13 @@ from .tools import NO_EXAMPLE
 class TestRun(object):
     def __init__(self, source, rewriting, plugin_notifier):
         self.source = source
-        self.importer = importing.Importer(rewriting)
         self.plugin_notifier = plugin_notifier
+        self.importer = importing.Importer(rewriting, self.plugin_notifier)
 
     def run(self):
         with self.plugin_notifier.run_test_run(self):
             modules = self.get_modules()
-            self.plugin_notifier.call_reporters('process_module_list', modules)
+            self.plugin_notifier.call_plugins('process_module_list', modules)
             for module in modules:
                 suite = Suite(module, self.plugin_notifier)
                 suite.run()
@@ -55,7 +55,7 @@ class Suite(object):
     def run(self):
         with self.plugin_notifier.run_suite(self):
             found_classes = list(finders.find_specs_in_module(self.module))
-            self.plugin_notifier.call_reporters('process_class_list', found_classes)
+            self.plugin_notifier.call_plugins('process_class_list', found_classes)
             for cls in found_classes:
                 self.run_class(cls)
 
@@ -109,7 +109,7 @@ class Context(object):
             run_with_test_data(teardown, self.example)
 
     def run(self):
-        self.plugin_notifier.call_reporters('process_assertion_list', self.assertions)
+        self.plugin_notifier.call_plugins('process_assertion_list', self.assertions)
         self.assertions = [Assertion(f, self.plugin_notifier) for f in self.assertions]
 
         if not self.assertions:
@@ -154,64 +154,66 @@ def run_with_test_data(func, test_data):
 
 
 class PluginNotifier(object):
-    def __init__(self, *reporters):
-        self.reporters = list(reporters)
+    def __init__(self, plugins):
+        self.plugins = plugins
 
     @property
     def failed(self):
-        return any(r.failed for r in self.reporters if hasattr(r, 'failed'))
+        return any(r.failed for r in self.plugins if hasattr(r, 'failed'))
 
     @contextmanager
     def run_test_run(self, test_run):
-        self.call_reporters("test_run_started")
+        self.call_plugins("test_run_started")
         try:
             yield
         except Exception as e:
-            self.call_reporters("unexpected_error", e)
-        self.call_reporters("test_run_ended")
+            self.call_plugins("unexpected_error", e)
+        self.call_plugins("test_run_ended")
 
     @contextmanager
     def importing(self, module_spec):
         try:
             yield
         except Exception as e:
-            self.call_reporters("unexpected_error", e)
+            self.call_plugins("unexpected_error", e)
 
     @contextmanager
     def run_suite(self, suite):
-        self.call_reporters("suite_started", suite.name)
+        self.call_plugins("suite_started", suite.name)
         yield
-        self.call_reporters("suite_ended", suite.name)
+        self.call_plugins("suite_ended", suite.name)
 
     @contextmanager
     def run_class(self, cls):
         try:
             yield
         except Exception as e:
-            self.call_reporters("unexpected_error", e)
+            self.call_plugins("unexpected_error", e)
 
     @contextmanager
     def run_context(self, context):
-        self.call_reporters("context_started", context.name, context.example)
+        self.call_plugins("context_started", context.name, context.example)
         try:
             yield
         except Exception as e:
-            self.call_reporters("context_errored", context.name, context.example, e)
+            self.call_plugins("context_errored", context.name, context.example, e)
         else:
-            self.call_reporters("context_ended", context.name, context.example)
+            self.call_plugins("context_ended", context.name, context.example)
 
     @contextmanager
     def run_assertion(self, assertion):
-        self.call_reporters("assertion_started", assertion.name)
+        self.call_plugins("assertion_started", assertion.name)
         try:
             yield
         except AssertionError as e:
-            self.call_reporters("assertion_failed", assertion.name, e)
+            self.call_plugins("assertion_failed", assertion.name, e)
         except Exception as e:
-            self.call_reporters("assertion_errored", assertion.name, e)
+            self.call_plugins("assertion_errored", assertion.name, e)
         else:
-            self.call_reporters("assertion_passed", assertion.name)
+            self.call_plugins("assertion_passed", assertion.name)
 
-    def call_reporters(self, method, *args):
-        for reporter in self.reporters:
-            getattr(reporter, method, lambda *_: None)(*args)
+    def call_plugins(self, method, *args):
+        for plugin in self.plugins:
+            reply = getattr(plugin, method, lambda *_: None)(*args)
+            if reply is not None:
+                return reply

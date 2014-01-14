@@ -21,7 +21,7 @@ class WhenColouringOutputAndAnAssertionPasses(ColouredReporterSharedContext):
 class WhenColouringOutputAndAnAssertionFails(ColouredReporterSharedContext):
     def establish_the_exception(self):
         tb = [('made_up_file_10.py', 1, 'made_up_function_1', 'frame1'),
-               ('made_up_file_11.py', 2, 'made_up_function_2', 'frame2')]
+              ('made_up_file_11.py', 2, 'made_up_function_2', 'frame2')]
         self.exception = tools.build_fake_assertion_error(tb, "you fail")
 
     def because_the_assertion_fails(self):
@@ -42,7 +42,7 @@ class WhenColouringOutputAndAnAssertionFails(ColouredReporterSharedContext):
 class WhenColouringOutputAndAnAssertionErrors(ColouredReporterSharedContext):
     def establish_the_exception(self):
         tb = [('made_up_file_12.py', 3, 'made_up_function_3', 'frame3'),
-               ('made_up_file_13.py', 4, 'made_up_function_4', 'frame4')]
+              ('made_up_file_13.py', 4, 'made_up_function_4', 'frame4')]
         self.exception = tools.build_fake_exception(tb, "no")
 
     def because_the_assertion_errors(self):
@@ -64,7 +64,7 @@ class WhenColouringOutputAndAContextErrors(ColouredReporterSharedContext):
     def establish_the_exception(self):
         self.context = tools.create_context()
         tb = [('made_up_file_14.py', 3, 'made_up_function_3', 'frame3'),
-               ('made_up_file_15.py', 4, 'made_up_function_4', 'frame4')]
+              ('made_up_file_15.py', 4, 'made_up_function_4', 'frame4')]
         self.exception = tools.build_fake_exception(tb, "out")
 
     @contexts.action
@@ -85,7 +85,7 @@ class WhenColouringOutputAndAContextErrors(ColouredReporterSharedContext):
 class WhenColouringOutputAndAnUnexpectedErrorOccurs(ColouredReporterSharedContext):
     def establish_the_exception(self):
         tb = [('made_up_file_16.py', 3, 'made_up_function_3', 'frame3'),
-               ('made_up_file_17.py', 4, 'made_up_function_4', 'frame4')]
+              ('made_up_file_17.py', 4, 'made_up_function_4', 'frame4')]
         self.exception = tools.build_fake_exception(tb, "out")
 
     def because_an_unexpected_error_occurs(self):
