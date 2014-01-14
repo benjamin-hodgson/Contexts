@@ -41,9 +41,6 @@ class TestSpec:
     def because_we_run_the_spec(self):
         contexts.run(self.filename, [AssertionRewritingImporter(), self.reporter])
 
-    def it_should_call_assertion_failed(self):
-        assert 'assertion_failed' in [call[0] for call in self.reporter.calls]
-
     def the_exception_should_contain_the_supplied_message(self):
         the_call, = [call for call in self.reporter.calls if call[0] == 'assertion_failed']
         assert str(the_call[2]) == self.message
@@ -62,9 +59,6 @@ class TestSpec:
     def because_we_run_the_spec(self):
         contexts.run(self.filename, [Importer(), self.reporter])
 
-    def it_should_call_assertion_failed(self):
-        assert 'assertion_failed' in [call[0] for call in self.reporter.calls]
-
     def the_exception_should_contain_an_empty_message(self):
         the_call, = [call for call in self.reporter.calls if call[0] == 'assertion_failed']
         assert str(the_call[2]) == ''
@@ -82,9 +76,6 @@ class TestSpec:
 
     def because_we_run_the_spec(self):
         contexts.run(self.filename, [AssertionRewritingImporter(), self.reporter])
-
-    def it_should_call_assertion_failed(self):
-        assert 'assertion_failed' in [call[0] for call in self.reporter.calls]
 
     def the_exception_should_contain_a_generated_message(self):
         the_call, = [call for call in self.reporter.calls if call[0] == 'assertion_failed']
@@ -113,9 +104,6 @@ class TestSpec:
     def because_we_run_the_spec(self):
         contexts.run(self.filename, [AssertionRewritingImporter(), self.reporter])
 
-    def it_should_call_assertion_failed(self):
-        assert 'assertion_failed' in [call[0] for call in self.reporter.calls]
-
     def the_exception_should_contain_a_generated_message(self, x):
         the_call, = [call for call in self.reporter.calls if call[0] == 'assertion_failed']
         assert str(the_call[2]) == "Asserted {} but found it to be falsy".format(repr(x))
@@ -140,9 +128,6 @@ class TestSpec:
 
     def because_we_run_the_spec(self):
         contexts.run(self.filename, [AssertionRewritingImporter(), self.reporter])
-
-    def it_should_call_assertion_failed(self):
-        assert 'assertion_failed' in [call[0] for call in self.reporter.calls]
 
     def the_exception_should_contain_a_generated_message(self):
         a_thing = sys.modules[self.module_name].a_thing
@@ -172,9 +157,6 @@ class TestSpec:
     def because_we_run_the_spec(self):
         contexts.run(self.filename, [AssertionRewritingImporter(), self.reporter])
 
-    def it_should_call_assertion_failed(self):
-        assert 'assertion_failed' in [call[0] for call in self.reporter.calls]
-
     def the_exception_should_contain_a_generated_message(self, x):
         the_call, = [call for call in self.reporter.calls if call[0] == 'assertion_failed']
         assert str(the_call[2]) == "Asserted not {} but found it to be truthy".format(repr(x))
@@ -200,9 +182,6 @@ class TestSpec:
     def it_should_only_call_the_function_once(self):
         mock = sys.modules[self.module_name].m
         mock.assert_called_once_with()
-
-    def it_should_call_assertion_failed(self):
-        assert 'assertion_failed' in [call[0] for call in self.reporter.calls]
 
     def the_exception_should_contain_a_generated_message(self):
         the_call, = [call for call in self.reporter.calls if call[0] == 'assertion_failed']
@@ -231,9 +210,6 @@ class TestSpec:
         mock = sys.modules[self.module_name].m
         mock.meth.assert_called_once_with()
 
-    def it_should_call_assertion_failed(self):
-        assert 'assertion_failed' in [call[0] for call in self.reporter.calls]
-
     def the_exception_should_contain_a_generated_message(self):
         the_call, = [call for call in self.reporter.calls if call[0] == 'assertion_failed']
         assert str(the_call[2]) == "Asserted {} but found it to be falsy".format(False)
@@ -260,9 +236,6 @@ class TestSpec:
 
     def because_we_run_the_spec(self):
         contexts.run(self.filename, [AssertionRewritingImporter(), self.reporter])
-
-    def it_should_call_assertion_failed(self):
-        assert 'assertion_failed' in [call[0] for call in self.reporter.calls]
 
     def the_exception_should_contain_a_generated_message(self, x, y):
         the_call, = [call for call in self.reporter.calls if call[0] == 'assertion_failed']
@@ -295,9 +268,6 @@ class TestSpec:
 
     def because_we_run_the_spec(self):
         contexts.run(self.filename, [AssertionRewritingImporter(), self.reporter])
-
-    def it_should_call_assertion_failed(self):
-        assert 'assertion_failed' in [call[0] for call in self.reporter.calls]
 
     def the_exception_should_contain_a_generated_message(self, x):
         the_call, = [call for call in self.reporter.calls if call[0] == 'assertion_failed']
@@ -333,9 +303,6 @@ class TestSpec:
         mock = sys.modules[self.module_name].m
         mock.assert_called_once_with()
 
-    def it_should_call_assertion_failed(self):
-        assert 'assertion_failed' in [call[0] for call in self.reporter.calls]
-
     def the_exception_should_contain_a_generated_message(self, x, y):
         the_call, = [call for call in self.reporter.calls if call[0] == 'assertion_failed']
         assert str(the_call[2]) == "Asserted {0} == {1} but found them not to be equal".format(repr(x), repr(y))
@@ -369,9 +336,6 @@ class TestSpec:
         mock = sys.modules[self.module_name].m
         mock.assert_called_once_with()
 
-    def it_should_call_assertion_failed(self):
-        assert 'assertion_failed' in [call[0] for call in self.reporter.calls]
-
     def the_exception_should_contain_a_generated_message(self, x, y):
         the_call, = [call for call in self.reporter.calls if call[0] == 'assertion_failed']
         assert str(the_call[2]) == "Asserted {0} == {1} but found them not to be equal".format(repr(y), repr(x))
@@ -398,9 +362,6 @@ class TestSpec:
 
     def because_we_run_the_spec(self):
         contexts.run(self.filename, [AssertionRewritingImporter(), self.reporter])
-
-    def it_should_call_assertion_failed(self):
-        assert 'assertion_failed' in [call[0] for call in self.reporter.calls]
 
     def the_exception_should_contain_a_generated_message(self, x):
         the_call, = [call for call in self.reporter.calls if call[0] == 'assertion_failed']
@@ -429,9 +390,6 @@ class TestSpec:
     def because_we_run_the_spec(self):
         contexts.run(self.filename, [AssertionRewritingImporter(), self.reporter])
 
-    def it_should_call_assertion_failed(self):
-        assert 'assertion_failed' in [call[0] for call in self.reporter.calls]
-
     def the_exception_should_contain_a_generated_message(self, x, y):
         the_call, = [call for call in self.reporter.calls if call[0] == 'assertion_failed']
         assert str(the_call[2]) == "Asserted {0} < {1} but found it to be greater".format(repr(x), repr(y))
@@ -458,9 +416,6 @@ class TestSpec:
 
     def because_we_run_the_spec(self):
         contexts.run(self.filename, [AssertionRewritingImporter(), self.reporter])
-
-    def it_should_call_assertion_failed(self):
-        assert 'assertion_failed' in [call[0] for call in self.reporter.calls]
 
     def the_exception_should_contain_a_generated_message(self, x):
         the_call, = [call for call in self.reporter.calls if call[0] == 'assertion_failed']
@@ -489,9 +444,6 @@ class TestSpec:
     def because_we_run_the_spec(self):
         contexts.run(self.filename, [AssertionRewritingImporter(), self.reporter])
 
-    def it_should_call_assertion_failed(self):
-        assert 'assertion_failed' in [call[0] for call in self.reporter.calls]
-
     def the_exception_should_contain_a_generated_message(self, x, y):
         the_call, = [call for call in self.reporter.calls if call[0] == 'assertion_failed']
         assert str(the_call[2]) == "Asserted {0} <= {1} but found it to be greater".format(repr(x), repr(y))
@@ -518,9 +470,6 @@ class TestSpec:
 
     def because_we_run_the_spec(self):
         contexts.run(self.filename, [AssertionRewritingImporter(), self.reporter])
-
-    def it_should_call_assertion_failed(self):
-        assert 'assertion_failed' in [call[0] for call in self.reporter.calls]
 
     def the_exception_should_contain_a_generated_message(self, x, y):
         the_call, = [call for call in self.reporter.calls if call[0] == 'assertion_failed']
@@ -549,9 +498,6 @@ class TestSpec:
     def because_we_run_the_spec(self):
         contexts.run(self.filename, [AssertionRewritingImporter(), self.reporter])
 
-    def it_should_call_assertion_failed(self):
-        assert 'assertion_failed' in [call[0] for call in self.reporter.calls]
-
     def the_exception_should_contain_a_generated_message(self, x):
         the_call, = [call for call in self.reporter.calls if call[0] == 'assertion_failed']
         assert str(the_call[2]) == "Asserted {0} > {0} but found them to be equal".format(repr(x))
@@ -578,9 +524,6 @@ class TestSpec:
 
     def because_we_run_the_spec(self):
         contexts.run(self.filename, [AssertionRewritingImporter(), self.reporter])
-
-    def it_should_call_assertion_failed(self):
-        assert 'assertion_failed' in [call[0] for call in self.reporter.calls]
 
     def the_exception_should_contain_a_generated_message(self, x, y):
         the_call, = [call for call in self.reporter.calls if call[0] == 'assertion_failed']
@@ -609,9 +552,6 @@ class TestSpec:
     def because_we_run_the_spec(self):
         contexts.run(self.filename, [AssertionRewritingImporter(), self.reporter])
 
-    def it_should_call_assertion_failed(self):
-        assert 'assertion_failed' in [call[0] for call in self.reporter.calls]
-
     def the_exception_should_contain_a_generated_message(self, x, y):
         the_call, = [call for call in self.reporter.calls if call[0] == 'assertion_failed']
         assert str(the_call[2]) == "Asserted {0} in {1} but found it not to be present".format(repr(x), repr(y))
@@ -638,9 +578,6 @@ class TestSpec:
 
     def because_we_run_the_spec(self):
         contexts.run(self.filename, [AssertionRewritingImporter(), self.reporter])
-
-    def it_should_call_assertion_failed(self):
-        assert 'assertion_failed' in [call[0] for call in self.reporter.calls]
 
     def the_exception_should_contain_a_generated_message(self, x, y):
         the_call, = [call for call in self.reporter.calls if call[0] == 'assertion_failed']
@@ -670,9 +607,6 @@ class TestSpec:
     def because_we_run_the_spec(self):
         contexts.run(self.filename, [AssertionRewritingImporter(), self.reporter])
 
-    def it_should_call_assertion_failed(self):
-        assert 'assertion_failed' in [call[0] for call in self.reporter.calls]
-
     def the_exception_should_contain_a_generated_message(self, x, y):
         the_call, = [call for call in self.reporter.calls if call[0] == 'assertion_failed']
         assert str(the_call[2]) == "Asserted {0} is {1} but found them not to be the same".format(repr(x), repr(y))
@@ -700,9 +634,6 @@ class TestSpec:
     def because_we_run_the_spec(self):
         contexts.run(self.filename, [AssertionRewritingImporter(), self.reporter])
 
-    def it_should_call_assertion_failed(self):
-        assert 'assertion_failed' in [call[0] for call in self.reporter.calls]
-
     def the_exception_should_contain_a_generated_message(self, x):
         the_call, = [call for call in self.reporter.calls if call[0] == 'assertion_failed']
         assert str(the_call[2]) == "Asserted {0} is not {0} but found them to be the same".format(repr(x))
@@ -728,9 +659,6 @@ class TestSpec:
 
     def because_we_run_the_spec(self):
         contexts.run(self.filename, [AssertionRewritingImporter(), self.reporter])
-
-    def it_should_call_assertion_failed(self):
-        assert 'assertion_failed' in [call[0] for call in self.reporter.calls]
 
     def the_exception_should_contain_a_generated_message(self, x, cls):
         the_call, = [call for call in self.reporter.calls if call[0] == 'assertion_failed']
@@ -758,9 +686,6 @@ class TestSpec:
     def because_we_run_the_spec(self):
         contexts.run(self.filename, [AssertionRewritingImporter(), self.reporter])
 
-    def it_should_call_assertion_failed(self):
-        assert 'assertion_failed' in [call[0] for call in self.reporter.calls]
-
     def the_exception_should_contain_a_generated_message(self, x, tup):
         the_call, = [call for call in self.reporter.calls if call[0] == 'assertion_failed']
         assert str(the_call[2]) == "Asserted isinstance({0}, {1}) but found it to be a {2}".format(repr(x), tup, type(x).__name__)
@@ -780,9 +705,6 @@ class TestSpec:
 
     def because_we_run_the_spec(self):
         contexts.run(self.filename, [AssertionRewritingImporter(), self.reporter])
-
-    def it_should_call_assertion_failed(self):
-        assert 'assertion_failed' in [call[0] for call in self.reporter.calls]
 
     def the_exception_should_contain_a_generated_message(self):
         the_call, = [call for call in self.reporter.calls if call[0] == 'assertion_failed']
