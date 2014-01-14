@@ -149,6 +149,62 @@ class FinalCountsReporter(shared.StreamReporter):
             pluralise("error", self.error_count))
 
 
+class StdOutCapturingReporter(VerboseReporter):
+    def centred_dashes(self, string, indentation):
+        num = str(70 - indentation)
+        return ("{:-^"+num+"}").format(string)
+
+    def context_started(self, name, example):
+        self.real_stdout = sys.stdout
+        self.buffer = StringIO()
+        sys.stdout = self.buffer
+        super().context_started(name, example)
+
+    def context_ended(self, name, example):
+        sys.stdout = self.real_stdout
+        super().context_ended(name, example)
+
+    def context_errored(self, name, example, exception):
+        super().context_errored(name, example, exception)
+        sys.stdout = self.real_stdout
+        self.add_buffer_to_summary(2)
+
+    def assertion_failed(self, name, exception):
+        super().assertion_failed(name, exception)
+        self.add_buffer_to_summary(4)
+
+    def assertion_errored(self, name, exception):
+        super().assertion_errored(name, exception)
+        self.add_buffer_to_summary(4)
+
+    def add_buffer_to_summary(self, indentation):
+        if self.buffer.getvalue():
+            lines = [self.centred_dashes(" >> begin captured stdout << ", indentation)]
+            lines.extend(self.buffer.getvalue().strip().split('\n'))
+            lines.append(self.centred_dashes(" >> end captured stdout << ", indentation))
+            for line in lines:
+                self._print(' '*(indentation) + line)
+
+
+class TimedReporter(shared.StreamReporter):
+    def test_run_started(self):
+        super().test_run_started()
+        self.start_time = datetime.datetime.now()
+
+    def test_run_ended(self):
+        super().test_run_ended()
+        self.end_time = datetime.datetime.now()
+        self.print_time()
+
+    def print_time(self):
+        total_secs = (self.end_time - self.start_time).total_seconds()
+        rounded = round(total_secs, 1)
+        self._print("({} seconds)".format(rounded))
+
+
+# Hint: split this up into two plugins that live at either end of the plugin list
+# - one starts colours, the other resets it.
+# Alternatively, provide before and after hooks.
 def ColouringDecorator(plugin_cls):
     def instantiate(stream):
         return _ColouringDecorator(plugin_cls, stream)
@@ -250,59 +306,6 @@ class _FailureOnlyDecorator(Plugin):
         return (type(self) == type(other)
             and self.stream == other.stream
             and type(self.plugin) == type(other.plugin))
-
-
-class StdOutCapturingReporter(VerboseReporter):
-    def centred_dashes(self, string, indentation):
-        num = str(70 - indentation)
-        return ("{:-^"+num+"}").format(string)
-
-    def context_started(self, name, example):
-        self.real_stdout = sys.stdout
-        self.buffer = StringIO()
-        sys.stdout = self.buffer
-        super().context_started(name, example)
-
-    def context_ended(self, name, example):
-        sys.stdout = self.real_stdout
-        super().context_ended(name, example)
-
-    def context_errored(self, name, example, exception):
-        super().context_errored(name, example, exception)
-        sys.stdout = self.real_stdout
-        self.add_buffer_to_summary(2)
-
-    def assertion_failed(self, name, exception):
-        super().assertion_failed(name, exception)
-        self.add_buffer_to_summary(4)
-
-    def assertion_errored(self, name, exception):
-        super().assertion_errored(name, exception)
-        self.add_buffer_to_summary(4)
-
-    def add_buffer_to_summary(self, indentation):
-        if self.buffer.getvalue():
-            lines = [self.centred_dashes(" >> begin captured stdout << ", indentation)]
-            lines.extend(self.buffer.getvalue().strip().split('\n'))
-            lines.append(self.centred_dashes(" >> end captured stdout << ", indentation))
-            for line in lines:
-                self._print(' '*(indentation) + line)
-
-
-class TimedReporter(shared.StreamReporter):
-    def test_run_started(self):
-        super().test_run_started()
-        self.start_time = datetime.datetime.now()
-
-    def test_run_ended(self):
-        super().test_run_ended()
-        self.end_time = datetime.datetime.now()
-        self.print_time()
-
-    def print_time(self):
-        total_secs = (self.end_time - self.start_time).total_seconds()
-        rounded = round(total_secs, 1)
-        self._print("({} seconds)".format(rounded))
 
 
 def pluralise(noun, num):
