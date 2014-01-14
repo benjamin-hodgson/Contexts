@@ -1,7 +1,7 @@
 import importlib
 import os
 import sys
-from ..assertion_rewriting import AssertionRewritingLoader
+from .assertion_rewriting import AssertionRewritingLoader
 from . import Plugin
 
 
