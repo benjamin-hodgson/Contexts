@@ -7,9 +7,10 @@ import colorama
 import contexts
 from contexts import __main__
 from contexts.plugins import cli
-from contexts.plugins.shared import ExitCodeReporter
-from contexts.plugins.other import Shuffler
+from contexts.plugins.shuffling import Shuffler
 from contexts.plugins.importing import Importer
+from contexts.plugins.shared import ExitCodeReporter
+from contexts.plugins.teamcity import TeamCityReporter
 from contexts.plugins.assertion_rewriting import AssertionRewritingImporter
 
 
@@ -300,7 +301,7 @@ class WhenRunningOnTheCmdLineInTeamcityMode(MainSharedContext):
         self.expected_plugins = [
             AssertionRewritingImporter(),
             Shuffler(),
-            contexts.plugins.teamcity.TeamCityReporter(sys.stdout),
+            TeamCityReporter(sys.stdout),
             ExitCodeReporter()
         ]
         sys.argv = ['run-contexts', '--teamcity']
@@ -317,7 +318,7 @@ class WhenRunningInTeamcity(MainSharedContext):
         self.expected_plugins = [
             AssertionRewritingImporter(),
             Shuffler(),
-            contexts.plugins.teamcity.TeamCityReporter(sys.stdout),
+            TeamCityReporter(sys.stdout),
             ExitCodeReporter()
         ]
         os.environ["TEAMCITY_VERSION"] = "7.0"
@@ -432,18 +433,6 @@ class WhenStdOutIsAPipe(MainSharedContext):
 ###########################################################
 # Test helper methods
 ###########################################################
-
-def args_with(**kwargs):
-    defaults = {
-        'capture': True,
-        'verbosity': 'normal',
-        'teamcity': False,
-        'shuffle': True,
-        'path': os.getcwd(),
-        'colour': True
-    }
-    defaults.update(kwargs)
-    return defaults
 
 class QuietReporterResemblance(object):
     """

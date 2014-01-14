@@ -1,5 +1,5 @@
 import contexts
-from contexts.plugins.other import Shuffler
+from contexts.plugins.shuffling import Shuffler
 
 class ShufflerSharedContext:
     def establish_that_shuffle_is_true(self):
