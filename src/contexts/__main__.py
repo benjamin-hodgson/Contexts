@@ -14,7 +14,7 @@ def cmd():
     if args.shuffle:
         plugin_list.append(Shuffler())
     plugin_list.extend(create_plugins(args))
-    main(os.path.realpath(args.path), plugin_list, args.rewriting)
+    main(os.path.realpath(args.path), plugin_list)
 
 
 def parse_args(args):

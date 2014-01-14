@@ -48,14 +48,13 @@ class WhenRunningFromCommandLineWithNoArguments(MainSharedContext):
             cli.FinalCountsReporter(sys.stdout),
             cli.TimedReporter(sys.stdout)
         ]
-        self.expected = (os.getcwd(), self.expected_plugins, True)
         sys.argv = ['run-contexts']
 
     def because_we_call_cmd(self):
         __main__.cmd()
 
     def it_should_call_main_with_the_default_plugins(self):
-        self.mock_main.assert_called_once_with(os.getcwd(), self.expected_plugins, True)
+        self.mock_main.assert_called_once_with(os.getcwd(), self.expected_plugins)
 
 
 class WhenSpecifyingAPath(MainSharedContext):
@@ -75,7 +74,7 @@ class WhenSpecifyingAPath(MainSharedContext):
         __main__.cmd()
 
     def it_should_call_main_with_the_path(self):
-        self.mock_main.assert_called_once_with(self.path, self.expected_plugins, True)
+        self.mock_main.assert_called_once_with(self.path, self.expected_plugins)
 
 
 class WhenUsingTheVerboseFlag(MainSharedContext):
@@ -98,7 +97,7 @@ class WhenUsingTheVerboseFlag(MainSharedContext):
         __main__.cmd()
 
     def it_should_call_main_with_a_verbose_reporter(self):
-        self.mock_main.assert_called_once_with(os.getcwd(), self.expected_plugins, True)
+        self.mock_main.assert_called_once_with(os.getcwd(), self.expected_plugins)
 
 
 class WhenUserDisablesColour(MainSharedContext):
@@ -117,7 +116,7 @@ class WhenUserDisablesColour(MainSharedContext):
         __main__.cmd()
 
     def it_should_call_main_with_a_non_coloured_reporter(self):
-        self.mock_main.assert_called_once_with(os.getcwd(), self.expected_plugins, True)
+        self.mock_main.assert_called_once_with(os.getcwd(), self.expected_plugins)
 
 
 class WhenDisablingColourInVerboseMode(MainSharedContext):
@@ -140,7 +139,7 @@ class WhenDisablingColourInVerboseMode(MainSharedContext):
         __main__.cmd()
 
     def it_should_call_main_with_a_non_coloured_verbose_reporter(self):
-        self.mock_main.assert_called_once_with(os.getcwd(), self.expected_plugins, True)
+        self.mock_main.assert_called_once_with(os.getcwd(), self.expected_plugins)
 
 
 class WhenUserDisablesStdOutCapturing(MainSharedContext):
@@ -164,7 +163,7 @@ class WhenUserDisablesStdOutCapturing(MainSharedContext):
         __main__.cmd()
 
     def it_should_call_main_with_a_non_capturing_reporter(self):
-        self.mock_main.assert_called_once_with(os.getcwd(), self.expected_plugins, True)
+        self.mock_main.assert_called_once_with(os.getcwd(), self.expected_plugins)
 
 
 class WhenUserDisablesCapturingInVerboseMode(MainSharedContext):
@@ -190,7 +189,7 @@ class WhenUserDisablesCapturingInVerboseMode(MainSharedContext):
         __main__.cmd()
 
     def it_should_call_main_with_a_non_capturing_verbose_reporter(self):
-        self.mock_main.assert_called_once_with(os.getcwd(), self.expected_plugins, True)
+        self.mock_main.assert_called_once_with(os.getcwd(), self.expected_plugins)
 
 
 class WhenUserDisablesColourAndCapturing(MainSharedContext):
@@ -214,7 +213,7 @@ class WhenUserDisablesColourAndCapturing(MainSharedContext):
         __main__.cmd()
 
     def it_should_call_main_with_a_non_coloured_non_capturing_reporter(self):
-        self.mock_main.assert_called_once_with(os.getcwd(), self.expected_plugins, True)
+        self.mock_main.assert_called_once_with(os.getcwd(), self.expected_plugins)
 
 
 class WhenUserDisablesColourAndCapturingInVerboseMode(MainSharedContext):
@@ -240,7 +239,7 @@ class WhenUserDisablesColourAndCapturingInVerboseMode(MainSharedContext):
         __main__.cmd()
 
     def it_should_call_main_with_a_non_coloured_non_capturing_verbose_reporter(self):
-        self.mock_main.assert_called_once_with(os.getcwd(), self.expected_plugins, True)
+        self.mock_main.assert_called_once_with(os.getcwd(), self.expected_plugins)
 
 
 class WhenRunningInQuietMode(MainSharedContext):
@@ -261,7 +260,7 @@ class WhenRunningInQuietMode(MainSharedContext):
         __main__.cmd()
 
     def it_should_call_main_with_a_quiet_reporter(self):
-        self.mock_main.assert_called_once_with(os.getcwd(), self.expected_plugins, True)
+        self.mock_main.assert_called_once_with(os.getcwd(), self.expected_plugins)
 
 
 class WhenDisablingAssertionRewriting(MainSharedContext):
@@ -280,7 +279,7 @@ class WhenDisablingAssertionRewriting(MainSharedContext):
         __main__.cmd()
 
     def it_should_tell_main_to_disable_assertion_rewriting(self):
-        self.mock_main.assert_called_once_with(os.getcwd(), self.expected_plugins, False)
+        self.mock_main.assert_called_once_with(os.getcwd(), self.expected_plugins)
 
 
 class WhenRunningOnTheCmdLineInTeamcityMode(MainSharedContext):
@@ -296,7 +295,7 @@ class WhenRunningOnTheCmdLineInTeamcityMode(MainSharedContext):
         __main__.cmd()
 
     def it_should_call_main_with_a_teamcity_reporter(self):
-        self.mock_main.assert_called_once_with(os.getcwd(), self.expected_plugins, True)
+        self.mock_main.assert_called_once_with(os.getcwd(), self.expected_plugins)
 
 
 class WhenRunningInTeamcity(MainSharedContext):
@@ -313,7 +312,7 @@ class WhenRunningInTeamcity(MainSharedContext):
         __main__.cmd()
 
     def it_should_call_main_with_a_teamcity_reporter(self):
-        self.mock_main.assert_called_once_with(os.getcwd(), self.expected_plugins, True)
+        self.mock_main.assert_called_once_with(os.getcwd(), self.expected_plugins)
 
 
 class WhenUserDisablesShuffling(MainSharedContext):
@@ -331,7 +330,7 @@ class WhenUserDisablesShuffling(MainSharedContext):
         __main__.cmd()
 
     def it_should_call_main_without_a_shuffler(self):
-        self.mock_main.assert_called_once_with(os.getcwd(), self.expected_plugins, True)
+        self.mock_main.assert_called_once_with(os.getcwd(), self.expected_plugins)
 
 
 class WhenArgumentsSpecifyMutuallyExclusiveOptions(MainSharedContext):
@@ -388,7 +387,7 @@ class WhenColoramaIsNotInstalled(MainSharedContext):
             cli.FailureOnlyDecorator(cli.StdOutCapturingReporter)(sys.stdout),
             cli.FinalCountsReporter(sys.stdout),
             cli.TimedReporter(sys.stdout)
-            ], True)
+            ])
 
     def cleanup_import(self):
         builtins.__import__ = self.real_import
@@ -409,7 +408,7 @@ class WhenStdOutIsAPipe(MainSharedContext):
             cli.FailureOnlyDecorator(cli.StdOutCapturingReporter)(sys.stdout),
             cli.FinalCountsReporter(sys.stdout),
             cli.TimedReporter(sys.stdout)
-            ], True)
+            ])
 
 
 ###########################################################

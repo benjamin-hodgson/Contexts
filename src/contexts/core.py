@@ -1,7 +1,6 @@
 import inspect
 import itertools
 import os
-import random
 import types
 from contextlib import contextmanager
 from . import discovery
@@ -12,10 +11,10 @@ from .tools import NO_EXAMPLE
 
 
 class TestRun(object):
-    def __init__(self, source, rewriting, plugin_notifier):
+    def __init__(self, source, plugin_notifier):
         self.source = source
         self.plugin_notifier = plugin_notifier
-        self.importer = importing.Importer(rewriting, self.plugin_notifier)
+        self.importer = importing.Importer(self.plugin_notifier)
 
     def run(self):
         with self.plugin_notifier.run_test_run(self):

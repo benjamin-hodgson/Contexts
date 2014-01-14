@@ -2,8 +2,7 @@ import os
 
 
 class Importer:
-    def __init__(self, rewriting, plugin_notifier):
-        self.rewriting = rewriting
+    def __init__(self, plugin_notifier):
         self.plugin_notifier = plugin_notifier
 
     def import_from_file(self, file_path):
