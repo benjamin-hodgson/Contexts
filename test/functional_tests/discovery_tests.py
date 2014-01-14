@@ -318,10 +318,6 @@ class WhenPluginsModifyAModuleList:
     def cleanup_the_file_system(self):
         shutil.rmtree(self.folder_path)
 
-    def create_folder(self):
-        self.folder_path = os.path.join(TEST_DATA_DIR, 'shuffling_folder')
-        os.mkdir(self.folder_path)
-
     def setup_filesystem(self):
         self.folder_path = os.path.join(TEST_DATA_DIR, 'non_package_folder')
         os.mkdir(self.folder_path)
@@ -536,89 +532,76 @@ class TestSpec:
 
 class WhenRunningAFolderWhichIsAPackage:
     def establish_that_there_is_a_folder_containing_modules(self):
-        self.code = """
-module_ran = False
-
-class TestSpec:
-    def it(self):
-        global module_ran
-        module_ran = True
-"""
         self.package_name = 'package_folder'
         self.module_names = ["__init__", "test_file1", "test_file2", "an_innocent_module"]
-        self.create_folder()
-        self.write_files()
+        self.setup_filesystem()
 
-        self.reporter = SpyReporter()
+        self.module1 = types.ModuleType(self.package_name)
+        class Spec1:
+            ran = False
+            def it(self):
+                self.__class__.ran = True
+        self.module1.Spec1 = Spec1
+        self.module2 = types.ModuleType(self.package_name + '.' + self.module_names[1])
+        class Spec2:
+            ran = False
+            def it(self):
+                self.__class__.ran = True
+        self.module2.Spec2 = Spec2
+        self.module3 = types.ModuleType(self.package_name + '.' + self.module_names[2])
+        class Spec3:
+            ran = False
+            def it(self):
+                self.__class__.ran = True
+        self.module3.Spec3 = Spec3
+
+        self.plugin = mock.Mock()
+        self.plugin.import_module.side_effect = [self.module1, self.module2, self.module3]
 
     def because_we_run_the_folder(self):
-        contexts.run(self.folder_path, [Importer(), self.reporter])
+        contexts.run(self.folder_path, [self.plugin])
 
-    def it_should_import_the_package(self):
-        assert self.package_name in sys.modules
-
-    def it_should_import_the_first_module(self):
-        assert self.package_name + '.' + self.module_names[1] in sys.modules
-
-    def it_should_only_import_the_first_module_using_its_full_name(self):
-        assert self.module_names[1] not in sys.modules
-
-    def it_should_import_the_second_module(self):
-        assert self.package_name + '.' + self.module_names[2] in sys.modules
-
-    def it_should_only_import_the_second_module_using_its_full_name(self):
-        assert self.module_names[1] not in sys.modules
-
-    def it_should_not_import_the_third_module(self):
-        assert self.package_name + '.' + self.module_names[3] not in sys.modules
-        assert self.module_names[3] not in sys.modules
-
-    def it_should_not_import_something_called_init(self):
-        assert "__init__" not in sys.modules
-        assert "package_folder.__init__" not in sys.modules
+    def it_should_import_the_package_before_the_modules(self):
+        assert self.plugin.import_module.call_args_list == [
+            mock.call(TEST_DATA_DIR, self.package_name),
+            mock.call(TEST_DATA_DIR, self.package_name + '.' + self.module_names[1]),
+            mock.call(TEST_DATA_DIR, self.package_name + '.' + self.module_names[2])
+            ]
 
     def it_should_run_the_package(self):
-        assert sys.modules[self.package_name].module_ran
+        assert self.module1.Spec1.ran
 
     def it_should_run_the_first_module(self):
-        assert sys.modules[self.package_name + '.' + self.module_names[1]].module_ran
+        assert self.module2.Spec2.ran
 
     def it_should_run_the_second_module(self):
-        assert sys.modules[self.package_name + '.' + self.module_names[2]].module_ran
+        assert self.module3.Spec3.ran
 
     def it_should_call_suite_started_for_three_modules(self):
-        assert self.reporter.calls[1][0] == 'suite_started'
-        assert self.reporter.calls[7][0] == 'suite_started'
-        assert self.reporter.calls[13][0] == 'suite_started'
-
-    def it_should_pass_the_names_into_suite_started(self):
-        names = {call[1] for call in self.reporter.calls if call[0] == 'suite_started'}
-        assert names == {'package_folder', 'package_folder.test_file1', 'package_folder.test_file2'}
+        assert self.plugin.suite_started.call_args_list == [
+            mock.call(self.module1.__name__),
+            mock.call(self.module2.__name__),
+            mock.call(self.module3.__name__)
+        ]
 
     def it_should_call_suite_ended_for_three_modules(self):
-        assert self.reporter.calls[6][0] == 'suite_ended'
-        assert self.reporter.calls[12][0] == 'suite_ended'
-        assert self.reporter.calls[18][0] == 'suite_ended'
+        assert self.plugin.suite_ended.call_args_list == [
+            mock.call(self.module1.__name__),
+            mock.call(self.module2.__name__),
+            mock.call(self.module3.__name__)
+        ]
 
-    def it_should_pass_the_names_into_suite_ended(self):
-        names = {call[1] for call in self.reporter.calls if call[0] == 'suite_ended'}
-        assert names == {'package_folder', 'package_folder.test_file1', 'package_folder.test_file2'}
-
-    def cleanup_the_file_system_and_sys_dot_modules(self):
+    def cleanup_the_file_system(self):
         shutil.rmtree(self.folder_path)
-        del sys.modules[self.package_name + '.' + self.module_names[1]]
-        del sys.modules[self.package_name + '.' + self.module_names[2]]
-        del sys.modules[self.package_name]
 
-    def create_folder(self):
+    def setup_filesystem(self):
         self.folder_path = os.path.join(TEST_DATA_DIR, self.package_name)
         os.mkdir(self.folder_path)
 
-    def write_files(self):
-        self.filenames = [os.path.join(self.folder_path, n + ".py") for n in self.module_names]
-        for fn in self.filenames:
-            with open(fn, 'w+') as f:
-                f.write(self.code)
+        for module_name in self.module_names:
+            filename = os.path.join(self.folder_path, module_name+".py")
+            with open(filename, 'w+') as f:
+                f.write('')
 
 
 class WhenRunningAFolderWithSubfolders:
