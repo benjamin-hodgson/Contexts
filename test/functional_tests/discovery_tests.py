@@ -116,14 +116,39 @@ class WhenRunningAFile:
                 self.__class__.ran = True
         self.module.When = When
 
+        self.not_implemented_plugin = mock.Mock(wraps=Plugin())
+        del self.not_implemented_plugin.import_module
+
+        self.noop_plugin = mock.Mock(wraps=Plugin())
+
         self.plugin = mock.Mock(spec=Plugin)
         self.plugin.import_module.return_value = self.module
 
-    def because_we_run_the_file(self):
-        contexts.run(self.filename, [self.plugin])
+        self.too_late_plugin = mock.Mock(spec=Plugin)
 
-    def it_should_ask_the_plugin_to_import_the_correct_file(self):
-        self.plugin.import_module.assert_called_once_with(TEST_DATA_DIR, self.module_name)
+        self.plugin_master = mock.Mock()
+        self.plugin_master.not_implemented_plugin = self.not_implemented_plugin
+        self.plugin_master.noop_plugin = self.noop_plugin
+        self.plugin_master.plugin = self.plugin
+        self.plugin_master.too_late_plugin = self.too_late_plugin
+
+    def because_we_run_the_file(self):
+        contexts.run(self.filename, [
+            self.not_implemented_plugin,
+            self.noop_plugin,
+            self.plugin,
+            self.too_late_plugin
+        ])
+
+    def it_should_ask_the_plugins_to_import_the_correct_file(self):
+        self.plugin_master.assert_has_calls([
+            mock.call.noop_plugin.import_module(TEST_DATA_DIR, self.module_name),
+            mock.call.plugin.import_module(TEST_DATA_DIR, self.module_name)
+            ])
+
+    @contexts.assertion
+    def it_should_not_ask_any_plugins_after_the_one_that_returned(self):
+        assert not self.too_late_plugin.import_module.called
 
     def it_should_run_the_module_that_the_plugin_imported(self):
         assert self.module.When.ran
@@ -141,6 +166,34 @@ class WhenRunningAFile:
         self.filename = os.path.join(TEST_DATA_DIR, self.module_name+".py")
         with open(self.filename, 'w+') as f:
             f.write('')
+
+
+class WhenAPluginFailsToImportAModule:
+    def establish_that_the_plugin_throws_an_exception(self):
+        self.exception = Exception()
+        self.plugin = mock.Mock(spec=Plugin)
+        self.plugin.import_module.side_effect = self.exception
+
+        self.module_name = 'accident_prone_test_module'
+
+        self.setup_filesystem()
+
+    def because_we_run_the_folder(self):
+        contexts.run(self.folder_path, [self.plugin])
+
+    def it_should_pass_the_exception_into_unexpected_error_on_the_plugin(self):
+        self.plugin.unexpected_error.assert_called_once_with(self.exception)
+
+    def cleanup_the_file_system(self):
+        shutil.rmtree(self.folder_path)
+
+    def setup_filesystem(self):
+        self.folder_path = os.path.join(TEST_DATA_DIR, 'plugin_failing_folder')
+        os.mkdir(self.folder_path)
+
+        filename = os.path.join(self.folder_path, self.module_name+".py")
+        with open(filename, 'w+') as f:
+            f.write("")
 
 
 class WhenRunningAFolderWhichIsNotAPackage:
@@ -213,7 +266,7 @@ class WhenRunningAFolderWhichIsNotAPackage:
                 f.write('')
 
 
-class WhenAPluginModifiesAModuleList:
+class WhenPluginsModifyAModuleList:
     def establish_that_there_is_a_folder_containing_modules(self):
         self.module_names = ["test_file1", "test_file2", "an_innocent_module"]
         self.setup_filesystem()
@@ -225,29 +278,44 @@ class WhenAPluginModifiesAModuleList:
         class SpySpecInModule2:
             def it_should_run_this(s):
                 self.ran_spies.append('module2')
-        module1 = types.ModuleType('module1')
-        module1.SpySpecInModule1 = SpySpecInModule1
-        module2 = types.ModuleType('module2')
-        module1.SpySpecInModule2 = SpySpecInModule2
+        self.module1 = types.ModuleType('module1')
+        self.module1.SpySpecInModule1 = SpySpecInModule1
+        self.module2 = types.ModuleType('module2')
+        self.module2.SpySpecInModule2 = SpySpecInModule2
 
         def modify_list(l):
             self.called_with = l.copy()
-            l[:] = [module1, module2]
+            l[:] = [self.module1, self.module2]
         self.plugin = mock.Mock()
         # if it tried to run strings as modules it would crash
         self.plugin.import_module.side_effect = ['x', 'y']
         self.plugin.process_module_list.side_effect = modify_list
 
-    def because_we_run_the_folder(self):
-        contexts.run(self.folder_path, [self.plugin])
+        self.plugin2 = mock.Mock()
 
-    def it_should_pass_the_imported_modules_to_process_module_list(self):
+        self.plugin_master = mock.Mock()
+        self.plugin_master.plugin = self.plugin
+        self.plugin_master.plugin2 = self.plugin2
+
+    def because_we_run_the_folder(self):
+        contexts.run(self.folder_path, [self.plugin, self.plugin2])
+
+    def it_should_ask_the_plugins_to_process_the_module_list_in_order(self):
+        self.plugin_master.assert_has_calls([
+            mock.call.plugin.process_module_list(mock.ANY),
+            mock.call.plugin2.process_module_list(mock.ANY)
+            ])
+
+    def it_should_pass_the_imported_modules_in_to_the_first_plugin(self):
         assert self.called_with == ['x', 'y']
+
+    def it_should_pass_the_modified_list_in_to_the_second_plugin(self):
+        self.plugin2.process_module_list.assert_called_once_with([self.module1, self.module2])
 
     def it_should_run_the_modules_in_the_list_that_the_config_modified(self):
         assert self.ran_spies == ['module1', 'module2']
 
-    def cleanup_the_file_system_and_sys_dot_modules(self):
+    def cleanup_the_file_system(self):
         shutil.rmtree(self.folder_path)
 
     def create_folder(self):
@@ -262,195 +330,6 @@ class WhenAPluginModifiesAModuleList:
             filename = os.path.join(self.folder_path, module_name+".py")
             with open(filename, 'w+') as f:
                 f.write('')
-
-
-class WhenPluginsImportModules:
-    def establish_that_we_have_a_bunch_of_plugins_and_a_file_in_the_filesystem(self):
-        self.module_name = "test_module"
-
-        self.plugin_without_method = mock.Mock(spec=Plugin)
-        del self.plugin_without_method.import_module
-
-        self.noop_plugin = mock.Mock(spec=Plugin)
-        self.noop_plugin.import_module.return_value = None
-
-        self.importer_plugin = mock.Mock(spec=Plugin)
-        module = types.ModuleType(self.module_name)
-        self.ran_spies = set()
-        class SpySpec1:
-            def it(s):
-                self.ran_spies.add('SpySpec1')
-        module.SpySpec1 = SpySpec1
-        class SpySpec2:
-            def it(s):
-                self.ran_spies.add('SpySpec2')
-        module.SpySpec2 = SpySpec2
-        self.importer_plugin.import_module.return_value = module
-
-        self.final_plugin = mock.Mock(spec=Plugin)
-
-        self.plugins = [self.plugin_without_method, self.noop_plugin, self.importer_plugin, self.final_plugin]
-        self.plugin_master = mock.Mock()
-        self.plugin_master.plugin_without_method = self.plugin_without_method
-        self.plugin_master.noop_plugin = self.noop_plugin
-        self.plugin_master.importer_plugin = self.importer_plugin
-        self.plugin_master.final_plugin = self.final_plugin
-
-        self.setup_filesystem()
-
-    def because_we_run_the_folder(self):
-        contexts.run(self.folder_path, self.plugins)
-
-    def it_should_call_import_module_on_the_first_plugin(self):
-        self.noop_plugin.import_module.assert_called_once_with(self.folder_path, self.module_name)
-
-    def it_should_call_import_module_on_the_second_plugin(self):
-        self.importer_plugin.import_module.assert_called_once_with(self.folder_path, self.module_name)
-
-    def it_should_not_call_import_module_on_the_plugin_following_the_one_that_returned(self):
-        assert not self.final_plugin.import_module.called
-
-    def it_should_not_import_the_real_file(self):
-        assert self.module_name not in sys.modules
-
-    def it_should_run_the_returned_module(self):
-        assert self.ran_spies == {'SpySpec1', 'SpySpec2'}
-
-    def cleanup_the_file_system(self):
-        shutil.rmtree(self.folder_path)
-
-    def setup_filesystem(self):
-        self.folder_path = os.path.join(TEST_DATA_DIR, 'plugin_importing_folder')
-        os.mkdir(self.folder_path)
-
-        filename = os.path.join(self.folder_path, self.module_name+".py")
-        with open(filename, 'w+') as f:
-            f.write("")
-
-
-class WhenAPluginFailsToImportAModule:
-    def establish_that_the_plugin_throws_an_exception(self):
-        self.exception = Exception()
-        self.plugin = mock.Mock(spec=Plugin)
-        self.plugin.import_module.side_effect = self.exception
-
-        self.module_name = 'accident_prone_test_module'
-
-        self.setup_filesystem()
-
-    def because_we_run_the_folder(self):
-        contexts.run(self.folder_path, [self.plugin])
-
-    def it_should_pass_the_exception_into_unexpected_error_on_the_plugin(self):
-        self.plugin.unexpected_error.assert_called_once_with(self.exception)
-
-    def cleanup_the_file_system(self):
-        shutil.rmtree(self.folder_path)
-
-    def setup_filesystem(self):
-        self.folder_path = os.path.join(TEST_DATA_DIR, 'plugin_failing_folder')
-        os.mkdir(self.folder_path)
-
-        filename = os.path.join(self.folder_path, self.module_name+".py")
-        with open(filename, 'w+') as f:
-            f.write("")
-
-
-class WhenAFolderContainsAnAlreadyImportedFile:
-    def establish_that_we_have_already_imported_the_module(self):
-        self.code = """
-module_ran = False
-is_fake = False
-
-class TestSpec:
-    def it(self):
-        global module_ran
-        module_ran = True
-"""
-        self.module_name = "test1"
-        self.create_folder()
-        self.write_files()
-        self.create_fake_module()
-
-    def because_we_run_the_folder(self):
-        contexts.run(self.folder_path, [Importer()])
-
-    def it_should_not_re_import_the_module(self):
-        assert sys.modules[self.module_name].is_fake
-
-    def it_should_not_re_run_the_module(self):
-        assert not sys.modules[self.module_name].module_ran
-
-    def cleanup_the_file_system_and_sys_dot_modules(self):
-        shutil.rmtree(self.folder_path)
-        del sys.modules[self.module_name]
-
-    def create_fake_module(self):
-        class TestSpec:
-            def it(self):
-                global module_ran
-                module_ran = True
-        test = types.ModuleType(self.module_name)
-        test.is_fake = True
-        test.module_ran = False
-        test.__file__ = self.filename
-        test.TestSpec = TestSpec
-        sys.modules[self.module_name] = test
-
-    def create_folder(self):
-        self.folder_path = os.path.join(TEST_DATA_DIR, 'non_package_folder2')
-        os.mkdir(self.folder_path)
-
-    def write_files(self):
-        self.filename = os.path.join(self.folder_path, self.module_name + '.py')
-        with open(self.filename, 'w+') as f:
-            f.write(self.code)
-
-
-class WhenAFolderContainsAFileWithTheSameNameAsAnAlreadyImportedModule:
-    def establish_that_we_have_imported_a_module_with_the_same_name(self):
-        self.code = """
-module_ran = False
-is_fake = False
-
-class TestSpec:
-    def it(self):
-        global module_ran
-        module_ran = True
-"""
-        self.module_name = "test2"
-        self.create_folder()
-        self.write_files()
-        self.create_fake_module()
-
-    def because_we_run_the_folder(self):
-        contexts.run(self.folder_path, [Importer()])
-
-    def it_should_import_the_new_module_and_overwrite_the_old_one(self):
-        assert not sys.modules[self.module_name].is_fake
-
-    def it_should_run_the_first_module(self):
-        assert sys.modules[self.module_name].module_ran
-
-    def cleanup_the_file_system_and_sys_dot_modules(self):
-        shutil.rmtree(self.folder_path)
-        del sys.modules[self.module_name]
-
-    def create_fake_module(self):
-        test = types.ModuleType(self.module_name)
-        test.is_fake = True
-        test.module_ran = False
-        test.__file__ = os.path.join("fake", "file.py")
-        sys.modules[self.module_name] = test
-
-    def create_folder(self):
-        self.folder_path = os.path.join(TEST_DATA_DIR, 'non_package_folder2')
-        os.mkdir(self.folder_path)
-
-    def write_files(self):
-        filename = os.path.join(self.folder_path, self.module_name + '.py')
-        with open(filename, 'w+') as f:
-            f.write(self.code)
 
 
 class WhenAPackageHasAlreadyBeenImported:
