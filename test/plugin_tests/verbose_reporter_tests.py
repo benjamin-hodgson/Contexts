@@ -10,17 +10,6 @@ class VerboseReporterSharedContext:
         self.reporter = plugins.cli.VerboseReporter(self.stringio)
         self.outputs = []
 
-class WhenPrintingVerboselyAndATestRunEnds(VerboseReporterSharedContext):
-    def because_a_test_run_ends(self):
-        self.reporter.test_run_ended()
-    def it_should_output_a_summary(self):
-        assert self.stringio.getvalue() == ("""
-----------------------------------------------------------------------
-PASSED!
-0 contexts, 0 assertions
-""")
-# TODO: tests that make assertions about the counts
-
 class WhenPrintingVerboselyAndAContextStarts(VerboseReporterSharedContext):
     def context(self):
         self.ctx = tools.create_context("made.up_context_1")

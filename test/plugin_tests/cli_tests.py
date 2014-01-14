@@ -5,10 +5,24 @@ from contexts import plugins
 from . import tools
 
 
-class WhenPrintingASuccessSummary:
+class WhenPrintingFinalCountsForAnEmptyRun:
+    def context(self):
+        self.stringio = StringIO()
+        self.reporter = plugins.cli.FinalCountsReporter(self.stringio)
+    def because_a_test_run_ends(self):
+        self.reporter.test_run_ended()
+    def it_should_output_a_summary(self):
+        assert self.stringio.getvalue() == ("""
+----------------------------------------------------------------------
+PASSED!
+0 contexts, 0 assertions
+""")
+
+
+class WhenPrintingFinalCountsForASuccessfulRun:
     def in_the_context_of_a_successful_run(self):
         self.stringio = StringIO()
-        self.reporter = plugins.cli.SummarisingReporter(self.stringio)
+        self.reporter = plugins.cli.FinalCountsReporter(self.stringio)
 
         ctx1 = tools.create_context()
         ctx2 = tools.create_context()
@@ -40,10 +54,10 @@ PASSED!
         assert not self.reporter.failed
 
 
-class WhenPrintingAFailureSummary:
+class WhenPrintingFinalCountsForAFailedRun:
     def establish_that_a_test_has_failed(self):
         self.stringio = StringIO()
-        self.reporter = plugins.cli.SummarisingReporter(self.stringio)
+        self.reporter = plugins.cli.FinalCountsReporter(self.stringio)
 
         context = tools.create_context("made.up_context")
         tb1 = [('made_up_file.py', 3, 'made_up_function', 'frame1'),
@@ -61,21 +75,50 @@ class WhenPrintingAFailureSummary:
     def it_should_print_the_failure_tracebacks(self):
         assert self.stringio.getvalue() == ("""
 ----------------------------------------------------------------------
-made up context
-  FAIL: made up assertion 1
-    Traceback (most recent call last):
-      File "made_up_file.py", line 3, in made_up_function
-        frame1
-      File "another_made_up_file.py", line 2, in another_made_up_function
-        frame2
-    plugin_tests.tools.FakeAssertionError: Gotcha
-----------------------------------------------------------------------
 FAILED!
 1 context, 1 assertion: 1 failed, 0 errors
 """)
 
     def it_should_say_it_failed(self):
         assert self.reporter.failed
+
+
+class WhenOutputtingFailuresOnly:
+    def in_the_contexts_of_a_partly_successful_run(self):
+        self.stringio = StringIO()
+        self.reporter = plugins.cli.SummarisingReporter(self.stringio)
+
+        context = tools.create_context()
+        tb1 = [('made_up_file.py', 3, 'made_up_function', 'frame1'),
+               ('another_made_up_file.py', 2, 'another_made_up_function', 'frame2')]
+        exception = tools.build_fake_assertion_error(tb1, "Gotcha")
+
+        self.reporter.context_started(context.name, context.example)
+        self.reporter.assertion_started('assertion1')
+        self.reporter.assertion_passed('assertion1')
+        self.reporter.assertion_started('assertion2')
+        self.reporter.assertion_failed('assertion2', exception)
+        self.reporter.context_ended(context.name, context.example)
+
+    def because_the_test_run_ends(self):
+        self.before = self.stringio.getvalue()
+        self.reporter.test_run_ended()
+
+    def it_should_not_print_anything_before_the_test_run_ends(self):
+        assert self.before == ''
+
+    def it_should_print_the_failures_at_the_end(self):
+        assert self.stringio.getvalue() == """
+----------------------------------------------------------------------
+context
+  FAIL: assertion 2
+    Traceback (most recent call last):
+      File "made_up_file.py", line 3, in made_up_function
+        frame1
+      File "another_made_up_file.py", line 2, in another_made_up_function
+        frame2
+    plugin_tests.tools.FakeAssertionError: Gotcha"""
+
 
 class WhenTimingATestRun:
     def context(self):

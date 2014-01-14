@@ -3,6 +3,7 @@ import sys
 from contextlib import contextmanager
 from io import StringIO
 from . import shared
+from . import Plugin
 
 
 class DotsReporter(shared.StreamReporter):
@@ -80,6 +81,46 @@ class VerboseReporter(shared.StreamReporter):
         self.failed = True
         for line in shared.format_exception(exception):
             self._print(line)
+
+
+class FinalCountsReporter(shared.StreamReporter):
+    dashes = '-' * 70
+
+    def __init__(self, stream):
+        super().__init__(stream)
+        self.context_count = 0
+        self.assertion_count = 0
+        self.failure_count = 0
+        self.error_count = 0
+        self.failed = False
+
+    def context_started(self, name, example):
+        super().context_started(name, example)
+        self.context_count += 1
+
+    def context_errored(self, name, example, exception):
+        super().context_errored(name, example, exception)
+        self.error_count += 1
+        self.failed = True
+
+    def assertion_started(self, name):
+        super().assertion_started(name)
+        self.assertion_count += 1
+
+    def assertion_failed(self, name, exception):
+        super().assertion_failed(name, exception)
+        self.failure_count += 1
+        self.failed = True
+
+    def assertion_errored(self, name, exception):
+        super().assertion_errored(name, exception)
+        self.error_count += 1
+        self.failed = True
+
+    def unexpected_error(self, exception):
+        super().unexpected_error(exception)
+        self.error_count += 1
+        self.failed = True
 
     def test_run_ended(self):
         super().test_run_ended()
