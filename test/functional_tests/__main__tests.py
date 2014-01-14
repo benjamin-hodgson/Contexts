@@ -37,48 +37,282 @@ class MainSharedContext:
         colorama.init = self.real_colorama_init
 
 
-class WhenRunningFromCommandLineWithArguments(MainSharedContext):
-    @classmethod
-    def examples(self):
-        yield [], [os.getcwd(), (Shuffler, cli.DotsReporter, cli.ColouredSummarisingCapturingReporter, cli.FinalCountsReporter, cli.TimedReporter), True]
-        path = os.path.join(os.getcwd(),'made','up','path')
-        yield [path], [path, (Shuffler, cli.DotsReporter, cli.ColouredSummarisingCapturingReporter, cli.FinalCountsReporter, cli.TimedReporter), True]
-        yield ['-v'], [os.getcwd(), (Shuffler, cli.ColouredVerboseCapturingReporter, cli.FinalCountsReporter, cli.TimedReporter), True]
-        yield ['--verbose'], [os.getcwd(), (Shuffler, cli.ColouredVerboseCapturingReporter, cli.FinalCountsReporter, cli.TimedReporter), True]
-        yield ['--verbose', '--no-colour'], [os.getcwd(), (Shuffler, cli.StdOutCapturingReporter, cli.FinalCountsReporter, cli.TimedReporter), True]
-        yield ['--verbose', '--no-capture'], [os.getcwd(), (Shuffler, cli.ColouredVerboseReporter, cli.FinalCountsReporter, cli.TimedReporter), True]
-        yield ['--verbose', '--no-colour', '--no-capture'], [os.getcwd(), (Shuffler, cli.VerboseReporter, cli.FinalCountsReporter, cli.TimedReporter), True]
-        yield ['-vs'], [os.getcwd(), (Shuffler, cli.ColouredVerboseReporter, cli.FinalCountsReporter, cli.TimedReporter), True]
-        yield ['-q'], [os.getcwd(), (Shuffler, QuietReporterResemblance), True]
-        yield ['--quiet'], [os.getcwd(), (Shuffler, QuietReporterResemblance), True]
-        yield ['-s'], [os.getcwd(), (Shuffler, cli.DotsReporter, cli.ColouredSummarisingReporter, cli.FinalCountsReporter, cli.TimedReporter), True]
-        yield ['--no-capture'], [os.getcwd(), (Shuffler, cli.DotsReporter, cli.ColouredSummarisingReporter, cli.FinalCountsReporter, cli.TimedReporter), True]
-        yield ['--no-colour'], [os.getcwd(), (Shuffler, cli.DotsReporter, cli.SummarisingCapturingReporter, cli.FinalCountsReporter, cli.TimedReporter), True]
-        yield ['--no-capture', '--no-colour'], [os.getcwd(), (Shuffler, cli.DotsReporter, cli.SummarisingReporter, cli.FinalCountsReporter, cli.TimedReporter), True]
-        yield ['--no-assert'], [os.getcwd(), (Shuffler, cli.DotsReporter, cli.ColouredSummarisingCapturingReporter, cli.FinalCountsReporter, cli.TimedReporter), False]
-        yield ['--teamcity'], [os.getcwd(), (Shuffler, contexts.plugins.teamcity.TeamCityReporter,), True]
-        yield ['--no-random'], [os.getcwd(), (cli.DotsReporter, cli.ColouredSummarisingCapturingReporter, cli.FinalCountsReporter, cli.TimedReporter), True]
-
-    def establish_arguments(self, argv, expected):
-        expected_reporters = []
-        for cls in expected[1]:
-            try:
-                expected_reporters.append(cls(sys.stdout))
-            except TypeError:
-                expected_reporters.append(cls())
-        self.expected = (expected[0], expected_reporters, expected[2])
-        sys.argv = ['run-contexts'] + argv
+class WhenRunningFromCommandLineWithNoArguments(MainSharedContext):
+    def establish_arguments(self):
+        self.expected_reporters = [
+            Shuffler(),
+            cli.DotsReporter(sys.stdout),
+            cli.ColouredSummarisingCapturingReporter(sys.stdout),
+            cli.FinalCountsReporter(sys.stdout),
+            cli.TimedReporter(sys.stdout)
+        ]
+        self.expected = (os.getcwd(), self.expected_reporters, True)
+        sys.argv = ['run-contexts']
 
     def because_we_call_cmd(self):
         __main__.cmd()
 
-    def it_should_call_main_with_the_correct_arguments(self):
-        self.mock_main.assert_called_once_with(*self.expected)
+    def it_should_call_main_with_the_default_plugins(self):
+        self.mock_main.assert_called_once_with(os.getcwd(), self.expected_reporters, True)
+
+
+class WhenSpecifyingAPath(MainSharedContext):
+    def establish_arguments(self):
+        self.expected_reporters = [
+            Shuffler(),
+            cli.DotsReporter(sys.stdout),
+            cli.ColouredSummarisingCapturingReporter(sys.stdout),
+            cli.FinalCountsReporter(sys.stdout),
+            cli.TimedReporter(sys.stdout)
+            ]
+        self.path = os.path.join(os.getcwd(),'made','up','path')
+        sys.argv = ['run-contexts', self.path]
+
+    def because_we_call_cmd(self):
+        __main__.cmd()
+
+    def it_should_call_main_with_the_path(self):
+        self.mock_main.assert_called_once_with(self.path, self.expected_reporters, True)
+
+
+class WhenUsingTheVerboseFlag(MainSharedContext):
+    @classmethod
+    def examples_of_ways_to_use_the_verbose_flag(cls):
+        yield '--verbose'
+        yield '-v'
+
+    def establish_arguments(self, flag):
+        self.expected_reporters = [
+            Shuffler(),
+            cli.ColouredVerboseCapturingReporter(sys.stdout),
+            cli.FinalCountsReporter(sys.stdout),
+            cli.TimedReporter(sys.stdout)
+            ]
+        sys.argv = ['run-contexts', flag]
+
+    def because_we_call_cmd(self):
+        __main__.cmd()
+
+    def it_should_call_main_with_a_verbose_reporter(self):
+        self.mock_main.assert_called_once_with(os.getcwd(), self.expected_reporters, True)
+
+
+class WhenUserDisablesColour(MainSharedContext):
+    def establish_arguments(self):
+        self.expected_reporters = [
+            Shuffler(),
+            cli.DotsReporter(sys.stdout),
+            cli.SummarisingCapturingReporter(sys.stdout),
+            cli.FinalCountsReporter(sys.stdout),
+            cli.TimedReporter(sys.stdout)
+        ]
+        sys.argv = ['run-contexts', '--no-colour']
+
+    def because_we_call_cmd(self):
+        __main__.cmd()
+
+    def it_should_call_main_with_a_non_coloured_reporter(self):
+        self.mock_main.assert_called_once_with(os.getcwd(), self.expected_reporters, True)
+
+
+class WhenDisablingColourInVerboseMode(MainSharedContext):
+    @classmethod
+    def examples(self):
+        yield ['--verbose', '--no-colour']
+        yield ['-v', '--no-colour']
+
+    def establish_arguments(self, args):
+        self.expected_reporters = [
+            Shuffler(),
+            cli.StdOutCapturingReporter(sys.stdout),
+            cli.FinalCountsReporter(sys.stdout),
+            cli.TimedReporter(sys.stdout)
+        ]
+        sys.argv = ['run-contexts'] + args
+
+    def because_we_call_cmd(self):
+        __main__.cmd()
+
+    def it_should_call_main_with_a_non_coloured_verbose_reporter(self):
+        self.mock_main.assert_called_once_with(os.getcwd(), self.expected_reporters, True)
+
+
+class WhenUserDisablesStdOutCapturing(MainSharedContext):
+    @classmethod
+    def examples(self):
+        yield '--no-capture'
+        yield '-s'
+
+    def establish_arguments(self, arg):
+        self.expected_reporters = [
+            Shuffler(),
+            cli.DotsReporter(sys.stdout),
+            cli.ColouredSummarisingReporter(sys.stdout),
+            cli.FinalCountsReporter(sys.stdout),
+            cli.TimedReporter(sys.stdout)
+        ]
+        sys.argv = ['run-contexts', arg]
+
+    def because_we_call_cmd(self):
+        __main__.cmd()
+
+    def it_should_call_main_with_a_non_capturing_reporter(self):
+        self.mock_main.assert_called_once_with(os.getcwd(), self.expected_reporters, True)
+
+
+class WhenUserDisablesCapturingInVerboseMode(MainSharedContext):
+    @classmethod
+    def examples_of_flag_combinations(self):
+        yield ['--verbose', '--no-capture']
+        yield ['-v', '--no-capture']
+        yield ['--verbose', '-s']
+        yield ['-v', '-s']
+        yield ['-vs']
+
+    def establish_arguments(self, args):
+        self.expected_reporters = [
+            Shuffler(),
+            cli.ColouredVerboseReporter(sys.stdout),
+            cli.FinalCountsReporter(sys.stdout),
+            cli.TimedReporter(sys.stdout)
+        ]
+        sys.argv = ['run-contexts'] + args
+
+    def because_we_call_cmd(self):
+        __main__.cmd()
+
+    def it_should_call_main_with_a_non_capturing_verbose_reporter(self):
+        self.mock_main.assert_called_once_with(os.getcwd(), self.expected_reporters, True)
+
+
+class WhenUserDisablesColourAndCapturing(MainSharedContext):
+    @classmethod
+    def examples_of_flag_combinations(self):
+        yield ['--no-capture', '--no-colour']
+        yield ['-s', '--no-colour']
+
+    def establish_arguments(self, args):
+        self.expected_reporters = [
+            Shuffler(),
+            cli.DotsReporter(sys.stdout),
+            cli.SummarisingReporter(sys.stdout),
+            cli.FinalCountsReporter(sys.stdout),
+            cli.TimedReporter(sys.stdout)
+        ]
+        sys.argv = ['run-contexts'] + args
+
+    def because_we_call_cmd(self):
+        __main__.cmd()
+
+    def it_should_call_main_with_a_non_coloured_non_capturing_reporter(self):
+        self.mock_main.assert_called_once_with(os.getcwd(), self.expected_reporters, True)
+
+
+class WhenUserDisablesColourAndCapturingInVerboseMode(MainSharedContext):
+    @classmethod
+    def examples_of_flag_combinations(self):
+        yield ['--verbose', '--no-colour', '--no-capture']
+        yield ['-v', '--no-colour', '--no-capture']
+        yield ['--verbose', '--no-colour', '-s']
+        yield ['-v', '--no-colour', '--no-capture']
+        yield ['-vs', '--no-colour']
+
+    def establish_arguments(self, args):
+        self.expected_reporters = [
+            Shuffler(),
+            cli.VerboseReporter(sys.stdout),
+            cli.FinalCountsReporter(sys.stdout),
+            cli.TimedReporter(sys.stdout)
+        ]
+        sys.argv = ['run-contexts'] + args
+
+    def because_we_call_cmd(self):
+        __main__.cmd()
+
+    def it_should_call_main_with_a_non_coloured_non_capturing_verbose_reporter(self):
+        self.mock_main.assert_called_once_with(os.getcwd(), self.expected_reporters, True)
+
+
+class WhenRunningInQuietMode(MainSharedContext):
+    @classmethod
+    def examples_of_ways_to_use_the_quiet_flag(self):
+        yield '-q'
+        yield '--quiet'
+
+    def establish_arguments(self, flag):
+        self.expected_reporters = [Shuffler(), QuietReporterResemblance(sys.stdout)]
+        sys.argv = ['run-contexts', flag]
+
+    def because_we_call_cmd(self):
+        __main__.cmd()
+
+    def it_should_call_main_with_a_quiet_reporter(self):
+        self.mock_main.assert_called_once_with(os.getcwd(), self.expected_reporters, True)
+
+
+class WhenDisablingAssertionRewriting(MainSharedContext):
+    def establish_arguments(self):
+        self.expected_reporters = [
+            Shuffler(),
+            cli.DotsReporter(sys.stdout),
+            cli.ColouredSummarisingCapturingReporter(sys.stdout),
+            cli.FinalCountsReporter(sys.stdout),
+            cli.TimedReporter(sys.stdout)
+        ]
+        sys.argv = ['run-contexts', '--no-assert']
+
+    def because_we_call_cmd(self):
+        __main__.cmd()
+
+    def it_should_tell_main_to_disable_assertion_rewriting(self):
+        self.mock_main.assert_called_once_with(os.getcwd(), self.expected_reporters, False)
+
+
+class WhenRunningOnTheCmdLineInTeamcityMode(MainSharedContext):
+    def establish_arguments(self):
+        self.expected_reporters = [Shuffler(), contexts.plugins.teamcity.TeamCityReporter(sys.stdout)]
+        sys.argv = ['run-contexts', '--teamcity']
+
+    def because_we_call_cmd(self):
+        __main__.cmd()
+
+    def it_should_call_main_with_a_teamcity_reporter(self):
+        self.mock_main.assert_called_once_with(os.getcwd(), self.expected_reporters, True)
+
+
+class WhenRunningInTeamcity(MainSharedContext):
+    def establish_that_teamcity_is_in_the_environment_variables(self):
+        self.expected_reporters = [Shuffler(), contexts.plugins.teamcity.TeamCityReporter(sys.stdout)]
+        os.environ["TEAMCITY_VERSION"] = "7.0"
+        sys.argv = ['run-contexts']
+
+    def because_we_call_cmd(self):
+        __main__.cmd()
+
+    def it_should_call_main_with_a_teamcity_reporter(self):
+        self.mock_main.assert_called_once_with(os.getcwd(), self.expected_reporters, True)
+
+
+class WhenUserDisablesShuffling(MainSharedContext):
+    def establish_arguments(self):
+        self.expected_reporters = [
+            cli.DotsReporter(sys.stdout),
+            cli.ColouredSummarisingCapturingReporter(sys.stdout),
+            cli.FinalCountsReporter(sys.stdout),
+            cli.TimedReporter(sys.stdout)
+        ]
+        sys.argv = ['run-contexts', '--no-random']
+
+    def because_we_call_cmd(self):
+        __main__.cmd()
+
+    def it_should_call_main_without_a_shuffler(self):
+        self.mock_main.assert_called_once_with(os.getcwd(), self.expected_reporters, True)
 
 
 class WhenArgumentsSpecifyMutuallyExclusiveOptions(MainSharedContext):
     @classmethod
-    def examples(cls):
+    def examples_of_flag_combinations(cls):
         yield ['-q', '-v']
         yield ['-qv']
         yield ['--quiet', '--verbose']
