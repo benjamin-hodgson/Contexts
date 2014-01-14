@@ -118,7 +118,7 @@ class TestSpec:
         self.reporter = SpyReporter()
 
     def because_we_run_the_file(self):
-        contexts.run(self.filename, [Importer(False), self.reporter])
+        contexts.run(self.filename, [Importer(), self.reporter])
 
     def it_should_import_the_file(self):
         assert self.module_name in sys.modules
@@ -166,7 +166,7 @@ raise ZeroDivisionError("bogus error message")
         self.reporter = SpyReporter()
 
     def because_we_run_the_file(self):
-        contexts.run(self.filename, [Importer(False), self.reporter])
+        contexts.run(self.filename, [Importer(), self.reporter])
 
     def it_should_call_unexpected_error_on_the_reporter(self):
         assert self.reporter.calls[1][0] == "unexpected_error"
@@ -201,7 +201,7 @@ class TestSpec:
         self.reporter = SpyReporter()
 
     def because_we_run_the_folder(self):
-        contexts.run(self.folder_path, [Importer(False), self.reporter])
+        contexts.run(self.folder_path, [Importer(), self.reporter])
 
     def it_should_import_the_first_module(self):
         assert self.module_names[0] in sys.modules
@@ -285,7 +285,7 @@ class TestSpec:
         del self.plugin.import_module
 
     def because_we_run_the_folder(self):
-        contexts.run(self.folder_path, [Importer(False), self.plugin])
+        contexts.run(self.folder_path, [Importer(), self.plugin])
 
     def it_should_pass_the_list_of_found_modules_to_process_module_list(self):
         assert isinstance(self.called_with, collections.abc.MutableSequence)
@@ -397,7 +397,7 @@ class TestSpec:
         self.create_fake_module()
 
     def because_we_run_the_folder(self):
-        contexts.run(self.folder_path, [Importer(False)])
+        contexts.run(self.folder_path, [Importer()])
 
     def it_should_not_re_import_the_module(self):
         assert sys.modules[self.module_name].is_fake
@@ -449,7 +449,7 @@ class TestSpec:
         self.create_fake_module()
 
     def because_we_run_the_folder(self):
-        contexts.run(self.folder_path, [Importer(False)])
+        contexts.run(self.folder_path, [Importer()])
 
     def it_should_import_the_new_module_and_overwrite_the_old_one(self):
         assert not sys.modules[self.module_name].is_fake
@@ -496,7 +496,7 @@ class TestSpec:
         self.create_fake_module()
 
     def because_we_run_the_package(self):
-        contexts.run(self.folder_path, [Importer(False)])
+        contexts.run(self.folder_path, [Importer()])
 
     def it_should_not_re_import_the_module(self):
         assert sys.modules[self.package_name].is_fake
@@ -548,7 +548,7 @@ class TestSpec:
         self.create_fake_module()
 
     def because_we_run_the_folder(self):
-        contexts.run(self.folder_path, [Importer(False)])
+        contexts.run(self.folder_path, [Importer()])
 
     def it_should_import_the_new_module_and_overwrite_the_old_one(self):
         assert not sys.modules[self.package_name].is_fake
@@ -597,7 +597,7 @@ class TestSpec:
         self.create_fake_module()
 
     def because_we_run_the_package(self):
-        contexts.run(self.folder_path, [Importer(False)])
+        contexts.run(self.folder_path, [Importer()])
 
     def it_should_not_re_import_the_module(self):
         assert sys.modules[self.qualified_name].is_fake
@@ -653,7 +653,7 @@ class TestSpec:
         self.create_fake_module()
 
     def because_we_run_the_folder(self):
-        contexts.run(self.folder_path, [Importer(False)])
+        contexts.run(self.folder_path, [Importer()])
 
     def it_should_import_the_new_module_and_overwrite_the_old_one(self):
         assert not sys.modules[self.qualified_name].is_fake
@@ -703,7 +703,7 @@ class TestSpec:
         self.reporter = SpyReporter()
 
     def because_we_run_the_folder(self):
-        contexts.run(self.folder_path, [Importer(False), self.reporter])
+        contexts.run(self.folder_path, [Importer(), self.reporter])
 
     def it_should_import_the_package(self):
         assert self.package_name in sys.modules
@@ -795,7 +795,7 @@ class TestSpec:
         self.reporter = SpyReporter()
 
     def because_we_run_the_folder(self):
-        contexts.run(self.folder_path, [Importer(False), self.reporter])
+        contexts.run(self.folder_path, [Importer(), self.reporter])
 
     def it_should_import_the_file_in_the_test_folder(self):
         assert "test_file1" in sys.modules
@@ -892,7 +892,7 @@ class TestSpec:
 
 
     def because_we_run_the_package(self):
-        contexts.run(self.folder_path, [Importer(False), self.reporter])
+        contexts.run(self.folder_path, [Importer(), self.reporter])
 
     def it_should_import_the_file_in_the_test_folder(self):
         assert "test_file1" in sys.modules
@@ -1011,7 +1011,7 @@ class TestSpec:
         self.reporter = SpyReporter()
 
     def because_we_run_the_folder(self):
-        contexts.run(self.folder_path, [Importer(False), self.reporter])
+        contexts.run(self.folder_path, [Importer(), self.reporter])
 
     def it_should_report_an_unexpected_error(self):
         assert self.reporter.calls[1][0] == "unexpected_error"

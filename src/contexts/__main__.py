@@ -6,11 +6,16 @@ from . import main
 from . import plugins
 from .plugins.other import Shuffler
 from .plugins.importing import Importer
+from .plugins.assertion_rewriting import AssertionRewritingImporter
 
 
 def cmd():
     args = parse_args(sys.argv[1:])
-    plugin_list = [Importer(args.rewriting)]
+    plugin_list = []
+    if args.rewriting:
+        plugin_list.append(AssertionRewritingImporter())
+    else:
+        plugin_list.append(Importer())
     if args.shuffle:
         plugin_list.append(Shuffler())
     plugin_list.extend(create_plugins(args))

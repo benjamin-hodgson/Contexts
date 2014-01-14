@@ -1,5 +1,22 @@
 import ast
 import importlib.abc
+import sys
+from . import Plugin
+from .importing import resolve_filename, prune_sys_dot_modules
+
+
+class AssertionRewritingImporter(Plugin):
+    def import_module(self, dir_path, module_name):
+        filename = resolve_filename(dir_path, module_name)
+        prune_sys_dot_modules(module_name, filename)
+        if module_name in sys.modules:
+            return sys.modules[module_name]
+
+        loader = AssertionRewritingLoader(module_name, filename)
+        return loader.load_module(module_name)
+
+    def __eq__(self, other):
+        return (type(self) == type(other))
 
 
 class AssertionRewritingLoader(importlib.abc.FileLoader, importlib.abc.SourceLoader):

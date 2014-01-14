@@ -4,6 +4,7 @@ import sys
 from .tools import SpyReporter
 import contexts
 from contexts.plugins.importing import Importer
+from contexts.plugins.assertion_rewriting import AssertionRewritingImporter
 
 
 THIS_FILE = os.path.realpath(__file__)
@@ -38,7 +39,7 @@ class TestSpec:
         self.write_file()
 
     def because_we_run_the_spec(self):
-        contexts.run(self.filename, [Importer(True), self.reporter])
+        contexts.run(self.filename, [AssertionRewritingImporter(), self.reporter])
 
     def it_should_call_assertion_failed(self):
         assert 'assertion_failed' in [call[0] for call in self.reporter.calls]
@@ -59,7 +60,7 @@ class TestSpec:
         self.write_file()
 
     def because_we_run_the_spec(self):
-        contexts.run(self.filename, [Importer(False), self.reporter])
+        contexts.run(self.filename, [Importer(), self.reporter])
 
     def it_should_call_assertion_failed(self):
         assert 'assertion_failed' in [call[0] for call in self.reporter.calls]
@@ -80,7 +81,7 @@ class TestSpec:
         self.write_file()
 
     def because_we_run_the_spec(self):
-        contexts.run(self.filename, [Importer(True), self.reporter])
+        contexts.run(self.filename, [AssertionRewritingImporter(), self.reporter])
 
     def it_should_call_assertion_failed(self):
         assert 'assertion_failed' in [call[0] for call in self.reporter.calls]
@@ -110,7 +111,7 @@ class TestSpec:
         self.write_file()
 
     def because_we_run_the_spec(self):
-        contexts.run(self.filename, [Importer(True), self.reporter])
+        contexts.run(self.filename, [AssertionRewritingImporter(), self.reporter])
 
     def it_should_call_assertion_failed(self):
         assert 'assertion_failed' in [call[0] for call in self.reporter.calls]
@@ -138,7 +139,7 @@ class TestSpec:
         self.write_file()
 
     def because_we_run_the_spec(self):
-        contexts.run(self.filename, [Importer(True), self.reporter])
+        contexts.run(self.filename, [AssertionRewritingImporter(), self.reporter])
 
     def it_should_call_assertion_failed(self):
         assert 'assertion_failed' in [call[0] for call in self.reporter.calls]
@@ -169,7 +170,7 @@ class TestSpec:
         self.write_file()
 
     def because_we_run_the_spec(self):
-        contexts.run(self.filename, [Importer(True), self.reporter])
+        contexts.run(self.filename, [AssertionRewritingImporter(), self.reporter])
 
     def it_should_call_assertion_failed(self):
         assert 'assertion_failed' in [call[0] for call in self.reporter.calls]
@@ -194,7 +195,7 @@ class TestSpec:
         self.write_file()
 
     def because_we_run_the_spec(self):
-        contexts.run(self.filename, [Importer(True), self.reporter])
+        contexts.run(self.filename, [AssertionRewritingImporter(), self.reporter])
 
     def it_should_only_call_the_function_once(self):
         mock = sys.modules[self.module_name].m
@@ -224,7 +225,7 @@ class TestSpec:
         self.write_file()
 
     def because_we_run_the_spec(self):
-        contexts.run(self.filename, [Importer(True), self.reporter])
+        contexts.run(self.filename, [AssertionRewritingImporter(), self.reporter])
 
     def it_should_only_call_the_function_once(self):
         mock = sys.modules[self.module_name].m
@@ -258,7 +259,7 @@ class TestSpec:
         self.write_file()
 
     def because_we_run_the_spec(self):
-        contexts.run(self.filename, [Importer(True), self.reporter])
+        contexts.run(self.filename, [AssertionRewritingImporter(), self.reporter])
 
     def it_should_call_assertion_failed(self):
         assert 'assertion_failed' in [call[0] for call in self.reporter.calls]
@@ -293,7 +294,7 @@ class TestSpec:
         self.write_file()
 
     def because_we_run_the_spec(self):
-        contexts.run(self.filename, [Importer(True), self.reporter])
+        contexts.run(self.filename, [AssertionRewritingImporter(), self.reporter])
 
     def it_should_call_assertion_failed(self):
         assert 'assertion_failed' in [call[0] for call in self.reporter.calls]
@@ -326,7 +327,7 @@ class TestSpec:
         self.write_file()
 
     def because_we_run_the_spec(self):
-        contexts.run(self.filename, [Importer(True), self.reporter])
+        contexts.run(self.filename, [AssertionRewritingImporter(), self.reporter])
 
     def it_should_only_call_the_function_once(self):
         mock = sys.modules[self.module_name].m
@@ -362,7 +363,7 @@ class TestSpec:
         self.write_file()
 
     def because_we_run_the_spec(self):
-        contexts.run(self.filename, [Importer(True), self.reporter])
+        contexts.run(self.filename, [AssertionRewritingImporter(), self.reporter])
 
     def it_should_only_call_the_function_once(self):
         mock = sys.modules[self.module_name].m
@@ -396,7 +397,7 @@ class TestSpec:
         self.write_file()
 
     def because_we_run_the_spec(self):
-        contexts.run(self.filename, [Importer(True), self.reporter])
+        contexts.run(self.filename, [AssertionRewritingImporter(), self.reporter])
 
     def it_should_call_assertion_failed(self):
         assert 'assertion_failed' in [call[0] for call in self.reporter.calls]
@@ -426,7 +427,7 @@ class TestSpec:
         self.write_file()
 
     def because_we_run_the_spec(self):
-        contexts.run(self.filename, [Importer(True), self.reporter])
+        contexts.run(self.filename, [AssertionRewritingImporter(), self.reporter])
 
     def it_should_call_assertion_failed(self):
         assert 'assertion_failed' in [call[0] for call in self.reporter.calls]
@@ -456,7 +457,7 @@ class TestSpec:
         self.write_file()
 
     def because_we_run_the_spec(self):
-        contexts.run(self.filename, [Importer(True), self.reporter])
+        contexts.run(self.filename, [AssertionRewritingImporter(), self.reporter])
 
     def it_should_call_assertion_failed(self):
         assert 'assertion_failed' in [call[0] for call in self.reporter.calls]
@@ -486,7 +487,7 @@ class TestSpec:
         self.write_file()
 
     def because_we_run_the_spec(self):
-        contexts.run(self.filename, [Importer(True), self.reporter])
+        contexts.run(self.filename, [AssertionRewritingImporter(), self.reporter])
 
     def it_should_call_assertion_failed(self):
         assert 'assertion_failed' in [call[0] for call in self.reporter.calls]
@@ -516,7 +517,7 @@ class TestSpec:
         self.write_file()
 
     def because_we_run_the_spec(self):
-        contexts.run(self.filename, [Importer(True), self.reporter])
+        contexts.run(self.filename, [AssertionRewritingImporter(), self.reporter])
 
     def it_should_call_assertion_failed(self):
         assert 'assertion_failed' in [call[0] for call in self.reporter.calls]
@@ -546,7 +547,7 @@ class TestSpec:
         self.write_file()
 
     def because_we_run_the_spec(self):
-        contexts.run(self.filename, [Importer(True), self.reporter])
+        contexts.run(self.filename, [AssertionRewritingImporter(), self.reporter])
 
     def it_should_call_assertion_failed(self):
         assert 'assertion_failed' in [call[0] for call in self.reporter.calls]
@@ -576,7 +577,7 @@ class TestSpec:
         self.write_file()
 
     def because_we_run_the_spec(self):
-        contexts.run(self.filename, [Importer(True), self.reporter])
+        contexts.run(self.filename, [AssertionRewritingImporter(), self.reporter])
 
     def it_should_call_assertion_failed(self):
         assert 'assertion_failed' in [call[0] for call in self.reporter.calls]
@@ -606,7 +607,7 @@ class TestSpec:
         self.write_file()
 
     def because_we_run_the_spec(self):
-        contexts.run(self.filename, [Importer(True), self.reporter])
+        contexts.run(self.filename, [AssertionRewritingImporter(), self.reporter])
 
     def it_should_call_assertion_failed(self):
         assert 'assertion_failed' in [call[0] for call in self.reporter.calls]
@@ -636,7 +637,7 @@ class TestSpec:
         self.write_file()
 
     def because_we_run_the_spec(self):
-        contexts.run(self.filename, [Importer(True), self.reporter])
+        contexts.run(self.filename, [AssertionRewritingImporter(), self.reporter])
 
     def it_should_call_assertion_failed(self):
         assert 'assertion_failed' in [call[0] for call in self.reporter.calls]
@@ -667,7 +668,7 @@ class TestSpec:
         self.write_file()
 
     def because_we_run_the_spec(self):
-        contexts.run(self.filename, [Importer(True), self.reporter])
+        contexts.run(self.filename, [AssertionRewritingImporter(), self.reporter])
 
     def it_should_call_assertion_failed(self):
         assert 'assertion_failed' in [call[0] for call in self.reporter.calls]
@@ -697,7 +698,7 @@ class TestSpec:
         self.write_file()
 
     def because_we_run_the_spec(self):
-        contexts.run(self.filename, [Importer(True), self.reporter])
+        contexts.run(self.filename, [AssertionRewritingImporter(), self.reporter])
 
     def it_should_call_assertion_failed(self):
         assert 'assertion_failed' in [call[0] for call in self.reporter.calls]
@@ -726,7 +727,7 @@ class TestSpec:
         self.write_file()
 
     def because_we_run_the_spec(self):
-        contexts.run(self.filename, [Importer(True), self.reporter])
+        contexts.run(self.filename, [AssertionRewritingImporter(), self.reporter])
 
     def it_should_call_assertion_failed(self):
         assert 'assertion_failed' in [call[0] for call in self.reporter.calls]
@@ -755,7 +756,7 @@ class TestSpec:
         self.write_file()
 
     def because_we_run_the_spec(self):
-        contexts.run(self.filename, [Importer(True), self.reporter])
+        contexts.run(self.filename, [AssertionRewritingImporter(), self.reporter])
 
     def it_should_call_assertion_failed(self):
         assert 'assertion_failed' in [call[0] for call in self.reporter.calls]
@@ -778,7 +779,7 @@ class TestSpec:
         self.write_file()
 
     def because_we_run_the_spec(self):
-        contexts.run(self.filename, [Importer(True), self.reporter])
+        contexts.run(self.filename, [AssertionRewritingImporter(), self.reporter])
 
     def it_should_call_assertion_failed(self):
         assert 'assertion_failed' in [call[0] for call in self.reporter.calls]
