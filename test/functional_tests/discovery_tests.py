@@ -359,12 +359,14 @@ class WhenRunningAFolderWhichIsAPackage:
     def because_we_run_the_folder(self):
         contexts.run(self.folder_path, [self.plugin])
 
-    def it_should_import_the_package_before_the_modules(self):
-        assert self.plugin.import_module.call_args_list == [
-            mock.call(TEST_DATA_DIR, self.package_name),
+    def it_should_import_the_package_first(self):
+        assert self.plugin.import_module.call_args_list[0] == mock.call(TEST_DATA_DIR, self.package_name)
+
+    def it_should_import_both_submodules(self):
+        self.plugin.import_module.assert_has_calls([
             mock.call(TEST_DATA_DIR, self.package_name + '.' + self.module_names[1]),
             mock.call(TEST_DATA_DIR, self.package_name + '.' + self.module_names[2])
-            ]
+            ])
 
     def it_should_run_the_package(self):
         assert self.module1.Spec1.ran
@@ -557,7 +559,7 @@ class WhenRunningAFolderWithAFileThatFailsToImport:
         self.plugin.unexpected_error.assert_called_once_with(self.exception)
 
     def it_should_still_import_the_second_module(self):
-        self.plugin.import_module.assert_called_with(self.folder_path, self.module_names[1])
+        assert self.plugin.import_module.call_count == 2
 
     def cleanup_the_file_system_and_sys_dot_modules(self):
         shutil.rmtree(self.folder_path)
