@@ -11,8 +11,11 @@ class Importer(Plugin):
         if module_name in sys.modules:
             return
 
-        loader = importlib.machinery.SourceFileLoader(module_name, filename)
+        loader = self.get_loader(module_name, filename)
         return loader.load_module(module_name)
+
+    def get_loader(self, module_name, filename):
+        return importlib.machinery.SourceFileLoader(module_name, filename)
 
     def __eq__(self, other):
         return (type(self) == type(other))
