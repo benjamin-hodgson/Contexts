@@ -12,11 +12,11 @@ from .plugins.assertion_rewriting import AssertionRewritingImporter
 
 def cmd():
     args = parse_args(sys.argv[1:])
-    plugin_list = create_plugins(args)
+    plugin_list = Configuration(args).create_plugins()
     main(os.path.realpath(args.path), plugin_list)
 
 
-def parse_args(args):
+def parse_args(argv):
     parser = argparse.ArgumentParser()
     parser.add_argument('-s', '--no-capture',
         action='store_false',
@@ -63,7 +63,7 @@ def parse_args(args):
         default='normal',
         help="Disable progress reporting.")
 
-    args = parser.parse_args(args)
+    args = parser.parse_args(argv)
 
     if "TEAMCITY_VERSION" in os.environ:
         args.teamcity = True
@@ -82,67 +82,68 @@ def parse_args(args):
     return args
 
 
-def create_plugins(args):
-    plugin_list = []
+class Configuration(object):
+    def __init__(self, args):
+        self.args = args
 
-    if args.rewriting:
-        plugin_list.append(AssertionRewritingImporter())
-    else:
-        plugin_list.append(Importer())
+    def __getattr__(self, name):
+        return getattr(self.args, name)
 
-    if args.shuffle:
-        plugin_list.append(Shuffler())
+    def create_plugins(self):
+        plugin_list = [self.create_importing_plugin()]
+        if self.shuffle:
+            plugin_list.append(Shuffler())
 
-    plugin_list.extend(create_reporting_plugins(args))
+        plugin_list.extend(self.create_reporting_plugins())
+        plugin_list.append(ExitCodeReporter())
 
-    plugin_list.append(ExitCodeReporter())
-
-    return plugin_list
-
-
-def create_reporting_plugins(args):
-    plugin_list = []
-
-    if args.teamcity:
-        plugin_list.append(plugins.teamcity.TeamCityReporter(sys.stdout))
         return plugin_list
 
-    if args.verbosity == 'quiet':
-        plugin_list.append(plugins.cli.StdOutCapturingReporter(StringIO()))
+    def create_importing_plugin(self):
+        if self.rewriting:
+            return AssertionRewritingImporter()
+        else:
+            return Importer()
+
+    def create_reporting_plugins(self):
+        if self.teamcity:
+            return [plugins.teamcity.TeamCityReporter(sys.stdout)]
+
+        if self.verbosity == 'quiet':
+            return [plugins.cli.StdOutCapturingReporter(StringIO())]
+
+        inner_plugin_cls = self.get_inner_plugin()
+        maybe_coloured_cls = self.apply_colouring(inner_plugin_cls)
+        maybe_muted_cls = self.apply_failure_muting(maybe_coloured_cls)
+
+        plugin_list = [
+            maybe_muted_cls(sys.stdout),
+            plugins.cli.FinalCountsReporter(sys.stdout),
+            plugins.cli.TimedReporter(sys.stdout)
+        ]
+
+        if self.verbosity == 'normal':
+            plugin_list.insert(0, plugins.cli.DotsReporter(sys.stdout))
+
         return plugin_list
 
-    if args.verbosity == 'normal':
-        plugin_list.append(plugins.cli.DotsReporter(sys.stdout))
+    def get_inner_plugin(self):
+        if self.capture:
+            return plugins.cli.StdOutCapturingReporter
+        return plugins.cli.VerboseReporter
 
-    if args.colour and args.capture and args.verbosity == 'verbose':
-        plugin_list.append(plugins.cli.ColouringDecorator(plugins.cli.StdOutCapturingReporter)(sys.stdout))
+    def apply_colouring(self, inner_plugin_cls):
+        if self.colour:
+            return plugins.cli.ColouringDecorator(inner_plugin_cls)
+        return inner_plugin_cls
 
-    elif args.colour and not args.capture and args.verbosity == 'verbose':
-        plugin_list.append(plugins.cli.ColouringDecorator(plugins.cli.VerboseReporter)(sys.stdout))
+    def apply_failure_muting(self, maybe_coloured_cls):
+        if self.verbosity == 'normal':
+            return plugins.cli.FailureOnlyDecorator(maybe_coloured_cls)
+        return maybe_coloured_cls
 
-    elif args.capture and not args.colour and args.verbosity == 'verbose':
-        plugin_list.append(plugins.cli.StdOutCapturingReporter(sys.stdout))
 
-    elif not args.colour and not args.capture and args.verbosity == 'verbose':
-        plugin_list.append(plugins.cli.VerboseReporter(sys.stdout))
 
-    elif args.capture and args.colour and args.verbosity == 'normal':
-        plugin_list.append(plugins.cli.FailureOnlyDecorator(plugins.cli.ColouringDecorator(plugins.cli.StdOutCapturingReporter))(sys.stdout))
-
-    elif args.capture and not args.colour and args.verbosity == 'normal':
-        plugin_list.append(plugins.cli.FailureOnlyDecorator(plugins.cli.StdOutCapturingReporter)(sys.stdout))
-
-    elif args.colour and not args.capture and args.verbosity == 'normal':
-        plugin_list.append(plugins.cli.FailureOnlyDecorator(plugins.cli.ColouringDecorator(plugins.cli.VerboseReporter))(sys.stdout))
-
-    elif not args.colour and not args.capture and args.verbosity == 'normal':
-        plugin_list.append(plugins.cli.FailureOnlyDecorator(plugins.cli.VerboseReporter)(sys.stdout))
-
-    if args.verbosity != 'quiet':
-        plugin_list.append(plugins.cli.FinalCountsReporter(sys.stdout))
-        plugin_list.append(plugins.cli.TimedReporter(sys.stdout))
-
-    return plugin_list
 
 
 if __name__ == "__main__":

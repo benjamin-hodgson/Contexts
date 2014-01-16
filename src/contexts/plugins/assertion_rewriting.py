@@ -21,6 +21,7 @@ class AssertionRewritingLoader(importlib.abc.FileLoader, importlib.abc.SourceLoa
 
     def source_to_code(self, source, path='<string>'):
         parsed = ast.parse(source)
+
         transformer = AssertionRewriter()
         transformer.visit(parsed)
 
