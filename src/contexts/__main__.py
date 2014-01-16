@@ -91,6 +91,7 @@ class Configuration(object):
 
     def create_plugins(self):
         plugin_list = [self.create_importing_plugin()]
+
         if self.shuffle:
             plugin_list.append(Shuffler())
 
@@ -114,7 +115,7 @@ class Configuration(object):
 
         inner_plugin_cls = self.get_inner_plugin()
         maybe_coloured_cls = self.apply_colouring(inner_plugin_cls)
-        maybe_muted_cls = self.apply_failure_muting(maybe_coloured_cls)
+        maybe_muted_cls = self.apply_success_muting(maybe_coloured_cls)
 
         plugin_list = [
             maybe_muted_cls(sys.stdout),
@@ -137,13 +138,10 @@ class Configuration(object):
             return plugins.cli.ColouringDecorator(inner_plugin_cls)
         return inner_plugin_cls
 
-    def apply_failure_muting(self, maybe_coloured_cls):
+    def apply_success_muting(self, maybe_coloured_cls):
         if self.verbosity == 'normal':
             return plugins.cli.FailureOnlyDecorator(maybe_coloured_cls)
         return maybe_coloured_cls
-
-
-
 
 
 if __name__ == "__main__":
