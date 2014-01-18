@@ -63,40 +63,83 @@ class Suite(object):
             found_classes = list(finders.find_specs_in_module(self.module))
             self.plugin_notifier.call_plugins('process_class_list', found_classes)
             for cls in found_classes:
-                self.run_class(cls)
+                test_class = TestClass(cls, self.plugin_notifier)
+                test_class.run()
 
-    def run_class(self, cls):
-        with self.plugin_notifier.run_class(cls):
-            for example in get_examples(cls):
-                context = Context(cls(), example, self.plugin_notifier)
+
+class TestClass(object):
+    def __init__(self, cls, plugin_notifier):
+        self.cls = cls
+        self.plugin_notifier = plugin_notifier
+
+        plugin_notifier.call_plugins("get_setup_methods", self.cls)
+        plugin_notifier.call_plugins("get_action_method", self.cls)
+        plugin_notifier.call_plugins("get_assertion_methods", self.cls)
+        plugin_notifier.call_plugins("get_teardown_methods", self.cls)
+
+        finder = finders.UnboundMethodFinder(self.cls)
+        self.examples_method = finder.find_examples_method()
+        self.unbound_setups = finder.find_setups()
+        self.unbound_actions = finder.find_actions()
+        self.unbound_assertions = finder.find_assertions()
+        self.unbound_teardowns = finder.find_teardowns()
+        assert_no_ambiguous_methods(self.unbound_setups, self.unbound_actions, self.unbound_assertions, self.unbound_teardowns)
+
+    def run(self):
+        with self.plugin_notifier.run_class(self):
+            for example in self.get_examples():
+                context = Context(
+                    self.cls(),
+                    example,
+                    self.unbound_setups,
+                    self.unbound_actions,
+                    self.unbound_assertions,
+                    self.unbound_teardowns,
+                    self.plugin_notifier
+                )
                 context.run()
 
-
-def get_examples(cls):
-    examples_method = finders.find_examples_method(cls)
-    examples = examples_method()
-    return examples if examples is not None else [NO_EXAMPLE]
+    def get_examples(self):
+        examples = self.examples_method()
+        return examples if examples is not None else [NO_EXAMPLE]
 
 
-class _NullExample(object):
-    null_example = True
+def assert_no_ambiguous_methods(*iterables):
+    for a, b in itertools.combinations((set(i) for i in iterables), 2):
+        overlap = a & b
+        if overlap:
+            msg = "The following methods are ambiguously named:\n"
+            msg += '\n'.join([func.__qualname__ for func in overlap])
+            raise errors.MethodNamingError(msg)
 
 
 class Context(object):
-    def __init__(self, instance, example, plugin_notifier):
+    def __init__(self, instance, example,
+                 unbound_setups, unbound_actions, unbound_assertions, unbound_teardowns,
+                 plugin_notifier):
         self.plugin_notifier = plugin_notifier
-
-        finder = finders.MethodFinder(instance)
-        setups, actions, assertions, teardowns = finder.find_special_methods()
-        assert_no_ambiguous_methods(setups, actions, assertions, teardowns)
-
         self.instance = instance
-        self.setups = setups
-        self.actions = actions
-        self.assertions = assertions
-        self.teardowns = teardowns
         self.example = example
         self.name = instance.__class__.__name__
+
+        self.setups = bind_methods(unbound_setups, self.instance)
+        self.actions = bind_methods(unbound_actions, self.instance)
+        self.assertions = bind_methods(unbound_assertions, self.instance)
+        self.teardowns = bind_methods(unbound_teardowns, self.instance)
+
+    def run(self):
+        self.plugin_notifier.call_plugins('process_assertion_list', self.assertions)
+        self.assertions = [Assertion(f, self.plugin_notifier) for f in self.assertions]
+
+        if not self.assertions:
+            return
+        with self.plugin_notifier.run_context(self):
+            try:
+                self.run_setup()
+                self.run_action()
+                self.run_assertions()
+            finally:
+                self.run_teardown()
 
     def run_setup(self):
         for setup in self.setups:
@@ -114,27 +157,9 @@ class Context(object):
         for teardown in self.teardowns:
             run_with_test_data(teardown, self.example)
 
-    def run(self):
-        self.plugin_notifier.call_plugins('process_assertion_list', self.assertions)
-        self.assertions = [Assertion(f, self.plugin_notifier) for f in self.assertions]
 
-        if not self.assertions:
-            return
-        with self.plugin_notifier.run_context(self):
-            try:
-                self.run_setup()
-                self.run_action()
-                self.run_assertions()
-            finally:
-                self.run_teardown()
-
-def assert_no_ambiguous_methods(*iterables):
-    for a, b in itertools.combinations((set(i) for i in iterables), 2):
-        overlap = a & b
-        if overlap:
-            msg = "The following methods are ambiguously named:\n"
-            msg += '\n'.join([func.__qualname__ for func in overlap])
-            raise errors.MethodNamingError(msg)
+def bind_methods(methods, instance):
+    return [types.MethodType(func, instance) for func in methods]
 
 
 class Assertion(object):
@@ -163,10 +188,6 @@ class PluginNotifier(object):
     def __init__(self, plugins):
         self.plugins = plugins
 
-    @property
-    def failed(self):
-        return any(r.failed for r in self.plugins if hasattr(r, 'failed'))
-
     @contextmanager
     def run_test_run(self, test_run):
         self.call_plugins("test_run_started")
@@ -190,7 +211,7 @@ class PluginNotifier(object):
         self.call_plugins("suite_ended", suite.name)
 
     @contextmanager
-    def run_class(self, cls):
+    def run_class(self, test_class):
         try:
             yield
         except Exception as e:

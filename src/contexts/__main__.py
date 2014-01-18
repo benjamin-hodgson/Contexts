@@ -12,7 +12,7 @@ from .plugins.assertion_rewriting import AssertionRewritingImporter
 
 def cmd():
     args = parse_args(sys.argv[1:])
-    plugin_list = Configuration(args).create_plugins()
+    plugin_list = create_plugins(args)
     main(os.path.realpath(args.path), plugin_list)
 
 
@@ -82,66 +82,59 @@ def parse_args(argv):
     return args
 
 
-class Configuration(object):
-    def __init__(self, args):
-        self.args = args
+def create_plugins(args):
+    plugin_list = [create_importing_plugin(args)]
 
-    def __getattr__(self, name):
-        return getattr(self.args, name)
+    if args.shuffle:
+        plugin_list.append(Shuffler())
 
-    def create_plugins(self):
-        plugin_list = [self.create_importing_plugin()]
+    plugin_list.extend(create_reporting_plugins(args))
+    plugin_list.append(ExitCodeReporter())
 
-        if self.shuffle:
-            plugin_list.append(Shuffler())
+    return plugin_list
 
-        plugin_list.extend(self.create_reporting_plugins())
-        plugin_list.append(ExitCodeReporter())
+def create_importing_plugin(args):
+    if args.rewriting:
+        return AssertionRewritingImporter()
+    else:
+        return Importer()
 
-        return plugin_list
+def create_reporting_plugins(args):
+    if args.teamcity:
+        return [plugins.teamcity.TeamCityReporter(sys.stdout)]
 
-    def create_importing_plugin(self):
-        if self.rewriting:
-            return AssertionRewritingImporter()
-        else:
-            return Importer()
+    if args.verbosity == 'quiet':
+        return [plugins.cli.StdOutCapturingReporter(StringIO())]
 
-    def create_reporting_plugins(self):
-        if self.teamcity:
-            return [plugins.teamcity.TeamCityReporter(sys.stdout)]
+    inner_plugin_cls = get_inner_plugin(args)
+    maybe_coloured_cls = apply_colouring(args, inner_plugin_cls)
+    maybe_muted_cls = apply_success_muting(args, maybe_coloured_cls)
 
-        if self.verbosity == 'quiet':
-            return [plugins.cli.StdOutCapturingReporter(StringIO())]
+    plugin_list = [
+        maybe_muted_cls(sys.stdout),
+        plugins.cli.FinalCountsReporter(sys.stdout),
+        plugins.cli.TimedReporter(sys.stdout)
+    ]
 
-        inner_plugin_cls = self.get_inner_plugin()
-        maybe_coloured_cls = self.apply_colouring(inner_plugin_cls)
-        maybe_muted_cls = self.apply_success_muting(maybe_coloured_cls)
+    if args.verbosity == 'normal':
+        plugin_list.insert(0, plugins.cli.DotsReporter(sys.stdout))
 
-        plugin_list = [
-            maybe_muted_cls(sys.stdout),
-            plugins.cli.FinalCountsReporter(sys.stdout),
-            plugins.cli.TimedReporter(sys.stdout)
-        ]
+    return plugin_list
 
-        if self.verbosity == 'normal':
-            plugin_list.insert(0, plugins.cli.DotsReporter(sys.stdout))
+def get_inner_plugin(args):
+    if args.capture:
+        return plugins.cli.StdOutCapturingReporter
+    return plugins.cli.VerboseReporter
 
-        return plugin_list
+def apply_colouring(args, inner_plugin_cls):
+    if args.colour:
+        return plugins.cli.ColouringDecorator(inner_plugin_cls)
+    return inner_plugin_cls
 
-    def get_inner_plugin(self):
-        if self.capture:
-            return plugins.cli.StdOutCapturingReporter
-        return plugins.cli.VerboseReporter
-
-    def apply_colouring(self, inner_plugin_cls):
-        if self.colour:
-            return plugins.cli.ColouringDecorator(inner_plugin_cls)
-        return inner_plugin_cls
-
-    def apply_success_muting(self, maybe_coloured_cls):
-        if self.verbosity == 'normal':
-            return plugins.cli.FailureOnlyDecorator(maybe_coloured_cls)
-        return maybe_coloured_cls
+def apply_success_muting(args, maybe_coloured_cls):
+    if args.verbosity == 'normal':
+        return plugins.cli.FailureOnlyDecorator(maybe_coloured_cls)
+    return maybe_coloured_cls
 
 
 if __name__ == "__main__":

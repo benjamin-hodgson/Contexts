@@ -31,6 +31,43 @@ class Plugin(object):
     def unexpected_error(self, exception):
         """Called when an error occurs outside of a Context or Assertion"""
 
+    def get_setup_methods(self, cls):
+        """
+        Called when the runner wants the plugin to identify the setup methods for a test class.
+        A plugin may return a list of unbound methods (i.e. functions with self as the first argument),
+        in the order they should be run, or None if it does not wish to identify any setup methods.
+
+        Arguments:
+            cls: class object. The test class currently being run.
+        """
+    def get_action_method(self, cls):
+        """
+        Called when the runner wants the plugin to identify the action method for a test class.
+        A plugin may return an unbound method (i.e. a function with self as the first argument),
+        or None if it does not wish to identify any action methods.
+
+        Arguments:
+            cls: class object. The test class currently being run.
+        """
+    def get_assertion_methods(self, cls):
+        """
+        Called when the runner wants the plugin to identify the assertion methods for a test class.
+        A plugin may return a list of unbound methods (i.e. functions with self as the first argument),
+        or None if it does not wish identify any setup methods.
+
+        Arguments:
+            cls: class object. The test class currently being run.
+        """
+    def get_teardown_methods(self, cls):
+        """
+        Called when the runner wants the plugin to identify the teardown methods for a test class.
+        A plugin may return a list of unbound methods (i.e. functions with self as the first argument),
+        in the order they should be run, or None if it does not wish identify any teardown methods.
+
+        Arguments:
+            cls: class object. The test class currently being run.
+        """
+
     def process_module_list(self, modules):
         """Called with the full list of found modules. Plugins may modify the list in-place."""
     def process_class_list(self, modules):
@@ -53,5 +90,6 @@ class Plugin(object):
         Called at the end of the test runner to obtain the exit code for the process.
         Plugins may return an integer, or None if they do not want to override the default behaviour.
         """
+
 
 from . import shared, cli, teamcity

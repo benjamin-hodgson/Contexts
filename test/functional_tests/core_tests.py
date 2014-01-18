@@ -30,6 +30,60 @@ class WhenRunningASpec:
         assert self.spec.log == "arrange act assert teardown "
 
 
+class WhenAPluginIdentifiesMethods:
+    def context(self):
+        class Singleton:
+            def __new__(cls):
+                if not hasattr(cls, 'instance'):
+                    cls.instance = super().__new__(cls)
+                return cls.instance
+        self.spec = Singleton
+
+        self.called_with = []
+        self.log = []
+
+        def logging_function_with(log_string):
+            def logger(s):
+                self.called_with.append(s)
+                self.log.append(log_string)
+            return logger
+
+        self.plugin = mock.Mock(spec=Plugin)
+        self.plugin.get_setup_methods.return_value = [
+            logging_function_with("setup1"),
+            logging_function_with("setup2")
+        ]
+        self.plugin.get_action_method.return_value = logging_function_with("action")
+        self.plugin.get_assertion_methods.return_value = [
+            logging_function_with("assertion1"),
+            logging_function_with("assertion2")
+        ]
+        self.plugin.get_teardown_methods.return_value = [
+            logging_function_with("teardown1"),
+            logging_function_with("teardown2")
+        ]
+
+
+    def because_we_run_the_spec(self):
+        contexts.run(self.spec, [self.plugin])
+
+    def it_should_pass_the_class_into_the_plugin_methods(self):
+        print(self.plugin.mock_calls)
+        self.plugin.assert_has_calls([
+                mock.call.get_setup_methods(self.spec),
+                mock.call.get_action_method(self.spec),
+                mock.call.get_assertion_methods(self.spec),
+                mock.call.get_teardown_methods(self.spec)
+            ], any_order=True)
+
+    # def it_should_run_the_supplied_methods_in_the_correct_order(self):
+    #     assert self.log == ["setup1", "setup2", "action", "assertion1", "assertion2", "teardown1", "teardown2"]
+
+    def it_should_pass_the_instance_into_each_method(self):
+        for arg in self.called_with:
+            assert arg is self.spec.instance
+
+
 class WhenRunningASpecWithMultipleAssertions:
     def context(self):
         class TestSpec:

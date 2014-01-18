@@ -5,8 +5,6 @@ from collections import namedtuple
 from . import errors
 
 
-SpecialMethods = namedtuple("SpecialMethods", ['setups', 'actions', 'assertions', 'teardowns'])
-
 establish_re = re.compile(r"(^|_)([Ee]stablish|[Cc]ontext|[Gg]iven)")
 because_re = re.compile(r"(^|_)([Bb]ecause|[Ww]hen|[Ss]ince|[Aa]fter)")
 should_re = re.compile(r"(^|_)([Ss]hould|[Ii]t|[Mm]ust|[Ww]ill|[Tt]hen)")
@@ -23,15 +21,29 @@ def find_specs_in_module(module):
             yield cls
 
 
-class MethodFinder(object):
-    def __init__(self, spec):
-        self.spec = spec
+class UnboundMethodFinder(object):
+    def __init__(self, spec_class):
+        self.spec_class = spec_class
 
-    def find_special_methods(self):
-        return SpecialMethods(self.find_setups(),
-                              self.find_actions(),
-                              self.find_assertions(),
-                              self.find_teardowns())
+    def find_examples_method(self):
+        found = []
+        for name, val in self.spec_class.__dict__.items():
+            entry = val._contexts_role if hasattr(val, '_contexts_role') else name
+
+            if not example_re.search(entry):
+                continue
+
+            if establish_re.search(entry) or because_re.search(entry) or should_re.search(entry) or cleanup_re.search(entry):
+                msg = "The method {} is ambiguously named".format(name)
+                raise errors.MethodNamingError(msg)
+
+            if not isinstance(val, classmethod):
+                raise TypeError("The examples method '{}' must be a classmethod".format(val.__qualname__))
+
+            method = getattr(self.spec_class, name)
+            found.append(method)
+        assert_single_method_of_given_type(self.spec_class, found)
+        return found[0] if found else lambda: None
 
     def find_setups(self):
         return self.find_methods_matching(establish_re, top_down=True, one_per_class=True)
@@ -47,31 +59,33 @@ class MethodFinder(object):
 
     def find_methods_matching(self, regex, *, top_down=False, one_only=False, one_per_class=False):
         found = []
-        mro = self.spec.__class__.__mro__
+        mro = self.spec_class.__mro__
         classes = reversed(mro) if top_down else mro
         for cls in classes:
-            found.extend(self.find_methods_on_class_matching(cls, regex, one_only or one_per_class))
+            found.extend(find_methods_on_class_matching(cls, regex, one_only or one_per_class))
             if one_only and found:
                 break
         return found
 
-    def find_methods_on_class_matching(self, cls, regex, one_per_class):
-        found = []
-        for name, val in cls.__dict__.items():
-            if hasattr(val, "_contexts_role"):
-                name = val._contexts_role
 
-            if not regex.search(name):
-                continue
+def find_methods_on_class_matching(cls, regex, one_per_class):
+    found = []
+    for name, val in cls.__dict__.items():
+        if hasattr(val, "_contexts_role"):
+            name = val._contexts_role
 
-            if callable(val):
-                method = types.MethodType(val, self.spec)
-                found.append(method)
+        if not regex.search(name):
+            continue
 
-        if one_per_class:
-            assert_single_method_of_given_type(cls, found)
+        if callable(val):
+            found.append(val)
 
-        return found
+    if one_per_class and len(found) > 1:
+        msg = "Context {} has multiple methods of the same type:\n".format(cls.__qualname__)
+        msg += ", ".join([func.__name__ for func in found])
+        raise errors.TooManySpecialMethodsError(msg)
+
+    return found
 
 
 def find_examples_method(cls):
