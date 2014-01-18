@@ -12,47 +12,35 @@ cleanup_re = re.compile(r"[Cc]leanup")
 class NameBasedFinder(object):
     def get_setup_methods(self, spec_cls):
         found = []
-
         for cls in reversed(inspect.getmro(spec_cls)):
-            found_on_class = []
-            for name, val in cls.__dict__.items():
-                if callable(val) and name_matches(name, establish_re):
-                    found_on_class.append(val)
-
+            found_on_class = get_methods_on_class(cls, establish_re)
             assert_one_method(found_on_class, cls)
             found.extend(found_on_class)
-
         return found
 
     def get_action_method(self, cls):
-        found = []
-        for name, val in cls.__dict__.items():
-            if callable(val) and name_matches(name, because_re):
-                found.append(val)
-
+        found = get_methods_on_class(cls, because_re)
         assert_one_method(found, cls)
         return found[0] if found else None
 
     def get_assertion_methods(self, cls):
-        found = []
-        for name, val in cls.__dict__.items():
-            if callable(val) and name_matches(name, should_re):
-                found.append(val)
-        return found
+        return get_methods_on_class(cls, should_re)
 
     def get_teardown_methods(self, spec_cls):
         found = []
-
         for cls in inspect.getmro(spec_cls):
-            found_on_class = []
-            for name, val in cls.__dict__.items():
-                if callable(val) and name_matches(name, cleanup_re):
-                    found_on_class.append(val)
-
+            found_on_class = get_methods_on_class(cls, cleanup_re)
             assert_one_method(found_on_class, cls)
             found.extend(found_on_class)
-
         return found
+
+
+def get_methods_on_class(cls, regex):
+    found_on_class = []
+    for name, val in cls.__dict__.items():
+        if callable(val) and name_matches(name, regex):
+            found_on_class.append(val)
+    return found_on_class
 
 
 def name_matches(name, regex):
