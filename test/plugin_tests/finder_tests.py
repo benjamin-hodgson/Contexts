@@ -303,3 +303,133 @@ class WhenANonFunctionObjectHasAnActionName:
     def it_should_not_return_the_non_function(self):
         assert self.result is None
 
+
+###########################################################
+# tests for get_assertion_methods
+###########################################################
+
+class WhenFindingAssertionMethods:
+    def given_a_class_with_assertion_methods(self):
+        class AssertionMethods:
+            def method_with_it_in_the_name(self):
+                pass
+            def method_with_should_in_the_name(self):
+                pass
+            def method_with_must_in_the_name(self):
+                pass
+            def method_with_will_in_the_name(self):
+                pass
+            def method_with_then_in_the_name(self):
+                pass
+        self.spec = AssertionMethods
+        self.finder = NameBasedFinder()
+
+    def when_the_framework_calls_get_assertion_methods(self):
+        self.result = self.finder.get_assertion_methods(self.spec)
+
+    def it_should_return_all_the_assertion_methods(self):
+        assert set(self.result) == {
+            self.spec.method_with_it_in_the_name,
+            self.spec.method_with_must_in_the_name,
+            self.spec.method_with_should_in_the_name,
+            self.spec.method_with_then_in_the_name,
+            self.spec.method_with_will_in_the_name
+        }
+
+
+class WhenASuperclassDefinesAssertionMethods:
+    def given_a_superclass_with_assertions(self):
+        class Super:
+            def should(self):
+                pass
+        class Spec(Super):
+            pass
+        self.spec = Spec
+        self.finder = NameBasedFinder()
+
+    def when_the_framework_calls_get_assertion_methods(self):
+        self.result = self.finder.get_assertion_methods(self.spec)
+
+    def it_should_not_return_the_superclass_methods(self):
+        assert self.result == []
+
+
+class WhenAnAssertionMethodIsAmbiguouslyNamed:
+    @classmethod
+    def examples_of_ambiguous_assertion_methods(cls):
+        class AmbiguousAssertion1:
+            def method_with_should_and_establish_in_the_name(self):
+                pass
+        yield AmbiguousAssertion1
+
+        class AmbiguousAssertion2:
+            def method_with_should_and_because_in_the_name(self):
+                pass
+        yield AmbiguousAssertion2
+
+        class AmbiguousAssertion3:
+            def method_with_should_and_cleanup_in_the_name(self):
+                pass
+        yield AmbiguousAssertion3
+
+    def context(self):
+        self.finder = NameBasedFinder()
+
+    def when_the_framework_calls_get_assertion_methods(self, spec):
+        self.exception = contexts.catch(self.finder.get_assertion_methods, spec)
+
+    def it_should_throw_a_MethodNamingError(self):
+        assert isinstance(self.exception, contexts.errors.MethodNamingError)
+
+
+class WhenAnAssertionMethodIsNotSoAmbiguouslyNamed:
+    @classmethod
+    def examples_of_not_so_ambiguous_assertion_methods(cls):
+        class NotSoAmbiguousAssertion1:
+            def method_with_it_and_should_in_the_name(self):
+                pass
+        yield NotSoAmbiguousAssertion1, NotSoAmbiguousAssertion1.method_with_it_and_should_in_the_name
+
+        class NotSoAmbiguousAssertion2:
+            def method_with_should_and_must_in_the_name(self):
+                pass
+        yield NotSoAmbiguousAssertion2, NotSoAmbiguousAssertion2.method_with_should_and_must_in_the_name
+
+        class NotSoAmbiguousAssertion3:
+            def method_with_must_and_will_in_the_name(self):
+                pass
+        yield NotSoAmbiguousAssertion3, NotSoAmbiguousAssertion3.method_with_must_and_will_in_the_name
+
+        class NotSoAmbiguousAssertion4:
+            def method_with_will_and_then_in_the_name(self):
+                pass
+        yield NotSoAmbiguousAssertion4, NotSoAmbiguousAssertion4.method_with_will_and_then_in_the_name
+
+        class NotSoAmbiguousAssertion5:
+            def method_with_then_and_it_in_the_name(self):
+                pass
+        yield NotSoAmbiguousAssertion5, NotSoAmbiguousAssertion5.method_with_then_and_it_in_the_name
+
+    def context(self):
+        self.finder = NameBasedFinder()
+
+    def when_the_framework_calls_get_assertion_methods(self, spec, method):
+        self.result = self.finder.get_assertion_methods(spec)
+
+    def it_should_return_the_method(self, spec, method):
+        assert self.result == [method]
+
+
+class WhenANonFunctionObjectHasAnAssertionName:
+    @contexts.setup
+    def establish_that_a_spec_has_because_not_bound_to_a_function(self):
+        class Spec:
+            should = 123
+        self.spec = Spec
+        self.finder = NameBasedFinder()
+
+    def when_the_framework_calls_get_assertion_methods(self):
+        self.result = self.finder.get_assertion_methods(self.spec)
+
+    def it_should_not_return_the_non_function(self):
+        assert self.result == []

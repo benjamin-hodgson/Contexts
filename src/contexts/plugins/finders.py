@@ -5,7 +5,7 @@ from .. import errors
 
 establish_re = re.compile(r"[Ee]stablish|[Cc]ontext|[Gg]iven")
 because_re = re.compile(r"[Bb]ecause|[Ww]hen|[Ss]ince|[Aa]fter")
-should_re = re.compile(r"[Ss]hould")
+should_re = re.compile(r"[Ss]hould|(^[Ii]|[a-z]I|_i)t|[Mm]ust|[Ww]ill|[Tt]hen")
 cleanup_re = re.compile(r"[Cc]leanup")
 
 
@@ -32,6 +32,13 @@ class NameBasedFinder(object):
 
         assert_one_method(found, cls)
         return found[0] if found else None
+
+    def get_assertion_methods(self, cls):
+        found = []
+        for name, val in cls.__dict__.items():
+            if callable(val) and name_matches(name, should_re):
+                found.append(val)
+        return found
 
 
 def name_matches(name, regex):
