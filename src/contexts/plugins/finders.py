@@ -16,20 +16,10 @@ class NameBasedFinder(object):
         for cls in reversed(inspect.getmro(spec_cls)):
             found_on_class = []
             for name, val in cls.__dict__.items():
-                if not callable(val):
-                    continue
-
-                if establish_re.search(name):
-                    if because_re.search(name) or should_re.search(name) or cleanup_re.search(name):
-                        raise errors.MethodNamingError("The method {} is ambiguously named".format(name))
-
+                if callable(val) and name_matches(name, establish_re):
                     found_on_class.append(val)
 
-            if len(found_on_class) > 1:
-                msg = "Context {} has multiple methods of the same type:\n".format(cls.__qualname__)
-                msg += ", ".join([func.__name__ for func in found])
-                raise errors.TooManySpecialMethodsError(msg)
-
+            assert_one_method(found_on_class, cls)
             found.extend(found_on_class)
 
         return found
@@ -37,18 +27,26 @@ class NameBasedFinder(object):
     def get_action_method(self, cls):
         found = []
         for name, val in cls.__dict__.items():
-            if not callable(val):
-                continue
-
-            if because_re.search(name):
-                if establish_re.search(name) or should_re.search(name) or cleanup_re.search(name):
-                    raise errors.MethodNamingError("The method {} is ambiguously named".format(name))
-
+            if callable(val) and name_matches(name, because_re):
                 found.append(val)
 
-        if len(found) > 1:
-            msg = "Context {} has multiple methods of the same type:\n".format(cls.__qualname__)
-            msg += ", ".join([func.__name__ for func in found])
-            raise errors.TooManySpecialMethodsError(msg)
+        assert_one_method(found, cls)
+        return found[0] if found else None
 
-        return found[0] if len(found) == 1 else None
+
+def name_matches(name, regex):
+    all_regexes = {establish_re, because_re, should_re, cleanup_re}
+    all_regexes.remove(regex)
+
+    if regex.search(name):
+        if any(r.search(name) for r in all_regexes):
+            raise errors.MethodNamingError("The method {} is ambiguously named".format(name))
+        return True
+    return False
+
+
+def assert_one_method(found_methods, cls):
+    if len(found_methods) > 1:
+        msg = "Context {} has multiple methods of the same type:\n".format(cls.__qualname__)
+        msg += ", ".join([func.__name__ for func in found_methods])
+        raise errors.TooManySpecialMethodsError(msg)
