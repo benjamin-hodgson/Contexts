@@ -40,6 +40,20 @@ class NameBasedFinder(object):
                 found.append(val)
         return found
 
+    def get_teardown_methods(self, spec_cls):
+        found = []
+
+        for cls in inspect.getmro(spec_cls):
+            found_on_class = []
+            for name, val in cls.__dict__.items():
+                if callable(val) and name_matches(name, cleanup_re):
+                    found_on_class.append(val)
+
+            assert_one_method(found_on_class, cls)
+            found.extend(found_on_class)
+
+        return found
+
 
 def name_matches(name, regex):
     all_regexes = {establish_re, because_re, should_re, cleanup_re}

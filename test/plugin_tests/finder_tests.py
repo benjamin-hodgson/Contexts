@@ -422,7 +422,7 @@ class WhenAnAssertionMethodIsNotSoAmbiguouslyNamed:
 
 class WhenANonFunctionObjectHasAnAssertionName:
     @contexts.setup
-    def establish_that_a_spec_has_because_not_bound_to_a_function(self):
+    def establish_that_a_spec_has_should_not_bound_to_a_function(self):
         class Spec:
             should = 123
         self.spec = Spec
@@ -430,6 +430,117 @@ class WhenANonFunctionObjectHasAnAssertionName:
 
     def when_the_framework_calls_get_assertion_methods(self):
         self.result = self.finder.get_assertion_methods(self.spec)
+
+    def it_should_not_return_the_non_function(self):
+        assert self.result == []
+
+
+###########################################################
+# tests for get_teardown_methods
+###########################################################
+
+class WhenFindingTeardownMethods:
+    def establish(self):
+        class Cleanup:
+            def method_with_cleanup_in_the_name(self):
+                pass
+        self.spec = Cleanup
+        self.finder = NameBasedFinder()
+
+    def when_the_framework_calls_get_teardown_methods(self):
+        self.result = self.finder.get_teardown_methods(self.spec)
+
+    def it_should_return_the_setup_method(self):
+        assert self.result == [self.spec.method_with_cleanup_in_the_name]
+
+
+class WhenASuperclassDefinesATeardownMethod:
+    @classmethod
+    def examples_of_ways_superclasses_can_define_methods(self):
+        class Super:
+            def superclass_cleanup_method(self):
+                pass
+        class Spec(Super):
+            def subclass_cleanup_method(self):
+                pass
+        yield Spec, Super.superclass_cleanup_method, Spec.subclass_cleanup_method
+
+        # I want it to run the superclass's methods _even if_
+        # they have the same name as the subclass method
+        class Super:
+            def cleanup(self):
+                pass
+        class Spec(Super):
+            def cleanup(self):
+                pass
+        yield Spec, Super.cleanup, Spec.cleanup
+
+    def establish(self):
+        self.finder = NameBasedFinder()
+
+    def when_the_framework_calls_get_teardown_methods(self, spec, super_method, spec_method):
+        self.result = self.finder.get_teardown_methods(spec)
+
+    @contexts.assertion
+    def it_should_return_the_subclass_method_and_then_the_superclass_method(self, spec, super_method, spec_method):
+        assert self.result == [spec_method, super_method]
+
+
+class WhenMultipleTeardownMethodsAreDefined:
+    def establish_that_a_spec_has_multiple_teardowns(self):
+        class MultipleTeardowns:
+            def method_with_cleanup_in_the_name(self):
+                pass
+            def another_method_with_cleanup_in_the_name(self):
+                pass
+        self.spec = MultipleTeardowns
+        self.finder = NameBasedFinder()
+
+    def when_the_framework_calls_get_teardown_methods(self):
+        self.exception = contexts.catch(self.finder.get_teardown_methods, self.spec)
+
+    def it_should_throw_a_TooManySpecialMethodsError(self):
+        assert isinstance(self.exception, contexts.errors.TooManySpecialMethodsError)
+
+
+class WhenATeardownMethodIsAmbiguouslyNamed:
+    @classmethod
+    def examples_of_specs_with_ambiguous_teardown_methods(cls):
+        class AmbiguousTeardown1:
+            def method_with_cleanup_and_establish_in_the_name(self):
+                pass
+        yield AmbiguousTeardown1
+
+        class AmbiguousTeardown2:
+            def method_with_cleanup_and_because_in_the_name(self):
+                pass
+        yield AmbiguousTeardown2
+
+        class AmbiguousTeardown3:
+            def method_with_cleanup_and_should_in_the_name(self):
+                pass
+        yield AmbiguousTeardown3
+
+    def establish(self):
+        self.finder = NameBasedFinder()
+
+    def when_the_framework_calls_get_teardown_methods(self, spec):
+        self.exception = contexts.catch(self.finder.get_teardown_methods, spec)
+
+    def it_should_throw_a_MethodNamingError(self):
+        assert isinstance(self.exception, contexts.errors.MethodNamingError)
+
+
+class WhenANonFunctionObjectHasATeardownName:
+    @contexts.setup
+    def establish_that_a_spec_has_cleanup_not_bound_to_a_function(self):
+        class Spec:
+            cleanup = 123
+        self.spec = Spec
+        self.finder = NameBasedFinder()
+
+    def when_the_framework_calls_get_teardown_methods(self):
+        self.result = self.finder.get_teardown_methods(self.spec)
 
     def it_should_not_return_the_non_function(self):
         assert self.result == []
