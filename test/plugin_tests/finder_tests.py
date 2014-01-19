@@ -1,17 +1,17 @@
 import contexts
-from contexts.plugins.finders import NameBasedFinder
+from contexts.plugins.finders import UnboundMethodFinder
 
 
-class NameBasedFinderSharedContext:
+class UnboundMethodFinderSharedContext:
     def shared_context(self):
-        self.finder = NameBasedFinder()
+        self.finder = UnboundMethodFinder()
 
 
 ###########################################################
 # tests for get_setup_methods
 ###########################################################
 
-class WhenFindingSetupMethods(NameBasedFinderSharedContext):
+class WhenFindingSetupMethods(UnboundMethodFinderSharedContext):
     @classmethod
     def examples_of_valid_setup_names(cls):
         class Establish:
@@ -36,7 +36,7 @@ class WhenFindingSetupMethods(NameBasedFinderSharedContext):
         assert self.result == [method]
 
 
-class WhenASuperclassDefinesASetupMethod(NameBasedFinderSharedContext):
+class WhenASuperclassDefinesASetupMethod(UnboundMethodFinderSharedContext):
     @classmethod
     def examples_of_ways_superclasses_can_define_methods(self):
         class SuperGiven:
@@ -65,7 +65,7 @@ class WhenASuperclassDefinesASetupMethod(NameBasedFinderSharedContext):
         assert self.result == [super_method, spec_method]
 
 
-class WhenMultipleSetupMethodsAreDefined(NameBasedFinderSharedContext):
+class WhenMultipleSetupMethodsAreDefined(UnboundMethodFinderSharedContext):
     def establish_that_a_spec_has_multiple_setups(self):
         class MultipleSetups:
             def method_with_establish_in_the_name(self):
@@ -81,7 +81,7 @@ class WhenMultipleSetupMethodsAreDefined(NameBasedFinderSharedContext):
         assert isinstance(self.exception, contexts.errors.TooManySpecialMethodsError)
 
 
-class WhenASetupMethodIsAmbiguouslyNamed(NameBasedFinderSharedContext):
+class WhenASetupMethodIsAmbiguouslyNamed(UnboundMethodFinderSharedContext):
     @classmethod
     def examples_of_specs_with_ambiguous_setup_methods(cls):
         class AmbiguousSetup1:
@@ -106,7 +106,7 @@ class WhenASetupMethodIsAmbiguouslyNamed(NameBasedFinderSharedContext):
         assert isinstance(self.exception, contexts.errors.MethodNamingError)
 
 
-class WhenASetupMethodIsNotSoAmbiguouslyNamed(NameBasedFinderSharedContext):
+class WhenASetupMethodIsNotSoAmbiguouslyNamed(UnboundMethodFinderSharedContext):
     @classmethod
     def examples_of_specs_with_not_so_ambiguous_setup_methods(cls):
         class NotSoAmbiguousSetup1:
@@ -131,7 +131,7 @@ class WhenASetupMethodIsNotSoAmbiguouslyNamed(NameBasedFinderSharedContext):
         assert self.result == [method]
 
 
-class WhenANonFunctionObjectHasASetupName(NameBasedFinderSharedContext):
+class WhenANonFunctionObjectHasASetupName(UnboundMethodFinderSharedContext):
     def establish_that_a_spec_has_establish_not_bound_to_a_function(self):
         class Spec:
             establish = 123
@@ -148,7 +148,7 @@ class WhenANonFunctionObjectHasASetupName(NameBasedFinderSharedContext):
 # tests for get_action_method
 ###########################################################
 
-class WhenFindingAnActionMethod(NameBasedFinderSharedContext):
+class WhenFindingAnActionMethod(UnboundMethodFinderSharedContext):
     @classmethod
     def examples_of_valid_action_names(cls):
         class Because:
@@ -178,7 +178,7 @@ class WhenFindingAnActionMethod(NameBasedFinderSharedContext):
         assert self.result == method
 
 
-class WhenASuperclassDefinesAnActionMethod(NameBasedFinderSharedContext):
+class WhenASuperclassDefinesAnActionMethod(UnboundMethodFinderSharedContext):
     def establish_that_a_spec_has_a_superclass(self):
         class Super:
             def because(self):
@@ -194,7 +194,7 @@ class WhenASuperclassDefinesAnActionMethod(NameBasedFinderSharedContext):
         assert self.result is None
 
 
-class WhenMultipleActionMethodsAreDefined(NameBasedFinderSharedContext):
+class WhenMultipleActionMethodsAreDefined(UnboundMethodFinderSharedContext):
     def establish_that_the_class_has_multiple_actions(self):
         class MultipleActions:
             def method_with_because_in_the_name(self):
@@ -210,7 +210,7 @@ class WhenMultipleActionMethodsAreDefined(NameBasedFinderSharedContext):
         assert isinstance(self.exception, contexts.errors.TooManySpecialMethodsError)
 
 
-class WhenAnActionMethodIsAmbiguouslyNamed(NameBasedFinderSharedContext):
+class WhenAnActionMethodIsAmbiguouslyNamed(UnboundMethodFinderSharedContext):
     @classmethod
     def examples_of_specs_with_ambiguous_action_methods(cls):
         class AmbiguousAction1:
@@ -235,7 +235,7 @@ class WhenAnActionMethodIsAmbiguouslyNamed(NameBasedFinderSharedContext):
         assert isinstance(self.exception, contexts.errors.MethodNamingError)
 
 
-class WhenAnActionMethodIsNotSoAmbiguouslyNamed(NameBasedFinderSharedContext):
+class WhenAnActionMethodIsNotSoAmbiguouslyNamed(UnboundMethodFinderSharedContext):
     @classmethod
     def examples_of_specs_with_not_so_ambiguous_setup_methods(cls):
         class NotSoAmbiguousAction1:
@@ -265,7 +265,7 @@ class WhenAnActionMethodIsNotSoAmbiguouslyNamed(NameBasedFinderSharedContext):
         assert self.result == method
 
 
-class WhenANonFunctionObjectHasAnActionName(NameBasedFinderSharedContext):
+class WhenANonFunctionObjectHasAnActionName(UnboundMethodFinderSharedContext):
     @contexts.setup
     def establish_that_a_spec_has_because_not_bound_to_a_function(self):
         class Spec:
@@ -283,7 +283,7 @@ class WhenANonFunctionObjectHasAnActionName(NameBasedFinderSharedContext):
 # tests for get_assertion_methods
 ###########################################################
 
-class WhenFindingAssertionMethods(NameBasedFinderSharedContext):
+class WhenFindingAssertionMethods(UnboundMethodFinderSharedContext):
     def given_a_class_with_assertion_methods(self):
         class AssertionMethods:
             def method_with_it_in_the_name(self):
@@ -311,7 +311,7 @@ class WhenFindingAssertionMethods(NameBasedFinderSharedContext):
         }
 
 
-class WhenASuperclassDefinesAssertionMethods(NameBasedFinderSharedContext):
+class WhenASuperclassDefinesAssertionMethods(UnboundMethodFinderSharedContext):
     def given_a_superclass_with_assertions(self):
         class Super:
             def should(self):
@@ -327,7 +327,7 @@ class WhenASuperclassDefinesAssertionMethods(NameBasedFinderSharedContext):
         assert self.result == []
 
 
-class WhenAnAssertionMethodIsAmbiguouslyNamed(NameBasedFinderSharedContext):
+class WhenAnAssertionMethodIsAmbiguouslyNamed(UnboundMethodFinderSharedContext):
     @classmethod
     def examples_of_ambiguous_assertion_methods(cls):
         class AmbiguousAssertion1:
@@ -352,7 +352,7 @@ class WhenAnAssertionMethodIsAmbiguouslyNamed(NameBasedFinderSharedContext):
         assert isinstance(self.exception, contexts.errors.MethodNamingError)
 
 
-class WhenAnAssertionMethodIsNotSoAmbiguouslyNamed(NameBasedFinderSharedContext):
+class WhenAnAssertionMethodIsNotSoAmbiguouslyNamed(UnboundMethodFinderSharedContext):
     @classmethod
     def examples_of_not_so_ambiguous_assertion_methods(cls):
         class NotSoAmbiguousAssertion1:
@@ -387,7 +387,7 @@ class WhenAnAssertionMethodIsNotSoAmbiguouslyNamed(NameBasedFinderSharedContext)
         assert self.result == [method]
 
 
-class WhenANonFunctionObjectHasAnAssertionName(NameBasedFinderSharedContext):
+class WhenANonFunctionObjectHasAnAssertionName(UnboundMethodFinderSharedContext):
     @contexts.setup
     def establish_that_a_spec_has_should_not_bound_to_a_function(self):
         class Spec:
@@ -405,7 +405,7 @@ class WhenANonFunctionObjectHasAnAssertionName(NameBasedFinderSharedContext):
 # tests for get_teardown_methods
 ###########################################################
 
-class WhenFindingTeardownMethods(NameBasedFinderSharedContext):
+class WhenFindingTeardownMethods(UnboundMethodFinderSharedContext):
     def establish(self):
         class Cleanup:
             def method_with_cleanup_in_the_name(self):
@@ -419,7 +419,7 @@ class WhenFindingTeardownMethods(NameBasedFinderSharedContext):
         assert self.result == [self.spec.method_with_cleanup_in_the_name]
 
 
-class WhenASuperclassDefinesATeardownMethod(NameBasedFinderSharedContext):
+class WhenASuperclassDefinesATeardownMethod(UnboundMethodFinderSharedContext):
     @classmethod
     def examples_of_ways_superclasses_can_define_methods(self):
         class Super:
@@ -448,7 +448,7 @@ class WhenASuperclassDefinesATeardownMethod(NameBasedFinderSharedContext):
         assert self.result == [spec_method, super_method]
 
 
-class WhenMultipleTeardownMethodsAreDefined(NameBasedFinderSharedContext):
+class WhenMultipleTeardownMethodsAreDefined(UnboundMethodFinderSharedContext):
     def establish_that_a_spec_has_multiple_teardowns(self):
         class MultipleTeardowns:
             def method_with_cleanup_in_the_name(self):
@@ -464,7 +464,7 @@ class WhenMultipleTeardownMethodsAreDefined(NameBasedFinderSharedContext):
         assert isinstance(self.exception, contexts.errors.TooManySpecialMethodsError)
 
 
-class WhenATeardownMethodIsAmbiguouslyNamed(NameBasedFinderSharedContext):
+class WhenATeardownMethodIsAmbiguouslyNamed(UnboundMethodFinderSharedContext):
     @classmethod
     def examples_of_specs_with_ambiguous_teardown_methods(cls):
         class AmbiguousTeardown1:
@@ -489,7 +489,7 @@ class WhenATeardownMethodIsAmbiguouslyNamed(NameBasedFinderSharedContext):
         assert isinstance(self.exception, contexts.errors.MethodNamingError)
 
 
-class WhenANonFunctionObjectHasATeardownName(NameBasedFinderSharedContext):
+class WhenANonFunctionObjectHasATeardownName(UnboundMethodFinderSharedContext):
     @contexts.setup
     def establish_that_a_spec_has_cleanup_not_bound_to_a_function(self):
         class Spec:

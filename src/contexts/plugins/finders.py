@@ -9,7 +9,7 @@ should_re = re.compile(r"[Ss]hould|(^[Ii]|[a-z]I|_i)t|[Mm]ust|[Ww]ill|[Tt]hen")
 cleanup_re = re.compile(r"[Cc]leanup")
 
 
-class NameBasedFinder(object):
+class UnboundMethodFinder(object):
     def get_setup_methods(self, spec_cls):
         found = []
         for cls in reversed(inspect.getmro(spec_cls)):
