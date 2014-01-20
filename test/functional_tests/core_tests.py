@@ -32,56 +32,68 @@ class WhenRunningASpec:
 
 class WhenAPluginIdentifiesMethods:
     def context(self):
-        class Singleton:
-            def __new__(cls):
-                if not hasattr(cls, 'instance'):
-                    cls.instance = super().__new__(cls)
-                return cls.instance
-        self.spec = Singleton
-
-        self.called_with = []
         self.log = []
+        class TestSpec:
+            @classmethod
+            def method_zero(cls):
+                self.log.append("examples")
+                yield 1
+                yield 2
+            def method_one(s, example):
+                self.log.append(("setup",example))
+            def method_two(s, example):
+                self.log.append(("action",example))
+            def method_three(s, example):
+                self.log.append(("assertion",example))
+            def method_four(s, example):
+                self.log.append(("teardown",example))
+        self.spec = TestSpec
 
-        def logging_function_with(log_string):
-            def logger(s):
-                self.called_with.append(s)
-                self.log.append(log_string)
-            return logger
+        self.none_plugin = mock.Mock(spec=Plugin)
+        self.none_plugin.identify_method.return_value = None
+
+        self.deleted_plugin = mock.Mock(spec=Plugin)
+        del self.deleted_plugin.identify_method
 
         self.plugin = mock.Mock(spec=Plugin)
-        self.plugin.get_setup_methods.return_value = [
-            logging_function_with("setup1"),
-            logging_function_with("setup2")
-        ]
-        self.plugin.get_action_method.return_value = logging_function_with("action")
-        self.plugin.get_assertion_methods.return_value = [
-            logging_function_with("assertion1"),
-            logging_function_with("assertion2")
-        ]
-        self.plugin.get_teardown_methods.return_value = [
-            logging_function_with("teardown1"),
-            logging_function_with("teardown2")
-        ]
+        self.plugin.identify_method.side_effect = lambda meth: {
+            TestSpec.method_zero: contexts.plugins.EXAMPLES,
+            TestSpec.method_one: contexts.plugins.SETUP,
+            TestSpec.method_two: contexts.plugins.ACTION,
+            TestSpec.method_three: contexts.plugins.ASSERTION,
+            TestSpec.method_four: contexts.plugins.TEARDOWN
+        }[meth]
+
+        self.too_late_plugin = mock.Mock(spec=Plugin)
 
 
     def because_we_run_the_spec(self):
-        contexts.run(self.spec, [self.plugin])
+        contexts.run(self.spec, [self.none_plugin, self.deleted_plugin, self.plugin, self.too_late_plugin])
 
-    def it_should_pass_the_class_into_the_plugin_methods(self):
-        print(self.plugin.mock_calls)
-        self.plugin.assert_has_calls([
-                mock.call.get_setup_methods(self.spec),
-                mock.call.get_action_method(self.spec),
-                mock.call.get_assertion_methods(self.spec),
-                mock.call.get_teardown_methods(self.spec)
+    def it_should_ask_the_plugin_to_identify_each_method(self):
+        self.plugin.identify_method.assert_has_calls([
+                mock.call(self.spec.method_zero),
+                mock.call(self.spec.method_one),
+                mock.call(self.spec.method_two),
+                mock.call(self.spec.method_three),
+                mock.call(self.spec.method_four)
             ], any_order=True)
 
-    # def it_should_run_the_supplied_methods_in_the_correct_order(self):
-    #     assert self.log == ["setup1", "setup2", "action", "assertion1", "assertion2", "teardown1", "teardown2"]
+    def it_should_not_ask_the_one_that_was_too_late(self):
+        assert not self.too_late_plugin.identify_method.called
 
-    def it_should_pass_the_instance_into_each_method(self):
-        for arg in self.called_with:
-            assert arg is self.spec.instance
+    # def it_should_run_the_supplied_methods_in_the_correct_order(self):
+    #     assert self.log == [
+    #         "examples",
+    #         ("setup", 1),
+    #         ("action", 1),
+    #         ("assertion", 1),
+    #         ("teardown", 1),
+    #         ("setup", 2),
+    #         ("action", 2),
+    #         ("assertion", 2),
+    #         ("teardown", 2)
+    #     ]
 
 
 class WhenRunningASpecWithMultipleAssertions:

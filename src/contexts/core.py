@@ -72,10 +72,11 @@ class TestClass(object):
         self.cls = cls
         self.plugin_notifier = plugin_notifier
 
-        plugin_notifier.call_plugins("get_setup_methods", self.cls)
-        plugin_notifier.call_plugins("get_action_method", self.cls)
-        plugin_notifier.call_plugins("get_assertion_methods", self.cls)
-        plugin_notifier.call_plugins("get_teardown_methods", self.cls)
+        for name, val in inspect.getmembers(cls):
+            if inspect.isfunction(val):
+                self.plugin_notifier.call_plugins("identify_method", val)
+            elif isinstance(val, classmethod):
+                self.plugin_notifier.call_plugins("identify_method", getattr(cls, name))
 
         finder = finders.UnboundMethodFinder(self.cls)
         self.examples_method = finder.find_examples_method()
@@ -89,8 +90,7 @@ class TestClass(object):
         with self.plugin_notifier.run_class(self):
             for example in self.get_examples():
                 context = Context(
-                    self.cls(),
-                    example,
+                    self.cls(), example,
                     self.unbound_setups,
                     self.unbound_actions,
                     self.unbound_assertions,

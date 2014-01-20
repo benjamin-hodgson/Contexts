@@ -31,41 +31,23 @@ class Plugin(object):
     def unexpected_error(self, exception):
         """Called when an error occurs outside of a Context or Assertion"""
 
-    def get_setup_methods(self, cls):
+    def identify_method(self, func):
         """
-        Called when the runner wants the plugin to identify the setup methods for a test class.
-        A plugin may return a list of unbound methods (i.e. functions with self as the first argument),
-        in the order they should be run, or None if it does not wish to identify any setup methods.
+        Called when the test runner encounters a method on a test class and wants to
+        know if it should run the method.
+
+        When a test class has a superclass, all the superclass's methods will be passed in first.
 
         Arguments:
-            cls: class object. The test class currently being run.
-        """
-    def get_action_method(self, cls):
-        """
-        Called when the runner wants the plugin to identify the action method for a test class.
-        A plugin may return an unbound method (i.e. a function with self as the first argument),
-        or None if it does not wish to identify any action methods.
+            func - the unbound method (or bound classmethod) which the test runner wants to be identified
 
-        Arguments:
-            cls: class object. The test class currently being run.
-        """
-    def get_assertion_methods(self, cls):
-        """
-        Called when the runner wants the plugin to identify the assertion methods for a test class.
-        A plugin may return a list of unbound methods (i.e. functions with self as the first argument),
-        or None if it does not wish identify any setup methods.
-
-        Arguments:
-            cls: class object. The test class currently being run.
-        """
-    def get_teardown_methods(self, cls):
-        """
-        Called when the runner wants the plugin to identify the teardown methods for a test class.
-        A plugin may return a list of unbound methods (i.e. functions with self as the first argument),
-        in the order they should be run, or None if it does not wish identify any teardown methods.
-
-        Arguments:
-            cls: class object. The test class currently being run.
+        Plugins may return:
+            contexts.plugins.EXAMPLES - plugin wishes the method to be treated as an 'examples' method
+            contexts.plugins.SETUP - plugin wishes the method to be treated as an 'establish' method
+            contexts.plugins.ACTION - plugin wishes the method to be treated as a 'because'
+            contexts.plugins.ASSERTION - plugin wishes the method to be treated as an assertion method
+            contexts.plugins.TEARDOWN - plugin wishes the method to be treated as a teardown method
+            None - plugin does not wish to identify the method (though other plugins may still cause it to be run)
         """
 
     def process_module_list(self, modules):
@@ -90,6 +72,13 @@ class Plugin(object):
         Called at the end of the test runner to obtain the exit code for the process.
         Plugins may return an integer, or None if they do not want to override the default behaviour.
         """
+
+
+EXAMPLES = "examples - DO NOT RELY ON THE VALUE OF THIS CONSTANT"
+SETUP = "setup - DO NOT RELY ON THE VALUE OF THIS CONSTANT"
+ACTION = "action - DO NOT RELY ON THE VALUE OF THIS CONSTANT"
+ASSERTION = "assertion - DO NOT RELY ON THE VALUE OF THIS CONSTANT"
+TEARDOWN = "teardown - DO NOT RELY ON THE VALUE OF THIS CONSTANT"
 
 
 from . import shared, cli, teamcity
