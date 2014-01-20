@@ -7,6 +7,7 @@ from . import discovery
 from . import errors
 from . import finders
 from .tools import NO_EXAMPLE
+from . import plugins
 
 
 class TestRun(object):
@@ -72,19 +73,42 @@ class TestClass(object):
         self.cls = cls
         self.plugin_notifier = plugin_notifier
 
-        for name, val in inspect.getmembers(cls):
-            if inspect.isfunction(val):
-                self.plugin_notifier.call_plugins("identify_method", val)
-            elif isinstance(val, classmethod):
-                self.plugin_notifier.call_plugins("identify_method", getattr(cls, name))
+        self.examples_method = None
+        self.unbound_setups = []
+        self.unbound_actions = []  # fixme: this should just be a single function, not a list
+        self.unbound_assertions = []
+        self.unbound_teardowns = []
+
+        for name, val in cls.__dict__.items():
+            if isinstance(val, classmethod):
+                val = getattr(cls, name)
+
+            if callable(val) and not isprivate(name):
+                response = self.plugin_notifier.call_plugins("identify_method", val)
+            else:
+                continue
+
+            if response is plugins.EXAMPLES:
+                self.examples_method = val
+            elif response is plugins.SETUP:
+                self.unbound_setups.append(val)
+            elif response is plugins.ACTION:
+                self.unbound_actions.append(val)
+            elif response is plugins.ASSERTION:
+                self.unbound_assertions.append(val)
+            elif response is plugins.TEARDOWN:
+                self.unbound_teardowns.append(val)
 
         finder = finders.UnboundMethodFinder(self.cls)
-        self.examples_method = finder.find_examples_method()
-        self.unbound_setups = finder.find_setups()
-        self.unbound_actions = finder.find_actions()
-        self.unbound_assertions = finder.find_assertions()
-        self.unbound_teardowns = finder.find_teardowns()
+        if self.examples_method is None:
+            self.examples_method = finder.find_examples_method()
+        self.unbound_setups.extend(finder.find_setups())
+        self.unbound_actions.extend(finder.find_actions())
+        self.unbound_assertions.extend(finder.find_assertions())
+        self.unbound_teardowns.extend(finder.find_teardowns())
+
         assert_no_ambiguous_methods(self.unbound_setups, self.unbound_actions, self.unbound_assertions, self.unbound_teardowns)
+
 
     def run(self):
         with self.plugin_notifier.run_class(self):
@@ -102,6 +126,10 @@ class TestClass(object):
     def get_examples(self):
         examples = self.examples_method()
         return examples if examples is not None else [NO_EXAMPLE]
+
+
+def isprivate(name):
+    return name.startswith('_')
 
 
 def assert_no_ambiguous_methods(*iterables):

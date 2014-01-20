@@ -82,18 +82,18 @@ class WhenAPluginIdentifiesMethods:
     def it_should_not_ask_the_one_that_was_too_late(self):
         assert not self.too_late_plugin.identify_method.called
 
-    # def it_should_run_the_supplied_methods_in_the_correct_order(self):
-    #     assert self.log == [
-    #         "examples",
-    #         ("setup", 1),
-    #         ("action", 1),
-    #         ("assertion", 1),
-    #         ("teardown", 1),
-    #         ("setup", 2),
-    #         ("action", 2),
-    #         ("assertion", 2),
-    #         ("teardown", 2)
-    #     ]
+    def it_should_run_the_supplied_methods_in_the_correct_order(self):
+        assert self.log == [
+            "examples",
+            ("setup", 1),
+            ("action", 1),
+            ("assertion", 1),
+            ("teardown", 1),
+            ("setup", 2),
+            ("action", 2),
+            ("assertion", 2),
+            ("teardown", 2)
+        ]
 
 
 class WhenRunningASpecWithMultipleAssertions:
