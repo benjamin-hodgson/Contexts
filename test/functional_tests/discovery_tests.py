@@ -7,7 +7,6 @@ import contexts
 from unittest import mock
 from .tools import SpyReporter
 from contexts.plugins import Plugin
-from contexts.plugins.importing import Importer
 
 
 THIS_FILE = os.path.realpath(__file__)
@@ -366,7 +365,7 @@ class WhenRunningAFolderWhichIsAPackage:
         self.plugin.import_module.assert_has_calls([
             mock.call(TEST_DATA_DIR, self.package_name + '.' + self.module_names[1]),
             mock.call(TEST_DATA_DIR, self.package_name + '.' + self.module_names[2])
-            ])
+            ], any_order=True)
 
     def it_should_run_the_package(self):
         assert self.module1.Spec1.ran
