@@ -96,44 +96,88 @@ class WhenAPluginIdentifiesMethods:
         ]
 
 
-# class WhenASpecHasASuperclassAndAPluginIdentifiesMethods:
-#     def establish_spec_with_superclass(self):
-#         self.log = []
-#         class Super:
-#             def method_one(s):
-#                 self.log.append("super setup")
-#             def method_three(s):
-#                 self.log.append("super assertion")
-#         class Spec(Super):
-#             def method_five(s):
-#                 self.log.append("sub setup")
-#             def method_six(s):
-#                 self.log.append("sub assertion")
-#         self.super = Super
-#         self.spec = Spec
+class WhenASpecHasASuperclassAndAPluginIdentifiesMethods:
+    def establish_spec_with_superclass(self):
+        self.log = []
+        class Super:
+            @classmethod
+            def method_zero(s):
+                self.log.append("super examples")
+            def method_one(s):
+                self.log.append("super setup")
+            def method_two(s):
+                self.log.append("super action")
+            def method_three(s):
+                self.log.append("super assertion")
+            def method_four(s):
+                self.log.append("super teardown")
+        class Spec(Super):
+            @classmethod
+            def method_zero_point_five(s):
+                self.log.append("sub examples")
+                yield 1
+            def method_five(s):
+                self.log.append("sub setup")
+            def method_six(s):
+                self.log.append("sub action")
+            def method_seven(s):
+                self.log.append("sub assertion")
+            def method_eight(s):
+                self.log.append("sub teardown")
+        self.super = Super
+        self.spec = Spec
 
-#         self.plugin = mock.Mock()
-#         self.plugin.identify_method.side_effect = lambda meth: {
-#             Super.method_one: contexts.plugins.SETUP,
-#             Super.method_three: contexts.plugins.ASSERTION,
-#             Spec.method_five: contexts.plugins.SETUP,
-#             Spec.method_six: contexts.plugins.ASSERTION
-#         }[meth]
+        self.plugin = mock.Mock()
+        self.plugin.identify_method.side_effect = lambda meth: {
+            Super.method_zero: contexts.plugins.EXAMPLES,
+            Super.method_one: contexts.plugins.SETUP,
+            Super.method_two: contexts.plugins.ACTION,
+            Super.method_three: contexts.plugins.ASSERTION,
+            Super.method_four: contexts.plugins.TEARDOWN,
+            Spec.method_zero_point_five: contexts.plugins.EXAMPLES,
+            Spec.method_five: contexts.plugins.SETUP,
+            Spec.method_six: contexts.plugins.ACTION,
+            Spec.method_seven: contexts.plugins.ASSERTION,
+            Spec.method_eight: contexts.plugins.TEARDOWN
+        }[meth]
 
-#     def because_we_run_the_spec(self):
-#         contexts.run(self.spec, [self.plugin])
+    def because_we_run_the_spec(self):
+        contexts.run(self.spec, [self.plugin])
 
-#     def it_should_call_identify_method_with_the_superclass_methods_first(self):
-#         assert self.plugin.identify_method.call_args_list[:3] == [
-#             mock.call(self.super.method_one),
-#             mock.call(self.super.method_three)
-#         ]
+    def it_should_call_identify_method_with_the_superclass_methods_first(self):
+        assert self.plugin.identify_method.call_args_list[:5] == UnorderedList([
+            mock.call(self.super.method_zero),
+            mock.call(self.super.method_one),
+            mock.call(self.super.method_two),
+            mock.call(self.super.method_three),
+            mock.call(self.super.method_four)
+        ])
 
-#     def it_should_run_the_superclass_setup_first(self):
-#         assert self.log[:2] == ["super setup", "sub setup"]
+    @contexts.assertion
+    def it_should_run_the_subclass_examples_before_anything_else(self):
+        assert self.log[0] == "sub examples"
 
-#     def it_should_not_run_the_superclass_assertions(self):
-#         assert "super assertion" not in self.log
+    @contexts.assertion
+    def it_should_not_run_the_superclass_examples(self):
+        assert "super examples" not in self.log
+
+    def it_should_run_the_superclass_setup_before_the_subclass_setup(self):
+        assert self.log[1:3] == ["super setup", "sub setup"]
+
+    def it_should_run_the_subclass_action_next(self):
+        assert self.log[3] == "sub action"
+
+    def it_should_not_run_the_superclass_action(self):
+        assert "super action" not in self.log
+
+    def it_should_run_the_subclass_assertions(self):
+        assert self.log[4] == "sub assertion"
+
+    def it_should_not_run_the_superclass_assertions(self):
+        assert "super assertion" not in self.log
+
+    def it_should_run_the_subclass_teardown_before_the_superclass_teardown(self):
+        assert self.log[-2:] == ["sub teardown", "super teardown"]
 
 
 class WhenRunningASpecWithMultipleAssertions:
@@ -750,28 +794,6 @@ class UnorderedList(object):
             if member not in self._list:
                 return False
         return True
-
-
-class UnorderedListSpec:
-    @classmethod
-    def examples(cls):
-        yield [], [], True
-        yield [], [123], False
-        yield [123], [], False
-        yield [123], [123], True
-        yield [123], [456], False
-        yield [123, 456], [456, 123], True
-        yield [123, 456, 789], [456, 123], False
-        yield [123, 456, 789], [456, 789, 123], True
-
-    def establish(self, input_list, other, expected):
-        self.unordered_list = UnorderedList(input_list)
-
-    def because(self, input_list, other, expected):
-        self.result = (other == self.unordered_list)
-
-    def should(self, input_list, other, expected):
-        assert self.result == expected
 
 
 if __name__ == "__main__":

@@ -93,12 +93,13 @@ class TestClass(object):
                     self.examples_method = val
                 elif response is plugins.SETUP:
                     self.unbound_setups.append(val)
-                elif response is plugins.ACTION:
+                elif response is plugins.ACTION and superclass is cls:
                     self.unbound_actions.append(val)
-                elif response is plugins.ASSERTION:
+                elif response is plugins.ASSERTION and superclass is cls:
                     self.unbound_assertions.append(val)
                 elif response is plugins.TEARDOWN:
                     self.unbound_teardowns.append(val)
+        self.unbound_teardowns.reverse()
 
         finder = finders.UnboundMethodFinder(self.cls)
         if self.examples_method is None:
@@ -109,7 +110,6 @@ class TestClass(object):
         self.unbound_teardowns.extend(finder.find_teardowns())
 
         assert_no_ambiguous_methods(self.unbound_setups, self.unbound_actions, self.unbound_assertions, self.unbound_teardowns)
-
 
     def run(self):
         with self.plugin_notifier.run_class(self):
