@@ -1,5 +1,4 @@
 import inspect
-import itertools
 import os
 import types
 from contextlib import contextmanager
@@ -7,7 +6,9 @@ from . import discovery
 from . import errors
 from . import finders
 from .tools import NO_EXAMPLE
-from . import plugins
+# FIXME: Core should not import plugins.
+# Dependency inversion says that Core should define these constants, and the interface.
+from .plugins import CONTEXT, EXAMPLES, SETUP, ACTION, ASSERTION, TEARDOWN
 
 
 class TestRun(object):
@@ -61,7 +62,16 @@ class Suite(object):
 
     def run(self):
         with self.plugin_notifier.run_suite(self):
-            found_classes = list(finders.find_specs_in_module(self.module))
+
+            found_classes = []
+            for name, cls in inspect.getmembers(self.module, inspect.isclass):
+                response = self.plugin_notifier.call_plugins("identify_class", cls)
+                if response is CONTEXT:
+                    found_classes.append(cls)
+
+            if not found_classes:
+                found_classes.extend(finders.find_specs_in_module(self.module))
+
             self.plugin_notifier.call_plugins('process_class_list', found_classes)
             for cls in found_classes:
                 test_class = TestClass(cls, self.plugin_notifier)
@@ -119,19 +129,19 @@ class TestClass(object):
             if callable(val) and not isprivate(name):
                 response = self.plugin_notifier.call_plugins("identify_method", val)
 
-                if response is plugins.EXAMPLES and bottom_of_tree:
+                if response is EXAMPLES and bottom_of_tree:
                     assert_not_too_many_special_methods(self.examples_method, cls, val)
                     self.examples_method = val
-                elif response is plugins.SETUP:
+                elif response is SETUP:
                     assert_not_too_many_special_methods(class_setup, cls, val)
                     class_setup = val
                     self.unbound_setups.append(val)
-                elif response is plugins.ACTION and bottom_of_tree:
+                elif response is ACTION and bottom_of_tree:
                     assert_not_too_many_special_methods(self.unbound_action, cls, val)
                     self.unbound_action = val
-                elif response is plugins.ASSERTION and bottom_of_tree:
+                elif response is ASSERTION and bottom_of_tree:
                     self.unbound_assertions.append(val)
-                elif response is plugins.TEARDOWN:
+                elif response is TEARDOWN:
                     assert_not_too_many_special_methods(class_teardown, cls, val)
                     class_teardown = val
                     self.unbound_teardowns.append(val)

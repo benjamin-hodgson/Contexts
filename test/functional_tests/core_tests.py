@@ -243,6 +243,7 @@ class WhenRunningASpecWithReporters:
                 s.__class__.log += "teardown "
 
         self.spec = TestSpec
+
         self.reporter1 = SpyReporter()
         self.reporter2 = SpyReporter()
         self.reporter3 = SpyReporter()
@@ -305,22 +306,50 @@ class WhenRunningASpecWithReporters:
         assert self.reporter3.calls == self.reporter1.calls
 
 
-class WhenAPluginSetsTheExitCode:
-    @classmethod
-    def examples_of_exit_codes(cls):
-        yield 0
-        yield 1
-        yield 99
+class WhenAPluginModifiesAnAssertionList:
+    def context(self):
+        self.ran_reals = False
+        class Spec:
+            def should1(s):
+                self.ran_reals = True
+            def should2(s):
+                self.ran_reals = True
+            def not_an_assertion(s):
+                pass
+            def __new__(cls):
+                cls.instance = super().__new__(cls)
+                return cls.instance
+        self.spec = Spec
 
-    def context(self, exitcode):
+        self.ran_spies = []
+        def spy_assertion_method1():
+            self.ran_spies.append('spy_assertion_method1')
+        def spy_assertion_method2():
+            self.ran_spies.append('spy_assertion_method2')
+
+        def modify_list(l):
+            self.called_with = l.copy()
+            l[:] = [spy_assertion_method1, spy_assertion_method2]
         self.plugin = mock.Mock(spec=Plugin)
-        self.plugin.get_exit_code.return_value = exitcode
+        self.plugin.identify_method.side_effect = lambda meth:{
+            Spec.should1: contexts.plugins.ASSERTION,
+            Spec.should2: contexts.plugins.ASSERTION,
+            Spec.not_an_assertion: None
+        }[meth]
+        self.plugin.process_assertion_list = modify_list
 
-    def because_we_run_something(self):
-        self.result = contexts.run(type('Spec', (), {}), [self.plugin])
+    def because_we_run_the_spec(self):
+        contexts.run(self.spec, [self.plugin])
 
-    def it_should_return_the_exit_code_from_the_plugin(self, exitcode):
-        assert self.result == exitcode
+    def it_should_pass_a_list_of_the_found_assertions_into_process_assertion_list(self):
+        assert isinstance(self.called_with, collections.abc.MutableSequence)
+        assert set(self.called_with) == {self.spec.instance.should1, self.spec.instance.should2}
+
+    def it_should_run_the_methods_in_the_list_that_the_plugin_modified(self):
+        assert self.ran_spies == ['spy_assertion_method1', 'spy_assertion_method2']
+
+    def it_should_not_run_the_old_version_of_the_list(self):
+        assert not self.ran_reals
 
 
 class WhenAnAssertionFails:
@@ -526,93 +555,22 @@ class WhenAContextErrorsDuringTheCleanup:
         assert self.reporter.calls[5][3] is self.exception
 
 
-class WhenAPluginModifiesAnAssertionList:
-    def context(self):
-        self.ran_reals = False
-        class SomeTestClass:
-            def it_should_do_this(s):
-                self.ran_reals = True
-            def it_should_do_that(s):
-                self.ran_reals = True
-            def not_an_assertion(s):
-                pass
-            def __new__(cls):
-                cls.last_instance = super().__new__(cls)
-                return cls.last_instance
-        self.spec = SomeTestClass
-
-        self.ran_spies = []
-        def spy_assertion_method1():
-            self.ran_spies.append('spy_assertion_method1')
-        def spy_assertion_method2():
-            self.ran_spies.append('spy_assertion_method2')
-
-        def modify_list(l):
-            self.called_with = l.copy()
-            l[:] = [spy_assertion_method1, spy_assertion_method2]
-        self.plugin = mock.Mock(spec=Plugin)
-        self.plugin.process_assertion_list = modify_list
-
-    def because_we_run_the_spec(self):
-        contexts.run(self.spec, [NameBasedIdentifier(), self.plugin])
-
-    def it_should_pass_a_list_of_the_found_assertions_into_process_assertion_list(self):
-        assert isinstance(self.called_with, collections.abc.MutableSequence)
-        assert set(self.called_with) == {self.spec.last_instance.it_should_do_this, self.spec.last_instance.it_should_do_that}
-
-    def it_should_run_the_methods_in_the_list_that_the_plugin_modified(self):
-        assert self.ran_spies == ['spy_assertion_method1', 'spy_assertion_method2']
-
-    def it_should_not_run_the_old_version_of_the_list(self):
-        assert not self.ran_reals
-
-
-class WhenWeRunSpecsWithAlternatelyNamedMethods:
+class WhenAPluginSetsTheExitCode:
     @classmethod
-    def examples(self):
-        class GivenWhenThen:
-            log = ""
-            def has_given_in_the_name(self):
-                self.__class__.log += "arrange "
-            def has_when_in_the_name(self):
-                self.__class__.log += "act "
-            def has_then_in_the_name(self):
-                self.__class__.log += "assert "
-        class AlternatelyNamedMethods:
-            log = ""
-            @classmethod
-            def has_data_in_the_name(cls):
-                cls.log += "test_data "
-                yield 1
-            def has_context_in_the_name(self):
-                self.__class__.log += "arrange "
-            def has_it_in_the_name(self):
-                self.__class__.log += "assert "
-        class MoreAlternativeNames:
-            log = ""
-            def has_since_in_the_name(self):
-                self.__class__.log += "act "
-            def has_must_in_the_name(self):
-                self.__class__.log += "assert "
-        class EvenMoreAlternativeNames:
-            log = ""
-            def has_after_in_the_name(self):
-                self.__class__.log += "act "
-            def has_will_in_the_name(self):
-                self.__class__.log += "assert "
-        yield GivenWhenThen, "arrange act assert "
-        yield AlternatelyNamedMethods, "test_data arrange assert "
-        yield MoreAlternativeNames, "act assert "
-        yield EvenMoreAlternativeNames, "act assert "
+    def examples_of_exit_codes(cls):
+        yield 0
+        yield 1
+        yield 99
 
-    def context(self, spec, _):
-        self.spec = spec
+    def context(self, exitcode):
+        self.plugin = mock.Mock(spec=Plugin)
+        self.plugin.get_exit_code.return_value = exitcode
 
-    def because_we_run_the_spec(self):
-        contexts.run(self.spec, [NameBasedIdentifier()])
+    def because_we_run_something(self):
+        self.result = contexts.run(type('Spec', (), {}), [self.plugin])
 
-    def it_should_run_the_methods_in_the_correct_order(self, _, expected_log):
-        assert self.spec.log == expected_log
+    def it_should_return_the_exit_code_from_the_plugin(self, exitcode):
+        assert self.result == exitcode
 
 
 class WhenRunningAmbiguouslyNamedMethods:

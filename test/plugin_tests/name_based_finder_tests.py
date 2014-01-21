@@ -1,6 +1,47 @@
 import contexts
-from contexts.plugins import EXAMPLES, SETUP, ACTION, ASSERTION, TEARDOWN
+from contexts.plugins import CONTEXT, EXAMPLES, SETUP, ACTION, ASSERTION, TEARDOWN
 from contexts.plugins.identifiers import NameBasedIdentifier
+
+
+class WhenIdentifyingAClass:
+    @classmethod
+    def examples_of_legal_test_class_names(self):
+        class ClassWithWhenInTheName:
+            pass
+        yield ClassWithWhenInTheName
+        class ClassWithSpecInTheName:
+            pass
+        yield ClassWithSpecInTheName
+
+    def establish(self):
+        self.identifier = NameBasedIdentifier()
+
+    def because_the_framework_asks_the_plugin_to_identify_the_class(self, cls):
+        self.result = self.identifier.identify_class(cls)
+
+    @contexts.assertion
+    def it_should_identify_it_as_a_context(self):
+        assert self.result is CONTEXT
+
+
+class WhenIdentifyingANormalClass:
+    @classmethod
+    def examples_of_legal_test_class_names(self):
+        class ANormalClass:
+            pass
+        yield ANormalClass
+        class AnotherNormalClass:
+            pass
+        yield AnotherNormalClass
+
+    def establish(self):
+        self.identifier = NameBasedIdentifier()
+
+    def because_the_framework_asks_the_plugin_to_identify_the_class(self, cls):
+        self.result = self.identifier.identify_class(cls)
+
+    def it_should_ignore_it(self):
+        assert self.result is None
 
 
 class WhenIdentifyingAnExamplesMethod:
@@ -14,10 +55,10 @@ class WhenIdentifyingAnExamplesMethod:
         yield method_with_data_in_the_name
 
     def establish(self):
-        self.finder = NameBasedIdentifier()
+        self.identifier = NameBasedIdentifier()
 
     def because_the_framework_asks_the_plugin_to_identify_the_method(self, method):
-        self.result = self.finder.identify_method(method)
+        self.result = self.identifier.identify_method(method)
 
     @contexts.assertion
     def it_should_identify_it_as_examples(self):
@@ -41,10 +82,10 @@ class WhenAnExamplesMethodIsAmbiguous:
         yield method_with_example_and_cleanup_in_the_name
 
     def establish(self):
-        self.finder = NameBasedIdentifier()
+        self.identifier = NameBasedIdentifier()
 
     def because_the_framework_asks_the_plugin_to_identify_the_method(self, method):
-        self.exception = contexts.catch(self.finder.identify_method, method)
+        self.exception = contexts.catch(self.identifier.identify_method, method)
 
     def it_should_throw_a_MethodNamingError(self):
         assert isinstance(self.exception, contexts.errors.MethodNamingError)
@@ -58,10 +99,10 @@ class WhenAnExamplesMethodIsNotSoAmbiguous:
         yield method_with_example_and_data_in_the_name
 
     def establish(self):
-        self.finder = NameBasedIdentifier()
+        self.identifier = NameBasedIdentifier()
 
     def because_the_framework_asks_the_plugin_to_identify_the_method(self, method):
-        self.result = self.finder.identify_method(method)
+        self.result = self.identifier.identify_method(method)
 
     @contexts.assertion
     def it_should_identify_it_as_examples(self):
@@ -82,10 +123,10 @@ class WhenIdentifyingASetupMethod:
         yield method_with_given_in_the_name
 
     def establish(self):
-        self.finder = NameBasedIdentifier()
+        self.identifier = NameBasedIdentifier()
 
     def because_the_framework_asks_the_plugin_to_identify_the_method(self, method):
-        self.result = self.finder.identify_method(method)
+        self.result = self.identifier.identify_method(method)
 
     def it_should_identify_it_as_setup(self):
         assert self.result is SETUP
@@ -108,10 +149,10 @@ class WhenASetupMethodIsAmbiguous:
         yield method_with_establish_and_cleanup_in_the_name
 
     def establish(self):
-        self.finder = NameBasedIdentifier()
+        self.identifier = NameBasedIdentifier()
 
     def because_the_framework_asks_the_plugin_to_identify_the_method(self, method):
-        self.exception = contexts.catch(self.finder.identify_method, method)
+        self.exception = contexts.catch(self.identifier.identify_method, method)
 
     def it_should_throw_a_MethodNamingError(self):
         assert isinstance(self.exception, contexts.errors.MethodNamingError)
@@ -131,10 +172,10 @@ class WhenASetupMethodIsNotSoAmbiguous:
         yield method_with_given_and_establish_in_the_name
 
     def establish(self):
-        self.finder = NameBasedIdentifier()
+        self.identifier = NameBasedIdentifier()
 
     def because_the_framework_asks_the_plugin_to_identify_the_method(self, method):
-        self.result = self.finder.identify_method(method)
+        self.result = self.identifier.identify_method(method)
 
     def it_should_identify_it_as_setup(self):
         assert self.result is SETUP
@@ -157,10 +198,10 @@ class WhenIdentifyingAnActionMethod:
         yield method_with_after_in_the_name
 
     def establish(self):
-        self.finder = NameBasedIdentifier()
+        self.identifier = NameBasedIdentifier()
 
     def because_the_framework_asks_the_plugin_to_identify_the_method(self, method):
-        self.result = self.finder.identify_method(method)
+        self.result = self.identifier.identify_method(method)
 
     def it_should_identify_it_as_an_action(self):
         assert self.result is ACTION
@@ -183,10 +224,10 @@ class WhenAnActionMethodIsAmbiguous:
         yield method_with_because_and_cleanup_in_the_name
 
     def establish(self):
-        self.finder = NameBasedIdentifier()
+        self.identifier = NameBasedIdentifier()
 
     def because_the_framework_asks_the_plugin_to_identify_the_method(self, method):
-        self.exception = contexts.catch(self.finder.identify_method, method)
+        self.exception = contexts.catch(self.identifier.identify_method, method)
 
     def it_should_throw_a_MethodNamingError(self):
         assert isinstance(self.exception, contexts.errors.MethodNamingError)
@@ -209,10 +250,10 @@ class WhenAnActionMethodIsNotSoAmbiguous:
         yield method_with_after_and_because_in_the_name
 
     def establish(self):
-        self.finder = NameBasedIdentifier()
+        self.identifier = NameBasedIdentifier()
 
     def because_the_framework_asks_the_plugin_to_identify_the_method(self, method):
-        self.result = self.finder.identify_method(method)
+        self.result = self.identifier.identify_method(method)
 
     def it_should_identify_it_as_an_action(self):
         assert self.result is ACTION
@@ -238,10 +279,10 @@ class WhenIdentifyingAnAssertionMethod:
         yield method_with_will_in_the_name
 
     def establish(self):
-        self.finder = NameBasedIdentifier()
+        self.identifier = NameBasedIdentifier()
 
     def because_the_framework_asks_the_plugin_to_identify_the_method(self, method):
-        self.result = self.finder.identify_method(method)
+        self.result = self.identifier.identify_method(method)
 
     def it_should_identify_it_as_an_assertion(self):
         assert self.result is ASSERTION
@@ -264,10 +305,10 @@ class WhenAnAssertionMethodIsAmbiguous:
         yield method_with_should_and_cleanup_in_the_name
 
     def establish(self):
-        self.finder = NameBasedIdentifier()
+        self.identifier = NameBasedIdentifier()
 
     def because_the_framework_asks_the_plugin_to_identify_the_method(self, method):
-        self.exception = contexts.catch(self.finder.identify_method, method)
+        self.exception = contexts.catch(self.identifier.identify_method, method)
 
     def it_should_throw_a_MethodNamingError(self):
         assert isinstance(self.exception, contexts.errors.MethodNamingError)
@@ -293,10 +334,10 @@ class WhenAnAssertionMethodIsNotSoAmbiguous:
         yield method_with_will_and_it_in_the_name
 
     def establish(self):
-        self.finder = NameBasedIdentifier()
+        self.identifier = NameBasedIdentifier()
 
     def because_the_framework_asks_the_plugin_to_identify_the_method(self, method):
-        self.result = self.finder.identify_method(method)
+        self.result = self.identifier.identify_method(method)
 
     def it_should_identify_it_as_an_assertion(self):
         assert self.result is ASSERTION
@@ -310,10 +351,10 @@ class WhenIdentifyingATeardownMethod:
         yield method_with_cleanup_in_the_name
 
     def establish(self):
-        self.finder = NameBasedIdentifier()
+        self.identifier = NameBasedIdentifier()
 
     def because_the_framework_asks_the_plugin_to_identify_the_method(self, method):
-        self.result = self.finder.identify_method(method)
+        self.result = self.identifier.identify_method(method)
 
     def it_should_identify_it_as_a_teardown(self):
         assert self.result is TEARDOWN
@@ -336,10 +377,30 @@ class WhenATeardownMethodIsAmbiguous:
         yield method_with_cleanup_and_should_in_the_name
 
     def establish(self):
-        self.finder = NameBasedIdentifier()
+        self.identifier = NameBasedIdentifier()
 
     def because_the_framework_asks_the_plugin_to_identify_the_method(self, method):
-        self.exception = contexts.catch(self.finder.identify_method, method)
+        self.exception = contexts.catch(self.identifier.identify_method, method)
 
     def it_should_throw_a_MethodNamingError(self):
         assert isinstance(self.exception, contexts.errors.MethodNamingError)
+
+
+class WhenIdentiyingANormalMethod:
+    @classmethod
+    def examples_of_uninteresting_names(self):
+        def an_innocuous_function(self):
+            pass
+        yield an_innocuous_function
+        def another_method(self):
+            pass
+        yield another_method
+
+    def establish(self):
+        self.identifier = NameBasedIdentifier()
+
+    def because_the_framework_asks_the_plugin_to_identify_the_method(self, method):
+        self.result = self.identifier.identify_method(method)
+
+    def it_should_ignore_it(self):
+        assert self.result is None

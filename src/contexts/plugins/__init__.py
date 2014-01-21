@@ -31,6 +31,18 @@ class Plugin(object):
     def unexpected_error(self, exception):
         """Called when an error occurs outside of a Context or Assertion"""
 
+    def identify_class(self, cls):
+        """
+        Called when the test runner encounters a class and wants to know if it should
+        treat it as a test class.
+
+        Arguments:
+            cls - the class object which the test runner wants to be identified.
+
+        Plugins may return:
+            contexts.plugins.CONTEXT - plugin wishes the class to be treated as a test class
+            None - plugin does not wish to identify the class (though other plugins may still cause it to be run)
+        """
     def identify_method(self, func):
         """
         Called when the test runner encounters a method on a test class and wants to
@@ -74,6 +86,7 @@ class Plugin(object):
         """
 
 
+CONTEXT = "context - DO NOT RELY ON THE VALUE OF THIS CONSTANT"
 EXAMPLES = "examples - DO NOT RELY ON THE VALUE OF THIS CONSTANT"
 SETUP = "setup - DO NOT RELY ON THE VALUE OF THIS CONSTANT"
 ACTION = "action - DO NOT RELY ON THE VALUE OF THIS CONSTANT"

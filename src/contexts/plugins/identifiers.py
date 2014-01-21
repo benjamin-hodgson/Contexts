@@ -1,7 +1,9 @@
 import re
-from . import Plugin, EXAMPLES, SETUP, ACTION, ASSERTION, TEARDOWN
+from . import Plugin, CONTEXT, EXAMPLES, SETUP, ACTION, ASSERTION, TEARDOWN
 from .. import errors
 
+
+class_re = re.compile(r"[Ss]pec|[Ww]hen")
 example_re = re.compile(r"[Ee]xample|[Dd]ata")
 establish_re = re.compile(r"[Ee]stablish|[Cc]ontext|[Gg]iven")
 because_re = re.compile(r"[Bb]ecause|[Ww]hen|[Ss]ince|[Aa]fter")
@@ -10,6 +12,10 @@ cleanup_re = re.compile(r"[Cc]leanup")
 
 
 class NameBasedIdentifier(object):
+    def identify_class(self, cls):
+        if class_re.search(cls.__name__):
+            return CONTEXT
+
     def identify_method(self, method):
         d = {
             example_re: EXAMPLES,

@@ -2,7 +2,6 @@ import importlib
 import os
 import shutil
 import sys
-from .tools import SpyReporter
 import contexts
 from contexts.plugins.importing import Importer
 from contexts.plugins.assertion_rewriting import AssertionRewritingImporter
@@ -16,7 +15,6 @@ class AssertionRewritingSharedContext:
     def establish(self):
         self.module_name = "assertion_rewriting_test_data"
         self.old_sys_dot_modules = sys.modules.copy()
-        self.reporter = SpyReporter()
         self.importer = AssertionRewritingImporter()
 
     def write_file(self):

@@ -6,7 +6,7 @@ import types
 import contexts
 from unittest import mock
 from .tools import SpyReporter
-from contexts.plugins import Plugin
+from contexts.plugins import Plugin, CONTEXT, ASSERTION
 from contexts.plugins.identifiers import NameBasedIdentifier
 
 
@@ -58,6 +58,54 @@ class WhenRunningAModule:
 
     def it_should_pass_the_name_into_suite_ended(self):
         assert self.reporter.calls[-2][1] == self.module.__name__
+
+
+class WhenAPluginChoosesClasses:
+    def context(self):
+        class ToRun1:
+            was_run = False
+            def it_should_run_this(self):
+                self.__class__.was_run = True
+        class ToRun2:
+            was_run = False
+            def it_should_run_this(self):
+                self.__class__.was_run = True
+        class NotToRun:
+            was_instantiated = False
+            def __init__(self):
+                self.__class__.was_instantiated = True
+        self.module = types.ModuleType('fake_specs')
+        self.module.ToRun1 = ToRun1
+        self.module.ToRun2 = ToRun2
+        self.module.NotToRun = NotToRun
+
+        self.plugin = mock.Mock(spec=Plugin)
+        self.plugin.identify_class.side_effect = lambda cls: {
+            ToRun1: CONTEXT,
+            ToRun2: CONTEXT,
+            NotToRun: None
+        }[cls]
+        self.plugin.identify_method.side_effect = lambda meth: {
+            ToRun1.it_should_run_this: ASSERTION,
+            ToRun2.it_should_run_this: ASSERTION,
+        }[meth]
+        self.other_plugin = mock.Mock()
+        self.other_plugin.identify_class.return_value = None
+
+    def because_we_run_the_module(self):
+        contexts.run(self.module, [self.plugin, self.other_plugin])
+
+    def it_should_run_the_class_the_plugin_likes(self):
+        assert self.module.ToRun1.was_run
+
+    def it_should_run_the_other_class_the_plugin_likes(self):
+        assert self.module.ToRun2.was_run
+
+    def it_should_only_ask_the_second_plugin_what_to_do_with_the_class_its_not_sure_about(self):
+        self.other_plugin.identify_class.assert_called_once_with(self.module.NotToRun)
+
+    def it_should_not_run_the_class_which_neither_plugin_wanted(self):
+        assert not self.module.NotToRun.was_instantiated
 
 
 class WhenAPluginModifiesAClassList:
