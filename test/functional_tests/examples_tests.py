@@ -169,11 +169,14 @@ class WhenUserFailsToMakeExamplesAClassmethod:
         class Naughty:
             def examples(self):
                 pass
+            def it(self):
+                pass
         self.spec = Naughty
 
         self.plugin = mock.Mock(spec=Plugin)
         self.plugin.identify_method.side_effect = lambda meth:{
-            Naughty.examples: EXAMPLES
+            Naughty.examples: EXAMPLES,
+            Naughty.it: ASSERTION
         }[meth]
 
     def because_we_run_the_spec(self):

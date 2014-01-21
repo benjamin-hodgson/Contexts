@@ -93,6 +93,9 @@ class TestClass(object):
             self.unbound_action = lambda self: None
 
     def run(self):
+        if not self.unbound_assertions:
+            return
+
         with self.plugin_composite.run_class(self):
             for example in self.get_examples():
                 context = Context(
@@ -168,9 +171,6 @@ class Context(object):
     def run(self):
         self.plugin_composite.call_plugins('process_assertion_list', self.assertions)
         self.assertions = [Assertion(f, self.plugin_composite) for f in self.assertions]
-
-        if not self.assertions:
-            return
         with self.plugin_composite.run_context(self):
             try:
                 self.run_setup()
