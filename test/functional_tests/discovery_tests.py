@@ -14,52 +14,6 @@ THIS_FILE = os.path.realpath(__file__)
 TEST_DATA_DIR = os.path.join(os.path.dirname(THIS_FILE), "test_data")
 
 
-class WhenRunningAModule:
-    def context(self):
-        class HasSpecInTheName:
-            was_run = False
-            def it_should_run_this(self):
-                self.__class__.was_run = True
-        class HasWhenInTheName:
-            was_run = False
-            def it_should_run_this(self):
-                self.__class__.was_run = True
-        class NormalClass:
-            was_instantiated = False
-            def __init__(self):
-                self.__class__.was_instantiated = True
-        self.module = types.ModuleType('fake_specs')
-        self.module.HasSpecInTheName = HasSpecInTheName
-        self.module.HasWhenInTheName = HasWhenInTheName
-        self.module.NormalClass = NormalClass
-
-        self.reporter = SpyReporter()
-
-    def because_we_run_the_module(self):
-        contexts.run(self.module, [NameBasedIdentifier(), self.reporter])
-
-    def it_should_run_the_spec(self):
-        assert self.module.HasSpecInTheName.was_run
-
-    def it_should_run_the_other_spec(self):
-        assert self.module.HasWhenInTheName.was_run
-
-    def it_should_not_instantiate_the_normal_class(self):
-        assert not self.module.NormalClass.was_instantiated
-
-    def it_should_call_suite_started(self):
-        assert self.reporter.calls[1][0] == "suite_started"
-
-    def it_should_pass_the_name_into_suite_started(self):
-        assert self.reporter.calls[1][1] == self.module.__name__
-
-    def it_should_call_suite_ended(self):
-        assert self.reporter.calls[-2][0] == "suite_ended"
-
-    def it_should_pass_the_name_into_suite_ended(self):
-        assert self.reporter.calls[-2][1] == self.module.__name__
-
-
 class WhenAPluginChoosesClasses:
     def context(self):
         class ToRun1:
