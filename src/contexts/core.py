@@ -11,20 +11,20 @@ from .plugins import CONTEXT, EXAMPLES, SETUP, ACTION, ASSERTION, TEARDOWN
 
 
 class TestRun(object):
-    def __init__(self, source, plugin_notifier):
+    def __init__(self, source, plugin_composite):
         self.source = source
-        self.plugin_notifier = plugin_notifier
+        self.plugin_composite = plugin_composite
 
     def run(self):
-        with self.plugin_notifier.run_test_run(self):
+        with self.plugin_composite.run_test_run(self):
             if isinstance(self.source, type):
-                test_class = TestClass(self.source, self.plugin_notifier)
+                test_class = TestClass(self.source, self.plugin_composite)
                 test_class.run()
             else:
                 modules = self.get_modules()
-                self.plugin_notifier.call_plugins('process_module_list', modules)
+                self.plugin_composite.call_plugins('process_module_list', modules)
                 for module in modules:
-                    suite = Suite(module, self.plugin_notifier)
+                    suite = Suite(module, self.plugin_composite)
                     suite.run()
 
     def get_modules(self):
@@ -36,7 +36,7 @@ class TestRun(object):
             specifications = discovery.module_specs(self.source)
             modules = []
             for module_spec in specifications:
-                with self.plugin_notifier.importing(module_spec):
+                with self.plugin_composite.importing(module_spec):
                     modules.append(self.import_module(*module_spec))
             return modules
 
@@ -47,34 +47,34 @@ class TestRun(object):
         return self.import_module(folder, module_name)
 
     def import_module(self, dir_path, module_name):
-        return self.plugin_notifier.call_plugins('import_module', dir_path, module_name)
+        return self.plugin_composite.call_plugins('import_module', dir_path, module_name)
 
 
 class Suite(object):
-    def __init__(self, module, plugin_notifier):
+    def __init__(self, module, plugin_composite):
         self.module = module
         self.name = self.module.__name__
-        self.plugin_notifier = plugin_notifier
+        self.plugin_composite = plugin_composite
 
     def run(self):
-        with self.plugin_notifier.run_suite(self):
+        with self.plugin_composite.run_suite(self):
 
             found_classes = []
             for name, cls in inspect.getmembers(self.module, inspect.isclass):
-                response = self.plugin_notifier.call_plugins("identify_class", cls)
+                response = self.plugin_composite.call_plugins("identify_class", cls)
                 if response is CONTEXT:
                     found_classes.append(cls)
 
-            self.plugin_notifier.call_plugins('process_class_list', found_classes)
+            self.plugin_composite.call_plugins('process_class_list', found_classes)
             for cls in found_classes:
-                test_class = TestClass(cls, self.plugin_notifier)
+                test_class = TestClass(cls, self.plugin_composite)
                 test_class.run()
 
 
 class TestClass(object):
-    def __init__(self, cls, plugin_notifier):
+    def __init__(self, cls, plugin_composite):
         self.cls = cls
-        self.plugin_notifier = plugin_notifier
+        self.plugin_composite = plugin_composite
 
         self.examples_method = None
         self.unbound_setups = []
@@ -93,7 +93,7 @@ class TestClass(object):
             self.unbound_action = lambda self: None
 
     def run(self):
-        with self.plugin_notifier.run_class(self):
+        with self.plugin_composite.run_class(self):
             for example in self.get_examples():
                 context = Context(
                     self.cls(), example,
@@ -101,7 +101,7 @@ class TestClass(object):
                     self.unbound_action,
                     self.unbound_assertions,
                     self.unbound_teardowns,
-                    self.plugin_notifier
+                    self.plugin_composite
                 )
                 context.run()
 
@@ -120,7 +120,7 @@ class TestClass(object):
                 val = getattr(cls, name)
 
             if callable(val) and not isprivate(name):
-                response = self.plugin_notifier.call_plugins("identify_method", val)
+                response = self.plugin_composite.call_plugins("identify_method", val)
 
                 if response is EXAMPLES and bottom_of_tree:
                     assert_not_too_many_special_methods(self.examples_method, cls, val)
@@ -154,8 +154,8 @@ def assert_not_too_many_special_methods(previously_found, cls, just_found):
 class Context(object):
     def __init__(self, instance, example,
                  unbound_setups, unbound_action, unbound_assertions, unbound_teardowns,
-                 plugin_notifier):
-        self.plugin_notifier = plugin_notifier
+                 plugin_composite):
+        self.plugin_composite = plugin_composite
         self.instance = instance
         self.example = example
         self.name = instance.__class__.__name__
@@ -166,12 +166,12 @@ class Context(object):
         self.teardowns = bind_methods(unbound_teardowns, self.instance)
 
     def run(self):
-        self.plugin_notifier.call_plugins('process_assertion_list', self.assertions)
-        self.assertions = [Assertion(f, self.plugin_notifier) for f in self.assertions]
+        self.plugin_composite.call_plugins('process_assertion_list', self.assertions)
+        self.assertions = [Assertion(f, self.plugin_composite) for f in self.assertions]
 
         if not self.assertions:
             return
-        with self.plugin_notifier.run_context(self):
+        with self.plugin_composite.run_context(self):
             try:
                 self.run_setup()
                 self.run_action()
@@ -200,13 +200,13 @@ def bind_methods(methods, instance):
 
 
 class Assertion(object):
-    def __init__(self, func, plugin_notifier):
+    def __init__(self, func, plugin_composite):
         self.func = func
         self.name = func.__name__
-        self.plugin_notifier = plugin_notifier
+        self.plugin_composite = plugin_composite
 
     def run(self, test_data):
-        with self.plugin_notifier.run_assertion(self):
+        with self.plugin_composite.run_assertion(self):
             run_with_test_data(self.func, test_data)
 
 
@@ -221,7 +221,7 @@ def run_with_test_data(func, test_data):
         func()
 
 
-class PluginNotifier(object):
+class PluginComposite(object):
     def __init__(self, plugins):
         self.plugins = plugins
 

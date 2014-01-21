@@ -51,8 +51,8 @@ def run(to_run=None, plugin_list=None):
     if to_run is None:
         to_run = sys.modules['__main__']
 
-    notifier = core.PluginNotifier(plugin_list)
-    test_run = core.TestRun(to_run, notifier)
+    composite = core.PluginComposite(plugin_list)
+    test_run = core.TestRun(to_run, composite)
     test_run.run()
 
-    return notifier.call_plugins('get_exit_code')
+    return composite.call_plugins('get_exit_code')
