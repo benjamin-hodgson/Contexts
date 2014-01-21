@@ -8,6 +8,7 @@ from .plugins.shared import ExitCodeReporter
 from .plugins.shuffling import Shuffler
 from .plugins.importing import Importer
 from .plugins.assertion_rewriting import AssertionRewritingImporter
+from contexts.plugins.identifiers import NameBasedIdentifier, DecoratorBasedIdentifier
 
 
 def cmd():
@@ -89,6 +90,7 @@ def create_plugins(args):
         plugin_list.append(Shuffler())
 
     plugin_list.extend(create_reporting_plugins(args))
+    plugin_list.extend([DecoratorBasedIdentifier(), NameBasedIdentifier()])
     plugin_list.append(ExitCodeReporter())
 
     return plugin_list

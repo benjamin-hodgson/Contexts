@@ -12,6 +12,7 @@ from contexts.plugins.importing import Importer
 from contexts.plugins.shared import ExitCodeReporter
 from contexts.plugins.teamcity import TeamCityReporter
 from contexts.plugins.assertion_rewriting import AssertionRewritingImporter
+from contexts.plugins.identifiers import NameBasedIdentifier, DecoratorBasedIdentifier
 
 
 class WhenLoadingUpTheModule:
@@ -50,6 +51,8 @@ class WhenRunningFromCommandLineWithNoArguments(MainSharedContext):
             cli.FailureOnlyDecorator(cli.ColouringDecorator(cli.StdOutCapturingReporter))(sys.stdout),
             cli.FinalCountsReporter(sys.stdout),
             cli.TimedReporter(sys.stdout),
+            DecoratorBasedIdentifier(),
+            NameBasedIdentifier(),
             ExitCodeReporter()
         ]
         sys.argv = ['run-contexts']
@@ -70,6 +73,8 @@ class WhenSpecifyingAPath(MainSharedContext):
             cli.FailureOnlyDecorator(cli.ColouringDecorator(cli.StdOutCapturingReporter))(sys.stdout),
             cli.FinalCountsReporter(sys.stdout),
             cli.TimedReporter(sys.stdout),
+            DecoratorBasedIdentifier(),
+            NameBasedIdentifier(),
             ExitCodeReporter()
         ]
         self.path = os.path.join(os.getcwd(),'made','up','path')
@@ -95,6 +100,8 @@ class WhenUsingTheVerboseFlag(MainSharedContext):
             cli.ColouringDecorator(cli.StdOutCapturingReporter)(sys.stdout),
             cli.FinalCountsReporter(sys.stdout),
             cli.TimedReporter(sys.stdout),
+            DecoratorBasedIdentifier(),
+            NameBasedIdentifier(),
             ExitCodeReporter()
         ]
         sys.argv = ['run-contexts', flag]
@@ -115,6 +122,8 @@ class WhenUserDisablesColour(MainSharedContext):
             cli.FailureOnlyDecorator(cli.StdOutCapturingReporter)(sys.stdout),
             cli.FinalCountsReporter(sys.stdout),
             cli.TimedReporter(sys.stdout),
+            DecoratorBasedIdentifier(),
+            NameBasedIdentifier(),
             ExitCodeReporter()
         ]
         sys.argv = ['run-contexts', '--no-colour']
@@ -139,6 +148,8 @@ class WhenDisablingColourInVerboseMode(MainSharedContext):
             cli.StdOutCapturingReporter(sys.stdout),
             cli.FinalCountsReporter(sys.stdout),
             cli.TimedReporter(sys.stdout),
+            DecoratorBasedIdentifier(),
+            NameBasedIdentifier(),
             ExitCodeReporter()
         ]
         sys.argv = ['run-contexts'] + args
@@ -164,6 +175,8 @@ class WhenUserDisablesStdOutCapturing(MainSharedContext):
             cli.FailureOnlyDecorator(cli.ColouringDecorator(cli.VerboseReporter))(sys.stdout),
             cli.FinalCountsReporter(sys.stdout),
             cli.TimedReporter(sys.stdout),
+            DecoratorBasedIdentifier(),
+            NameBasedIdentifier(),
             ExitCodeReporter()
         ]
         sys.argv = ['run-contexts', arg]
@@ -191,6 +204,8 @@ class WhenUserDisablesCapturingInVerboseMode(MainSharedContext):
             cli.ColouringDecorator(cli.VerboseReporter)(sys.stdout),
             cli.FinalCountsReporter(sys.stdout),
             cli.TimedReporter(sys.stdout),
+            DecoratorBasedIdentifier(),
+            NameBasedIdentifier(),
             ExitCodeReporter()
         ]
         sys.argv = ['run-contexts'] + args
@@ -216,6 +231,8 @@ class WhenUserDisablesColourAndCapturing(MainSharedContext):
             cli.FailureOnlyDecorator(cli.VerboseReporter)(sys.stdout),
             cli.FinalCountsReporter(sys.stdout),
             cli.TimedReporter(sys.stdout),
+            DecoratorBasedIdentifier(),
+            NameBasedIdentifier(),
             ExitCodeReporter()
         ]
         sys.argv = ['run-contexts'] + args
@@ -243,6 +260,8 @@ class WhenUserDisablesColourAndCapturingInVerboseMode(MainSharedContext):
             cli.VerboseReporter(sys.stdout),
             cli.FinalCountsReporter(sys.stdout),
             cli.TimedReporter(sys.stdout),
+            DecoratorBasedIdentifier(),
+            NameBasedIdentifier(),
             ExitCodeReporter()
         ]
         sys.argv = ['run-contexts'] + args
@@ -265,6 +284,8 @@ class WhenRunningInQuietMode(MainSharedContext):
             AssertionRewritingImporter(),
             Shuffler(),
             QuietReporterResemblance(sys.stdout),
+            DecoratorBasedIdentifier(),
+            NameBasedIdentifier(),
             ExitCodeReporter()
         ]
         sys.argv = ['run-contexts', flag]
@@ -285,6 +306,8 @@ class WhenDisablingAssertionRewriting(MainSharedContext):
             cli.FailureOnlyDecorator(cli.ColouringDecorator(cli.StdOutCapturingReporter))(sys.stdout),
             cli.FinalCountsReporter(sys.stdout),
             cli.TimedReporter(sys.stdout),
+            DecoratorBasedIdentifier(),
+            NameBasedIdentifier(),
             ExitCodeReporter()
         ]
         sys.argv = ['run-contexts', '--no-assert']
@@ -302,6 +325,8 @@ class WhenRunningOnTheCmdLineInTeamcityMode(MainSharedContext):
             AssertionRewritingImporter(),
             Shuffler(),
             TeamCityReporter(sys.stdout),
+            DecoratorBasedIdentifier(),
+            NameBasedIdentifier(),
             ExitCodeReporter()
         ]
         sys.argv = ['run-contexts', '--teamcity']
@@ -319,6 +344,8 @@ class WhenRunningInTeamcity(MainSharedContext):
             AssertionRewritingImporter(),
             Shuffler(),
             TeamCityReporter(sys.stdout),
+            DecoratorBasedIdentifier(),
+            NameBasedIdentifier(),
             ExitCodeReporter()
         ]
         os.environ["TEAMCITY_VERSION"] = "7.0"
@@ -339,6 +366,8 @@ class WhenUserDisablesShuffling(MainSharedContext):
             cli.FailureOnlyDecorator(cli.ColouringDecorator(cli.StdOutCapturingReporter))(sys.stdout),
             cli.FinalCountsReporter(sys.stdout),
             cli.TimedReporter(sys.stdout),
+            DecoratorBasedIdentifier(),
+            NameBasedIdentifier(),
             ExitCodeReporter()
         ]
         sys.argv = ['run-contexts', '--no-random']
@@ -404,6 +433,8 @@ class WhenColoramaIsNotInstalled(MainSharedContext):
             cli.FailureOnlyDecorator(cli.StdOutCapturingReporter)(sys.stdout),
             cli.FinalCountsReporter(sys.stdout),
             cli.TimedReporter(sys.stdout),
+            DecoratorBasedIdentifier(),
+            NameBasedIdentifier(),
             ExitCodeReporter()
         ])
 
@@ -426,6 +457,8 @@ class WhenStdOutIsAPipe(MainSharedContext):
             cli.FailureOnlyDecorator(cli.StdOutCapturingReporter)(sys.stdout),
             cli.FinalCountsReporter(sys.stdout),
             cli.TimedReporter(sys.stdout),
+            DecoratorBasedIdentifier(),
+            NameBasedIdentifier(),
             ExitCodeReporter()
         ])
 

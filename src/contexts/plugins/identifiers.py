@@ -1,5 +1,5 @@
 import re
-from . import EXAMPLES, SETUP, ACTION, ASSERTION, TEARDOWN
+from . import Plugin, EXAMPLES, SETUP, ACTION, ASSERTION, TEARDOWN
 from .. import errors
 
 example_re = re.compile(r"[Ee]xample|[Dd]ata")
@@ -25,6 +25,9 @@ class NameBasedIdentifier(object):
                 assert_not_ambiguous(name, regex)
                 return d[regex]
 
+    def __eq__(self, other):
+        return type(self) == type(other)
+
 
 def assert_not_ambiguous(name, regex):
     all_regexes = {example_re, establish_re, because_re, should_re, cleanup_re}
@@ -48,4 +51,7 @@ class DecoratorBasedIdentifier(object):
             "cleanup": TEARDOWN
         }
         return d[method._contexts_role]
+
+    def __eq__(self, other):
+        return type(self) == type(other)
 
