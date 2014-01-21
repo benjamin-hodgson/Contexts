@@ -1,5 +1,6 @@
 import re
 from . import EXAMPLES, SETUP, ACTION, ASSERTION, TEARDOWN
+from .. import errors
 
 example_re = re.compile(r"[Ee]xample|[Dd]ata")
 establish_re = re.compile(r"[Ee]stablish|[Cc]ontext|[Gg]iven")
@@ -10,13 +11,25 @@ cleanup_re = re.compile(r"[Cc]leanup")
 
 class NameBasedIdentifier(object):
     def identify_method(self, method):
-        if example_re.search(method.__name__):
-            return EXAMPLES
-        elif establish_re.search(method.__name__):
-            return SETUP
-        elif because_re.search(method.__name__):
-            return ACTION
-        elif should_re.search(method.__name__):
-            return ASSERTION
-        elif cleanup_re.search(method.__name__):
-            return TEARDOWN
+        d = {
+            example_re: EXAMPLES,
+            establish_re: SETUP,
+            because_re: ACTION,
+            should_re: ASSERTION,
+            cleanup_re: TEARDOWN
+        }
+        name = method.__name__
+
+        for regex in d:
+            if regex.search(name):
+                assert_not_ambiguous(name, regex)
+                return d[regex]
+
+
+def assert_not_ambiguous(name, regex):
+    all_regexes = {example_re, establish_re, because_re, should_re, cleanup_re}
+    all_regexes.remove(regex)
+
+    if any(r.search(name) for r in all_regexes):
+        msg = "The method {} is ambiguously named".format(name)
+        raise errors.MethodNamingError(msg)
