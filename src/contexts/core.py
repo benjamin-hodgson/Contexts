@@ -75,59 +75,19 @@ class TestClass(object):
 
         self.examples_method = None
         self.unbound_setups = []
-        self.unbound_actions = []  # fixme: this should just be a single function, not a list
+        self.unbound_action = None
         self.unbound_assertions = []
         self.unbound_teardowns = []
 
         for superclass in reversed(inspect.getmro(cls)):
-            class_examples = None
-            class_setup = None
-            class_action = None
-            class_teardown = None
-
-            for name, val in superclass.__dict__.items():
-                if isinstance(val, classmethod):
-                    val = getattr(superclass, name)
-
-                if callable(val) and not isprivate(name):
-                    response = self.plugin_notifier.call_plugins("identify_method", val)
-                else:
-                    continue
-
-                if response is plugins.EXAMPLES:
-                    if class_examples is not None:
-                        msg = "Context {} has multiple methods of the same type:\n".format(cls.__qualname__)
-                        msg += class_examples.__name__ + ", " + name
-                        raise errors.TooManySpecialMethodsError(msg)
-                    self.examples_method = class_examples = val
-                elif response is plugins.SETUP:
-                    if class_setup is not None:
-                        msg = "Context {} has multiple methods of the same type:\n".format(cls.__qualname__)
-                        msg += class_setup.__name__ + ", " + name
-                        raise errors.TooManySpecialMethodsError(msg)
-                    class_setup = val
-                    self.unbound_setups.append(val)
-                elif response is plugins.ACTION and superclass is cls:
-                    if class_action is not None:
-                        msg = "Context {} has multiple methods of the same type:\n".format(cls.__qualname__)
-                        msg += class_action.__name__ + ", " + name
-                        raise errors.TooManySpecialMethodsError(msg)
-                    class_action = val
-                    self.unbound_actions.append(val)
-                elif response is plugins.ASSERTION and superclass is cls:
-                    self.unbound_assertions.append(val)
-                elif response is plugins.TEARDOWN:
-                    if class_teardown is not None:
-                        msg = "Context {} has multiple methods of the same type:\n".format(cls.__qualname__)
-                        msg += class_teardown.__name__ + ", " + name
-                        raise errors.TooManySpecialMethodsError(msg)
-                    class_teardown = val
-                    self.unbound_teardowns.append(val)
+            bottom_of_tree = (superclass is cls)
+            self.load_special_methods_from_class(superclass, bottom_of_tree)
         self.unbound_teardowns.reverse()
 
         if self.examples_method is None:
             self.examples_method = lambda: None
-
+        if self.unbound_action is None:
+            self.unbound_action = lambda self: None
 
     def run(self):
         with self.plugin_notifier.run_class(self):
@@ -135,7 +95,7 @@ class TestClass(object):
                 context = Context(
                     self.cls(), example,
                     self.unbound_setups,
-                    self.unbound_actions,
+                    self.unbound_action,
                     self.unbound_assertions,
                     self.unbound_teardowns,
                     self.plugin_notifier
@@ -146,23 +106,51 @@ class TestClass(object):
         examples = self.examples_method()
         return examples if examples is not None else [NO_EXAMPLE]
 
+    def load_special_methods_from_class(self, cls, bottom_of_tree):
+        # there should be one of each of these per class,
+        # but there may be more than one in the inheritance tree
+        class_setup = None
+        class_teardown = None
+
+        for name, val in cls.__dict__.items():
+            if isinstance(val, classmethod):
+                val = getattr(cls, name)
+
+            if callable(val) and not isprivate(name):
+                response = self.plugin_notifier.call_plugins("identify_method", val)
+
+                if response is plugins.EXAMPLES and bottom_of_tree:
+                    assert_not_too_many_special_methods(self.examples_method, cls, val)
+                    self.examples_method = val
+                elif response is plugins.SETUP:
+                    assert_not_too_many_special_methods(class_setup, cls, val)
+                    class_setup = val
+                    self.unbound_setups.append(val)
+                elif response is plugins.ACTION and bottom_of_tree:
+                    assert_not_too_many_special_methods(self.unbound_action, cls, val)
+                    self.unbound_action = val
+                elif response is plugins.ASSERTION and bottom_of_tree:
+                    self.unbound_assertions.append(val)
+                elif response is plugins.TEARDOWN:
+                    assert_not_too_many_special_methods(class_teardown, cls, val)
+                    class_teardown = val
+                    self.unbound_teardowns.append(val)
+
 
 def isprivate(name):
     return name.startswith('_')
 
 
-def assert_no_ambiguous_methods(*iterables):
-    for a, b in itertools.combinations((set(i) for i in iterables), 2):
-        overlap = a & b
-        if overlap:
-            msg = "The following methods are ambiguously named:\n"
-            msg += '\n'.join([func.__qualname__ for func in overlap])
-            raise errors.MethodNamingError(msg)
+def assert_not_too_many_special_methods(previously_found, cls, just_found):
+    if previously_found is not None:
+        msg = "Context {} has multiple methods of the same type:\n".format(cls.__qualname__)
+        msg += previously_found.__name__ + ", " + just_found.__name__
+        raise errors.TooManySpecialMethodsError(msg)
 
 
 class Context(object):
     def __init__(self, instance, example,
-                 unbound_setups, unbound_actions, unbound_assertions, unbound_teardowns,
+                 unbound_setups, unbound_action, unbound_assertions, unbound_teardowns,
                  plugin_notifier):
         self.plugin_notifier = plugin_notifier
         self.instance = instance
@@ -170,7 +158,7 @@ class Context(object):
         self.name = instance.__class__.__name__
 
         self.setups = bind_methods(unbound_setups, self.instance)
-        self.actions = bind_methods(unbound_actions, self.instance)
+        self.action = types.MethodType(unbound_action, self.instance)
         self.assertions = bind_methods(unbound_assertions, self.instance)
         self.teardowns = bind_methods(unbound_teardowns, self.instance)
 
@@ -193,8 +181,7 @@ class Context(object):
             run_with_test_data(setup, self.example)
 
     def run_action(self):
-        for action in self.actions:
-            run_with_test_data(action, self.example)
+        run_with_test_data(self.action, self.example)
 
     def run_assertions(self):
         for assertion in self.assertions:
