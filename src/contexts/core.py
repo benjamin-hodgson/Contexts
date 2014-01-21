@@ -125,19 +125,9 @@ class TestClass(object):
                     self.unbound_teardowns.append(val)
         self.unbound_teardowns.reverse()
 
-        finder = finders.UnboundMethodFinder(self.cls)
         if self.examples_method is None:
-            self.examples_method = finder.find_examples_method()
-        if not self.unbound_setups:
-            self.unbound_setups.extend(finder.find_setups())
-        if not self.unbound_actions:
-            self.unbound_actions.extend(finder.find_actions())
-        if not self.unbound_assertions:
-            self.unbound_assertions.extend(finder.find_assertions())
-        if not self.unbound_teardowns:
-            self.unbound_teardowns.extend(finder.find_teardowns())
+            self.examples_method = lambda: None
 
-        assert_no_ambiguous_methods(self.unbound_setups, self.unbound_actions, self.unbound_assertions, self.unbound_teardowns)
 
     def run(self):
         with self.plugin_notifier.run_class(self):

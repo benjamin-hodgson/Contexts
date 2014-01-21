@@ -180,9 +180,9 @@ class WhenMarkingAnUnrelatedMethodAsExamples:
     def context(self):
         class Spec:
             log = []
-            @contexts.examples
             @classmethod
-            def innocuous_classmethod(self):
+            @contexts.examples
+            def innocuous_classmethod(cls):
                 yield 1
                 yield 2
             def it(self, example):
@@ -192,7 +192,8 @@ class WhenMarkingAnUnrelatedMethodAsExamples:
     def because_we_run_the_spec(self):
         contexts.run(self.spec, [DecoratorBasedIdentifier(), NameBasedIdentifier()])
 
-    def it_should_treat_the_marked_method_as_teardown(self):
+    @contexts.assertion
+    def it_should_treat_the_marked_method_as_examples(self):
         assert self.spec.log == [1,2]
 
 class WhenMarkingAnOtherwiseNamedMethodAsExamples:
@@ -201,7 +202,7 @@ class WhenMarkingAnOtherwiseNamedMethodAsExamples:
             log = []
             @classmethod
             @contexts.examples
-            def because(self):
+            def because(cls):
                 yield 1
                 yield 2
             def it(self, example):
@@ -211,7 +212,8 @@ class WhenMarkingAnOtherwiseNamedMethodAsExamples:
     def because_we_run_the_spec(self):
         contexts.run(self.spec, [DecoratorBasedIdentifier(), NameBasedIdentifier()])
 
-    def it_should_treat_the_marked_method_as_teardown(self):
+    @contexts.assertion
+    def it_should_treat_the_marked_method_as_examples(self):
         assert self.spec.log == [1,2]
 
 

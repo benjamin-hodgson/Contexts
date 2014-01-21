@@ -377,7 +377,7 @@ class WhenAnAssertionFails:
         self.reporter = SpyReporter()
 
     def because_we_run_the_spec(self):
-        contexts.run(self.spec, [self.reporter])
+        contexts.run(self.spec, [NameBasedIdentifier(), self.reporter])
 
     def it_should_call_assertion_failed(self):
         assert "assertion_failed" in [c[0] for c in self.reporter.calls]
