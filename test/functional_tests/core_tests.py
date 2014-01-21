@@ -96,6 +96,46 @@ class WhenAPluginIdentifiesMethods:
         ]
 
 
+# class WhenASpecHasASuperclassAndAPluginIdentifiesMethods:
+#     def establish_spec_with_superclass(self):
+#         self.log = []
+#         class Super:
+#             def method_one(s):
+#                 self.log.append("super setup")
+#             def method_three(s):
+#                 self.log.append("super assertion")
+#         class Spec(Super):
+#             def method_five(s):
+#                 self.log.append("sub setup")
+#             def method_six(s):
+#                 self.log.append("sub assertion")
+#         self.super = Super
+#         self.spec = Spec
+
+#         self.plugin = mock.Mock()
+#         self.plugin.identify_method.side_effect = lambda meth: {
+#             Super.method_one: contexts.plugins.SETUP,
+#             Super.method_three: contexts.plugins.ASSERTION,
+#             Spec.method_five: contexts.plugins.SETUP,
+#             Spec.method_six: contexts.plugins.ASSERTION
+#         }[meth]
+
+#     def because_we_run_the_spec(self):
+#         contexts.run(self.spec, [self.plugin])
+
+#     def it_should_call_identify_method_with_the_superclass_methods_first(self):
+#         assert self.plugin.identify_method.call_args_list[:3] == [
+#             mock.call(self.super.method_one),
+#             mock.call(self.super.method_three)
+#         ]
+
+#     def it_should_run_the_superclass_setup_first(self):
+#         assert self.log[:2] == ["super setup", "sub setup"]
+
+#     def it_should_not_run_the_superclass_assertions(self):
+#         assert "super assertion" not in self.log
+
+
 class WhenRunningASpecWithMultipleAssertions:
     def context(self):
         class TestSpec:
@@ -693,6 +733,45 @@ class WhenRunningAClassContainingNoAssertions:
 
     def it_should_not_run_the_class(self):
         assert self.spec.log == []
+
+
+###########################################################
+# HFELKPER CLASSES
+###########################################################
+
+class UnorderedList(object):
+    def __init__(self, l):
+        self._list = l
+
+    def __eq__(self, other):
+        if len(other) != len(self._list):
+            return False
+        for member in other:
+            if member not in self._list:
+                return False
+        return True
+
+
+class UnorderedListSpec:
+    @classmethod
+    def examples(cls):
+        yield [], [], True
+        yield [], [123], False
+        yield [123], [], False
+        yield [123], [123], True
+        yield [123], [456], False
+        yield [123, 456], [456, 123], True
+        yield [123, 456, 789], [456, 123], False
+        yield [123, 456, 789], [456, 789, 123], True
+
+    def establish(self, input_list, other, expected):
+        self.unordered_list = UnorderedList(input_list)
+
+    def because(self, input_list, other, expected):
+        self.result = (other == self.unordered_list)
+
+    def should(self, input_list, other, expected):
+        assert self.result == expected
 
 
 if __name__ == "__main__":

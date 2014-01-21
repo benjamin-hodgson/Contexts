@@ -79,25 +79,26 @@ class TestClass(object):
         self.unbound_assertions = []
         self.unbound_teardowns = []
 
-        for name, val in cls.__dict__.items():
-            if isinstance(val, classmethod):
-                val = getattr(cls, name)
+        for superclass in reversed(inspect.getmro(cls)):
+            for name, val in superclass.__dict__.items():
+                if isinstance(val, classmethod):
+                    val = getattr(superclass, name)
 
-            if callable(val) and not isprivate(name):
-                response = self.plugin_notifier.call_plugins("identify_method", val)
-            else:
-                continue
+                if callable(val) and not isprivate(name):
+                    response = self.plugin_notifier.call_plugins("identify_method", val)
+                else:
+                    continue
 
-            if response is plugins.EXAMPLES:
-                self.examples_method = val
-            elif response is plugins.SETUP:
-                self.unbound_setups.append(val)
-            elif response is plugins.ACTION:
-                self.unbound_actions.append(val)
-            elif response is plugins.ASSERTION:
-                self.unbound_assertions.append(val)
-            elif response is plugins.TEARDOWN:
-                self.unbound_teardowns.append(val)
+                if response is plugins.EXAMPLES:
+                    self.examples_method = val
+                elif response is plugins.SETUP:
+                    self.unbound_setups.append(val)
+                elif response is plugins.ACTION:
+                    self.unbound_actions.append(val)
+                elif response is plugins.ASSERTION:
+                    self.unbound_assertions.append(val)
+                elif response is plugins.TEARDOWN:
+                    self.unbound_teardowns.append(val)
 
         finder = finders.UnboundMethodFinder(self.cls)
         if self.examples_method is None:
