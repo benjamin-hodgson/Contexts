@@ -80,6 +80,11 @@ class TestClass(object):
         self.unbound_teardowns = []
 
         for superclass in reversed(inspect.getmro(cls)):
+            class_examples = None
+            class_setup = None
+            class_action = None
+            class_teardown = None
+
             for name, val in superclass.__dict__.items():
                 if isinstance(val, classmethod):
                     val = getattr(superclass, name)
@@ -90,14 +95,33 @@ class TestClass(object):
                     continue
 
                 if response is plugins.EXAMPLES:
-                    self.examples_method = val
+                    if class_examples is not None:
+                        msg = "Context {} has multiple methods of the same type:\n".format(cls.__qualname__)
+                        msg += class_examples.__name__ + ", " + name
+                        raise errors.TooManySpecialMethodsError(msg)
+                    self.examples_method = class_examples = val
                 elif response is plugins.SETUP:
+                    if class_setup is not None:
+                        msg = "Context {} has multiple methods of the same type:\n".format(cls.__qualname__)
+                        msg += class_setup.__name__ + ", " + name
+                        raise errors.TooManySpecialMethodsError(msg)
+                    class_setup = val
                     self.unbound_setups.append(val)
                 elif response is plugins.ACTION and superclass is cls:
+                    if class_action is not None:
+                        msg = "Context {} has multiple methods of the same type:\n".format(cls.__qualname__)
+                        msg += class_action.__name__ + ", " + name
+                        raise errors.TooManySpecialMethodsError(msg)
+                    class_action = val
                     self.unbound_actions.append(val)
                 elif response is plugins.ASSERTION and superclass is cls:
                     self.unbound_assertions.append(val)
                 elif response is plugins.TEARDOWN:
+                    if class_teardown is not None:
+                        msg = "Context {} has multiple methods of the same type:\n".format(cls.__qualname__)
+                        msg += class_teardown.__name__ + ", " + name
+                        raise errors.TooManySpecialMethodsError(msg)
+                    class_teardown = val
                     self.unbound_teardowns.append(val)
         self.unbound_teardowns.reverse()
 

@@ -96,6 +96,42 @@ class WhenAPluginIdentifiesMethods:
         ]
 
 
+class WhenAPluginIdentifiesMultipleAssertions:
+    def establish_that_the_plugin_identifies_two_assertions(self):
+        self.log = []
+        class Spec:
+            def method_one(s):
+                self.log.append('assertion')
+            def method_two(s):
+                self.log.append('assertion')
+        self.spec = Spec
+        self.plugin = mock.Mock(spec=Plugin)
+        self.plugin.identify_method.return_value = contexts.plugins.ASSERTION
+
+    def because_we_run_the_spec(self):
+        contexts.run(self.spec, [self.plugin])
+
+    def it_should_run_both_assertions(self):
+        assert self.log == ["assertion", "assertion"]
+
+
+class WhenAPluginRefusesToIdentifyAMethod:
+    def establish_that_the_plugin_returns_none(self):
+        self.log = []
+        class Spec:
+            def method_one(s):
+                self.log.append("should not happen")
+        self.spec = Spec
+        self.plugin = mock.Mock(spec=Plugin)
+        self.plugin.identify_method.return_value = None
+
+    def because_we_run_the_spec(self):
+        contexts.run(self.spec, [self.plugin])
+
+    def it_should_ignore_the_method(self):
+        assert self.log == []
+
+
 class WhenASpecHasASuperclassAndAPluginIdentifiesMethods:
     def establish_spec_with_superclass(self):
         self.log = []
@@ -127,7 +163,7 @@ class WhenASpecHasASuperclassAndAPluginIdentifiesMethods:
         self.super = Super
         self.spec = Spec
 
-        self.plugin = mock.Mock()
+        self.plugin = mock.Mock(spec=Plugin)
         self.plugin.identify_method.side_effect = lambda meth: {
             Super.method_zero: contexts.plugins.EXAMPLES,
             Super.method_one: contexts.plugins.SETUP,
@@ -178,6 +214,36 @@ class WhenASpecHasASuperclassAndAPluginIdentifiesMethods:
 
     def it_should_run_the_subclass_teardown_before_the_superclass_teardown(self):
         assert self.log[-2:] == ["sub teardown", "super teardown"]
+
+
+class WhenAPluginReturnsMultipleMethodsOfTheSameType:
+    @classmethod
+    def examples_of_ways_plugins_can_mess_up(cls):
+        yield [contexts.plugins.EXAMPLES, contexts.plugins.EXAMPLES]
+        yield [contexts.plugins.SETUP, contexts.plugins.SETUP]
+        yield [contexts.plugins.ACTION, contexts.plugins.ACTION]
+        yield [contexts.plugins.TEARDOWN, contexts.plugins.TEARDOWN]
+
+    def context(self, side_effect):
+        self.ran_a_method = False
+        class Spec:
+            def method_one(s):
+                self.ran_a_method = True
+            def method_two(s):
+                self.ran_a_method = True
+        self.spec = Spec
+
+        self.plugin = mock.Mock(spec=Plugin)
+        self.plugin.identify_method.side_effect = side_effect
+
+    def because_we_run_the_spec(self):
+        contexts.run(self.spec, [self.plugin])
+
+    def it_should_call_unexpected_error_with_a_TooManySpecialMethodsError(self):
+        assert isinstance(self.plugin.unexpected_error.call_args[0][0], contexts.errors.TooManySpecialMethodsError)
+
+    def it_should_not_run_the_methods(self):
+        assert not self.ran_a_method
 
 
 class WhenRunningASpecWithMultipleAssertions:
@@ -521,7 +587,7 @@ class WhenAPluginModifiesAnAssertionList:
         def modify_list(l):
             self.called_with = l.copy()
             l[:] = [spy_assertion_method1, spy_assertion_method2]
-        self.plugin = mock.Mock()
+        self.plugin = mock.Mock(spec=Plugin)
         self.plugin.process_assertion_list = modify_list
 
     def because_we_run_the_spec(self):

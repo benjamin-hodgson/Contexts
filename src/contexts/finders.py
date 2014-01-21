@@ -49,7 +49,7 @@ class UnboundMethodFinder(object):
         return self.find_methods_matching(establish_re, top_down=True, one_per_class=True)
 
     def find_actions(self):
-        return self.find_methods_matching(because_re, one_only=True, one_per_class=True)
+        return find_methods_on_class_matching(self.spec_class, because_re, True)
 
     def find_assertions(self):
         return self.find_methods_matching(should_re)
