@@ -20,10 +20,10 @@ class WhenMakingANameHumanReadable:
         yield "CamelCaseWithASingleLetterWord", "Camel case with a single letter word"
         yield "Does.EverythingAT_once.TOBe100Percent_Certain", "Does everything AT once TO be 100 percent certain"
 
-    def because_we_make_the_string_readable(self, input, _):
+    def because_we_make_the_string_readable(self, input, expected):
         self.result = plugins.shared.make_readable(input)
 
-    def it_should_return_a_string_with_appropriate_spaces(self, _, expected):
+    def it_should_return_a_string_with_appropriate_spaces(self, input, expected):
         assert self.result == expected
 
 

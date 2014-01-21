@@ -9,28 +9,6 @@ core_file = repr(contexts.core.__file__)[1:-1]
 this_file = repr(__file__)[1:-1]
 
 
-class WhenRunningASpec:
-    def context(self):
-        class TestSpec:
-            log = ""
-            def method_with_establish_in_the_name(s):
-                s.__class__.log += "arrange "
-            def method_with_because_in_the_name(s):
-                s.__class__.log += "act "
-            def method_with_should_in_the_name(s):
-                s.__class__.log += "assert "
-            def method_with_cleanup_in_the_name(s):
-                s.__class__.log += "teardown "
-
-        self.spec = TestSpec
-
-    def because_we_run_the_spec(self):
-        contexts.run(self.spec, [NameBasedIdentifier()])
-
-    def it_should_run_the_methods_in_the_correct_order(self):
-        assert self.spec.log == "arrange act assert teardown "
-
-
 class WhenAPluginIdentifiesMethods:
     def context(self):
         self.log = []
@@ -70,6 +48,10 @@ class WhenAPluginIdentifiesMethods:
 
     def because_we_run_the_spec(self):
         contexts.run(self.spec, [self.none_plugin, self.deleted_plugin, self.plugin, self.too_late_plugin])
+
+    def it_should_not_ask_the_plugin_to_identify_the_class(self):
+        # we are explicitly running this class, don't want to give plugs a chance to stop it
+        pass
 
     def it_should_ask_the_plugin_to_identify_each_method(self):
         self.plugin.identify_method.assert_has_calls([
@@ -245,26 +227,6 @@ class WhenAPluginReturnsMultipleMethodsOfTheSameType:
 
     def it_should_not_run_the_methods(self):
         assert not self.ran_a_method
-
-
-class WhenRunningASpecWithMultipleAssertions:
-    def context(self):
-        class TestSpec:
-            calls = 0
-            def method_with_should_in_the_name(self):
-                self.__class__.calls += 1
-            def another_should_method(self):
-                self.__class__.calls += 1
-            def third_should_method(self):
-                self.__class__.calls += 1
-
-        self.spec = TestSpec
-
-    def because_we_run_the_spec(self):
-        contexts.run(self.spec, [NameBasedIdentifier()])
-
-    def it_should_run_all_three_assertion_methods(self):
-        assert self.spec.calls == 3
 
 
 class WhenRunningASpecWithReporters:
