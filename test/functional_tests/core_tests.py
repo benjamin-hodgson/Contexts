@@ -2,6 +2,7 @@ import collections.abc
 from unittest import mock
 import contexts
 from contexts.plugins import Plugin
+from contexts.plugins.identifiers import NameBasedIdentifier
 from .tools import SpyReporter
 
 core_file = repr(contexts.core.__file__)[1:-1]
@@ -24,7 +25,7 @@ class WhenRunningASpec:
         self.spec = TestSpec
 
     def because_we_run_the_spec(self):
-        contexts.run(self.spec, [])
+        contexts.run(self.spec, [NameBasedIdentifier()])
 
     def it_should_run_the_methods_in_the_correct_order(self):
         assert self.spec.log == "arrange act assert teardown "
@@ -260,7 +261,7 @@ class WhenRunningASpecWithMultipleAssertions:
         self.spec = TestSpec
 
     def because_we_run_the_spec(self):
-        contexts.run(self.spec, [])
+        contexts.run(self.spec, [NameBasedIdentifier()])
 
     def it_should_run_all_three_assertion_methods(self):
         assert self.spec.calls == 3
@@ -285,7 +286,7 @@ class WhenRunningASpecWithReporters:
         self.reporter3 = SpyReporter()
 
     def because_we_run_the_spec(self):
-        contexts.run(self.spec, [self.reporter1, self.reporter2, self.reporter3])
+        contexts.run(self.spec, [NameBasedIdentifier(), self.reporter1, self.reporter2, self.reporter3])
 
     def it_should_call_test_run_started_first(self):
         assert self.reporter1.calls[0][0] == 'test_run_started'
@@ -416,7 +417,7 @@ class WhenAnAssertionErrors:
         self.reporter = SpyReporter()
 
     def because_we_run_the_spec(self):
-        contexts.run(self.spec, [self.reporter])
+        contexts.run(self.spec, [NameBasedIdentifier(), self.reporter])
 
     def it_should_call_assertion_errored(self):
         assert "assertion_errored" in [c[0] for c in self.reporter.calls]
@@ -460,7 +461,7 @@ class WhenAContextErrorsDuringTheSetup:
         self.reporter = SpyReporter()
 
     def because_we_run_the_specs(self):
-        contexts.run(self.spec, [self.reporter])
+        contexts.run(self.spec, [NameBasedIdentifier(), self.reporter])
 
     @contexts.assertion
     def it_should_call_context_errored(self):
@@ -505,7 +506,7 @@ class WhenAContextErrorsDuringTheAction:
         self.reporter = SpyReporter()
 
     def because_we_run_the_specs(self):
-        contexts.run(self.spec, [self.reporter])
+        contexts.run(self.spec, [NameBasedIdentifier(), self.reporter])
 
     @contexts.assertion
     def it_should_call_context_errored(self):
@@ -545,7 +546,7 @@ class WhenAContextErrorsDuringTheCleanup:
         self.reporter = SpyReporter()
 
     def because_we_run_the_specs(self):
-        contexts.run(self.spec, [self.reporter])
+        contexts.run(self.spec, [NameBasedIdentifier(), self.reporter])
 
     @contexts.assertion
     def it_should_call_context_errored(self):
@@ -591,7 +592,7 @@ class WhenAPluginModifiesAnAssertionList:
         self.plugin.process_assertion_list = modify_list
 
     def because_we_run_the_spec(self):
-        contexts.run(self.spec, [self.plugin])
+        contexts.run(self.spec, [NameBasedIdentifier(), self.plugin])
 
     def it_should_pass_a_list_of_the_found_assertions_into_process_assertion_list(self):
         assert isinstance(self.called_with, collections.abc.MutableSequence)
@@ -602,64 +603,6 @@ class WhenAPluginModifiesAnAssertionList:
 
     def it_should_not_run_the_old_version_of_the_list(self):
         assert not self.ran_reals
-
-
-class WhenASpecHasASuperclass:
-    def context(self):
-        self.log = ""
-        class SharedContext:
-            def context(s):
-                self.log += "superclass arrange "
-            def superclass_because(s):
-                self.log += "superclass action "
-            def it(s):
-                self.log += "superclass assertion "
-            def cleanup(s):
-                self.log += "superclass cleanup "
-        class Spec(SharedContext):
-            # I want it to run the superclasses' specially-named methods
-            # _even if_ they are masked by the subclass
-            def context(s):
-                self.log += "subclass arrange "
-            def because(s):
-                self.log += "subclass action "
-            def it(s):
-                self.log += "subclass assertion "
-            def cleanup(s):
-                self.log += "subclass cleanup "
-
-        self.spec = Spec
-        self.reporter = SpyReporter()
-
-    def because_we_run_the_spec(self):
-        contexts.run(self.spec, [self.reporter])
-
-    def it_should_run_the_superclass_setup_first(self):
-        assert self.log[:19] == "superclass arrange "
-
-    def it_should_run_the_subclass_setup_next(self):
-        assert self.log[19:36] == "subclass arrange "
-
-    def it_should_run_the_subclass_action_next(self):
-        assert self.log[36:52] == "subclass action "
-
-    def it_should_not_run_the_superclass_action(self):
-        assert "superclass action " not in self.log
-
-    def it_should_run_both_assertions(self):
-        # We don't care what order the two assertions get run in
-        assert "superclass assertion " in self.log[52:92]
-        assert "subclass assertion " in self.log[52:92]
-
-    def it_should_run_the_subclass_teardown_first(self):
-        assert self.log[92:109] == "subclass cleanup "
-
-    def it_should_run_the_superclass_teardown_second(self):
-        assert self.log[109:238] == "superclass cleanup "
-
-    @contexts.assertion
-    def it_should_only_call_context_started_on_the_reporter_once(self):
-        assert len([call for call in self.reporter.calls if call[0] == "context_started"]) == 1
 
 
 class WhenWeRunSpecsWithAlternatelyNamedMethods:
@@ -704,7 +647,7 @@ class WhenWeRunSpecsWithAlternatelyNamedMethods:
         self.spec = spec
 
     def because_we_run_the_spec(self):
-        contexts.run(self.spec, [])
+        contexts.run(self.spec, [NameBasedIdentifier()])
 
     def it_should_run_the_methods_in_the_correct_order(self, _, expected_log):
         assert self.spec.log == expected_log
@@ -739,7 +682,7 @@ class WhenRunningAmbiguouslyNamedMethods:
         self.reporter = SpyReporter()
 
     def because_we_try_to_run_the_spec(self, example):
-        contexts.run(example, [self.reporter])
+        contexts.run(example, [NameBasedIdentifier(), self.reporter])
 
     def it_should_call_unexpected_error_on_the_reporter(self):
         assert self.reporter.calls[2][0] == "unexpected_error"
@@ -773,7 +716,7 @@ class WhenRunningNotSoAmbiguouslyNamedMethods:
         yield NotAmbiguousMethods4
 
     def because_we_try_to_run_the_spec(self, example):
-        self.exception = contexts.catch(contexts.run, example, [])
+        self.exception = contexts.catch(contexts.run, example, [NameBasedIdentifier()])
 
     def it_should_not_raise_any_exceptions(self):
         assert self.exception is None
@@ -813,7 +756,7 @@ class WhenRunningSpecsWithTooManySpecialMethods:
         self.reporter = SpyReporter()
 
     def because_we_try_to_run_the_spec(self, example):
-        contexts.run(example, [self.reporter])
+        contexts.run(example, [NameBasedIdentifier(), self.reporter])
 
     def it_should_call_unexpected_error_on_the_reporter(self):
         assert self.reporter.calls[2][0] == "unexpected_error"
@@ -839,7 +782,7 @@ class WhenRunningAClassContainingNoAssertions:
         self.reporter = SpyReporter()
 
     def because_we_run_the_spec(self):
-        contexts.run(self.spec, [self.reporter])
+        contexts.run(self.spec, [NameBasedIdentifier(), self.reporter])
 
     def it_should_not_run_the_class(self):
         assert self.spec.log == []

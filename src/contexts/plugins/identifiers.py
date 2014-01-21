@@ -33,3 +33,19 @@ def assert_not_ambiguous(name, regex):
     if any(r.search(name) for r in all_regexes):
         msg = "The method {} is ambiguously named".format(name)
         raise errors.MethodNamingError(msg)
+
+
+class DecoratorBasedIdentifier(object):
+    def identify_method(self, method):
+        if not hasattr(method, "_contexts_role"):
+            return None
+
+        d = {
+            "examples": EXAMPLES,
+            "establish": SETUP,
+            "because": ACTION,
+            "should": ASSERTION,
+            "cleanup": TEARDOWN
+        }
+        return d[method._contexts_role]
+

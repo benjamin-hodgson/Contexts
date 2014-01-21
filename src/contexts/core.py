@@ -128,10 +128,14 @@ class TestClass(object):
         finder = finders.UnboundMethodFinder(self.cls)
         if self.examples_method is None:
             self.examples_method = finder.find_examples_method()
-        self.unbound_setups.extend(finder.find_setups())
-        self.unbound_actions.extend(finder.find_actions())
-        self.unbound_assertions.extend(finder.find_assertions())
-        self.unbound_teardowns.extend(finder.find_teardowns())
+        if not self.unbound_setups:
+            self.unbound_setups.extend(finder.find_setups())
+        if not self.unbound_actions:
+            self.unbound_actions.extend(finder.find_actions())
+        if not self.unbound_assertions:
+            self.unbound_assertions.extend(finder.find_assertions())
+        if not self.unbound_teardowns:
+            self.unbound_teardowns.extend(finder.find_teardowns())
 
         assert_no_ambiguous_methods(self.unbound_setups, self.unbound_actions, self.unbound_assertions, self.unbound_teardowns)
 
