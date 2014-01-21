@@ -4,7 +4,6 @@ import types
 from contextlib import contextmanager
 from . import discovery
 from . import errors
-from . import finders
 from .tools import NO_EXAMPLE
 # FIXME: Core should not import plugins.
 # Dependency inversion says that Core should define these constants, and the interface.
@@ -18,11 +17,15 @@ class TestRun(object):
 
     def run(self):
         with self.plugin_notifier.run_test_run(self):
-            modules = self.get_modules()
-            self.plugin_notifier.call_plugins('process_module_list', modules)
-            for module in modules:
-                suite = Suite(module, self.plugin_notifier)
-                suite.run()
+            if isinstance(self.source, type):
+                test_class = TestClass(self.source, self.plugin_notifier)
+                test_class.run()
+            else:
+                modules = self.get_modules()
+                self.plugin_notifier.call_plugins('process_module_list', modules)
+                for module in modules:
+                    suite = Suite(module, self.plugin_notifier)
+                    suite.run()
 
     def get_modules(self):
         if isinstance(self.source, types.ModuleType):
@@ -36,13 +39,6 @@ class TestRun(object):
                 with self.plugin_notifier.importing(module_spec):
                     modules.append(self.import_module(*module_spec))
             return modules
-
-        # self.source is a class
-
-        module = types.ModuleType("contexts_module")
-        # use a hard-coded name that the finder will recognise (needs a better fix)
-        module.Spec = self.source
-        return [module]
 
     def import_from_file(self, file_path):
         folder = os.path.dirname(file_path)
@@ -68,9 +64,6 @@ class Suite(object):
                 response = self.plugin_notifier.call_plugins("identify_class", cls)
                 if response is CONTEXT:
                     found_classes.append(cls)
-
-            if not found_classes:
-                found_classes.extend(finders.find_specs_in_module(self.module))
 
             self.plugin_notifier.call_plugins('process_class_list', found_classes)
             for cls in found_classes:

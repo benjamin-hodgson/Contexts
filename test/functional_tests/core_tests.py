@@ -254,50 +254,44 @@ class WhenRunningASpecWithReporters:
     def it_should_call_test_run_started_first(self):
         assert self.reporter1.calls[0][0] == 'test_run_started'
 
-    def it_should_call_suite_started(self):
-        assert self.reporter1.calls[1][0] == 'suite_started'
-
     @contexts.assertion
     def it_should_call_context_started_next(self):
-        assert self.reporter1.calls[2][0] == 'context_started'
+        assert self.reporter1.calls[1][0] == 'context_started'
 
     @contexts.assertion
     def it_should_pass_in_the_context_name(self):
-        assert self.reporter1.calls[2][1] == 'TestSpec'
+        assert self.reporter1.calls[1][1] == 'TestSpec'
 
     @contexts.assertion
     def it_should_pass_in_no_example(self):
-        assert self.reporter1.calls[2][2] is contexts.tools.NO_EXAMPLE
+        assert self.reporter1.calls[1][2] is contexts.tools.NO_EXAMPLE
 
     def it_should_call_assertion_started_for_the_assertion(self):
-        assert self.reporter1.calls[3][0] == 'assertion_started'
+        assert self.reporter1.calls[2][0] == 'assertion_started'
 
     def it_should_pass_the_assertion_name_into_assertion_started(self):
-        assert self.reporter1.calls[3][1] == 'method_with_should_in_the_name'
+        assert self.reporter1.calls[2][1] == 'method_with_should_in_the_name'
 
     def it_should_call_assertion_passed_for_the_assertion(self):
-        assert self.reporter1.calls[4][0] == 'assertion_passed'
+        assert self.reporter1.calls[3][0] == 'assertion_passed'
 
     def it_should_pass_the_name_into_assertion_passed(self):
-        assert self.reporter1.calls[4][1] == 'method_with_should_in_the_name'
+        assert self.reporter1.calls[3][1] == 'method_with_should_in_the_name'
 
     @contexts.assertion
     def it_should_call_context_ended_next(self):
-        assert self.reporter1.calls[5][0] == 'context_ended'
+        assert self.reporter1.calls[4][0] == 'context_ended'
 
     @contexts.assertion
     def it_should_pass_in_the_context_name_again(self):
-        assert self.reporter1.calls[5][1] == 'TestSpec'
+        assert self.reporter1.calls[4][1] == 'TestSpec'
 
     @contexts.assertion
     def it_should_pass_in_no_example_again(self):
-        assert self.reporter1.calls[5][2] is contexts.tools.NO_EXAMPLE
-
-    def it_should_call_suite_ended(self):
-        assert self.reporter1.calls[6][0] == 'suite_ended'
+        assert self.reporter1.calls[4][2] is contexts.tools.NO_EXAMPLE
 
     def it_should_call_test_run_ended_last(self):
-        assert self.reporter1.calls[7][0] == 'test_run_ended'
+        assert self.reporter1.calls[-1][0] == 'test_run_ended'
 
     def it_should_do_exactly_the_same_to_the_second_reporter(self):
         assert self.reporter2.calls == self.reporter1.calls
@@ -456,18 +450,18 @@ class WhenAContextErrorsDuringTheSetup:
 
     @contexts.assertion
     def it_should_call_context_errored(self):
-        assert self.reporter.calls[3][0] == "context_errored"
+        assert self.reporter.calls[2][0] == "context_errored"
 
     @contexts.assertion
     def it_should_pass_in_the_context_name(self):
-        assert self.reporter.calls[3][1] == self.spec.__name__
+        assert self.reporter.calls[2][1] == self.spec.__name__
 
     @contexts.assertion
     def it_should_pass_in_no_example(self):
-        assert self.reporter.calls[3][2] is contexts.tools.NO_EXAMPLE
+        assert self.reporter.calls[2][2] is contexts.tools.NO_EXAMPLE
 
     def it_should_pass_in_the_exception(self):
-        assert self.reporter.calls[3][3] is self.exception
+        assert self.reporter.calls[2][3] is self.exception
 
     def it_should_not_run_the_action(self):
         assert not self.spec.ran_because
@@ -501,18 +495,18 @@ class WhenAContextErrorsDuringTheAction:
 
     @contexts.assertion
     def it_should_call_context_errored(self):
-        assert self.reporter.calls[3][0] == "context_errored"
+        assert self.reporter.calls[2][0] == "context_errored"
 
     @contexts.assertion
     def it_should_pass_in_the_context_name(self):
-        assert self.reporter.calls[3][1] == self.spec.__name__
+        assert self.reporter.calls[2][1] == self.spec.__name__
 
     @contexts.assertion
     def it_should_pass_in_no_example(self):
-        assert self.reporter.calls[3][2] is contexts.tools.NO_EXAMPLE
+        assert self.reporter.calls[2][2] is contexts.tools.NO_EXAMPLE
 
     def it_should_pass_in_the_exception(self):
-        assert self.reporter.calls[3][3] is self.exception
+        assert self.reporter.calls[2][3] is self.exception
 
     def it_should_not_run_the_assertion(self):
         assert not self.spec.ran_assertion
@@ -541,18 +535,18 @@ class WhenAContextErrorsDuringTheCleanup:
 
     @contexts.assertion
     def it_should_call_context_errored(self):
-        assert self.reporter.calls[5][0] == "context_errored"
+        assert self.reporter.calls[4][0] == "context_errored"
 
     @contexts.assertion
     def it_should_pass_in_the_context_name(self):
-        assert self.reporter.calls[5][1] == self.spec.__name__
+        assert self.reporter.calls[4][1] == self.spec.__name__
 
     @contexts.assertion
     def it_should_pass_in_no_example(self):
-        assert self.reporter.calls[5][2] is contexts.tools.NO_EXAMPLE
+        assert self.reporter.calls[4][2] is contexts.tools.NO_EXAMPLE
 
     def it_should_pass_in_the_exception(self):
-        assert self.reporter.calls[5][3] is self.exception
+        assert self.reporter.calls[4][3] is self.exception
 
 
 class WhenAPluginSetsTheExitCode:
@@ -573,121 +567,6 @@ class WhenAPluginSetsTheExitCode:
         assert self.result == exitcode
 
 
-class WhenRunningAmbiguouslyNamedMethods:
-    @classmethod
-    def examples(cls):
-        class AmbiguousMethods1:
-            def this_has_both_context_and_because_in_the_name(self):
-                pass
-        class AmbiguousMethods2:
-            def this_has_both_because_and_should_in_the_name(self):
-                pass
-        class AmbiguousMethods3:
-            def this_has_both_should_and_cleanup_in_the_name(self):
-                pass
-        class AmbiguousMethods4:
-            def this_has_both_cleanup_and_establish_in_the_name(self):
-                pass
-        class AmbiguousMethods5:
-            @classmethod
-            def this_has_both_examples_and_it_in_the_name(self):
-                pass
-        yield AmbiguousMethods1
-        yield AmbiguousMethods2
-        yield AmbiguousMethods3
-        yield AmbiguousMethods4
-        yield AmbiguousMethods5
-
-    def context(self):
-        self.reporter = SpyReporter()
-
-    def because_we_try_to_run_the_spec(self, example):
-        contexts.run(example, [NameBasedIdentifier(), self.reporter])
-
-    def it_should_call_unexpected_error_on_the_reporter(self):
-        assert self.reporter.calls[2][0] == "unexpected_error"
-
-    def it_should_pass_in_a_MethodNamingError(self):
-        assert isinstance(self.reporter.calls[2][1], contexts.errors.MethodNamingError)
-
-    def it_should_finish_the_test_run(self):
-        assert self.reporter.calls[-1][0] == "test_run_ended"
-
-
-class WhenRunningNotSoAmbiguouslyNamedMethods:
-    @classmethod
-    def examples(self):
-        class NotAmbiguousMethods1:
-            def this_has_both_context_and_establish_in_the_name(self):
-                pass
-        class NotAmbiguousMethods2:
-            def this_has_both_because_and_when_in_the_name(self):
-                pass
-        class NotAmbiguousMethods3:
-            def this_has_both_should_and_it_in_the_name(self):
-                pass
-        class NotAmbiguousMethods4:
-            @classmethod
-            def this_has_both_examples_and_data_in_the_name(self):
-                yield 1
-        yield NotAmbiguousMethods1
-        yield NotAmbiguousMethods2
-        yield NotAmbiguousMethods3
-        yield NotAmbiguousMethods4
-
-    def because_we_try_to_run_the_spec(self, example):
-        self.exception = contexts.catch(contexts.run, example, [NameBasedIdentifier()])
-
-    def it_should_not_raise_any_exceptions(self):
-        assert self.exception is None
-
-
-class WhenRunningSpecsWithTooManySpecialMethods:
-    @classmethod
-    def examples(cls):
-        class TooManyContexts:
-            def context(self):
-                pass
-            def establish(self):
-                pass
-        class TooManyActions:
-            def because(self):
-                pass
-            def when(self):
-                pass
-        class TooManyTeardowns:
-            def cleanup1(self):
-                pass
-            def cleanup2(self):
-                pass
-        class TooManyExamples:
-            @classmethod
-            def examples(self):
-                pass
-            @classmethod
-            def test_data(self):
-                pass
-        yield TooManyContexts
-        yield TooManyActions
-        yield TooManyTeardowns
-        yield TooManyExamples
-
-    def context(self):
-        self.reporter = SpyReporter()
-
-    def because_we_try_to_run_the_spec(self, example):
-        contexts.run(example, [NameBasedIdentifier(), self.reporter])
-
-    def it_should_call_unexpected_error_on_the_reporter(self):
-        assert self.reporter.calls[2][0] == "unexpected_error"
-
-    def it_should_pass_in_a_TooManySpecialMethodsError(self):
-        assert isinstance(self.reporter.calls[2][1], contexts.errors.TooManySpecialMethodsError)
-
-    def it_should_finish_the_test_run(self):
-        assert self.reporter.calls[-1][0] == "test_run_ended"
-
-
 class WhenRunningAClassContainingNoAssertions:
     def context(self):
         class NoAssertions:
@@ -699,10 +578,16 @@ class WhenRunningAClassContainingNoAssertions:
             def cleanup(self):
                 self.__class__.log.append('teardown')
         self.spec = NoAssertions
-        self.reporter = SpyReporter()
+
+        self.plugin = mock.Mock(spec=Plugin)
+        self.plugin.identify_method.side_effect = lambda meth: {
+            NoAssertions.context: SETUP,
+            NoAssertions.because: ACTION,
+            NoAssertions.cleanup: TEARDOWN
+        }[meth]
 
     def because_we_run_the_spec(self):
-        contexts.run(self.spec, [NameBasedIdentifier(), self.reporter])
+        contexts.run(self.spec, [self.plugin])
 
     def it_should_not_run_the_class(self):
         assert self.spec.log == []

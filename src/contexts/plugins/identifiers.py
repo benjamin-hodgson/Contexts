@@ -45,6 +45,15 @@ def assert_not_ambiguous(name, regex):
 
 
 class DecoratorBasedIdentifier(object):
+    def identify_class(self, cls):
+        if not hasattr(cls, "_contexts_role"):
+            return None
+
+        d = {
+            "Spec": CONTEXT
+        }
+        return d[cls._contexts_role]
+
     def identify_method(self, method):
         if not hasattr(method, "_contexts_role"):
             return None
