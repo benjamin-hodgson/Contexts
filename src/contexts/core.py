@@ -33,28 +33,19 @@ class TestRun(object):
             return [self.source]
         if os.path.isfile(self.source):
             folder, filename = os.path.split(self.source)
-            if discovery.ispackage(folder):
-                return self.import_file_from_package(folder, filename)
-            else:
-                module_list = ModuleList(self.plugin_composite)
-                module_name = os.path.splitext(filename)[0]
-                module_list.add(folder, module_name)
-                return module_list.modules
+            importer = discovery.create_importer(folder, self.plugin_composite)
+            return [importer.import_file(filename)]
         if os.path.isdir(self.source):
-            specifications = discovery.module_specs(self.source)
-            module_list = ModuleList(self.plugin_composite)
-            for folder, filename in specifications:
-                module_list.add(folder, filename)
+            module_list = discovery.ModuleList(self.plugin_composite)
+            for folder, dirnames, _ in os.walk(self.source):
+                self.remove_non_test_folders(dirnames)
+                importer = discovery.create_importer(folder, self.plugin_composite)
+                for folder, filename in importer.module_specs():
+                    module_list.add(folder, filename)
             return module_list.modules
 
-    def import_file_from_package(self, folder, filename):
-        module_list = ModuleList(self.plugin_composite)
-        top_folder, package_name = discovery.PackageSpecificationFactory(folder).create()
-        add_parent_packages_to_list(module_list, top_folder, package_name)
-        if filename != '__init__.py':
-            module_name = package_name + '.' + os.path.splitext(filename)[0]
-            module_list.add(top_folder, module_name)
-        return module_list.modules[-1:]
+    def remove_non_test_folders(self, dirnames):
+        dirnames[:] = [n for n in dirnames if discovery.folder_re.search(n)]
 
 
 def add_parent_packages_to_list(module_list, top_folder, package_name):
@@ -64,41 +55,28 @@ def add_parent_packages_to_list(module_list, top_folder, package_name):
         i += 1
 
 
-
-# FIXME: i don't think it's right for ModuleList to exist. TestRun is a list of
-# modules ('Suites') so we dont need another list of modules.
-# however i also feel weird about the two alternatves: initialising TestRun with an empty
-# list of modules and then populating it inside run(), or importing the modules in the constructor
-# So for now this class lives on, and will only be used inside import_modules()
-class ModuleList(object):
-    def __init__(self, plugin_composite):
-        self.modules = []
-        self.plugin_composite = plugin_composite
-    def add(self, folder, module_name):
-        with self.plugin_composite.importing(folder, module_name):
-            module = self.plugin_composite.call_plugins('import_module', folder, module_name)
-            self.modules.append(module)
-
-
 class Suite(object):
     def __init__(self, module, plugin_composite):
         self.module = module
         self.name = self.module.__name__
         self.plugin_composite = plugin_composite
+        self.classes = self.get_classes()
+        self.plugin_composite.call_plugins('process_class_list', self.classes)
 
     def run(self):
         with self.plugin_composite.run_suite(self):
-
-            found_classes = []
-            for name, cls in inspect.getmembers(self.module, inspect.isclass):
-                response = self.plugin_composite.call_plugins("identify_class", cls)
-                if response is CONTEXT:
-                    found_classes.append(cls)
-
-            self.plugin_composite.call_plugins('process_class_list', found_classes)
-            for cls in found_classes:
+            for cls in self.classes:
                 test_class = TestClass(cls, self.plugin_composite)
                 test_class.run()
+
+    def get_classes(self):
+        classes = []
+        for name, cls in inspect.getmembers(self.module, inspect.isclass):
+            response = self.plugin_composite.call_plugins("identify_class", cls)
+            if response is CONTEXT:
+                classes.append(cls)
+        return classes
+
 
 
 class TestClass(object):

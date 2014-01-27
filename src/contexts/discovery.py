@@ -1,6 +1,5 @@
 import os
 import re
-import random
 from collections import namedtuple
 
 
@@ -11,80 +10,91 @@ file_re = re.compile(r"([Ss]pec|[Tt]est).*?\.py$")
 folder_re = re.compile(r"([Ss]pec|[Tt]est)")
 
 
-def module_specs(directory):
-    """
-    Return an iterable of ModuleSpecifications found in the folder
-    """
-    specs = []
-    for finder in FinderGenerator(directory).generate_finders():
-        specs.extend(finder.module_specs())
-    return specs
+def create_importer(folder, plugin_composite):
+    if ispackage(folder):
+        return PackageModuleImporter(folder, plugin_composite)
+    else:
+        return FolderModuleImporter(folder, plugin_composite)
 
 
-class FinderGenerator(object):
-    """Like a finder factory, but generates a sequence of them"""
-    def __init__(self, starting_directory):
-        self.walker = Walker(starting_directory)
-
-    def generate_finders(self):
-        for directory in self.walker:
-            self.current_directory = directory
-            yield self.create_finder()
-
-    def create_finder(self):
-        if ispackage(self.current_directory):
-            return PackageModuleFinder(self.current_directory)
-        return FolderModuleFinder(self.current_directory)
-
-
-def Walker(starting_directory):
-    for dirpath, dirnames, _ in os.walk(starting_directory):
-        remove_non_test_folders(dirnames)
-        yield dirpath
-
-
-class FolderModuleFinder(object):
-    def __init__(self, directory):
-        self.directory = directory
-
-    def module_specs(self):
-        return [ModuleSpecification(self.directory, mod) for mod in self.get_module_names()]
-
-    def get_module_names(self):
-        return [remove_extension(f) for f in matching_filenames(self.directory)]
-
-
-class PackageModuleFinder(object):
-    def __init__(self, directory):
-        self.directory = directory
-        self.package_spec = PackageSpecificationFactory(self.directory).create()
-
-    def module_specs(self):
-        found_modules = self.get_module_names()
-        specs = [ModuleSpecification(self.package_spec[0], mod) for mod in found_modules]
-        return [self.package_spec] + specs
-
-    def get_module_names(self):
+class Importer(object):
+    def get_file_details(self):
+        specs = []
         for filename in matching_filenames(self.directory):
-            module_name = remove_extension(filename)
-            yield self.package_spec[1] + '.' + module_name
+            module_name = self.module_prefix + remove_extension(filename)
+            specs.append(ModuleSpecification(self.location, module_name))
+        return specs
 
 
-class PackageSpecificationFactory(object):
-    def __init__(self, directory):
+class FolderModuleImporter(Importer):
+    def __init__(self, directory, plugin_composite):
         self.directory = directory
-        self.current_parent = os.path.dirname(directory)
-        self.package_names = [os.path.basename(directory)]
+        self.location = self.directory
+        self.module_prefix = ''
+        self.plugin_composite = plugin_composite
 
-    def create(self):
-        self.traverse_filesystem()
-        full_package_name = '.'.join(reversed(self.package_names))
-        return PackageSpecification(self.current_parent, full_package_name)
+    def module_specs(self):
+        return self.get_file_details()
 
-    def traverse_filesystem(self):
-        while ispackage(self.current_parent):
-            dirpath, self.current_parent = self.current_parent, os.path.dirname(self.current_parent)
-            self.package_names.append(os.path.basename(dirpath))
+    def import_file(self, filename):
+        module_name = os.path.splitext(filename)[0]
+        with self.plugin_composite.importing(self.directory, module_name):
+            return self.plugin_composite.call_plugins('import_module', self.directory, module_name)
+
+
+class PackageModuleImporter(Importer):
+    def __init__(self, directory, plugin_composite):
+        self.package_spec = get_package_specification(directory)
+
+        self.directory = directory
+        self.location = self.package_spec[0]
+        self.module_prefix = self.package_spec[1] + '.'
+        self.plugin_composite = plugin_composite
+
+    def module_specs(self):
+        return [self.package_spec] + self.get_file_details()
+
+    def import_file(self, filename):
+        module_list = ModuleList(self.plugin_composite)
+        top_folder, package_name = self.package_spec
+        add_parent_packages_to_list(module_list, top_folder, package_name)
+        if filename != '__init__.py':
+            module_name = package_name + '.' + os.path.splitext(filename)[0]
+            module_list.add(top_folder, module_name)
+        return module_list.modules[-1]
+
+
+def add_parent_packages_to_list(module_list, top_folder, package_name):
+    i = 1
+    while i <= len(package_name.split('.')):
+        module_list.add(top_folder, '.'.join(package_name.split('.')[:i]))
+        i += 1
+
+
+# FIXME: i don't think it's right for ModuleList to exist. TestRun is a list of
+# modules ('Suites') so we dont need another list of modules.
+# however i also feel weird about the two alternatves: initialising TestRun with an empty
+# list of modules and then populating it inside run(), or importing the modules in the constructor
+# So, until i come up with a better idea, this class lives on and will only be used inside import_modules()
+class ModuleList(object):
+    def __init__(self, plugin_composite):
+        self.modules = []
+        self.plugin_composite = plugin_composite
+    def add(self, folder, module_name):
+        with self.plugin_composite.importing(folder, module_name):
+            module = self.plugin_composite.call_plugins('import_module', folder, module_name)
+            self.modules.append(module)
+
+
+def get_package_specification(directory):
+    current_parent = os.path.dirname(directory)
+    package_names = [os.path.basename(directory)]
+
+    while ispackage(current_parent):
+        dirpath, current_parent = current_parent, os.path.dirname(current_parent)
+        package_names.append(os.path.basename(dirpath))
+    full_package_name = '.'.join(reversed(package_names))
+    return PackageSpecification(current_parent, full_package_name)
 
 
 def ispackage(directory):
@@ -95,10 +105,6 @@ def matching_filenames(directory):
     for filename in os.listdir(directory):
         if file_re.search(filename):
             yield filename
-
-
-def remove_non_test_folders(dirnames):
-    dirnames[:] = [n for n in dirnames if folder_re.search(n)]
 
 
 def remove_extension(filename):

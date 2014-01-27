@@ -370,8 +370,9 @@ class WhenRunningAFolderWhichIsNotAPackage:
     def it_should_end_the_first_suite_before_starting_the_second(self):
         self.plugin.assert_has_calls([
             mock.call.suite_ended(self.module1.__name__),
+            mock.call.process_class_list(mock.ANY),  # i am the lord of the hack, said he
             mock.call.suite_started(self.module2.__name__),
-            ])
+        ])
 
     def cleanup_the_file_system(self):
         shutil.rmtree(self.folder_path)
