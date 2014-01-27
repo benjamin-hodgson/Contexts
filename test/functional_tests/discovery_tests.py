@@ -175,9 +175,12 @@ class WhenRunningAFileInAPackage:
     def establish_that_there_is_a_file_in_the_filesystem(self):
         self.module_name = "test_file"
         self.package_name = "package_with_one_file"
+        self.full_module_name = self.package_name + '.' + self.module_name
+        self.module_list = [types.ModuleType(self.package_name), types.ModuleType(self.full_module_name)]
         self.setup_tree()
 
         self.plugin = mock.Mock(spec=Plugin)
+        self.plugin.import_module.side_effect = self.module_list
 
     def because_we_run_the_file(self):
         contexts.run(self.filename, [self.plugin])
@@ -187,6 +190,10 @@ class WhenRunningAFileInAPackage:
             mock.call(TEST_DATA_DIR, self.package_name),
             mock.call(TEST_DATA_DIR, self.package_name + '.' + self.module_name)
         ]
+
+    def it_should_discard_the_package_module(self):
+        # it only needs to have been imported, not run
+        self.plugin.process_module_list.assert_called_once_with(self.module_list[-1:])
 
     def cleanup_the_file_system(self):
         shutil.rmtree(self.folder_location)
@@ -207,9 +214,15 @@ class WhenRunningAFileInASubPackage:
         self.module_name = "test_file"
         self.package_name = "package_with_one_subpackage"
         self.subpackage_name = "subpackage_with_one_file"
+
+        self.full_subpackage_name = self.package_name + '.' + self.subpackage_name
+        self.full_module_name = self.full_subpackage_name + '.' + self.module_name
+
+        self.module_list = [types.ModuleType(self.package_name), types.ModuleType(self.full_subpackage_name), types.ModuleType(self.full_module_name)]
         self.setup_tree()
 
         self.plugin = mock.Mock(spec=Plugin)
+        self.plugin.import_module.side_effect = self.module_list
 
     def because_we_run_the_file(self):
         contexts.run(self.filename, [self.plugin])
@@ -217,9 +230,12 @@ class WhenRunningAFileInASubPackage:
     def it_should_import_the_package_before_the_file(self):
         assert self.plugin.import_module.call_args_list == [
             mock.call(TEST_DATA_DIR, self.package_name),
-            mock.call(TEST_DATA_DIR, '.'.join([self.package_name, self.subpackage_name])),
-            mock.call(TEST_DATA_DIR, '.'.join([self.package_name, self.subpackage_name, self.module_name]))
+            mock.call(TEST_DATA_DIR, self.full_subpackage_name),
+            mock.call(TEST_DATA_DIR, self.full_module_name)
         ]
+
+    def it_should_discard_the_package_modules(self):
+        self.plugin.process_module_list.assert_called_once_with(self.module_list[-1:])
 
     def cleanup_the_file_system(self):
         shutil.rmtree(self.folder_location)
@@ -237,6 +253,39 @@ class WhenRunningAFileInASubPackage:
         self.filename = os.path.join(subpackage_folder, self.module_name+".py")
         with open(self.filename, 'w+') as f:
             f.write('')
+
+
+class WhenRunningInitDotPy:
+    def establish_that_there_is_a_file_in_the_filesystem(self):
+        self.package_name = "package_with_one_file"
+        self.setup_tree()
+
+        self.module = types.ModuleType(self.package_name)
+
+        self.plugin = mock.Mock(spec=Plugin)
+        self.plugin.import_module.return_value = self.module
+
+    def because_we_run_the_file(self):
+        contexts.run(self.filename, [self.plugin])
+
+    def it_should_import_it_as_a_package(self):
+        assert self.plugin.import_module.call_args_list == [
+            mock.call(TEST_DATA_DIR, self.package_name)
+        ]
+
+    def it_should_not_discard_the_package_module(self):
+        self.plugin.process_module_list.assert_called_once_with([self.module])
+
+    def cleanup_the_file_system(self):
+        shutil.rmtree(self.folder_location)
+
+    def setup_tree(self):
+        self.folder_location = os.path.join(TEST_DATA_DIR, self.package_name)
+        self.filename = os.path.join(self.folder_location, '__init__.py')
+        os.mkdir(self.folder_location)
+        with open(self.filename, 'w+') as f:
+            f.write('')
+
 
 
 class WhenAPluginFailsToImportAModule:

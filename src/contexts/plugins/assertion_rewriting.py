@@ -1,7 +1,5 @@
 import ast
 import importlib.abc
-import sys
-from . import Plugin
 from .importing import Importer
 
 
@@ -10,7 +8,7 @@ class AssertionRewritingImporter(Importer):
         return AssertionRewritingLoader(module_name, filename)
 
 
-class AssertionRewritingLoader(importlib.abc.FileLoader, importlib.abc.SourceLoader):
+class AssertionRewritingLoader(importlib.machinery.SourceFileLoader):
     # in Python 3.4, implementing get_code won't be necessary -
     # I could just override source_to_code.
     # When 3.4 gets officially released, maybe wrap this def in an if

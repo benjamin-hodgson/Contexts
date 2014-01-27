@@ -40,12 +40,13 @@ class TestRun(object):
                 while i <= len(package_name.split('.')):
                     module_list.add(top_folder, '.'.join(package_name.split('.')[:i]))
                     i += 1
-                module_name = package_name + '.' + os.path.splitext(filename)[0]
-                module_list.add(top_folder, module_name)
+                if filename != '__init__.py':
+                    module_name = package_name + '.' + os.path.splitext(filename)[0]
+                    module_list.add(top_folder, module_name)
             else:
                 module_name = os.path.splitext(filename)[0]
                 module_list.add(folder, module_name)
-            return module_list.modules
+            return module_list.modules[-1:]
         if os.path.isdir(self.source):
             specifications = discovery.module_specs(self.source)
             module_list = ModuleList(self.plugin_composite)

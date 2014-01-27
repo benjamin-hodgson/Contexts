@@ -2,8 +2,8 @@ import importlib
 import os
 import shutil
 import sys
+import traceback
 import contexts
-from contexts.plugins.importing import Importer
 from contexts.plugins.assertion_rewriting import AssertionRewritingImporter
 
 
@@ -220,6 +220,29 @@ def assertion_func():
     @contexts.assertion
     def the_exception_should_be_given_a_generated_message(self, x, y):
         assert self.exc.args[0] == "Asserted {0} == {1} but found them not to be equal".format(repr(x), repr(y))
+
+
+# this is a test for one of the weirdest bugs i've ever seen.
+# Commented for now because i don't know how to fix it
+# class WhenAnAssertionTakesUpMultipleLines(AssertionRewritingSharedContext):
+#     def context(self):
+#         self.code = """
+# def assertion_func():
+#     assert [123] == [
+#         456
+#     ]
+# """
+#         self.write_file()
+
+#     @contexts.action
+#     def when_we_import_the_module_and_prompt_it_to_raise_the_exception(self):
+#         self.module = self.importer.import_module(TEST_DATA_DIR, self.module_name)
+#         self.exc = contexts.catch(self.module.assertion_func)
+
+#     def the_exception_should_have_the_correct_line_number(self):
+#         tb = self.exc.__traceback__
+#         bottom_frame = traceback.extract_tb(tb)[-1]
+#         assert bottom_frame[1] == 3
 
 
 class WhenUserAssertsEqualOnACustomObject(AssertionRewritingSharedContext):
