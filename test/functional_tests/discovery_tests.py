@@ -5,8 +5,7 @@ import types
 import contexts
 from unittest import mock
 from .tools import SpyReporter
-from contexts.plugins import Plugin, CONTEXT, ASSERTION
-from contexts.plugins.identifiers import NameBasedIdentifier
+from contexts.plugins import Plugin, TEST_FOLDER, CONTEXT, ASSERTION
 
 
 THIS_FILE = os.path.realpath(__file__)
@@ -64,41 +63,43 @@ class WhenAPluginChoosesClasses:
 class WhenAPluginModifiesAClassList:
     def establish_that_a_plugin_is_fiddling_with_the_list(self):
         self.ran_reals = False
-        class HasSpecInTheName:
+        class FoundClass1:
             def it_should_run_this(s):
                 self.ran_reals = True
-        class HasWhenInTheName:
+        class FoundClass2:
             def it_should_run_this(s):
                 self.ran_reals = True
 
         self.ran_spies = []
-        class NormalClass1:
+        class AnotherClass1:
             def it_should_run_this(s):
-                self.ran_spies.append('NormalClass1')
-        class NormalClass2:
+                self.ran_spies.append('AnotherClass1')
+        class AnotherClass2:
             def it_should_run_this(s):
-                self.ran_spies.append('NormalClass2')
+                self.ran_spies.append('AnotherClass2')
         self.module = types.ModuleType('fake_specs')
-        self.module.HasSpecInTheName = HasSpecInTheName
-        self.module.HasWhenInTheName = HasWhenInTheName
-        self.NormalClass1 = NormalClass1
-        self.NormalClass2 = NormalClass2
+        self.module.FoundClass1 = FoundClass1
+        self.module.FoundClass2 = FoundClass2
+        self.AnotherClass1 = AnotherClass1
+        self.AnotherClass2 = AnotherClass2
 
         def modify_list(l):
             self.called_with = l.copy()
-            l[:] = [NormalClass1, NormalClass2]
+            l[:] = [AnotherClass1, AnotherClass2]
         self.plugin = mock.Mock()
         self.plugin.process_class_list = modify_list
+        self.plugin.identify_class.return_value = CONTEXT
+        self.plugin.identify_method.return_value = ASSERTION
 
     def because_we_run_the_module(self):
-        contexts.run(self.module, [NameBasedIdentifier(), self.plugin])
+        contexts.run(self.module, [self.plugin])
 
     def it_should_pass_a_list_of_the_found_classes_into_process_class_list(self):
         assert isinstance(self.called_with, collections.abc.MutableSequence)
-        assert set(self.called_with) == {self.module.HasSpecInTheName, self.module.HasWhenInTheName}
+        assert set(self.called_with) == {self.module.FoundClass1, self.module.FoundClass2}
 
     def it_should_run_the_classes_in_the_list_that_the_plugin_modified(self):
-        assert self.ran_spies == ['NormalClass1', 'NormalClass2']
+        assert self.ran_spies == ['AnotherClass1', 'AnotherClass2']
 
     def it_should_not_run_the_old_version_of_the_list(self):
         assert not self.ran_reals
@@ -336,9 +337,11 @@ class WhenRunningAFolderWhichIsNotAPackage:
 
         self.plugin = mock.Mock(spec=Plugin)
         self.plugin.import_module.side_effect = [self.module1, self.module2]
+        self.plugin.identify_class.return_value = CONTEXT
+        self.plugin.identify_method.return_value = ASSERTION
 
     def because_we_run_the_folder(self):
-        contexts.run(self.folder_path, [NameBasedIdentifier(), self.plugin])
+        contexts.run(self.folder_path, [self.plugin])
 
     def it_should_ask_the_plugin_to_import_the_correct_files(self):
         self.plugin.import_module.assert_has_calls([
@@ -367,13 +370,6 @@ class WhenRunningAFolderWhichIsNotAPackage:
             mock.call(self.module2.__name__)
             ], any_order=True)
 
-    def it_should_end_the_first_suite_before_starting_the_second(self):
-        self.plugin.assert_has_calls([
-            mock.call.suite_ended(self.module1.__name__),
-            mock.call.process_class_list(mock.ANY),  # i am the lord of the hack, said he
-            mock.call.suite_started(self.module2.__name__),
-        ])
-
     def cleanup_the_file_system(self):
         shutil.rmtree(self.folder_path)
 
@@ -393,16 +389,16 @@ class WhenPluginsModifyAModuleList:
         self.setup_filesystem()
 
         self.ran_spies = []
-        class SpySpecInModule1:
+        class Spec1:
             def it_should_run_this(s):
                 self.ran_spies.append('module1')
-        class SpySpecInModule2:
+        class Spec2:
             def it_should_run_this(s):
                 self.ran_spies.append('module2')
         self.module1 = types.ModuleType('module1')
-        self.module1.SpySpecInModule1 = SpySpecInModule1
+        self.module1.Spec1 = Spec1
         self.module2 = types.ModuleType('module2')
-        self.module2.SpySpecInModule2 = SpySpecInModule2
+        self.module2.Spec2 = Spec2
 
         def modify_list(l):
             self.called_with = l.copy()
@@ -411,6 +407,8 @@ class WhenPluginsModifyAModuleList:
         # if it tried to run strings as modules it would crash
         self.plugin.import_module.side_effect = ['x', 'y']
         self.plugin.process_module_list.side_effect = modify_list
+        self.plugin.identify_class.return_value = CONTEXT
+        self.plugin.identify_method.return_value = ASSERTION
 
         self.plugin2 = mock.Mock()
 
@@ -419,13 +417,13 @@ class WhenPluginsModifyAModuleList:
         self.plugin_master.plugin2 = self.plugin2
 
     def because_we_run_the_folder(self):
-        contexts.run(self.folder_path, [NameBasedIdentifier(), self.plugin, self.plugin2])
+        contexts.run(self.folder_path, [self.plugin, self.plugin2])
 
     def it_should_ask_the_plugins_to_process_the_module_list_in_order(self):
         self.plugin_master.assert_has_calls([
             mock.call.plugin.process_module_list(mock.ANY),
             mock.call.plugin2.process_module_list(mock.ANY)
-            ])
+        ])
 
     def it_should_pass_the_imported_modules_in_to_the_first_plugin(self):
         assert self.called_with == ['x', 'y']
@@ -456,29 +454,31 @@ class WhenRunningAFolderWhichIsAPackage:
         self.setup_filesystem()
 
         self.module1 = types.ModuleType(self.package_name)
-        class Spec1:
+        class Class1:
             ran = False
             def it(self):
                 self.__class__.ran = True
-        self.module1.Spec1 = Spec1
+        self.module1.Class1 = Class1
         self.module2 = types.ModuleType(self.package_name + '.' + self.module_names[1])
-        class Spec2:
+        class Class2:
             ran = False
             def it(self):
                 self.__class__.ran = True
-        self.module2.Spec2 = Spec2
+        self.module2.Class2 = Class2
         self.module3 = types.ModuleType(self.package_name + '.' + self.module_names[2])
-        class Spec3:
+        class Class3:
             ran = False
             def it(self):
                 self.__class__.ran = True
-        self.module3.Spec3 = Spec3
+        self.module3.Class3 = Class3
 
         self.plugin = mock.Mock()
         self.plugin.import_module.side_effect = [self.module1, self.module2, self.module3]
+        self.plugin.identify_class.return_value = CONTEXT
+        self.plugin.identify_method.return_value = ASSERTION
 
     def because_we_run_the_folder(self):
-        contexts.run(self.folder_path, [NameBasedIdentifier(), self.plugin])
+        contexts.run(self.folder_path, [self.plugin])
 
     def it_should_import_the_package_first(self):
         assert self.plugin.import_module.call_args_list[0] == mock.call(TEST_DATA_DIR, self.package_name)
@@ -487,16 +487,16 @@ class WhenRunningAFolderWhichIsAPackage:
         self.plugin.import_module.assert_has_calls([
             mock.call(TEST_DATA_DIR, self.package_name + '.' + self.module_names[1]),
             mock.call(TEST_DATA_DIR, self.package_name + '.' + self.module_names[2])
-            ], any_order=True)
+        ], any_order=True)
 
     def it_should_run_the_package(self):
-        assert self.module1.Spec1.ran
+        assert self.module1.Class1.ran
 
     def it_should_run_the_first_module(self):
-        assert self.module2.Spec2.ran
+        assert self.module2.Class2.ran
 
     def it_should_run_the_second_module(self):
-        assert self.module3.Spec3.ran
+        assert self.module3.Class3.ran
 
     def it_should_call_suite_started_for_three_modules(self):
         assert self.plugin.suite_started.call_args_list == [
@@ -529,27 +529,33 @@ class WhenRunningAFolderWithSubfolders:
     def establish_that_there_is_a_folder_containing_subfolders(self):
         self.folder_name = 'folder3'
         self.tree = {
-            "test_subfolder": ["test_file1"],
-            "test_subpackage": ["__init__", "test_file2"],
+            "wanted_subfolder": ["test_file1"],
+            "wanted_subpackage": ["__init__", "test_file2"],
             "another_subfolder": ["test_file3"],
             "another_subpackage": ["__init__", "test_file4"]
         }
         self.create_tree()
-        self.plugin = mock.Mock()
+
+        def identify_folder(folder_path):
+            if (folder_path == os.path.join(self.folder_path, "wanted_subfolder") or
+                folder_path == os.path.join(self.folder_path, "wanted_subpackage")):
+                return TEST_FOLDER
+        self.plugin = mock.Mock(spec=Plugin)
+        self.plugin.identify_folder.side_effect = identify_folder
 
     def because_we_run_the_folder(self):
-        contexts.run(self.folder_path, [NameBasedIdentifier(), self.plugin])
+        contexts.run(self.folder_path, [self.plugin])
 
     def it_should_import_the_file_in_the_test_folder(self):
-        self.plugin.import_module.assert_any_call(os.path.join(self.folder_path, "test_subfolder"), "test_file1")
+        self.plugin.import_module.assert_any_call(os.path.join(self.folder_path, "wanted_subfolder"), "test_file1")
 
     def it_should_not_import_the_file_in_the_non_test_folder(self):
         assert mock.call(mock.ANY, "test_file3") not in self.plugin.import_module.call_args_list
 
     def it_should_import_the_test_package_followed_by_the_test_submodule(self):
         self.plugin.import_module.assert_has_calls([
-            mock.call(self.folder_path, "test_subpackage"),
-            mock.call(self.folder_path, "test_subpackage.test_file2")
+            mock.call(self.folder_path, "wanted_subpackage"),
+            mock.call(self.folder_path, "wanted_subpackage.test_file2")
             ])
 
     def it_should_not_import_the_non_test_package(self):
@@ -561,7 +567,7 @@ class WhenRunningAFolderWithSubfolders:
 
     def it_should_not_import_anything_called_init(self):
         assert mock.call(mock.ANY, "__init__") not in self.plugin.import_module.call_args_list
-        assert mock.call(mock.ANY, "test_subpackage.__init__") not in self.plugin.import_module.call_args_list
+        assert mock.call(mock.ANY, "wanted_subpackage.__init__") not in self.plugin.import_module.call_args_list
         assert mock.call(mock.ANY, "another_subpackage.__init__") not in self.plugin.import_module.call_args_list
 
     def cleanup_the_file_system(self):
@@ -593,7 +599,7 @@ class WhenRunningAPackageWithSubfolders:
         self.plugin = mock.Mock()
 
     def because_we_run_the_package(self):
-        contexts.run(self.folder_path, [NameBasedIdentifier(), self.plugin])
+        contexts.run(self.folder_path, [self.plugin])
 
     def it_should_import_the_package_first(self):
         assert self.plugin.import_module.call_args_list[0] == mock.call(TEST_DATA_DIR, self.package_name)
@@ -674,7 +680,7 @@ class WhenRunningAFolderWithAFileThatFailsToImport:
         self.plugin.import_module.side_effect = [self.exception, self.module]
 
     def because_we_run_the_folder(self):
-        contexts.run(self.folder_path, [NameBasedIdentifier(), self.plugin])
+        contexts.run(self.folder_path, [self.plugin])
 
     def it_should_report_an_unexpected_error(self):
         self.plugin.unexpected_error.assert_called_once_with(self.exception)

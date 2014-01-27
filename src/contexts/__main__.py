@@ -3,7 +3,7 @@ import os
 import sys
 from io import StringIO
 from . import main
-from . import plugins
+from .plugins import cli, teamcity
 from .plugins.shared import ExitCodeReporter
 from .plugins.shuffling import Shuffler
 from .plugins.importing import Importer
@@ -103,10 +103,10 @@ def create_importing_plugin(args):
 
 def create_reporting_plugins(args):
     if args.teamcity:
-        return [plugins.teamcity.TeamCityReporter(sys.stdout)]
+        return [teamcity.TeamCityReporter(sys.stdout)]
 
     if args.verbosity == 'quiet':
-        return [plugins.cli.StdOutCapturingReporter(StringIO())]
+        return [cli.StdOutCapturingReporter(StringIO())]
 
     inner_plugin_cls = get_inner_plugin(args)
     maybe_coloured_cls = apply_colouring(args, inner_plugin_cls)
@@ -114,28 +114,28 @@ def create_reporting_plugins(args):
 
     plugin_list = [
         maybe_muted_cls(sys.stdout),
-        plugins.cli.FinalCountsReporter(sys.stdout),
-        plugins.cli.TimedReporter(sys.stdout)
+        cli.FinalCountsReporter(sys.stdout),
+        cli.TimedReporter(sys.stdout)
     ]
 
     if args.verbosity == 'normal':
-        plugin_list.insert(0, plugins.cli.DotsReporter(sys.stdout))
+        plugin_list.insert(0, cli.DotsReporter(sys.stdout))
 
     return plugin_list
 
 def get_inner_plugin(args):
     if args.capture:
-        return plugins.cli.StdOutCapturingReporter
-    return plugins.cli.VerboseReporter
+        return cli.StdOutCapturingReporter
+    return cli.VerboseReporter
 
 def apply_colouring(args, inner_plugin_cls):
     if args.colour:
-        return plugins.cli.ColouringDecorator(inner_plugin_cls)
+        return cli.ColouringDecorator(inner_plugin_cls)
     return inner_plugin_cls
 
 def apply_success_muting(args, maybe_coloured_cls):
     if args.verbosity == 'normal':
-        return plugins.cli.FailureOnlyDecorator(maybe_coloured_cls)
+        return cli.FailureOnlyDecorator(maybe_coloured_cls)
     return maybe_coloured_cls
 
 

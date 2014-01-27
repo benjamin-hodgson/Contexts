@@ -8,7 +8,7 @@ from .tools import NO_EXAMPLE
 # FIXME: Core should not import plugins.
 # Dependency inversion says that Core should define these constants,
 # along with the rest of the interface.
-from .plugins import CONTEXT, EXAMPLES, SETUP, ACTION, ASSERTION, TEARDOWN
+from .plugins import TEST_FOLDER, CONTEXT, EXAMPLES, SETUP, ACTION, ASSERTION, TEARDOWN
 
 
 class TestRun(object):
@@ -36,23 +36,25 @@ class TestRun(object):
             importer = discovery.create_importer(folder, self.plugin_composite)
             return [importer.import_file(filename)]
         if os.path.isdir(self.source):
-            module_list = discovery.ModuleList(self.plugin_composite)
-            for folder, dirnames, _ in os.walk(self.source):
-                self.remove_non_test_folders(dirnames)
-                importer = discovery.create_importer(folder, self.plugin_composite)
-                for folder, filename in importer.module_specs():
-                    module_list.add(folder, filename)
-            return module_list.modules
+            return self.import_modules_from_folder(self.source)
 
-    def remove_non_test_folders(self, dirnames):
-        dirnames[:] = [n for n in dirnames if discovery.folder_re.search(n)]
+    def import_modules_from_folder(self, directory):
+        module_list = discovery.ModuleList(self.plugin_composite)
+        for folder, dirnames, _ in os.walk(directory):
+            self.remove_non_test_folders(folder, dirnames)
+            importer = discovery.create_importer(folder, self.plugin_composite)
+            for folder, filename in importer.module_specs():
+                module_list.add(folder, filename)
+        return module_list.modules
 
+    def remove_non_test_folders(self, parent, dirnames):
+        replacement = []
+        for dirname in dirnames:
+            reply = self.plugin_composite.call_plugins("identify_folder", os.path.join(parent, dirname))
+            if reply is TEST_FOLDER or discovery.folder_re.search(dirname):
+                replacement.append(dirname)
+        dirnames[:] = replacement
 
-def add_parent_packages_to_list(module_list, top_folder, package_name):
-    i = 1
-    while i <= len(package_name.split('.')):
-        module_list.add(top_folder, '.'.join(package_name.split('.')[:i]))
-        i += 1
 
 
 class Suite(object):
