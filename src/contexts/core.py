@@ -32,27 +32,37 @@ class TestRun(object):
         if isinstance(self.source, types.ModuleType):
             return [self.source]
         if os.path.isfile(self.source):
-            module_list = ModuleList(self.plugin_composite)
             folder, filename = os.path.split(self.source)
             if discovery.ispackage(folder):
-                top_folder, package_name = discovery.PackageSpecificationFactory(folder).create()
-                i = 1
-                while i <= len(package_name.split('.')):
-                    module_list.add(top_folder, '.'.join(package_name.split('.')[:i]))
-                    i += 1
-                if filename != '__init__.py':
-                    module_name = package_name + '.' + os.path.splitext(filename)[0]
-                    module_list.add(top_folder, module_name)
+                return self.import_file_from_package(folder, filename)
             else:
+                module_list = ModuleList(self.plugin_composite)
                 module_name = os.path.splitext(filename)[0]
                 module_list.add(folder, module_name)
-            return module_list.modules[-1:]
+                return module_list.modules
         if os.path.isdir(self.source):
             specifications = discovery.module_specs(self.source)
             module_list = ModuleList(self.plugin_composite)
             for folder, filename in specifications:
                 module_list.add(folder, filename)
             return module_list.modules
+
+    def import_file_from_package(self, folder, filename):
+        module_list = ModuleList(self.plugin_composite)
+        top_folder, package_name = discovery.PackageSpecificationFactory(folder).create()
+        add_parent_packages_to_list(module_list, top_folder, package_name)
+        if filename != '__init__.py':
+            module_name = package_name + '.' + os.path.splitext(filename)[0]
+            module_list.add(top_folder, module_name)
+        return module_list.modules[-1:]
+
+
+def add_parent_packages_to_list(module_list, top_folder, package_name):
+    i = 1
+    while i <= len(package_name.split('.')):
+        module_list.add(top_folder, '.'.join(package_name.split('.')[:i]))
+        i += 1
+
 
 
 # FIXME: i don't think it's right for ModuleList to exist. TestRun is a list of
