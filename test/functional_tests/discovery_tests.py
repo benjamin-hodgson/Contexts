@@ -1,7 +1,6 @@
 import collections.abc
 import os
 import shutil
-import sys
 import types
 import contexts
 from unittest import mock
@@ -125,6 +124,8 @@ class WhenRunningAFile:
 
         self.plugin = mock.Mock(spec=Plugin)
         self.plugin.import_module.return_value = self.module
+        self.plugin.identify_class.return_value = CONTEXT
+        self.plugin.identify_method.return_value = ASSERTION
 
         self.too_late_plugin = mock.Mock(spec=Plugin)
 
@@ -136,7 +137,6 @@ class WhenRunningAFile:
 
     def because_we_run_the_file(self):
         contexts.run(self.filename, [
-            NameBasedIdentifier(),
             self.not_implemented_plugin,
             self.noop_plugin,
             self.plugin,
@@ -171,6 +171,74 @@ class WhenRunningAFile:
             f.write('')
 
 
+class WhenRunningAFileInAPackage:
+    def establish_that_there_is_a_file_in_the_filesystem(self):
+        self.module_name = "test_file"
+        self.package_name = "package_with_one_file"
+        self.setup_tree()
+
+        self.plugin = mock.Mock(spec=Plugin)
+
+    def because_we_run_the_file(self):
+        contexts.run(self.filename, [self.plugin])
+
+    def it_should_import_the_package_before_the_file(self):
+        assert self.plugin.import_module.call_args_list == [
+            mock.call(TEST_DATA_DIR, self.package_name),
+            mock.call(TEST_DATA_DIR, self.package_name + '.' + self.module_name)
+        ]
+
+    def cleanup_the_file_system(self):
+        shutil.rmtree(self.folder_location)
+
+    def setup_tree(self):
+        self.folder_location = os.path.join(TEST_DATA_DIR, self.package_name)
+        os.mkdir(self.folder_location)
+
+        self.filename = os.path.join(self.folder_location, self.module_name+".py")
+        with open(os.path.join(self.folder_location, '__init__.py'), 'w+') as f:
+            f.write('')
+        with open(self.filename, 'w+') as f:
+            f.write('')
+
+
+class WhenRunningAFileInASubPackage:
+    def establish_that_there_is_a_file_in_the_filesystem(self):
+        self.module_name = "test_file"
+        self.package_name = "package_with_one_subpackage"
+        self.subpackage_name = "subpackage_with_one_file"
+        self.setup_tree()
+
+        self.plugin = mock.Mock(spec=Plugin)
+
+    def because_we_run_the_file(self):
+        contexts.run(self.filename, [self.plugin])
+
+    def it_should_import_the_package_before_the_file(self):
+        assert self.plugin.import_module.call_args_list == [
+            mock.call(TEST_DATA_DIR, self.package_name),
+            mock.call(TEST_DATA_DIR, '.'.join([self.package_name, self.subpackage_name])),
+            mock.call(TEST_DATA_DIR, '.'.join([self.package_name, self.subpackage_name, self.module_name]))
+        ]
+
+    def cleanup_the_file_system(self):
+        shutil.rmtree(self.folder_location)
+
+    def setup_tree(self):
+        self.folder_location = os.path.join(TEST_DATA_DIR, self.package_name)
+        os.mkdir(self.folder_location)
+        subpackage_folder = os.path.join(self.folder_location, self.subpackage_name)
+        os.mkdir(subpackage_folder)
+        with open(os.path.join(self.folder_location, '__init__.py'), 'w+') as f:
+            f.write('')
+        with open(os.path.join(subpackage_folder, '__init__.py'), 'w+') as f:
+            f.write('')
+
+        self.filename = os.path.join(subpackage_folder, self.module_name+".py")
+        with open(self.filename, 'w+') as f:
+            f.write('')
+
+
 class WhenAPluginFailsToImportAModule:
     def establish_that_the_plugin_throws_an_exception(self):
         self.exception = Exception()
@@ -182,7 +250,7 @@ class WhenAPluginFailsToImportAModule:
         self.setup_filesystem()
 
     def because_we_run_the_folder(self):
-        contexts.run(self.folder_path, [NameBasedIdentifier(), self.plugin])
+        contexts.run(self.folder_path, [self.plugin])
 
     def it_should_pass_the_exception_into_unexpected_error_on_the_plugin(self):
         self.plugin.unexpected_error.assert_called_once_with(self.exception)

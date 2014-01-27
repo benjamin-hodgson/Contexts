@@ -6,7 +6,8 @@ from . import discovery
 from . import errors
 from .tools import NO_EXAMPLE
 # FIXME: Core should not import plugins.
-# Dependency inversion says that Core should define these constants, and the interface.
+# Dependency inversion says that Core should define these constants,
+# along with the rest of the interface.
 from .plugins import CONTEXT, EXAMPLES, SETUP, ACTION, ASSERTION, TEARDOWN
 
 
@@ -21,33 +22,51 @@ class TestRun(object):
                 test_class = TestClass(self.source, self.plugin_composite)
                 test_class.run()
             else:
-                modules = self.get_modules()
+                modules = self.import_modules()
                 self.plugin_composite.call_plugins('process_module_list', modules)
                 for module in modules:
                     suite = Suite(module, self.plugin_composite)
                     suite.run()
 
-    def get_modules(self):
+    def import_modules(self):
         if isinstance(self.source, types.ModuleType):
             return [self.source]
-        if isinstance(self.source, str) and os.path.isfile(self.source):
-            return [self.import_from_file(self.source)]
-        if isinstance(self.source, str) and os.path.isdir(self.source):
+        if os.path.isfile(self.source):
+            module_list = ModuleList(self.plugin_composite)
+            folder, filename = os.path.split(self.source)
+            if discovery.ispackage(folder):
+                top_folder, package_name = discovery.PackageSpecificationFactory(folder).create()
+                i = 1
+                while i <= len(package_name.split('.')):
+                    module_list.add(top_folder, '.'.join(package_name.split('.')[:i]))
+                    i += 1
+                module_name = package_name + '.' + os.path.splitext(filename)[0]
+                module_list.add(top_folder, module_name)
+            else:
+                module_name = os.path.splitext(filename)[0]
+                module_list.add(folder, module_name)
+            return module_list.modules
+        if os.path.isdir(self.source):
             specifications = discovery.module_specs(self.source)
-            modules = []
-            for module_spec in specifications:
-                with self.plugin_composite.importing(module_spec):
-                    modules.append(self.import_module(*module_spec))
-            return modules
+            module_list = ModuleList(self.plugin_composite)
+            for folder, filename in specifications:
+                module_list.add(folder, filename)
+            return module_list.modules
 
-    def import_from_file(self, file_path):
-        folder = os.path.dirname(file_path)
-        filename = os.path.basename(file_path)
-        module_name = os.path.splitext(filename)[0]
-        return self.import_module(folder, module_name)
 
-    def import_module(self, dir_path, module_name):
-        return self.plugin_composite.call_plugins('import_module', dir_path, module_name)
+# FIXME: i don't think it's right for ModuleList to exist. TestRun is a list of
+# modules ('Suites') so we dont need another list of modules.
+# however i also feel weird about the two alternatves: initialising TestRun with an empty
+# list of modules and then populating it inside run(), or importing the modules in the constructor
+# So for now this class lives on, and will only be used inside import_modules()
+class ModuleList(object):
+    def __init__(self, plugin_composite):
+        self.modules = []
+        self.plugin_composite = plugin_composite
+    def add(self, folder, module_name):
+        with self.plugin_composite.importing(folder, module_name):
+            module = self.plugin_composite.call_plugins('import_module', folder, module_name)
+            self.modules.append(module)
 
 
 class Suite(object):
@@ -235,7 +254,7 @@ class PluginComposite(object):
         self.call_plugins("test_run_ended")
 
     @contextmanager
-    def importing(self, module_spec):
+    def importing(self, folder, filename):
         try:
             yield
         except Exception as e:
