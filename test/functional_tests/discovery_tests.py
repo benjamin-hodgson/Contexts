@@ -589,14 +589,19 @@ class WhenRunningAPackageWithSubfolders:
     def establish_that_there_is_a_package_containing_subfolders(self):
         self.package_name = 'package4'
         self.tree = {
-            "test_subfolder": ["test_file1"],
-            "test_subpackage": ["__init__", "test_file2"],
+            "wanted_subfolder": ["test_file1"],
+            "wanted_subpackage": ["__init__", "test_file2"],
             "another_subfolder": ["test_file3"],
             "another_subpackage": ["__init__", "test_file4"]
         }
         self.create_tree()
 
-        self.plugin = mock.Mock()
+        def identify_folder(folder_path):
+            if (folder_path == os.path.join(self.folder_path, "wanted_subfolder") or
+                folder_path == os.path.join(self.folder_path, "wanted_subpackage")):
+                return TEST_FOLDER
+        self.plugin = mock.Mock(spec=Plugin)
+        self.plugin.identify_folder.side_effect = identify_folder
 
     def because_we_run_the_package(self):
         contexts.run(self.folder_path, [self.plugin])
@@ -604,8 +609,11 @@ class WhenRunningAPackageWithSubfolders:
     def it_should_import_the_package_first(self):
         assert self.plugin.import_module.call_args_list[0] == mock.call(TEST_DATA_DIR, self.package_name)
 
+    def it_should_not_ask_permission_to_import_the_package(self):
+        assert mock.call(self.folder_path) not in self.plugin.identify_folder.call_args_list
+
     def it_should_import_the_file_in_the_test_folder(self):
-        self.plugin.import_module.assert_any_call(os.path.join(self.folder_path, "test_subfolder"), "test_file1")
+        self.plugin.import_module.assert_any_call(os.path.join(self.folder_path, "wanted_subfolder"), "test_file1")
 
     def it_should_not_import_the_file_in_the_test_folder_using_the_package_name(self):
         assert mock.call(mock.ANY, "package4.test_file1") not in self.plugin.import_module.call_args_list
@@ -616,15 +624,15 @@ class WhenRunningAPackageWithSubfolders:
 
     def it_should_import_the_test_subpackage_followed_by_the_test_submodule(self):
         self.plugin.import_module.assert_has_calls([
-            mock.call(TEST_DATA_DIR, 'package4.test_subpackage'),
-            mock.call(TEST_DATA_DIR, 'package4.test_subpackage.test_file2'),
+            mock.call(TEST_DATA_DIR, 'package4.wanted_subpackage'),
+            mock.call(TEST_DATA_DIR, 'package4.wanted_subpackage.test_file2'),
         ])
 
     def it_should_only_import_the_test_package_using_its_full_name(self):
-        assert mock.call(mock.ANY, "test_subpackage") not in self.plugin.import_module.call_args_list
+        assert mock.call(mock.ANY, "wanted_subpackage") not in self.plugin.import_module.call_args_list
 
     def it_should_only_import_the_test_submodule_using_its_full_name(self):
-        assert mock.call(mock.ANY, "test_subpackage.test_file2") not in self.plugin.import_module.call_args_list
+        assert mock.call(mock.ANY, "wanted_subpackage.test_file2") not in self.plugin.import_module.call_args_list
         assert mock.call(mock.ANY, "test_file2") not in self.plugin.import_module.call_args_list
 
     def it_should_not_import_the_non_test_package(self):
@@ -640,8 +648,8 @@ class WhenRunningAPackageWithSubfolders:
     def it_should_not_import_any_init_files(self):
         assert mock.call(mock.ANY, "__init__") not in self.plugin.import_module.call_args_list
         assert mock.call(mock.ANY, "package4.__init__") not in self.plugin.import_module.call_args_list
-        assert mock.call(mock.ANY, "test_subpackage.__init__") not in self.plugin.import_module.call_args_list
-        assert mock.call(mock.ANY, "package4.test_subpackage.__init__") not in self.plugin.import_module.call_args_list
+        assert mock.call(mock.ANY, "wanted_subpackage.__init__") not in self.plugin.import_module.call_args_list
+        assert mock.call(mock.ANY, "package4.wanted_subpackage.__init__") not in self.plugin.import_module.call_args_list
         assert mock.call(mock.ANY, "another_subpackage.__init__") not in self.plugin.import_module.call_args_list
         assert mock.call(mock.ANY, "package4.another_subpackage.__init__") not in self.plugin.import_module.call_args_list
 

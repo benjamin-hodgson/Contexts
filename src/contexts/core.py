@@ -50,8 +50,9 @@ class TestRun(object):
     def remove_non_test_folders(self, parent, dirnames):
         replacement = []
         for dirname in dirnames:
-            reply = self.plugin_composite.call_plugins("identify_folder", os.path.join(parent, dirname))
-            if reply is TEST_FOLDER or discovery.folder_re.search(dirname):
+            full_path = os.path.realpath(os.path.join(parent, dirname))
+            reply = self.plugin_composite.call_plugins("identify_folder", full_path)
+            if reply is TEST_FOLDER:
                 replacement.append(dirname)
         dirnames[:] = replacement
 

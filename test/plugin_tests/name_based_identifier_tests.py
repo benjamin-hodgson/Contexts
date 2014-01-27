@@ -1,6 +1,42 @@
+import os.path
 import contexts
-from contexts.plugins import CONTEXT, EXAMPLES, SETUP, ACTION, ASSERTION, TEARDOWN
+from contexts.plugins import TEST_FOLDER, CONTEXT, EXAMPLES, SETUP, ACTION, ASSERTION, TEARDOWN
 from contexts.plugins.identifiers import NameBasedIdentifier
+
+
+class WhenIdentifyingAFolder:
+    @classmethod
+    def examples_of_legal_test_folder_names(self):
+        yield 'test'
+        yield os.path.join('a_folder', 'tests')
+        yield 'spec'
+        yield os.path.join('another_folder', 'specs')
+
+    def establish(self):
+        self.identifier = NameBasedIdentifier()
+
+    def because_the_framework_asks_the_plugin_to_identify_the_class(self, folder):
+        self.result = self.identifier.identify_folder(folder)
+
+    def it_should_identify_it_as_a_test_folder(self):
+        assert self.result is TEST_FOLDER
+
+
+class WhenIdentifyingANonTestFolder:
+    @classmethod
+    def examples_of_non_test_folder_names(self):
+        yield 'innocent_folder'
+        yield os.path.join('tests', 'subfolder')
+        yield os.path.join('spec', 'another_subfolder')
+
+    def establish(self):
+        self.identifier = NameBasedIdentifier()
+
+    def because_the_framework_asks_the_plugin_to_identify_the_class(self, folder):
+        self.result = self.identifier.identify_folder(folder)
+
+    def it_should_not_point_any_fingers(self):
+        assert self.result is None
 
 
 class WhenIdentifyingAClass:

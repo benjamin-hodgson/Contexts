@@ -7,7 +7,6 @@ PackageSpecification = namedtuple('PackageSpecification', ['parent_folder', 'pac
 ModuleSpecification = namedtuple('ModuleSpecification', ['parent_folder', 'module_name'])
 
 file_re = re.compile(r"([Ss]pec|[Tt]est).*?\.py$")
-folder_re = re.compile(r"([Ss]pec|[Tt]est)")
 
 
 def create_importer(folder, plugin_composite):
