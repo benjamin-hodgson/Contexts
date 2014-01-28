@@ -6,6 +6,7 @@ import contexts
 from unittest import mock
 from .tools import SpyReporter, UnorderedList
 from contexts.plugin_interface import PluginInterface, TEST_FOLDER, TEST_FILE, CONTEXT, ASSERTION
+from contexts.plugins.decorators import assertion
 
 
 THIS_FILE = os.path.realpath(__file__)
@@ -150,7 +151,7 @@ class WhenRunningAFile:
             mock.call.plugin.import_module(TEST_DATA_DIR, self.module_name)
             ])
 
-    @contexts.assertion
+    @assertion
     def it_should_not_ask_any_plugins_after_the_one_that_returned(self):
         assert not self.too_late_plugin.import_module.called
 

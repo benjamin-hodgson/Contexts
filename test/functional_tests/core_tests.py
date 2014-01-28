@@ -2,7 +2,8 @@ import collections.abc
 from unittest import mock
 import contexts
 from contexts.plugin_interface import PluginInterface, EXAMPLES, SETUP, ACTION, ASSERTION, TEARDOWN, NO_EXAMPLE
-from contexts.plugins.identifiers import NameBasedIdentifier
+from contexts.plugins.name_based_identifier import NameBasedIdentifier
+from contexts.plugins.decorators import assertion
 from .tools import SpyReporter, UnorderedList
 
 core_file = repr(contexts.core.__file__)[1:-1]
@@ -172,11 +173,11 @@ class WhenASpecHasASuperclassAndAPluginIdentifiesMethods:
             mock.call(self.super.method_four)
         ])
 
-    @contexts.assertion
+    @assertion
     def it_should_run_the_subclass_examples_before_anything_else(self):
         assert self.log[0] == "sub examples"
 
-    @contexts.assertion
+    @assertion
     def it_should_not_run_the_superclass_examples(self):
         assert "super examples" not in self.log
 
@@ -254,15 +255,15 @@ class WhenRunningASpecWithReporters:
     def it_should_call_test_run_started_first(self):
         assert self.reporter1.calls[0][0] == 'test_run_started'
 
-    @contexts.assertion
+    @assertion
     def it_should_call_context_started_next(self):
         assert self.reporter1.calls[1][0] == 'context_started'
 
-    @contexts.assertion
+    @assertion
     def it_should_pass_in_the_context_name(self):
         assert self.reporter1.calls[1][1] == 'TestSpec'
 
-    @contexts.assertion
+    @assertion
     def it_should_pass_in_no_example(self):
         assert self.reporter1.calls[1][2] is NO_EXAMPLE
 
@@ -278,15 +279,15 @@ class WhenRunningASpecWithReporters:
     def it_should_pass_the_name_into_assertion_passed(self):
         assert self.reporter1.calls[3][1] == 'method_with_should_in_the_name'
 
-    @contexts.assertion
+    @assertion
     def it_should_call_context_ended_next(self):
         assert self.reporter1.calls[4][0] == 'context_ended'
 
-    @contexts.assertion
+    @assertion
     def it_should_pass_in_the_context_name_again(self):
         assert self.reporter1.calls[4][1] == 'TestSpec'
 
-    @contexts.assertion
+    @assertion
     def it_should_pass_in_no_example_again(self):
         assert self.reporter1.calls[4][2] is NO_EXAMPLE
 
@@ -381,7 +382,7 @@ class WhenAnAssertionFails:
         # sometimes.
         assert self.spec.ran_second
 
-    @contexts.assertion
+    @assertion
     def it_should_still_run_the_cleanup(self):
         assert self.spec.ran_cleanup
 
@@ -421,7 +422,7 @@ class WhenAnAssertionErrors:
         # sometimes.
         assert self.spec.ran_second
 
-    @contexts.assertion
+    @assertion
     def it_should_still_run_the_cleanup(self):
         assert self.spec.ran_cleanup
 
@@ -448,15 +449,15 @@ class WhenAContextErrorsDuringTheSetup:
     def because_we_run_the_specs(self):
         contexts.run(self.spec, [NameBasedIdentifier(), self.reporter])
 
-    @contexts.assertion
+    @assertion
     def it_should_call_context_errored(self):
         assert self.reporter.calls[2][0] == "context_errored"
 
-    @contexts.assertion
+    @assertion
     def it_should_pass_in_the_context_name(self):
         assert self.reporter.calls[2][1] == self.spec.__name__
 
-    @contexts.assertion
+    @assertion
     def it_should_pass_in_no_example(self):
         assert self.reporter.calls[2][2] is NO_EXAMPLE
 
@@ -469,7 +470,7 @@ class WhenAContextErrorsDuringTheSetup:
     def it_should_not_run_the_assertion(self):
         assert not self.spec.ran_assertion
 
-    @contexts.assertion
+    @assertion
     def it_should_still_run_the_cleanup(self):
         assert self.spec.ran_cleanup
 
@@ -493,15 +494,15 @@ class WhenAContextErrorsDuringTheAction:
     def because_we_run_the_specs(self):
         contexts.run(self.spec, [NameBasedIdentifier(), self.reporter])
 
-    @contexts.assertion
+    @assertion
     def it_should_call_context_errored(self):
         assert self.reporter.calls[2][0] == "context_errored"
 
-    @contexts.assertion
+    @assertion
     def it_should_pass_in_the_context_name(self):
         assert self.reporter.calls[2][1] == self.spec.__name__
 
-    @contexts.assertion
+    @assertion
     def it_should_pass_in_no_example(self):
         assert self.reporter.calls[2][2] is NO_EXAMPLE
 
@@ -511,7 +512,7 @@ class WhenAContextErrorsDuringTheAction:
     def it_should_not_run_the_assertion(self):
         assert not self.spec.ran_assertion
 
-    @contexts.assertion
+    @assertion
     def it_should_still_run_the_cleanup(self):
         assert self.spec.ran_cleanup
 
@@ -533,15 +534,15 @@ class WhenAContextErrorsDuringTheCleanup:
     def because_we_run_the_specs(self):
         contexts.run(self.spec, [NameBasedIdentifier(), self.reporter])
 
-    @contexts.assertion
+    @assertion
     def it_should_call_context_errored(self):
         assert self.reporter.calls[4][0] == "context_errored"
 
-    @contexts.assertion
+    @assertion
     def it_should_pass_in_the_context_name(self):
         assert self.reporter.calls[4][1] == self.spec.__name__
 
-    @contexts.assertion
+    @assertion
     def it_should_pass_in_no_example(self):
         assert self.reporter.calls[4][2] is NO_EXAMPLE
 

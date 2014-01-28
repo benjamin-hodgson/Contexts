@@ -4,6 +4,7 @@ import shutil
 import sys
 import traceback
 import contexts
+from contexts.plugins.decorators import action, assertion
 from contexts.plugins.assertion_rewriting import AssertionRewritingImporter
 
 
@@ -38,7 +39,7 @@ def assertion_func():
 """.format(repr(self.message))
         self.write_file()
 
-    @contexts.action
+    @action
     def when_we_import_the_module_and_prompt_it_to_raise_the_exception(self):
         self.module = self.importer.import_module(TEST_DATA_DIR, self.module_name)
         self.exc = contexts.catch(self.module.assertion_func)
@@ -55,12 +56,12 @@ def assertion_func():
 """
         self.write_file()
 
-    @contexts.action
+    @action
     def when_we_import_the_module_and_prompt_it_to_raise_the_exception(self):
         self.module = self.importer.import_module(TEST_DATA_DIR, self.module_name)
         self.exc = contexts.catch(self.module.assertion_func)
 
-    @contexts.assertion
+    @assertion
     def the_exception_should_be_given_a_generated_message(self):
         assert self.exc.args[0] == "Explicitly asserted False"
 
@@ -82,12 +83,12 @@ def assertion_func():
 """.format(repr(x))
         self.write_file()
 
-    @contexts.action
+    @action
     def when_we_import_the_module_and_prompt_it_to_raise_the_exception(self):
         self.module = self.importer.import_module(TEST_DATA_DIR, self.module_name)
         self.exc = contexts.catch(self.module.assertion_func)
 
-    @contexts.assertion
+    @assertion
     def the_exception_should_be_given_a_generated_message(self, x):
         assert self.exc.args[0] == "Asserted {} but found it to be falsy".format(repr(x))
 
@@ -106,12 +107,12 @@ def assertion_func():
 """
         self.write_file()
 
-    @contexts.action
+    @action
     def when_we_import_the_module_and_prompt_it_to_raise_the_exception(self):
         self.module = self.importer.import_module(TEST_DATA_DIR, self.module_name)
         self.exc = contexts.catch(self.module.assertion_func)
 
-    @contexts.assertion
+    @assertion
     def the_exception_should_be_given_a_generated_message(self):
         a_thing = self.module.a_thing
         assert self.exc.args[0] == "Asserted {} but found it to be falsy".format(repr(a_thing))
@@ -134,12 +135,12 @@ def assertion_func():
 """.format(repr(x))
         self.write_file()
 
-    @contexts.action
+    @action
     def when_we_import_the_module_and_prompt_it_to_raise_the_exception(self):
         self.module = self.importer.import_module(TEST_DATA_DIR, self.module_name)
         self.exc = contexts.catch(self.module.assertion_func)
 
-    @contexts.assertion
+    @assertion
     def the_exception_should_be_given_a_generated_message(self, x):
         assert self.exc.args[0] == "Asserted not {} but found it to be truthy".format(repr(x))
 
@@ -156,7 +157,7 @@ def assertion_func():
 """
         self.write_file()
 
-    @contexts.action
+    @action
     def when_we_import_the_module_and_prompt_it_to_raise_the_exception(self):
         self.module = self.importer.import_module(TEST_DATA_DIR, self.module_name)
         self.exc = contexts.catch(self.module.assertion_func)
@@ -164,7 +165,7 @@ def assertion_func():
     def it_should_only_call_the_function_once(self):
         self.module.m.assert_called_once_with()
 
-    @contexts.assertion
+    @assertion
     def the_exception_should_be_given_a_generated_message(self):
         assert self.exc.args[0] == "Asserted {} but found it to be falsy".format(False)
 
@@ -182,7 +183,7 @@ def assertion_func():
 """
         self.write_file()
 
-    @contexts.action
+    @action
     def when_we_import_the_module_and_prompt_it_to_raise_the_exception(self):
         self.module = self.importer.import_module(TEST_DATA_DIR, self.module_name)
         self.exc = contexts.catch(self.module.assertion_func)
@@ -190,7 +191,7 @@ def assertion_func():
     def it_should_only_call_the_function_once(self):
         self.module.m.meth.assert_called_once_with()
 
-    @contexts.assertion
+    @assertion
     def the_exception_should_be_given_a_generated_message(self):
         assert self.exc.args[0] == "Asserted {} but found it to be falsy".format(False)
 
@@ -212,12 +213,12 @@ def assertion_func():
 """.format(repr(x), repr(y))
         self.write_file()
 
-    @contexts.action
+    @action
     def when_we_import_the_module_and_prompt_it_to_raise_the_exception(self):
         self.module = self.importer.import_module(TEST_DATA_DIR, self.module_name)
         self.exc = contexts.catch(self.module.assertion_func)
 
-    @contexts.assertion
+    @assertion
     def the_exception_should_be_given_a_generated_message(self, x, y):
         assert self.exc.args[0] == "Asserted {0} == {1} but found them not to be equal".format(repr(x), repr(y))
 
@@ -234,7 +235,7 @@ def assertion_func():
 # """
 #         self.write_file()
 
-#     @contexts.action
+#     @action
 #     def when_we_import_the_module_and_prompt_it_to_raise_the_exception(self):
 #         self.module = self.importer.import_module(TEST_DATA_DIR, self.module_name)
 #         self.exc = contexts.catch(self.module.assertion_func)
@@ -267,12 +268,12 @@ def assertion_func():
 """.format(repr(x))
         self.write_file()
 
-    @contexts.action
+    @action
     def when_we_import_the_module_and_prompt_it_to_raise_the_exception(self):
         self.module = self.importer.import_module(TEST_DATA_DIR, self.module_name)
         self.exc = contexts.catch(self.module.assertion_func)
 
-    @contexts.assertion
+    @assertion
     def the_exception_should_be_given_a_generated_message(self, x):
         never_equal = self.module.never_equal
         assert self.exc.args[0] == "Asserted {0} == {1} but found them not to be equal".format(repr(x), repr(never_equal))
@@ -297,7 +298,7 @@ def assertion_func():
 """.format(repr(x), repr(y))
         self.write_file()
 
-    @contexts.action
+    @action
     def when_we_import_the_module_and_prompt_it_to_raise_the_exception(self):
         self.module = self.importer.import_module(TEST_DATA_DIR, self.module_name)
         self.exc = contexts.catch(self.module.assertion_func)
@@ -305,7 +306,7 @@ def assertion_func():
     def it_should_only_call_the_function_once(self):
         self.module.m.assert_called_once_with()
 
-    @contexts.assertion
+    @assertion
     def the_exception_should_be_given_a_generated_message(self, x, y):
         assert self.exc.args[0] == "Asserted {0} == {1} but found them not to be equal".format(repr(x), repr(y))
 
@@ -329,7 +330,7 @@ def assertion_func():
 """.format(repr(x), repr(y))
         self.write_file()
 
-    @contexts.action
+    @action
     def when_we_import_the_module_and_prompt_it_to_raise_the_exception(self):
         self.module = self.importer.import_module(TEST_DATA_DIR, self.module_name)
         self.exc = contexts.catch(self.module.assertion_func)
@@ -337,7 +338,7 @@ def assertion_func():
     def it_should_only_call_the_function_once(self):
         self.module.m.assert_called_once_with()
 
-    @contexts.assertion
+    @assertion
     def the_exception_should_be_given_a_generated_message(self, x, y):
         assert self.exc.args[0] == "Asserted {0} == {1} but found them not to be equal".format(repr(y), repr(x))
 
@@ -359,12 +360,12 @@ def assertion_func():
 """.format(repr(x))
         self.write_file()
 
-    @contexts.action
+    @action
     def when_we_import_the_module_and_prompt_it_to_raise_the_exception(self):
         self.module = self.importer.import_module(TEST_DATA_DIR, self.module_name)
         self.exc = contexts.catch(self.module.assertion_func)
 
-    @contexts.assertion
+    @assertion
     def the_exception_should_be_given_a_generated_message(self, x):
         assert self.exc.args[0] == "Asserted {0} != {0} but found them to be equal".format(repr(x))
 
@@ -386,12 +387,12 @@ def assertion_func():
 """.format(repr(x), repr(y))
         self.write_file()
 
-    @contexts.action
+    @action
     def when_we_import_the_module_and_prompt_it_to_raise_the_exception(self):
         self.module = self.importer.import_module(TEST_DATA_DIR, self.module_name)
         self.exc = contexts.catch(self.module.assertion_func)
 
-    @contexts.assertion
+    @assertion
     def the_exception_should_be_given_a_generated_message(self, x, y):
         assert self.exc.args[0] == "Asserted {0} < {1} but found it to be greater".format(repr(x), repr(y))
 
@@ -413,12 +414,12 @@ def assertion_func():
 """.format(repr(x))
         self.write_file()
 
-    @contexts.action
+    @action
     def when_we_import_the_module_and_prompt_it_to_raise_the_exception(self):
         self.module = self.importer.import_module(TEST_DATA_DIR, self.module_name)
         self.exc = contexts.catch(self.module.assertion_func)
 
-    @contexts.assertion
+    @assertion
     def the_exception_should_be_given_a_generated_message(self, x):
         assert self.exc.args[0] == "Asserted {0} < {0} but found them to be equal".format(repr(x))
 
@@ -440,12 +441,12 @@ def assertion_func():
 """.format(repr(x), repr(y))
         self.write_file()
 
-    @contexts.action
+    @action
     def when_we_import_the_module_and_prompt_it_to_raise_the_exception(self):
         self.module = self.importer.import_module(TEST_DATA_DIR, self.module_name)
         self.exc = contexts.catch(self.module.assertion_func)
 
-    @contexts.assertion
+    @assertion
     def the_exception_should_be_given_a_generated_message(self, x, y):
         assert self.exc.args[0] == "Asserted {0} <= {1} but found it to be greater".format(repr(x), repr(y))
 
@@ -467,12 +468,12 @@ def assertion_func():
 """.format(repr(x), repr(y))
         self.write_file()
 
-    @contexts.action
+    @action
     def when_we_import_the_module_and_prompt_it_to_raise_the_exception(self):
         self.module = self.importer.import_module(TEST_DATA_DIR, self.module_name)
         self.exc = contexts.catch(self.module.assertion_func)
 
-    @contexts.assertion
+    @assertion
     def the_exception_should_be_given_a_generated_message(self, x, y):
         assert self.exc.args[0] == "Asserted {0} > {1} but found it to be less".format(repr(x), repr(y))
 
@@ -494,12 +495,12 @@ def assertion_func():
 """.format(repr(x))
         self.write_file()
 
-    @contexts.action
+    @action
     def when_we_import_the_module_and_prompt_it_to_raise_the_exception(self):
         self.module = self.importer.import_module(TEST_DATA_DIR, self.module_name)
         self.exc = contexts.catch(self.module.assertion_func)
 
-    @contexts.assertion
+    @assertion
     def the_exception_should_be_given_a_generated_message(self, x):
         assert self.exc.args[0] == "Asserted {0} > {0} but found them to be equal".format(repr(x))
 
@@ -521,12 +522,12 @@ def assertion_func():
 """.format(repr(x), repr(y))
         self.write_file()
 
-    @contexts.action
+    @action
     def when_we_import_the_module_and_prompt_it_to_raise_the_exception(self):
         self.module = self.importer.import_module(TEST_DATA_DIR, self.module_name)
         self.exc = contexts.catch(self.module.assertion_func)
 
-    @contexts.assertion
+    @assertion
     def the_exception_should_be_given_a_generated_message(self, x, y):
         assert self.exc.args[0] == "Asserted {0} >= {1} but found it to be less".format(repr(x), repr(y))
 
@@ -548,12 +549,12 @@ def assertion_func():
 """.format(repr(x), repr(y))
         self.write_file()
 
-    @contexts.action
+    @action
     def when_we_import_the_module_and_prompt_it_to_raise_the_exception(self):
         self.module = self.importer.import_module(TEST_DATA_DIR, self.module_name)
         self.exc = contexts.catch(self.module.assertion_func)
 
-    @contexts.assertion
+    @assertion
     def the_exception_should_be_given_a_generated_message(self, x, y):
         assert self.exc.args[0] == "Asserted {0} in {1} but found it not to be present".format(repr(x), repr(y))
 
@@ -575,12 +576,12 @@ def assertion_func():
 """.format(repr(x), repr(y))
         self.write_file()
 
-    @contexts.action
+    @action
     def when_we_import_the_module_and_prompt_it_to_raise_the_exception(self):
         self.module = self.importer.import_module(TEST_DATA_DIR, self.module_name)
         self.exc = contexts.catch(self.module.assertion_func)
 
-    @contexts.assertion
+    @assertion
     def the_exception_should_be_given_a_generated_message(self, x, y):
         assert self.exc.args[0] == "Asserted {0} not in {1} but found it to be present".format(repr(x), repr(y))
 
@@ -603,12 +604,12 @@ def assertion_func():
 """.format(repr(x), repr(y))
         self.write_file()
 
-    @contexts.action
+    @action
     def when_we_import_the_module_and_prompt_it_to_raise_the_exception(self):
         self.module = self.importer.import_module(TEST_DATA_DIR, self.module_name)
         self.exc = contexts.catch(self.module.assertion_func)
 
-    @contexts.assertion
+    @assertion
     def the_exception_should_be_given_a_generated_message(self, x, y):
         assert self.exc.args[0] == "Asserted {0} is {1} but found them not to be the same".format(repr(x), repr(y))
 
@@ -630,12 +631,12 @@ def assertion_func():
 """.format(repr(x))
         self.write_file()
 
-    @contexts.action
+    @action
     def when_we_import_the_module_and_prompt_it_to_raise_the_exception(self):
         self.module = self.importer.import_module(TEST_DATA_DIR, self.module_name)
         self.exc = contexts.catch(self.module.assertion_func)
 
-    @contexts.assertion
+    @assertion
     def the_exception_should_be_given_a_generated_message(self, x):
         assert self.exc.args[0] == "Asserted {0} is not {0} but found them to be the same".format(repr(x))
 
@@ -656,12 +657,12 @@ def assertion_func():
 """.format(repr(x), cls.__name__)
         self.write_file()
 
-    @contexts.action
+    @action
     def when_we_import_the_module_and_prompt_it_to_raise_the_exception(self):
         self.module = self.importer.import_module(TEST_DATA_DIR, self.module_name)
         self.exc = contexts.catch(self.module.assertion_func)
 
-    @contexts.assertion
+    @assertion
     def the_exception_should_be_given_a_generated_message(self, x, cls):
         assert self.exc.args[0] == "Asserted isinstance({0}, {1}) but found it to be a {2}".format(repr(x), cls.__name__, type(x).__name__)
 
@@ -682,12 +683,12 @@ def assertion_func():
 """.format(repr(x), tup)
         self.write_file()
 
-    @contexts.action
+    @action
     def when_we_import_the_module_and_prompt_it_to_raise_the_exception(self):
         self.module = self.importer.import_module(TEST_DATA_DIR, self.module_name)
         self.exc = contexts.catch(self.module.assertion_func)
 
-    @contexts.assertion
+    @assertion
     def the_exception_should_be_given_a_generated_message(self, x, tup):
         assert self.exc.args[0] == "Asserted isinstance({0}, {1}) but found it to be a {2}".format(repr(x), tup, type(x).__name__)
 
@@ -702,12 +703,12 @@ def assertion_func():
 """
         self.write_file()
 
-    @contexts.action
+    @action
     def when_we_import_the_module_and_prompt_it_to_raise_the_exception(self):
         self.module = self.importer.import_module(TEST_DATA_DIR, self.module_name)
         self.exc = contexts.catch(self.module.assertion_func)
 
-    @contexts.assertion
+    @assertion
     def the_exception_should_be_given_a_generated_message(self):
         # FIXME: this should have a more useful message.
         # At the moment, the test is just making sure that the message doesn't lie outright.

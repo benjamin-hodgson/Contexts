@@ -12,7 +12,8 @@ from contexts.plugins.importing import Importer
 from contexts.plugins.shared import ExitCodeReporter
 from contexts.plugins.teamcity import TeamCityReporter
 from contexts.plugins.assertion_rewriting import AssertionRewritingImporter
-from contexts.plugins.identifiers import NameBasedIdentifier, DecoratorBasedIdentifier
+from contexts.plugins.name_based_identifier import NameBasedIdentifier
+from contexts.plugins.decorators import DecoratorBasedIdentifier
 
 
 class WhenLoadingUpTheModule:

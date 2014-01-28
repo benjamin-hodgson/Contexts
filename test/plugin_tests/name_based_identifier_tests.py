@@ -1,7 +1,8 @@
 import os.path
 import contexts
 from contexts.plugin_interface import TEST_FOLDER, TEST_FILE, CONTEXT, EXAMPLES, SETUP, ACTION, ASSERTION, TEARDOWN
-from contexts.plugins.identifiers import NameBasedIdentifier
+from contexts.plugins.name_based_identifier import NameBasedIdentifier
+from contexts.plugins.decorators import assertion
 
 
 class WhenIdentifyingAFolder:
@@ -92,7 +93,7 @@ class WhenIdentifyingAClass:
     def because_the_framework_asks_the_plugin_to_identify_the_class(self, cls):
         self.result = self.identifier.identify_class(cls)
 
-    @contexts.assertion
+    @assertion
     def it_should_identify_it_as_a_context(self):
         assert self.result is CONTEXT
 
@@ -133,7 +134,7 @@ class WhenIdentifyingAnExamplesMethod:
     def because_the_framework_asks_the_plugin_to_identify_the_method(self, method):
         self.result = self.identifier.identify_method(method)
 
-    @contexts.assertion
+    @assertion
     def it_should_identify_it_as_examples(self):
         assert self.result is EXAMPLES
 
@@ -177,7 +178,7 @@ class WhenAnExamplesMethodIsNotSoAmbiguous:
     def because_the_framework_asks_the_plugin_to_identify_the_method(self, method):
         self.result = self.identifier.identify_method(method)
 
-    @contexts.assertion
+    @assertion
     def it_should_identify_it_as_examples(self):
         assert self.result is EXAMPLES
 

@@ -1,6 +1,6 @@
 from io import StringIO
-import contexts
 from contexts import plugins
+from contexts.plugins.decorators import action
 from . import tools
 
 
@@ -67,7 +67,7 @@ class WhenColouringOutputAndAContextErrors(ColouredReporterSharedContext):
               ('made_up_file_15.py', 4, 'made_up_function_4', 'frame4')]
         self.exception = tools.build_fake_exception(tb, "out")
 
-    @contexts.action
+    @action
     def because_the_context_errors(self):
         self.reporter.context_errored(self.context.name, self.context.example, self.exception)
 

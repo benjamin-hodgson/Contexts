@@ -2,6 +2,7 @@ import sys
 from io import StringIO
 import contexts
 from contexts import plugins
+from contexts.plugins.decorators import action
 from . import tools
 
 
@@ -105,7 +106,7 @@ class WhenCapturingStdOutAndAContextErrors(StdOutCapturingSharedContext):
         print("assertion in erroring context")
         self.reporter.assertion_passed("assertion")
 
-    @contexts.action
+    @action
     def because_the_context_errors(self):
         self.reporter.context_errored(self.ctx.name, self.ctx.example, tools.FakeException())
 

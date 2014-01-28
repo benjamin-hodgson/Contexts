@@ -8,7 +8,8 @@ from .plugins.shared import ExitCodeReporter
 from .plugins.shuffling import Shuffler
 from .plugins.importing import Importer
 from .plugins.assertion_rewriting import AssertionRewritingImporter
-from contexts.plugins.identifiers import NameBasedIdentifier, DecoratorBasedIdentifier
+from contexts.plugins.name_based_identifier import NameBasedIdentifier
+from contexts.plugins.decorators import DecoratorBasedIdentifier
 
 
 def cmd():

@@ -1,6 +1,6 @@
 from io import StringIO
-import contexts
 from contexts import plugins
+from contexts.plugins.decorators import action
 from . import tools
 
 
@@ -13,7 +13,7 @@ class VerboseReporterSharedContext:
 class WhenPrintingVerboselyAndAContextStarts(VerboseReporterSharedContext):
     def context(self):
         self.ctx = tools.create_context("made.up_context_1")
-    @contexts.action
+    @action
     def because_a_context_starts(self):
         self.reporter.context_started(self.ctx.name, self.ctx.example)
     def it_should_print_its_name(self):
@@ -72,7 +72,7 @@ class WhenPrintingVerboselyAndAContextErrors(VerboseReporterSharedContext):
         self.exception = tools.build_fake_exception(tb, "out")
         self.ctx = tools.create_context("made.up_context_2", ["abc", 123])
 
-    @contexts.action
+    @action
     def because_a_context_errors(self):
         self.reporter.context_errored(self.ctx.name, self.ctx.example, self.exception)
 

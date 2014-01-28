@@ -1,5 +1,5 @@
-import contexts
 from contexts.plugins.shuffling import Shuffler
+from contexts.plugins.decorators import action
 
 class ShufflerSharedContext:
     def establish_that_shuffle_is_true(self):
@@ -9,7 +9,7 @@ class ShufflerSharedContext:
 
 # should really assert that it *randomises* the list, not just changes the order
 class WhenProcessingAModuleListAndShuffleIsTrue(ShufflerSharedContext):
-    @contexts.action
+    @action
     def because_we_ask_it_to_process_the_list_of_modules(self):
         self.shuffler.process_module_list(self.list)
     def it_should_shuffle_the_list_in_place(self):
@@ -18,7 +18,7 @@ class WhenProcessingAModuleListAndShuffleIsTrue(ShufflerSharedContext):
         assert set(self.list) == set(self.original_list)
 
 class WhenProcessingAClassListAndShuffleIsTrue(ShufflerSharedContext):
-    @contexts.action
+    @action
     def because_we_ask_it_to_process_the_list_of_classes(self):
         self.shuffler.process_class_list(self.list)
     def it_should_shuffle_the_list_in_place(self):
@@ -27,7 +27,7 @@ class WhenProcessingAClassListAndShuffleIsTrue(ShufflerSharedContext):
         assert set(self.list) == set(self.original_list)
 
 class WhenProcessingAnAssertionListAndShuffleIsTrue(ShufflerSharedContext):
-    @contexts.action
+    @action
     def because_we_ask_it_to_process_the_list_of_assertions(self):
         self.shuffler.process_assertion_list(self.list)
 
