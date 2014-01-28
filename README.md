@@ -10,6 +10,22 @@ no `.feature` files, no fuss.
 
 Contexts is a 'Context-Specification'-style test framework for Python 3.3 and above, inspired by C#'s
 [`Machine.Specifications`](https://github.com/machine/machine.specifications).
+It aims to be flexible and extensible, and is appropriate for unit, integration and acceptance testing.
+
+Test written with Contexts resemble the grammar of ['Given/When/Then'](http://martinfowler.com/bliki/GivenWhenThen.html)-style
+specifications. Writing tests which read like user-centric sentences can encourage you to
+focus on the behaviour, not the implementation, of your code.
+Contexts takes cues from [Behaviour Driven Development](http://dannorth.net/introducing-bdd/),
+but it aims to be useful for more than just acceptance testing (unlike Cucumber or FitNesse).
+
+Cool features
+-------------
+* Give your tests **descriptive names** so you can tell what's gone wrong when they fail!
+* Run **all the assertions** for each test case, even when one fails!
+* Practice 'Example-Driven-Development' with **parametrised tests**!
+* Extend Contexts by writing your own **plugins**!
+* Use the `assert` statement and still get **helpful failure messages**!
+* **Test all the things**!
 
 Installation
 ------------
