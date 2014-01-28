@@ -97,9 +97,3 @@ def spec(cls):
     return cls
 
 context = spec
-
-
-class _NoExample(object):
-    """Singleton representing the absence of an Example"""
-NO_EXAMPLE = _NoExample()
-del _NoExample

@@ -4,11 +4,7 @@ import types
 from contextlib import contextmanager
 from . import discovery
 from . import errors
-from .tools import NO_EXAMPLE
-# FIXME: Core should not import plugins.
-# Dependency inversion says that Core should define these constants,
-# along with the rest of the interface.
-from .plugins import TEST_FOLDER, CONTEXT, EXAMPLES, SETUP, ACTION, ASSERTION, TEARDOWN
+from .plugin_interface import TEST_FOLDER, CONTEXT, EXAMPLES, SETUP, ACTION, ASSERTION, TEARDOWN, NO_EXAMPLE
 
 
 class TestRun(object):

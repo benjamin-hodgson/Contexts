@@ -1,6 +1,6 @@
 import os
 from collections import namedtuple
-from .plugins import TEST_FILE
+from .plugin_interface import TEST_FILE
 
 
 PackageSpecification = namedtuple('PackageSpecification', ['parent_folder', 'package_name'])

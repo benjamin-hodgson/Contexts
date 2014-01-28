@@ -3,7 +3,6 @@ import sys
 from contextlib import contextmanager
 from io import StringIO
 from . import shared
-from . import Plugin
 
 
 class DotsReporter(shared.StreamReporter):
@@ -263,7 +262,7 @@ def FailureOnlyDecorator(plugin_cls):
         return _FailureOnlyDecorator(plugin_cls, stream)
     return instantiate
 
-class _FailureOnlyDecorator(Plugin):
+class _FailureOnlyDecorator(object):
     dashes = '-' * 70
 
     def __init__(self, plugin_cls, stream):
@@ -284,6 +283,8 @@ class _FailureOnlyDecorator(Plugin):
         self.final_report.write(self.plugin.stream.getvalue())
         self.plugin.stream = StringIO()
 
+    def assertion_passed(self, name):
+        pass
     def assertion_failed(self, name, exception):
         # accumulate failures and errors and grab them at the end of the ctx
         self.plugin.assertion_failed(name, exception)
@@ -309,6 +310,9 @@ class _FailureOnlyDecorator(Plugin):
         return (type(self) == type(other)
             and self.stream == other.stream
             and type(self.plugin) == type(other.plugin))
+
+    def __getattr__(self, name):
+        return getattr(self.plugin, name)
 
 
 def pluralise(noun, num):

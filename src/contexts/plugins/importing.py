@@ -1,10 +1,9 @@
 import importlib
 import os
 import sys
-from . import Plugin
 
 
-class Importer(Plugin):
+class Importer(object):
     def import_module(self, dir_path, module_name):
         filename = resolve_filename(dir_path, module_name)
         prune_sys_dot_modules(module_name, filename)

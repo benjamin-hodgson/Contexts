@@ -1,6 +1,6 @@
 from unittest import mock
 import contexts
-from contexts.plugins import Plugin, EXAMPLES, SETUP, ACTION, ASSERTION, TEARDOWN
+from contexts.plugin_interface import PluginInterface, EXAMPLES, SETUP, ACTION, ASSERTION, TEARDOWN
 
 
 class WhenRunningAParametrisedSpec:
@@ -27,7 +27,7 @@ class WhenRunningAParametrisedSpec:
                 self.__class__.teardowns.append(example)
         self.ParametrisedSpec = ParametrisedSpec
 
-        self.plugin = mock.Mock(spec=Plugin)
+        self.plugin = mock.Mock(spec=PluginInterface)
         self.plugin.identify_method.side_effect = lambda meth:{
             ParametrisedSpec.examples: EXAMPLES,
             ParametrisedSpec.context: SETUP,
@@ -68,7 +68,7 @@ class WhenRunningAParametrisedSpecAndExamplesYieldsTuples:
                 self.__class__.params.append(b)
         self.ParametrisedSpec = ParametrisedSpec
 
-        self.plugin = mock.Mock(spec=Plugin)
+        self.plugin = mock.Mock(spec=PluginInterface)
         self.plugin.identify_method.side_effect = lambda meth:{
             ParametrisedSpec.examples: EXAMPLES,
             ParametrisedSpec.it: ASSERTION
@@ -93,7 +93,7 @@ class WhenRunningAParametrisedSpecAndExamplesYieldsTuplesButTheMethodsOnlyAccept
                 self.__class__.params.append(a)
         self.ParametrisedSpec = ParametrisedSpec
 
-        self.plugin = mock.Mock(spec=Plugin)
+        self.plugin = mock.Mock(spec=PluginInterface)
         self.plugin.identify_method.side_effect = lambda meth:{
             ParametrisedSpec.examples: EXAMPLES,
             ParametrisedSpec.it: ASSERTION
@@ -122,7 +122,7 @@ class WhenRunningAParametrisedSpecWithNonParametrisedMethods:
                 self.__class__.assertions += 1
         self.ParametrisedSpec = ParametrisedSpec
 
-        self.plugin = mock.Mock(spec=Plugin)
+        self.plugin = mock.Mock(spec=PluginInterface)
         self.plugin.identify_method.side_effect = lambda meth:{
             ParametrisedSpec.examples: EXAMPLES,
             ParametrisedSpec.it: ASSERTION
@@ -148,7 +148,7 @@ class WhenExamplesRaisesAnException:
                 s.__class__.total += example
         self.spec = ParametrisedSpec
 
-        self.plugin = mock.Mock(spec=Plugin)
+        self.plugin = mock.Mock(spec=PluginInterface)
         self.plugin.identify_method.side_effect = lambda meth:{
             ParametrisedSpec.examples: EXAMPLES,
             ParametrisedSpec.it: ASSERTION
@@ -173,7 +173,7 @@ class WhenUserFailsToMakeExamplesAClassmethod:
                 pass
         self.spec = Naughty
 
-        self.plugin = mock.Mock(spec=Plugin)
+        self.plugin = mock.Mock(spec=PluginInterface)
         self.plugin.identify_method.side_effect = lambda meth:{
             Naughty.examples: EXAMPLES,
             Naughty.it: ASSERTION
@@ -200,7 +200,7 @@ class WhenExamplesReturnsNone:
                 self.__class__.times_run += 1
         self.spec = ParametrisedSpec
 
-        self.plugin = mock.Mock(spec=Plugin)
+        self.plugin = mock.Mock(spec=PluginInterface)
         self.plugin.identify_method.side_effect = lambda meth:{
             ParametrisedSpec.examples: EXAMPLES,
             ParametrisedSpec.it: ASSERTION

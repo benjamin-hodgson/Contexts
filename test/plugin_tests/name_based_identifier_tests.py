@@ -1,6 +1,6 @@
 import os.path
 import contexts
-from contexts.plugins import TEST_FOLDER, TEST_FILE, CONTEXT, EXAMPLES, SETUP, ACTION, ASSERTION, TEARDOWN
+from contexts.plugin_interface import TEST_FOLDER, TEST_FILE, CONTEXT, EXAMPLES, SETUP, ACTION, ASSERTION, TEARDOWN
 from contexts.plugins.identifiers import NameBasedIdentifier
 
 

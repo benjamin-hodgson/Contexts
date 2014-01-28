@@ -1,7 +1,7 @@
 import collections.abc
 from unittest import mock
 import contexts
-from contexts.plugins import Plugin
+from contexts.plugin_interface import PluginInterface, EXAMPLES, SETUP, ACTION, ASSERTION, TEARDOWN, NO_EXAMPLE
 from contexts.plugins.identifiers import NameBasedIdentifier
 from .tools import SpyReporter, UnorderedList
 
@@ -28,22 +28,22 @@ class WhenAPluginIdentifiesMethods:
                 self.log.append(("teardown",example))
         self.spec = TestSpec
 
-        self.none_plugin = mock.Mock(spec=Plugin)
+        self.none_plugin = mock.Mock(spec=PluginInterface)
         self.none_plugin.identify_method.return_value = None
 
-        self.deleted_plugin = mock.Mock(spec=Plugin)
+        self.deleted_plugin = mock.Mock(spec=PluginInterface)
         del self.deleted_plugin.identify_method
 
-        self.plugin = mock.Mock(spec=Plugin)
+        self.plugin = mock.Mock(spec=PluginInterface)
         self.plugin.identify_method.side_effect = lambda meth: {
-            TestSpec.method_zero: contexts.plugins.EXAMPLES,
-            TestSpec.method_one: contexts.plugins.SETUP,
-            TestSpec.method_two: contexts.plugins.ACTION,
-            TestSpec.method_three: contexts.plugins.ASSERTION,
-            TestSpec.method_four: contexts.plugins.TEARDOWN
+            TestSpec.method_zero: EXAMPLES,
+            TestSpec.method_one: SETUP,
+            TestSpec.method_two: ACTION,
+            TestSpec.method_three: ASSERTION,
+            TestSpec.method_four: TEARDOWN
         }[meth]
 
-        self.too_late_plugin = mock.Mock(spec=Plugin)
+        self.too_late_plugin = mock.Mock(spec=PluginInterface)
 
 
     def because_we_run_the_spec(self):
@@ -88,8 +88,8 @@ class WhenAPluginIdentifiesMultipleAssertions:
             def method_two(s):
                 self.log.append('assertion')
         self.spec = Spec
-        self.plugin = mock.Mock(spec=Plugin)
-        self.plugin.identify_method.return_value = contexts.plugins.ASSERTION
+        self.plugin = mock.Mock(spec=PluginInterface)
+        self.plugin.identify_method.return_value = ASSERTION
 
     def because_we_run_the_spec(self):
         contexts.run(self.spec, [self.plugin])
@@ -105,7 +105,7 @@ class WhenAPluginRefusesToIdentifyAMethod:
             def method_one(s):
                 self.log.append("should not happen")
         self.spec = Spec
-        self.plugin = mock.Mock(spec=Plugin)
+        self.plugin = mock.Mock(spec=PluginInterface)
         self.plugin.identify_method.return_value = None
 
     def because_we_run_the_spec(self):
@@ -146,18 +146,18 @@ class WhenASpecHasASuperclassAndAPluginIdentifiesMethods:
         self.super = Super
         self.spec = Spec
 
-        self.plugin = mock.Mock(spec=Plugin)
+        self.plugin = mock.Mock(spec=PluginInterface)
         self.plugin.identify_method.side_effect = lambda meth: {
-            Super.method_zero: contexts.plugins.EXAMPLES,
-            Super.method_one: contexts.plugins.SETUP,
-            Super.method_two: contexts.plugins.ACTION,
-            Super.method_three: contexts.plugins.ASSERTION,
-            Super.method_four: contexts.plugins.TEARDOWN,
-            Spec.method_zero_point_five: contexts.plugins.EXAMPLES,
-            Spec.method_five: contexts.plugins.SETUP,
-            Spec.method_six: contexts.plugins.ACTION,
-            Spec.method_seven: contexts.plugins.ASSERTION,
-            Spec.method_eight: contexts.plugins.TEARDOWN
+            Super.method_zero: EXAMPLES,
+            Super.method_one: SETUP,
+            Super.method_two: ACTION,
+            Super.method_three: ASSERTION,
+            Super.method_four: TEARDOWN,
+            Spec.method_zero_point_five: EXAMPLES,
+            Spec.method_five: SETUP,
+            Spec.method_six: ACTION,
+            Spec.method_seven: ASSERTION,
+            Spec.method_eight: TEARDOWN
         }[meth]
 
     def because_we_run_the_spec(self):
@@ -202,10 +202,10 @@ class WhenASpecHasASuperclassAndAPluginIdentifiesMethods:
 class WhenAPluginReturnsMultipleMethodsOfTheSameType:
     @classmethod
     def examples_of_ways_plugins_can_mess_up(cls):
-        yield [contexts.plugins.EXAMPLES, contexts.plugins.EXAMPLES]
-        yield [contexts.plugins.SETUP, contexts.plugins.SETUP]
-        yield [contexts.plugins.ACTION, contexts.plugins.ACTION]
-        yield [contexts.plugins.TEARDOWN, contexts.plugins.TEARDOWN]
+        yield [EXAMPLES, EXAMPLES]
+        yield [SETUP, SETUP]
+        yield [ACTION, ACTION]
+        yield [TEARDOWN, TEARDOWN]
 
     def context(self, side_effect):
         self.ran_a_method = False
@@ -216,7 +216,7 @@ class WhenAPluginReturnsMultipleMethodsOfTheSameType:
                 self.ran_a_method = True
         self.spec = Spec
 
-        self.plugin = mock.Mock(spec=Plugin)
+        self.plugin = mock.Mock(spec=PluginInterface)
         self.plugin.identify_method.side_effect = side_effect
 
     def because_we_run_the_spec(self):
@@ -264,7 +264,7 @@ class WhenRunningASpecWithReporters:
 
     @contexts.assertion
     def it_should_pass_in_no_example(self):
-        assert self.reporter1.calls[1][2] is contexts.tools.NO_EXAMPLE
+        assert self.reporter1.calls[1][2] is NO_EXAMPLE
 
     def it_should_call_assertion_started_for_the_assertion(self):
         assert self.reporter1.calls[2][0] == 'assertion_started'
@@ -288,7 +288,7 @@ class WhenRunningASpecWithReporters:
 
     @contexts.assertion
     def it_should_pass_in_no_example_again(self):
-        assert self.reporter1.calls[4][2] is contexts.tools.NO_EXAMPLE
+        assert self.reporter1.calls[4][2] is NO_EXAMPLE
 
     def it_should_call_test_run_ended_last(self):
         assert self.reporter1.calls[-1][0] == 'test_run_ended'
@@ -324,10 +324,10 @@ class WhenAPluginModifiesAnAssertionList:
         def modify_list(l):
             self.called_with = l.copy()
             l[:] = [spy_assertion_method1, spy_assertion_method2]
-        self.plugin = mock.Mock(spec=Plugin)
+        self.plugin = mock.Mock(spec=PluginInterface)
         self.plugin.identify_method.side_effect = lambda meth:{
-            Spec.should1: contexts.plugins.ASSERTION,
-            Spec.should2: contexts.plugins.ASSERTION,
+            Spec.should1: ASSERTION,
+            Spec.should2: ASSERTION,
             Spec.not_an_assertion: None
         }[meth]
         self.plugin.process_assertion_list = modify_list
@@ -458,7 +458,7 @@ class WhenAContextErrorsDuringTheSetup:
 
     @contexts.assertion
     def it_should_pass_in_no_example(self):
-        assert self.reporter.calls[2][2] is contexts.tools.NO_EXAMPLE
+        assert self.reporter.calls[2][2] is NO_EXAMPLE
 
     def it_should_pass_in_the_exception(self):
         assert self.reporter.calls[2][3] is self.exception
@@ -503,7 +503,7 @@ class WhenAContextErrorsDuringTheAction:
 
     @contexts.assertion
     def it_should_pass_in_no_example(self):
-        assert self.reporter.calls[2][2] is contexts.tools.NO_EXAMPLE
+        assert self.reporter.calls[2][2] is NO_EXAMPLE
 
     def it_should_pass_in_the_exception(self):
         assert self.reporter.calls[2][3] is self.exception
@@ -543,7 +543,7 @@ class WhenAContextErrorsDuringTheCleanup:
 
     @contexts.assertion
     def it_should_pass_in_no_example(self):
-        assert self.reporter.calls[4][2] is contexts.tools.NO_EXAMPLE
+        assert self.reporter.calls[4][2] is NO_EXAMPLE
 
     def it_should_pass_in_the_exception(self):
         assert self.reporter.calls[4][3] is self.exception
@@ -557,7 +557,7 @@ class WhenAPluginSetsTheExitCode:
         yield 99
 
     def context(self, exitcode):
-        self.plugin = mock.Mock(spec=Plugin)
+        self.plugin = mock.Mock(spec=PluginInterface)
         self.plugin.get_exit_code.return_value = exitcode
 
     def because_we_run_something(self):
@@ -579,7 +579,7 @@ class WhenRunningAClassContainingNoAssertions:
                 self.__class__.log.append('teardown')
         self.spec = NoAssertions
 
-        self.plugin = mock.Mock(spec=Plugin)
+        self.plugin = mock.Mock(spec=PluginInterface)
         self.plugin.identify_method.side_effect = lambda meth: {
             NoAssertions.context: SETUP,
             NoAssertions.because: ACTION,

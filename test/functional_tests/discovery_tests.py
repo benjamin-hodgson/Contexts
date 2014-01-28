@@ -5,7 +5,7 @@ import types
 import contexts
 from unittest import mock
 from .tools import SpyReporter, UnorderedList
-from contexts.plugins import Plugin, TEST_FOLDER, TEST_FILE, CONTEXT, ASSERTION
+from contexts.plugin_interface import PluginInterface, TEST_FOLDER, TEST_FILE, CONTEXT, ASSERTION
 
 
 THIS_FILE = os.path.realpath(__file__)
@@ -31,7 +31,7 @@ class WhenAPluginChoosesClasses:
         self.module.ToRun2 = ToRun2
         self.module.NotToRun = NotToRun
 
-        self.plugin = mock.Mock(spec=Plugin)
+        self.plugin = mock.Mock(spec=PluginInterface)
         self.plugin.identify_class.side_effect = lambda cls: {
             ToRun1: CONTEXT,
             ToRun2: CONTEXT,
@@ -118,17 +118,17 @@ class WhenRunningAFile:
                 self.__class__.ran = True
         self.module.When = When
 
-        self.not_implemented_plugin = mock.Mock(wraps=Plugin())
+        self.not_implemented_plugin = mock.Mock(wraps=PluginInterface())
         del self.not_implemented_plugin.import_module
 
-        self.noop_plugin = mock.Mock(wraps=Plugin())
+        self.noop_plugin = mock.Mock(wraps=PluginInterface())
 
-        self.plugin = mock.Mock(spec=Plugin)
+        self.plugin = mock.Mock(spec=PluginInterface)
         self.plugin.import_module.return_value = self.module
         self.plugin.identify_class.return_value = CONTEXT
         self.plugin.identify_method.return_value = ASSERTION
 
-        self.too_late_plugin = mock.Mock(spec=Plugin)
+        self.too_late_plugin = mock.Mock(spec=PluginInterface)
 
         self.plugin_master = mock.Mock()
         self.plugin_master.not_implemented_plugin = self.not_implemented_plugin
@@ -180,7 +180,7 @@ class WhenRunningAFileInAPackage:
         self.module_list = [types.ModuleType(self.package_name), types.ModuleType(self.full_module_name)]
         self.setup_tree()
 
-        self.plugin = mock.Mock(spec=Plugin)
+        self.plugin = mock.Mock(spec=PluginInterface)
         self.plugin.import_module.side_effect = self.module_list
 
     def because_we_run_the_file(self):
@@ -225,7 +225,7 @@ class WhenRunningAFileInASubPackage:
         self.module_list = [types.ModuleType(self.package_name), types.ModuleType(self.full_subpackage_name), types.ModuleType(self.full_module_name)]
         self.setup_tree()
 
-        self.plugin = mock.Mock(spec=Plugin)
+        self.plugin = mock.Mock(spec=PluginInterface)
         self.plugin.import_module.side_effect = self.module_list
 
     def because_we_run_the_file(self):
@@ -266,7 +266,7 @@ class WhenRunningInitDotPy:
 
         self.module = types.ModuleType(self.package_name)
 
-        self.plugin = mock.Mock(spec=Plugin)
+        self.plugin = mock.Mock(spec=PluginInterface)
         self.plugin.import_module.return_value = self.module
 
     def because_we_run_the_file(self):
@@ -292,7 +292,7 @@ class WhenRunningInitDotPy:
 class WhenAPluginFailsToImportAModule:
     def establish_that_the_plugin_throws_an_exception(self):
         self.exception = Exception()
-        self.plugin = mock.Mock(spec=Plugin)
+        self.plugin = mock.Mock(spec=PluginInterface)
         self.plugin.import_module.side_effect = self.exception
 
         self.module_name = 'accident_prone_test_module'
@@ -340,7 +340,7 @@ class WhenRunningAFolderWhichIsNotAPackage:
                 path == os.path.join(self.folder_path, self.module_names[1]+'.py')):
                 return TEST_FILE
 
-        self.plugin = mock.Mock(spec=Plugin)
+        self.plugin = mock.Mock(spec=PluginInterface)
         self.plugin.identify_file.side_effect = identify_file
         self.plugin.import_module.side_effect = [self.module1, self.module2]
         self.plugin.identify_class.return_value = CONTEXT
@@ -554,7 +554,7 @@ class WhenRunningAFolderWithSubfolders:
             if (folder_path == os.path.join(self.folder_path, "wanted_subfolder") or
                 folder_path == os.path.join(self.folder_path, "wanted_subpackage")):
                 return TEST_FOLDER
-        self.plugin = mock.Mock(spec=Plugin)
+        self.plugin = mock.Mock(spec=PluginInterface)
         self.plugin.identify_file.return_value = TEST_FILE
         self.plugin.identify_folder.side_effect = identify_folder
 
@@ -615,7 +615,7 @@ class WhenRunningAPackageWithSubfolders:
             if (folder_path == os.path.join(self.folder_path, "wanted_subfolder") or
                 folder_path == os.path.join(self.folder_path, "wanted_subpackage")):
                 return TEST_FOLDER
-        self.plugin = mock.Mock(spec=Plugin)
+        self.plugin = mock.Mock(spec=PluginInterface)
         self.plugin.identify_file.return_value = TEST_FILE
         self.plugin.identify_folder.side_effect = identify_folder
 

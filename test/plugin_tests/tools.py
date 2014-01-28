@@ -1,6 +1,7 @@
 import collections
 import types
 import contexts
+from contexts.plugin_interface import NO_EXAMPLE
 
 
 class FakeCode(object):
@@ -84,5 +85,5 @@ def build_fake_assertion_error(*args):
 
 
 context_spec = collections.namedtuple("context_spec", ["name", "example"])
-def create_context(name='context', example=contexts.tools.NO_EXAMPLE):
+def create_context(name='context', example=NO_EXAMPLE):
     return context_spec(name, example)

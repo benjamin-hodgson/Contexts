@@ -1,4 +1,4 @@
-from contexts.plugins import CONTEXT, EXAMPLES, SETUP, ACTION, ASSERTION, TEARDOWN
+from contexts.plugin_interface import CONTEXT, EXAMPLES, SETUP, ACTION, ASSERTION, TEARDOWN
 from contexts.plugins.identifiers import DecoratorBasedIdentifier
 import contexts
 

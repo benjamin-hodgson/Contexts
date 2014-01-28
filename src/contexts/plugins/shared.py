@@ -1,10 +1,9 @@
 import re
 import traceback
-from . import Plugin
-from ..tools import NO_EXAMPLE
+from ..plugin_interface import PluginInterface, NO_EXAMPLE
 
 
-class StreamReporter(Plugin):
+class StreamReporter(PluginInterface):
     def __init__(self, stream):
         super().__init__()
         self.stream = stream
@@ -16,7 +15,7 @@ class StreamReporter(Plugin):
         return type(self) == type(other) and self.stream == other.stream
 
 
-class ExitCodeReporter(Plugin):
+class ExitCodeReporter(PluginInterface):
     def __init__(self):
         self.exit_code = 0
     def get_exit_code(self):
