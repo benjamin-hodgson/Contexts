@@ -43,6 +43,18 @@ class Plugin(object):
             contexts.plugins.TEST_FOLDER - plugin wishes the folder to be treated as a test folder
             None - plugin does not wish to identify the folder (though other plugins may still cause it to be run)
         """
+    def identify_file(self, file):
+        """
+        Called when the test runner encounters a file and wants to know if it should
+        run the files in that file.
+
+        Arguments:
+            file - the full path of the file which the test runner wants to be identified
+
+        Plugins may return:
+            contexts.plugins.TEST_FILE - plugin wishes the file to be imported and run as a test file
+            None - plugin does not wish to identify the file (though other plugins may still cause it to be run)
+        """
     def identify_class(self, cls):
         """
         Called when the test runner encounters a class and wants to know if it should
@@ -99,6 +111,7 @@ class Plugin(object):
 
 
 TEST_FOLDER = "test folder - DO NOT RELY ON THE VALUE OF THIS CONSTANT"
+TEST_FILE = "test file - DO NOT RELY ON THE VALUE OF THIS CONSTANT"
 CONTEXT = "context - DO NOT RELY ON THE VALUE OF THIS CONSTANT"
 EXAMPLES = "examples - DO NOT RELY ON THE VALUE OF THIS CONSTANT"
 SETUP = "setup - DO NOT RELY ON THE VALUE OF THIS CONSTANT"

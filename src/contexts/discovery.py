@@ -1,12 +1,10 @@
 import os
-import re
 from collections import namedtuple
+from .plugins import TEST_FILE
 
 
 PackageSpecification = namedtuple('PackageSpecification', ['parent_folder', 'package_name'])
 ModuleSpecification = namedtuple('ModuleSpecification', ['parent_folder', 'module_name'])
-
-file_re = re.compile(r"([Ss]pec|[Tt]est).*?\.py$")
 
 
 def create_importer(folder, plugin_composite):
@@ -19,9 +17,13 @@ def create_importer(folder, plugin_composite):
 class Importer(object):
     def get_file_details(self):
         specs = []
-        for filename in matching_filenames(self.directory):
-            module_name = self.module_prefix + remove_extension(filename)
-            specs.append(ModuleSpecification(self.location, module_name))
+        for filename in os.listdir(self.directory):
+            full_path = os.path.realpath(os.path.join(self.directory, filename))
+            if not os.path.isfile(full_path) or filename == '__init__.py':
+                continue
+            if self.plugin_composite.call_plugins("identify_file", full_path) is TEST_FILE:
+                module_name = self.module_prefix + remove_extension(filename)
+                specs.append(ModuleSpecification(self.location, module_name))
         return specs
 
 
@@ -74,7 +76,7 @@ def add_parent_packages_to_list(module_list, top_folder, package_name):
 # modules ('Suites') so we dont need another list of modules.
 # however i also feel weird about the two alternatves: initialising TestRun with an empty
 # list of modules and then populating it inside run(), or importing the modules in the constructor
-# So, until i come up with a better idea, this class lives on and will only be used inside import_modules()
+# So, until i come up with a better idea, this class lives on and will only be used inside import_file()
 class ModuleList(object):
     def __init__(self, plugin_composite):
         self.modules = []
@@ -98,12 +100,6 @@ def get_package_specification(directory):
 
 def ispackage(directory):
     return "__init__.py" in os.listdir(directory)
-
-
-def matching_filenames(directory):
-    for filename in os.listdir(directory):
-        if file_re.search(filename):
-            yield filename
 
 
 def remove_extension(filename):

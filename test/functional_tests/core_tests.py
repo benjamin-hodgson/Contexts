@@ -3,7 +3,7 @@ from unittest import mock
 import contexts
 from contexts.plugins import Plugin
 from contexts.plugins.identifiers import NameBasedIdentifier
-from .tools import SpyReporter
+from .tools import SpyReporter, UnorderedList
 
 core_file = repr(contexts.core.__file__)[1:-1]
 this_file = repr(__file__)[1:-1]
@@ -591,23 +591,6 @@ class WhenRunningAClassContainingNoAssertions:
 
     def it_should_not_run_the_class(self):
         assert self.spec.log == []
-
-
-###########################################################
-# HFELKPER CLASSES
-###########################################################
-
-class UnorderedList(object):
-    def __init__(self, l):
-        self._list = l
-
-    def __eq__(self, other):
-        if len(other) != len(self._list):
-            return False
-        for member in other:
-            if member not in self._list:
-                return False
-        return True
 
 
 if __name__ == "__main__":

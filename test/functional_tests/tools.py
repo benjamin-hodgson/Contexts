@@ -33,3 +33,16 @@ class SpyReporter(object):
 
     def unexpected_error(self, exception):
         self.calls.append(('unexpected_error', exception))
+
+
+class UnorderedList(object):
+    def __init__(self, l):
+        self._list = l
+
+    def __eq__(self, other):
+        if len(other) != len(self._list):
+            return False
+        for member in other:
+            if member not in self._list:
+                return False
+        return True

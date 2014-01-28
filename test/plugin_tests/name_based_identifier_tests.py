@@ -1,6 +1,6 @@
 import os.path
 import contexts
-from contexts.plugins import TEST_FOLDER, CONTEXT, EXAMPLES, SETUP, ACTION, ASSERTION, TEARDOWN
+from contexts.plugins import TEST_FOLDER, TEST_FILE, CONTEXT, EXAMPLES, SETUP, ACTION, ASSERTION, TEARDOWN
 from contexts.plugins.identifiers import NameBasedIdentifier
 
 
@@ -15,7 +15,7 @@ class WhenIdentifyingAFolder:
     def establish(self):
         self.identifier = NameBasedIdentifier()
 
-    def because_the_framework_asks_the_plugin_to_identify_the_class(self, folder):
+    def because_the_framework_asks_the_plugin_to_identify_the_folder(self, folder):
         self.result = self.identifier.identify_folder(folder)
 
     def it_should_identify_it_as_a_test_folder(self):
@@ -32,8 +32,45 @@ class WhenIdentifyingANonTestFolder:
     def establish(self):
         self.identifier = NameBasedIdentifier()
 
-    def because_the_framework_asks_the_plugin_to_identify_the_class(self, folder):
+    def because_the_framework_asks_the_plugin_to_identify_the_folder(self, folder):
         self.result = self.identifier.identify_folder(folder)
+
+    def it_should_not_point_any_fingers(self):
+        assert self.result is None
+
+
+class WhenIdentifyingAFile:
+    @classmethod
+    def examples_of_legal_test_file_names(self):
+        yield 'test.py'
+        yield os.path.join('a_folder', 'tests.py')
+        yield 'spec.py'
+        yield os.path.join('another_folder', 'specs.py')
+
+    def establish(self):
+        self.identifier = NameBasedIdentifier()
+
+    def because_the_framework_asks_the_plugin_to_identify_the_file(self, file):
+        self.result = self.identifier.identify_file(file)
+
+    def it_should_identify_it_as_a_test_file(self):
+        assert self.result is TEST_FILE
+
+
+class WhenIdentifyingANonTestFile:
+    @classmethod
+    def examples_of_non_test_file_names(self):
+        yield 'innocent_file'
+        yield 'test_without_extension'
+        yield 'test_with_other_extension.cs'
+        yield os.path.join('tests', 'innocent_file.py')
+        yield os.path.join('folder_with_spec_and.py', 'another_file.py')
+
+    def establish(self):
+        self.identifier = NameBasedIdentifier()
+
+    def because_the_framework_asks_the_plugin_to_identify_the_file(self, file):
+        self.result = self.identifier.identify_file(file)
 
     def it_should_not_point_any_fingers(self):
         assert self.result is None

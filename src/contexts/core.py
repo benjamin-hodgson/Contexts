@@ -34,7 +34,10 @@ class TestRun(object):
         if os.path.isfile(self.source):
             folder, filename = os.path.split(self.source)
             importer = discovery.create_importer(folder, self.plugin_composite)
-            return [importer.import_file(filename)]
+            module = importer.import_file(filename)
+            if module is None:
+                return []
+            return [module]
         if os.path.isdir(self.source):
             return self.import_modules_from_folder(self.source)
 
