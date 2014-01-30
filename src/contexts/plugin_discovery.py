@@ -28,7 +28,6 @@ def get_location(cls):
 class Graph(object):
     def __init__(self):
         self.nodes = {}
-        self.output = []
 
     def add_node(self, node):
         if node in self.nodes and self.nodes[node]['added']:
