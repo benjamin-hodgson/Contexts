@@ -1,7 +1,23 @@
 class PluginInterface(object):
     """
-    Interface for a plugin
+    Interface for plugins.
     """
+    @classmethod
+    def locate(cls):
+        """
+        Called before the plugin is instantiated, to determine where it should
+        appear in the list of plugins.
+        The ordering of this list matters. If a plugin returns a (non-None) value
+        from a given method, plugins later in the list will not get called.
+
+        Plugins may return a 2-tuple of (`left`, `right`).
+        Here, `left` is a plugin class which this plugin wishes to _follow_,
+        and `right` is a class the plugin wishes to _precede_.
+        Either or both of the values may be None, to indicate that the plugin
+        does not mind what it comes before or after, respectively.
+        Returning None from this method is equivalent to returning (None, None).
+        """
+
     def test_run_started(self):
         """Called at the beginning of a test run"""
     def test_run_ended(self):
@@ -13,11 +29,27 @@ class PluginInterface(object):
         """Called at the end of a test module"""
 
     def context_started(self, name, example):
-        """Called when a test context begins its run"""
+        """
+        Called when a test context begins its run.
+
+        `name` is the name of the test context. `example` is the current example,
+        which may be contexts.plugins.NO_EXAMPLE if it is not a parametrised test.
+        """
     def context_ended(self, name, example):
-        """Called when a test context completes its run"""
+        """
+        Called when a test context completes its run
+
+        `name` is the name of the test context. `example` is the current example,
+        which may be contexts.plugins.NO_EXAMPLE if it is not a parametrised test.
+        """
     def context_errored(self, name, example, exception):
-        """Called when a test context (not an assertion) throws an exception"""
+        """
+        Called when a test context (not an assertion) throws an exception
+
+        `name` is the name of the test context. `example` is the current example,
+        which may be contexts.plugins.NO_EXAMPLE if it is not a parametrised test.
+        `exception` is the exception which got thrown.
+        """
 
     def assertion_started(self, name):
         """Called when an assertion begins"""
@@ -110,7 +142,7 @@ class PluginInterface(object):
         """
 
 
-TEST_FOLDER = "test folder - DO NOT RELY ON THE VALUE OF THIS CONSTANT"
+TEST_FOLDER = type("_TestFolder", (), {})()
 TEST_FILE = "test file - DO NOT RELY ON THE VALUE OF THIS CONSTANT"
 CONTEXT = "context - DO NOT RELY ON THE VALUE OF THIS CONSTANT"
 EXAMPLES = "examples - DO NOT RELY ON THE VALUE OF THIS CONSTANT"
@@ -118,9 +150,4 @@ SETUP = "setup - DO NOT RELY ON THE VALUE OF THIS CONSTANT"
 ACTION = "action - DO NOT RELY ON THE VALUE OF THIS CONSTANT"
 ASSERTION = "assertion - DO NOT RELY ON THE VALUE OF THIS CONSTANT"
 TEARDOWN = "teardown - DO NOT RELY ON THE VALUE OF THIS CONSTANT"
-
-
-class _NoExample(object):
-    """Singleton representing the absence of an Example"""
-NO_EXAMPLE = _NoExample()
-del _NoExample
+NO_EXAMPLE = type("_NoExample", (), {})()
