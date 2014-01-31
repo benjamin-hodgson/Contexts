@@ -1,4 +1,5 @@
 import argparse
+import inspect
 import os
 import sys
 from io import StringIO
@@ -85,42 +86,42 @@ def parse_args(argv):
 
 
 def create_plugins(args):
-    plugin_list = [create_importing_plugin(args)]
+    plugin_class_list = [create_importing_plugin(args)]
 
     if args.shuffle:
-        plugin_list.append(Shuffler())
+        plugin_class_list.append(Shuffler)
 
-    plugin_list.extend(create_reporting_plugins(args))
-    plugin_list.extend([DecoratorBasedIdentifier(), NameBasedIdentifier()])
-    plugin_list.append(ExitCodeReporter())
+    plugin_class_list.extend(create_reporting_plugins(args))
+    plugin_class_list.extend([DecoratorBasedIdentifier, NameBasedIdentifier])
+    plugin_class_list.append(ExitCodeReporter)
 
-    return plugin_list
+    return [activate_plugin(cls) for cls in plugin_class_list]
 
 def create_importing_plugin(args):
     if args.rewriting:
-        return AssertionRewritingImporter()
+        return AssertionRewritingImporter
     else:
-        return Importer()
+        return Importer
 
 def create_reporting_plugins(args):
     if args.teamcity:
-        return [teamcity.TeamCityReporter(sys.stdout)]
+        return [teamcity.TeamCityReporter]
 
     if args.verbosity == 'quiet':
-        return [cli.StdOutCapturingReporter(StringIO())]
+        return [cli.QuietReporter]
 
     inner_plugin_cls = get_inner_plugin(args)
     maybe_coloured_cls = apply_colouring(args, inner_plugin_cls)
     maybe_muted_cls = apply_success_muting(args, maybe_coloured_cls)
 
     plugin_list = [
-        maybe_muted_cls(sys.stdout),
-        cli.FinalCountsReporter(sys.stdout),
-        cli.TimedReporter(sys.stdout)
+        maybe_muted_cls,
+        cli.FinalCountsReporter,
+        cli.TimedReporter
     ]
 
     if args.verbosity == 'normal':
-        plugin_list.insert(0, cli.DotsReporter(sys.stdout))
+        plugin_list.insert(0, cli.DotsReporter)
 
     return plugin_list
 
@@ -138,6 +139,20 @@ def apply_success_muting(args, maybe_coloured_cls):
     if args.verbosity == 'normal':
         return cli.FailureOnlyDecorator(maybe_coloured_cls)
     return maybe_coloured_cls
+
+
+def activate_plugin(cls):
+    try:
+        sig = inspect.signature(cls)
+    except ValueError:
+        # working around a bug in inspect.signature :(
+        # http://bugs.python.org/issue20308
+        # hopefully it'll be backported to a future version of 3.3
+        # so I can take this out
+        return cls()
+    if sig.parameters:
+        return cls(sys.stdout)
+    return cls()
 
 
 if __name__ == "__main__":

@@ -185,6 +185,10 @@ class StdOutCapturingReporter(VerboseReporter):
                 self._print(' '*(indentation) + line)
 
 
+def QuietReporter():
+    return StdOutCapturingReporter(StringIO())
+
+
 class TimedReporter(shared.StreamReporter):
     def test_run_started(self):
         super().test_run_started()
