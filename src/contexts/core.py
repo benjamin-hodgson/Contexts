@@ -128,9 +128,8 @@ class TestClass(object):
         class_setup = None
         class_teardown = None
 
-        for name, val in cls.__dict__.items():
-            if isinstance(val, classmethod):
-                val = getattr(cls, name)
+        for name in cls.__dict__:
+            val = getattr(cls, name)
 
             if callable(val) and not isprivate(name):
                 response = self.plugin_composite.call_plugins("identify_method", val)

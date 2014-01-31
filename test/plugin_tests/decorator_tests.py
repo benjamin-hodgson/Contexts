@@ -1,5 +1,6 @@
 from contexts.plugin_interface import CONTEXT, EXAMPLES, SETUP, ACTION, ASSERTION, TEARDOWN
 from contexts.plugins.decorators import DecoratorBasedIdentifier, spec, context, examples, setup, action, assertion, teardown
+from contexts import catch
 
 
 class WhenMarkingAClassAsASpec:
@@ -109,3 +110,27 @@ class WhenMarkingAMethodAsATeardown:
 
     def it_should_identify_it_as_teardown(self):
         assert self.result is TEARDOWN
+
+
+class WhenMarkingAMethodAsTwoThings:
+    @classmethod
+    def examples(cls):
+        yield examples, setup
+        yield setup, action
+        yield action, assertion
+        yield assertion, teardown
+        yield teardown, examples
+
+    def given_an_attempt_to_use_multiple_decorators(self, decorator1, decorator2):
+        def throwing_func():
+            @decorator1
+            @decorator2
+            def a_function():
+                pass
+        self.throwing_func = throwing_func
+
+    def when_we_try_to_use_the_decorators(self):
+        self.exception = catch(self.throwing_func)
+
+    def it_should_throw_a_ValueError(self):
+        assert isinstance(self.exception, ValueError)

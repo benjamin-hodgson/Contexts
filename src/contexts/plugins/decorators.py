@@ -9,7 +9,7 @@ class DecoratorBasedIdentifier(object):
         "setups": set(),
         "actions": set(),
         "assertions": set(),
-        "teardowns": set(),
+        "teardowns": set()
     }
 
     def identify_class(self, cls):
@@ -37,11 +37,11 @@ class DecoratorBasedIdentifier(object):
         return type(self) == type(other)
 
 
-
 def setup(func):
     """
     Decorator. Marks a method as a setup method.
     """
+    assert_not_multiple_decorators(func, "setups")
     DecoratorBasedIdentifier.decorated_items["setups"].add(func)
     return func
 
@@ -50,6 +50,7 @@ def action(func):
     """
     Decorator. Marks a method as an action method.
     """
+    assert_not_multiple_decorators(func, "actions")
     DecoratorBasedIdentifier.decorated_items["actions"].add(func)
     return func
 
@@ -58,6 +59,7 @@ def assertion(func):
     """
     Decorator. Marks a method as an assertion method.
     """
+    assert_not_multiple_decorators(func, "assertions")
     DecoratorBasedIdentifier.decorated_items["assertions"].add(func)
     return func
 
@@ -66,6 +68,7 @@ def teardown(func):
     """
     Decorator. Marks a method as a teardown method.
     """
+    assert_not_multiple_decorators(func, "teardowns")
     DecoratorBasedIdentifier.decorated_items["teardowns"].add(func)
     return func
 
@@ -74,6 +77,7 @@ def examples(func):
     """
     Decorator. Marks a method as an examples method.
     """
+    assert_not_multiple_decorators(func, "examples")
     DecoratorBasedIdentifier.decorated_items["examples"].add(func)
     return func
 
@@ -82,7 +86,13 @@ def spec(cls):
     """
     Class decorator. Marks a class as a test class.
     """
+    assert_not_multiple_decorators(cls, "contexts")
     DecoratorBasedIdentifier.decorated_items["contexts"].add(cls)
     return cls
 
 context = spec
+
+
+def assert_not_multiple_decorators(item, decorator_type):
+    if any(item in s for k, s in DecoratorBasedIdentifier.decorated_items.items() if k != decorator_type):
+        raise ValueError("Function {} has more than one decorator")
