@@ -1,5 +1,7 @@
 import types
 from ..plugin_interface import CONTEXT, EXAMPLES, SETUP, ACTION, ASSERTION, TEARDOWN
+from .importing import Importer
+from .name_based_identifier import NameBasedIdentifier
 
 
 class DecoratorBasedIdentifier(object):
@@ -11,6 +13,13 @@ class DecoratorBasedIdentifier(object):
         "assertions": set(),
         "teardowns": set()
     }
+
+    @classmethod
+    def locate(self):
+        return (Importer, NameBasedIdentifier)
+
+    def initialise(self, args):
+        return True
 
     def identify_class(self, cls):
         if cls in self.decorated_items["contexts"]:

@@ -1,9 +1,15 @@
 import ast
 import importlib.abc
 from .importing import Importer
+from .shuffling import Shuffler
 
 
 class AssertionRewritingImporter(Importer):
+    @classmethod
+    def locate(cls):
+        return (Shuffler, Importer)
+    def initialise(self, args):
+        return args.rewriting
     def get_loader(self, module_name, filename):
         return AssertionRewritingLoader(module_name, filename)
 

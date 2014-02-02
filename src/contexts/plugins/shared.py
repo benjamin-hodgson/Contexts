@@ -1,11 +1,12 @@
 import re
+import sys
 import traceback
 from ..plugin_interface import PluginInterface, NO_EXAMPLE
+from .shuffling import Shuffler
 
 
 class StreamReporter(PluginInterface):
-    def __init__(self, stream):
-        super().__init__()
+    def __init__(self, stream=sys.stdout):
         self.stream = stream
 
     def _print(self, *args, sep=' ', end='\n', flush=True):
@@ -15,7 +16,13 @@ class StreamReporter(PluginInterface):
         return type(self) == type(other) and self.stream == other.stream
 
 
-class ExitCodeReporter(PluginInterface):
+class ExitCodeReporter(object):
+    @classmethod
+    def locate(cls):
+        return (None, Shuffler)
+    def initialise(self, args):
+        return True
+
     def __init__(self):
         self.exit_code = 0
     def get_exit_code(self):

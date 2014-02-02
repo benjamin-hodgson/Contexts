@@ -46,15 +46,15 @@ class MainSharedContext:
 class WhenRunningFromCommandLineWithNoArguments(MainSharedContext):
     def establish_arguments(self):
         self.expected_plugins = [
-            AssertionRewritingImporter(),
+            ExitCodeReporter(),
             Shuffler(),
+            AssertionRewritingImporter(),
+            DecoratorBasedIdentifier(),
+            NameBasedIdentifier(),
             cli.DotsReporter(sys.stdout),
             cli.FailureOnlyDecorator(cli.ColouringDecorator(cli.StdOutCapturingReporter))(sys.stdout),
             cli.FinalCountsReporter(sys.stdout),
             cli.TimedReporter(sys.stdout),
-            DecoratorBasedIdentifier(),
-            NameBasedIdentifier(),
-            ExitCodeReporter()
         ]
         sys.argv = ['run-contexts']
 
@@ -68,15 +68,15 @@ class WhenRunningFromCommandLineWithNoArguments(MainSharedContext):
 class WhenSpecifyingAPath(MainSharedContext):
     def establish_arguments(self):
         self.expected_plugins = [
-            AssertionRewritingImporter(),
+            ExitCodeReporter(),
             Shuffler(),
+            AssertionRewritingImporter(),
+            DecoratorBasedIdentifier(),
+            NameBasedIdentifier(),
             cli.DotsReporter(sys.stdout),
             cli.FailureOnlyDecorator(cli.ColouringDecorator(cli.StdOutCapturingReporter))(sys.stdout),
             cli.FinalCountsReporter(sys.stdout),
             cli.TimedReporter(sys.stdout),
-            DecoratorBasedIdentifier(),
-            NameBasedIdentifier(),
-            ExitCodeReporter()
         ]
         self.path = os.path.join(os.getcwd(),'made','up','path')
         sys.argv = ['run-contexts', self.path]
@@ -96,14 +96,14 @@ class WhenUsingTheVerboseFlag(MainSharedContext):
 
     def establish_arguments(self, flag):
         self.expected_plugins = [
-            AssertionRewritingImporter(),
+            ExitCodeReporter(),
             Shuffler(),
+            AssertionRewritingImporter(),
+            DecoratorBasedIdentifier(),
+            NameBasedIdentifier(),
             cli.ColouringDecorator(cli.StdOutCapturingReporter)(sys.stdout),
             cli.FinalCountsReporter(sys.stdout),
             cli.TimedReporter(sys.stdout),
-            DecoratorBasedIdentifier(),
-            NameBasedIdentifier(),
-            ExitCodeReporter()
         ]
         sys.argv = ['run-contexts', flag]
 
@@ -117,15 +117,15 @@ class WhenUsingTheVerboseFlag(MainSharedContext):
 class WhenUserDisablesColour(MainSharedContext):
     def establish_arguments(self):
         self.expected_plugins = [
-            AssertionRewritingImporter(),
+            ExitCodeReporter(),
             Shuffler(),
+            AssertionRewritingImporter(),
+            DecoratorBasedIdentifier(),
+            NameBasedIdentifier(),
             cli.DotsReporter(sys.stdout),
             cli.FailureOnlyDecorator(cli.StdOutCapturingReporter)(sys.stdout),
             cli.FinalCountsReporter(sys.stdout),
             cli.TimedReporter(sys.stdout),
-            DecoratorBasedIdentifier(),
-            NameBasedIdentifier(),
-            ExitCodeReporter()
         ]
         sys.argv = ['run-contexts', '--no-colour']
 
@@ -144,14 +144,14 @@ class WhenDisablingColourInVerboseMode(MainSharedContext):
 
     def establish_arguments(self, args):
         self.expected_plugins = [
-            AssertionRewritingImporter(),
+            ExitCodeReporter(),
             Shuffler(),
+            AssertionRewritingImporter(),
+            DecoratorBasedIdentifier(),
+            NameBasedIdentifier(),
             cli.StdOutCapturingReporter(sys.stdout),
             cli.FinalCountsReporter(sys.stdout),
             cli.TimedReporter(sys.stdout),
-            DecoratorBasedIdentifier(),
-            NameBasedIdentifier(),
-            ExitCodeReporter()
         ]
         sys.argv = ['run-contexts'] + args
 
@@ -170,15 +170,15 @@ class WhenUserDisablesStdOutCapturing(MainSharedContext):
 
     def establish_arguments(self, arg):
         self.expected_plugins = [
-            AssertionRewritingImporter(),
+            ExitCodeReporter(),
             Shuffler(),
+            AssertionRewritingImporter(),
+            DecoratorBasedIdentifier(),
+            NameBasedIdentifier(),
             cli.DotsReporter(sys.stdout),
             cli.FailureOnlyDecorator(cli.ColouringDecorator(cli.VerboseReporter))(sys.stdout),
             cli.FinalCountsReporter(sys.stdout),
             cli.TimedReporter(sys.stdout),
-            DecoratorBasedIdentifier(),
-            NameBasedIdentifier(),
-            ExitCodeReporter()
         ]
         sys.argv = ['run-contexts', arg]
 
@@ -200,14 +200,14 @@ class WhenUserDisablesCapturingInVerboseMode(MainSharedContext):
 
     def establish_arguments(self, args):
         self.expected_plugins = [
-            AssertionRewritingImporter(),
+            ExitCodeReporter(),
             Shuffler(),
+            AssertionRewritingImporter(),
+            DecoratorBasedIdentifier(),
+            NameBasedIdentifier(),
             cli.ColouringDecorator(cli.VerboseReporter)(sys.stdout),
             cli.FinalCountsReporter(sys.stdout),
             cli.TimedReporter(sys.stdout),
-            DecoratorBasedIdentifier(),
-            NameBasedIdentifier(),
-            ExitCodeReporter()
         ]
         sys.argv = ['run-contexts'] + args
 
@@ -226,15 +226,15 @@ class WhenUserDisablesColourAndCapturing(MainSharedContext):
 
     def establish_arguments(self, args):
         self.expected_plugins = [
-            AssertionRewritingImporter(),
+            ExitCodeReporter(),
             Shuffler(),
+            AssertionRewritingImporter(),
+            DecoratorBasedIdentifier(),
+            NameBasedIdentifier(),
             cli.DotsReporter(sys.stdout),
             cli.FailureOnlyDecorator(cli.VerboseReporter)(sys.stdout),
             cli.FinalCountsReporter(sys.stdout),
             cli.TimedReporter(sys.stdout),
-            DecoratorBasedIdentifier(),
-            NameBasedIdentifier(),
-            ExitCodeReporter()
         ]
         sys.argv = ['run-contexts'] + args
 
@@ -256,14 +256,14 @@ class WhenUserDisablesColourAndCapturingInVerboseMode(MainSharedContext):
 
     def establish_arguments(self, args):
         self.expected_plugins = [
-            AssertionRewritingImporter(),
+            ExitCodeReporter(),
             Shuffler(),
+            AssertionRewritingImporter(),
+            DecoratorBasedIdentifier(),
+            NameBasedIdentifier(),
             cli.VerboseReporter(sys.stdout),
             cli.FinalCountsReporter(sys.stdout),
             cli.TimedReporter(sys.stdout),
-            DecoratorBasedIdentifier(),
-            NameBasedIdentifier(),
-            ExitCodeReporter()
         ]
         sys.argv = ['run-contexts'] + args
 
@@ -282,12 +282,12 @@ class WhenRunningInQuietMode(MainSharedContext):
 
     def establish_arguments(self, flag):
         self.expected_plugins = [
-            AssertionRewritingImporter(),
+            ExitCodeReporter(),
             Shuffler(),
-            QuietReporterResemblance(sys.stdout),
+            AssertionRewritingImporter(),
             DecoratorBasedIdentifier(),
             NameBasedIdentifier(),
-            ExitCodeReporter()
+            QuietReporterResemblance(sys.stdout),
         ]
         sys.argv = ['run-contexts', flag]
 
@@ -301,15 +301,15 @@ class WhenRunningInQuietMode(MainSharedContext):
 class WhenDisablingAssertionRewriting(MainSharedContext):
     def establish_arguments(self):
         self.expected_plugins = [
-            Importer(),
+            ExitCodeReporter(),
             Shuffler(),
+            Importer(),
+            DecoratorBasedIdentifier(),
+            NameBasedIdentifier(),
             cli.DotsReporter(sys.stdout),
             cli.FailureOnlyDecorator(cli.ColouringDecorator(cli.StdOutCapturingReporter))(sys.stdout),
             cli.FinalCountsReporter(sys.stdout),
             cli.TimedReporter(sys.stdout),
-            DecoratorBasedIdentifier(),
-            NameBasedIdentifier(),
-            ExitCodeReporter()
         ]
         sys.argv = ['run-contexts', '--no-assert']
 
@@ -323,12 +323,12 @@ class WhenDisablingAssertionRewriting(MainSharedContext):
 class WhenRunningOnTheCmdLineInTeamcityMode(MainSharedContext):
     def establish_arguments(self):
         self.expected_plugins = [
-            AssertionRewritingImporter(),
+            ExitCodeReporter(),
             Shuffler(),
-            TeamCityReporter(sys.stdout),
+            AssertionRewritingImporter(),
             DecoratorBasedIdentifier(),
             NameBasedIdentifier(),
-            ExitCodeReporter()
+            TeamCityReporter(sys.stdout),
         ]
         sys.argv = ['run-contexts', '--teamcity']
 
@@ -342,12 +342,12 @@ class WhenRunningOnTheCmdLineInTeamcityMode(MainSharedContext):
 class WhenRunningInTeamcity(MainSharedContext):
     def establish_that_teamcity_is_in_the_environment_variables(self):
         self.expected_plugins = [
-            AssertionRewritingImporter(),
+            ExitCodeReporter(),
             Shuffler(),
-            TeamCityReporter(sys.stdout),
+            AssertionRewritingImporter(),
             DecoratorBasedIdentifier(),
             NameBasedIdentifier(),
-            ExitCodeReporter()
+            TeamCityReporter(sys.stdout),
         ]
         os.environ["TEAMCITY_VERSION"] = "7.0"
         sys.argv = ['run-contexts']
@@ -362,14 +362,14 @@ class WhenRunningInTeamcity(MainSharedContext):
 class WhenUserDisablesShuffling(MainSharedContext):
     def establish_arguments(self):
         self.expected_plugins = [
+            ExitCodeReporter(),
             AssertionRewritingImporter(),
+            DecoratorBasedIdentifier(),
+            NameBasedIdentifier(),
             cli.DotsReporter(sys.stdout),
             cli.FailureOnlyDecorator(cli.ColouringDecorator(cli.StdOutCapturingReporter))(sys.stdout),
             cli.FinalCountsReporter(sys.stdout),
             cli.TimedReporter(sys.stdout),
-            DecoratorBasedIdentifier(),
-            NameBasedIdentifier(),
-            ExitCodeReporter()
         ]
         sys.argv = ['run-contexts', '--no-random']
 
@@ -428,15 +428,15 @@ class WhenColoramaIsNotInstalled(MainSharedContext):
 
     def it_should_not_send_a_coloured_reporter_to_main(self):
         self.mock_main.assert_called_once_with(os.getcwd(), [
-            AssertionRewritingImporter(),
+            ExitCodeReporter(),
             Shuffler(),
+            AssertionRewritingImporter(),
+            DecoratorBasedIdentifier(),
+            NameBasedIdentifier(),
             cli.DotsReporter(sys.stdout),
             cli.FailureOnlyDecorator(cli.StdOutCapturingReporter)(sys.stdout),
             cli.FinalCountsReporter(sys.stdout),
             cli.TimedReporter(sys.stdout),
-            DecoratorBasedIdentifier(),
-            NameBasedIdentifier(),
-            ExitCodeReporter()
         ])
 
     def cleanup_import(self):
@@ -452,15 +452,15 @@ class WhenStdOutIsAPipe(MainSharedContext):
 
     def it_should_not_send_a_coloured_reporter_to_main(self):
         self.mock_main.assert_called_once_with(os.getcwd(), [
-            AssertionRewritingImporter(),
+            ExitCodeReporter(),
             Shuffler(),
+            AssertionRewritingImporter(),
+            DecoratorBasedIdentifier(),
+            NameBasedIdentifier(),
             cli.DotsReporter(sys.stdout),
             cli.FailureOnlyDecorator(cli.StdOutCapturingReporter)(sys.stdout),
             cli.FinalCountsReporter(sys.stdout),
             cli.TimedReporter(sys.stdout),
-            DecoratorBasedIdentifier(),
-            NameBasedIdentifier(),
-            ExitCodeReporter()
         ])
 
 

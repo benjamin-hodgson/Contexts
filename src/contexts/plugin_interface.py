@@ -17,6 +17,27 @@ class PluginInterface(object):
         does not mind what it comes before or after, respectively.
         Returning None from this method is equivalent to returning (None, None).
         """
+    def setup_parser(self, parser):
+        """
+        Called before command-line arguments are parsed.
+
+        Plugins may mutate `parser`, which is an instance of
+        `argparse.ArgumentParser`, in order to set it up to expect the options
+        the plugin needs to configure itself. See the standard library documentation
+        for `argparse` for more information.
+        """
+    def initialise(self, args):
+        """
+        Called after command-line arguments are parsed.
+
+        `args` is the result of `ArgumentParser.parser_args()`
+        (see the standard library documentation for `argparse` for more information).
+        Plugins should use this to set themselves up.
+
+        Plugins may return True or False from this method. Returning True will cause
+        the plugin to be added to the list of plugins for this test run. Returning False
+        will prevent this.
+        """
 
     def test_run_started(self):
         """Called at the beginning of a test run"""

@@ -30,8 +30,8 @@ class DotsReporter(shared.StreamReporter):
 class VerboseReporter(shared.StreamReporter):
     dashes = '-' * 70
 
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+    def __init__(self, stream=sys.stdout):
+        super().__init__(stream)
         self.context_count = 0
         self.assertion_count = 0
         self.failure_count = 0
@@ -85,7 +85,7 @@ class VerboseReporter(shared.StreamReporter):
 class FinalCountsReporter(shared.StreamReporter):
     dashes = '-' * 70
 
-    def __init__(self, stream):
+    def __init__(self, stream=sys.stdout):
         super().__init__(stream)
         self.context_count = 0
         self.assertion_count = 0
@@ -209,7 +209,7 @@ class TimedReporter(shared.StreamReporter):
 # - one starts colours, the other resets it.
 # Alternatively, provide before and after hooks.
 def ColouringDecorator(plugin_cls):
-    def instantiate(stream):
+    def instantiate(stream=sys.stdout):
         return _ColouringDecorator(plugin_cls, stream)
     return instantiate
 
@@ -262,7 +262,7 @@ class _ColouringDecorator:
 
 
 def FailureOnlyDecorator(plugin_cls):
-    def instantiate(stream):
+    def instantiate(stream=sys.stdout):
         return _FailureOnlyDecorator(plugin_cls, stream)
     return instantiate
 

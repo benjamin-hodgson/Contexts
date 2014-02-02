@@ -1,9 +1,30 @@
+import argparse
 import importlib
 import os
 import sys
+from .shuffling import Shuffler
 
 
 class Importer(object):
+    @classmethod
+    def locate(cls):
+        # this is such a hack :(
+        # Just trying to get the tests for __main__ to pass.
+        # hopefully I can delete those tests (and this method) soon since the
+        # logic of __main__ will be much simpler
+        return (Shuffler, None)
+    def setup_parser(self, parser):
+        try:
+            parser.add_argument('--no-assert',
+                action='store_false',
+                dest='rewriting',
+                default=True,
+                help='Disable assertion rewriting.')
+        except argparse.ArgumentError:  # just means it's already been set up
+            pass
+    def initialise(self, args):
+        return not args.rewriting
+
     def import_module(self, dir_path, module_name):
         filename = resolve_filename(dir_path, module_name)
         prune_sys_dot_modules(module_name, filename)

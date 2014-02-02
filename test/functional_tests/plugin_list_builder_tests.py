@@ -15,6 +15,9 @@ class WhenTheListBuilderIsEmpty(PluginListBuilderSharedContext):
     def it_should_return_an_empty_list(self):
         assert self.result == []
 
+    def the_operation_should_be_idempotent(self):
+        assert self.builder.to_list() == self.result
+
 
 class WhenAddingAFewPluginsWhichAreNotPicky(PluginListBuilderSharedContext):
     def context(self):
@@ -42,6 +45,9 @@ class WhenAddingAFewPluginsWhichAreNotPicky(PluginListBuilderSharedContext):
     def it_should_return_the_plugins(self):
         assert set(self.result) == {self.class1, self.class2, self.class3}
 
+    def the_operation_should_be_idempotent(self):
+        assert self.builder.to_list() == self.result
+
 
 class WhenAPluginAsksToBeBeforeAPluginWhichNeverGetsAdded(PluginListBuilderSharedContext):
     def given_that_the_plugin_refers_to_a_class_we_never_added(self):
@@ -60,6 +66,9 @@ class WhenAPluginAsksToBeBeforeAPluginWhichNeverGetsAdded(PluginListBuilderShare
     def it_should_return_only_the_plugin_we_added(self):
         assert self.result == [self.class1]
 
+    def the_operation_should_be_idempotent(self):
+        assert self.builder.to_list() == self.result
+
 class WhenAPluginAsksToBeAfterAPluginWhichNeverGetsAdded(PluginListBuilderSharedContext):
     def given_that_the_plugin_refers_to_a_class_we_never_added(self):
         class Plugin1(object):
@@ -76,6 +85,9 @@ class WhenAPluginAsksToBeAfterAPluginWhichNeverGetsAdded(PluginListBuilderShared
 
     def it_should_return_only_the_plugin_we_added(self):
         assert self.result == [self.class1]
+
+    def the_operation_should_be_idempotent(self):
+        assert self.builder.to_list() == self.result
 
 
 class WhenAPluginAsksToBeBeforeAPluginThatDoesntMind(PluginListBuilderSharedContext):
@@ -101,6 +113,9 @@ class WhenAPluginAsksToBeBeforeAPluginThatDoesntMind(PluginListBuilderSharedCont
     def it_should_put_the_picky_one_first(self, first, second, expected):
         assert self.result == expected
 
+    def the_operation_should_be_idempotent(self):
+        assert self.builder.to_list() == self.result
+
 class WhenAPluginAsksToBeAfterAPluginThatDoesntMind(PluginListBuilderSharedContext):
     @classmethod
     def examples_of_plugins_that_want_to_be_first(self):
@@ -123,6 +138,9 @@ class WhenAPluginAsksToBeAfterAPluginThatDoesntMind(PluginListBuilderSharedConte
 
     def it_should_put_the_picky_one_second(self, first, second, expected):
         assert self.result == expected
+
+    def the_operation_should_be_idempotent(self):
+        assert self.builder.to_list() == self.result
 
 
 class WhenAPluginWantsToBeBetweenTwoOtherPlugins(PluginListBuilderSharedContext):
@@ -154,6 +172,9 @@ class WhenAPluginWantsToBeBetweenTwoOtherPlugins(PluginListBuilderSharedContext)
 
     def it_should_put_the_picky_one_second(self, first, second, third, expected):
         assert self.result == expected
+
+    def the_operation_should_be_idempotent(self):
+        assert self.builder.to_list() == self.result
 
 
 class WhenTwoPluginsWantToBeEitherSideOfTheSamePlugin(PluginListBuilderSharedContext):
@@ -187,6 +208,9 @@ class WhenTwoPluginsWantToBeEitherSideOfTheSamePlugin(PluginListBuilderSharedCon
 
     def it_should_put_the_picky_one_second(self, first, second, third, expected):
         assert self.result == expected
+
+    def the_operation_should_be_idempotent(self):
+        assert self.builder.to_list() == self.result
 
 
 class WhenAddingTheSamePluginTwice(PluginListBuilderSharedContext):

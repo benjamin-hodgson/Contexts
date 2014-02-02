@@ -2,8 +2,8 @@ import argparse
 import inspect
 import os
 import sys
-from io import StringIO
 from . import main
+from .plugin_discovery import PluginListBuilder
 from .plugins import cli, teamcity
 from .plugins.shared import ExitCodeReporter
 from .plugins.shuffling import Shuffler
@@ -14,13 +14,50 @@ from contexts.plugins.decorators import DecoratorBasedIdentifier
 
 
 def cmd():
-    args = parse_args(sys.argv[1:])
-    plugin_list = create_plugins(args)
-    main(os.path.realpath(args.path), plugin_list)
+    builder = PluginListBuilder()
+    builder.add(ExitCodeReporter)
+    builder.add(Shuffler)
+    builder.add(Importer)
+    builder.add(AssertionRewritingImporter)
+    builder.add(DecoratorBasedIdentifier)
+    builder.add(NameBasedIdentifier)
+    plugin_list = [activate_plugin(p) for p in builder.to_list()]
 
-
-def parse_args(argv):
     parser = argparse.ArgumentParser()
+
+    for plug in plugin_list:
+        if hasattr(plug, "setup_parser"):
+            plug.setup_parser(parser)
+
+    setup_parser(parser)
+
+    args = parser.parse_args(sys.argv[1:])
+
+    if "TEAMCITY_VERSION" in os.environ:
+        args.teamcity = True
+
+    if not sys.stdout.isatty():
+        args.colour = False
+
+    if args.colour:
+        try:
+            import colorama
+        except ImportError:
+            args.colour = False
+        else:
+            colorama.init()
+
+    new_list = []
+    for plug in plugin_list:
+        include = plug.initialise(args)
+        if include:
+            new_list.append(plug)
+
+    new_list.extend(create_plugins(args))
+    main(os.path.realpath(args.path), new_list)
+
+
+def setup_parser(parser):
     parser.add_argument('-s', '--no-capture',
         action='store_false',
         dest='capture',
@@ -31,21 +68,11 @@ def parse_args(argv):
         dest='teamcity',
         default=False,
         help="Enable teamcity test reporting.")
-    parser.add_argument('--no-random',
-        action='store_false',
-        dest='shuffle',
-        default=True,
-        help="Disable test order randomisation.")
     parser.add_argument('--no-colour',
         action='store_false',
         dest='colour',
         default=True,
         help='Disable coloured output.')
-    parser.add_argument('--no-assert',
-        action='store_false',
-        dest='rewriting',
-        default=True,
-        help='Disable assertion rewriting.')
     parser.add_argument('path',
         action='store',
         nargs='?',
@@ -66,42 +93,15 @@ def parse_args(argv):
         default='normal',
         help="Disable progress reporting.")
 
-    args = parser.parse_args(argv)
-
-    if "TEAMCITY_VERSION" in os.environ:
-        args.teamcity = True
-
-    if not sys.stdout.isatty():
-        args.colour = False
-
-    if args.colour:
-        try:
-            import colorama
-        except ImportError:
-            args.colour = False
-        else:
-            colorama.init()
-
-    return args
+    return parser
 
 
 def create_plugins(args):
-    plugin_class_list = [create_importing_plugin(args)]
-
-    if args.shuffle:
-        plugin_class_list.append(Shuffler)
+    plugin_class_list = []
 
     plugin_class_list.extend(create_reporting_plugins(args))
-    plugin_class_list.extend([DecoratorBasedIdentifier, NameBasedIdentifier])
-    plugin_class_list.append(ExitCodeReporter)
 
     return [activate_plugin(cls) for cls in plugin_class_list]
-
-def create_importing_plugin(args):
-    if args.rewriting:
-        return AssertionRewritingImporter
-    else:
-        return Importer
 
 def create_reporting_plugins(args):
     if args.teamcity:
@@ -150,8 +150,10 @@ def activate_plugin(cls):
         # hopefully it'll be backported to a future version of 3.3
         # so I can take this out
         return cls()
+
     if sig.parameters:
         return cls(sys.stdout)
+
     return cls()
 
 
