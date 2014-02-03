@@ -1,6 +1,5 @@
 import sys
 from io import StringIO
-import contexts
 from contexts import plugins
 from contexts.plugins.decorators import action
 from . import tools
@@ -40,10 +39,7 @@ class WhenCapturingStdOutAndATestPasses(StdOutCapturingSharedContext):
         assert self.fake_stderr.getvalue() == "to stderr\n"
 
     def it_should_not_output_the_captured_stdout(self):
-        assert self.stringio.getvalue() == ("""\
-context
-  PASS: assertion
-""")
+        assert not self.stringio.getvalue()
 
 class WhenCapturingStdOutAndATestFails(StdOutCapturingSharedContext):
     def context(self):
@@ -62,9 +58,6 @@ class WhenCapturingStdOutAndATestFails(StdOutCapturingSharedContext):
 
     def it_should_output_the_captured_stdout(self):
         assert self.stringio.getvalue() == ("""\
-context
-  FAIL: assertion
-    plugin_tests.tools.FakeAssertionError
     ------------------ >> begin captured stdout << -------------------
     failing context
     failing assertion
@@ -88,9 +81,6 @@ class WhenCapturingStdOutAndATestErrors(StdOutCapturingSharedContext):
 
     def it_should_output_the_captured_stdout(self):
         assert self.stringio.getvalue() == ("""\
-context
-  ERROR: assertion
-    plugin_tests.tools.FakeException
     ------------------ >> begin captured stdout << -------------------
     failing context
     erroring assertion
@@ -115,9 +105,6 @@ class WhenCapturingStdOutAndAContextErrors(StdOutCapturingSharedContext):
 
     def it_should_output_the_captured_stdout(self):
         assert self.stringio.getvalue() == ("""\
-context
-  PASS: assertion
-  plugin_tests.tools.FakeException
   ------------------- >> begin captured stdout << --------------------
   erroring context
   assertion in erroring context
@@ -140,8 +127,4 @@ class WhenCapturingStdOutButNotPrinting(StdOutCapturingSharedContext):
         assert self.fake_stdout.getvalue() == ''
 
     def it_should_not_output_the_delimiters(self):
-        assert self.stringio.getvalue() == ("""\
-context
-  FAIL: assertion name
-    plugin_tests.tools.FakeAssertionError
-""")
+        assert not self.stringio.getvalue()

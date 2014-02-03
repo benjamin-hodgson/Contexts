@@ -52,7 +52,11 @@ class WhenRunningFromCommandLineWithNoArguments(MainSharedContext):
             DecoratorBasedIdentifier(),
             NameBasedIdentifier(),
             cli.DotsReporter(sys.stdout),
-            cli.FailureOnlyDecorator(cli.ColouringDecorator(cli.StdOutCapturingReporter))(sys.stdout),
+            # FIXME: failures only
+            cli.Colouriser(sys.stdout),
+            cli.VerboseReporter(sys.stdout),
+            cli.StdOutCapturingReporter(sys.stdout),
+            cli.UnColouriser(sys.stdout),
             cli.FinalCountsReporter(sys.stdout),
             cli.TimedReporter(sys.stdout),
         ]
@@ -74,7 +78,11 @@ class WhenSpecifyingAPath(MainSharedContext):
             DecoratorBasedIdentifier(),
             NameBasedIdentifier(),
             cli.DotsReporter(sys.stdout),
-            cli.FailureOnlyDecorator(cli.ColouringDecorator(cli.StdOutCapturingReporter))(sys.stdout),
+            # FIXME: failures only
+            cli.Colouriser(sys.stdout),
+            cli.VerboseReporter(sys.stdout),
+            cli.StdOutCapturingReporter(sys.stdout),
+            cli.UnColouriser(sys.stdout),
             cli.FinalCountsReporter(sys.stdout),
             cli.TimedReporter(sys.stdout),
         ]
@@ -101,7 +109,10 @@ class WhenUsingTheVerboseFlag(MainSharedContext):
             AssertionRewritingImporter(),
             DecoratorBasedIdentifier(),
             NameBasedIdentifier(),
-            cli.ColouringDecorator(cli.StdOutCapturingReporter)(sys.stdout),
+            cli.Colouriser(sys.stdout),
+            cli.VerboseReporter(sys.stdout),
+            cli.StdOutCapturingReporter(sys.stdout),
+            cli.UnColouriser(sys.stdout),
             cli.FinalCountsReporter(sys.stdout),
             cli.TimedReporter(sys.stdout),
         ]
@@ -123,7 +134,9 @@ class WhenUserDisablesColour(MainSharedContext):
             DecoratorBasedIdentifier(),
             NameBasedIdentifier(),
             cli.DotsReporter(sys.stdout),
-            cli.FailureOnlyDecorator(cli.StdOutCapturingReporter)(sys.stdout),
+            # FIXME: failures only
+            cli.VerboseReporter(sys.stdout),
+            cli.StdOutCapturingReporter(sys.stdout),
             cli.FinalCountsReporter(sys.stdout),
             cli.TimedReporter(sys.stdout),
         ]
@@ -149,6 +162,7 @@ class WhenDisablingColourInVerboseMode(MainSharedContext):
             AssertionRewritingImporter(),
             DecoratorBasedIdentifier(),
             NameBasedIdentifier(),
+            cli.VerboseReporter(sys.stdout),
             cli.StdOutCapturingReporter(sys.stdout),
             cli.FinalCountsReporter(sys.stdout),
             cli.TimedReporter(sys.stdout),
@@ -176,7 +190,10 @@ class WhenUserDisablesStdOutCapturing(MainSharedContext):
             DecoratorBasedIdentifier(),
             NameBasedIdentifier(),
             cli.DotsReporter(sys.stdout),
-            cli.FailureOnlyDecorator(cli.ColouringDecorator(cli.VerboseReporter))(sys.stdout),
+            # FIXME: failures only
+            cli.Colouriser(sys.stdout),
+            cli.VerboseReporter(sys.stdout),
+            cli.UnColouriser(sys.stdout),
             cli.FinalCountsReporter(sys.stdout),
             cli.TimedReporter(sys.stdout),
         ]
@@ -205,7 +222,9 @@ class WhenUserDisablesCapturingInVerboseMode(MainSharedContext):
             AssertionRewritingImporter(),
             DecoratorBasedIdentifier(),
             NameBasedIdentifier(),
-            cli.ColouringDecorator(cli.VerboseReporter)(sys.stdout),
+            cli.Colouriser(sys.stdout),
+            cli.VerboseReporter(sys.stdout),
+            cli.UnColouriser(sys.stdout),
             cli.FinalCountsReporter(sys.stdout),
             cli.TimedReporter(sys.stdout),
         ]
@@ -232,7 +251,8 @@ class WhenUserDisablesColourAndCapturing(MainSharedContext):
             DecoratorBasedIdentifier(),
             NameBasedIdentifier(),
             cli.DotsReporter(sys.stdout),
-            cli.FailureOnlyDecorator(cli.VerboseReporter)(sys.stdout),
+            # FIXME: failures only
+            cli.VerboseReporter(sys.stdout),
             cli.FinalCountsReporter(sys.stdout),
             cli.TimedReporter(sys.stdout),
         ]
@@ -287,18 +307,17 @@ class WhenRunningInQuietMode(MainSharedContext):
             AssertionRewritingImporter(),
             DecoratorBasedIdentifier(),
             NameBasedIdentifier(),
-            QuietReporterResemblance(sys.stdout),
         ]
         sys.argv = ['run-contexts', flag]
 
     def because_we_call_cmd(self):
         __main__.cmd()
 
-    def it_should_call_main_with_a_quiet_reporter(self):
+    def it_should_not_pass_in_anything_that_will_print(self):
         self.mock_main.assert_called_once_with(os.getcwd(), self.expected_plugins)
 
 
-class WhenDisablingAssertionRewriting(MainSharedContext):
+class WhenUserDisablesAssertionRewriting(MainSharedContext):
     def establish_arguments(self):
         self.expected_plugins = [
             ExitCodeReporter(),
@@ -307,7 +326,11 @@ class WhenDisablingAssertionRewriting(MainSharedContext):
             DecoratorBasedIdentifier(),
             NameBasedIdentifier(),
             cli.DotsReporter(sys.stdout),
-            cli.FailureOnlyDecorator(cli.ColouringDecorator(cli.StdOutCapturingReporter))(sys.stdout),
+            # FIXME: failures only
+            cli.Colouriser(sys.stdout),
+            cli.VerboseReporter(sys.stdout),
+            cli.StdOutCapturingReporter(sys.stdout),
+            cli.UnColouriser(sys.stdout),
             cli.FinalCountsReporter(sys.stdout),
             cli.TimedReporter(sys.stdout),
         ]
@@ -367,7 +390,11 @@ class WhenUserDisablesShuffling(MainSharedContext):
             DecoratorBasedIdentifier(),
             NameBasedIdentifier(),
             cli.DotsReporter(sys.stdout),
-            cli.FailureOnlyDecorator(cli.ColouringDecorator(cli.StdOutCapturingReporter))(sys.stdout),
+            # FIXME: failures only
+            cli.Colouriser(sys.stdout),
+            cli.VerboseReporter(sys.stdout),
+            cli.StdOutCapturingReporter(sys.stdout),
+            cli.UnColouriser(sys.stdout),
             cli.FinalCountsReporter(sys.stdout),
             cli.TimedReporter(sys.stdout),
         ]
@@ -434,7 +461,9 @@ class WhenColoramaIsNotInstalled(MainSharedContext):
             DecoratorBasedIdentifier(),
             NameBasedIdentifier(),
             cli.DotsReporter(sys.stdout),
-            cli.FailureOnlyDecorator(cli.StdOutCapturingReporter)(sys.stdout),
+            # FIXME: failures only
+            cli.VerboseReporter(sys.stdout),
+            cli.StdOutCapturingReporter(sys.stdout),
             cli.FinalCountsReporter(sys.stdout),
             cli.TimedReporter(sys.stdout),
         ])
@@ -458,21 +487,9 @@ class WhenStdOutIsAPipe(MainSharedContext):
             DecoratorBasedIdentifier(),
             NameBasedIdentifier(),
             cli.DotsReporter(sys.stdout),
-            cli.FailureOnlyDecorator(cli.StdOutCapturingReporter)(sys.stdout),
+            # FIXME: failures only
+            cli.VerboseReporter(sys.stdout),
+            cli.StdOutCapturingReporter(sys.stdout),
             cli.FinalCountsReporter(sys.stdout),
             cli.TimedReporter(sys.stdout),
         ])
-
-
-###########################################################
-# Test helper methods
-###########################################################
-
-class QuietReporterResemblance(object):
-    """
-    Compares equal to quiet reporters
-    """
-    def __init__(self, not_stream):
-        self.not_stream = not_stream
-    def __eq__(self, other):
-        return type(other) == cli.StdOutCapturingReporter and other.stream != self.not_stream

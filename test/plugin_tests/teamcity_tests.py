@@ -1,7 +1,6 @@
 import sys
 from io import StringIO
 import re
-import contexts
 from contexts.plugins import teamcity
 from contexts.plugins.decorators import setup, action, assertion
 from . import tools
@@ -437,30 +436,6 @@ class WhenASecondContextRunsAfterAnError(TeamCitySharedContext):
     @assertion
     def it_should_report_the_name_of_the_current_context(self):
         assert self.parse_line(-1)[1]['name'] == 'the second context -> a lovely assertion'
-
-
-class WhenEscapingForTeamCity:
-    @classmethod
-    def examples(self):
-        yield "'", "|'"
-        yield '\n', "|n"
-        yield '\r', "|r"
-        yield '|', "||"
-        yield '[', '|['
-        yield ']', '|]'
-        yield '\u0041', 'A'  # should not escape normal ascii
-        yield '\u007e', '~'
-        yield '\u00df', '|0x00df'  # ß
-        yield '\u00e7', '|0x00e7'  # ç
-
-    def context(self, example):
-        self.input, self.expected = example
-
-    def because_we_escape_the_char(self):
-        self.result = teamcity.escape(self.input)
-
-    def it_should_escape_the_chars_correctly(self):
-        assert self.result == self.expected
 
 
 class WhenParsingATeamCityMessage:

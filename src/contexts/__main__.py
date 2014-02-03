@@ -21,6 +21,12 @@ def cmd():
     builder.add(AssertionRewritingImporter)
     builder.add(DecoratorBasedIdentifier)
     builder.add(NameBasedIdentifier)
+    builder.add(cli.DotsReporter)
+    builder.add(teamcity.TeamCityReporter)
+    builder.add(cli.VerboseReporter)
+    builder.add(cli.StdOutCapturingReporter)
+    builder.add(cli.Colouriser)
+    builder.add(cli.UnColouriser)
     plugin_list = [activate_plugin(p) for p in builder.to_list()]
 
     parser = argparse.ArgumentParser()
@@ -53,92 +59,26 @@ def cmd():
         if include:
             new_list.append(plug)
 
-    new_list.extend(create_plugins(args))
+    new_list.extend(activate_plugin(cls) for cls in create_reporting_plugins(args))
     main(os.path.realpath(args.path), new_list)
 
 
 def setup_parser(parser):
-    parser.add_argument('-s', '--no-capture',
-        action='store_false',
-        dest='capture',
-        default=True,
-        help="Disable capturing of stdout during tests.")
-    parser.add_argument('--teamcity',
-        action='store_true',
-        dest='teamcity',
-        default=False,
-        help="Enable teamcity test reporting.")
-    parser.add_argument('--no-colour',
-        action='store_false',
-        dest='colour',
-        default=True,
-        help='Disable coloured output.')
     parser.add_argument('path',
         action='store',
         nargs='?',
         default=os.getcwd(),
-        help="Path to the test file or directory to run. (default current directory)")
-
-    group = parser.add_mutually_exclusive_group(required=False)
-    group.add_argument('-v', '--verbose',
-        action='store_const',
-        dest='verbosity',
-        const='verbose',
-        default='normal',
-        help="Enable verbose progress reporting.")
-    group.add_argument('-q', '--quiet',
-        action='store_const',
-        dest='verbosity',
-        const='quiet',
-        default='normal',
-        help="Disable progress reporting.")
-
+        help="Path to the test file or directory to run. (Default: current directory)")
     return parser
 
 
-def create_plugins(args):
-    plugin_class_list = []
-
-    plugin_class_list.extend(create_reporting_plugins(args))
-
-    return [activate_plugin(cls) for cls in plugin_class_list]
-
 def create_reporting_plugins(args):
-    if args.teamcity:
-        return [teamcity.TeamCityReporter]
-
-    if args.verbosity == 'quiet':
-        return [cli.QuietReporter]
-
-    inner_plugin_cls = get_inner_plugin(args)
-    maybe_coloured_cls = apply_colouring(args, inner_plugin_cls)
-    maybe_muted_cls = apply_success_muting(args, maybe_coloured_cls)
-
-    plugin_list = [
-        maybe_muted_cls,
+    if args.teamcity or args.verbosity == 'quiet':
+        return []
+    return [
         cli.FinalCountsReporter,
         cli.TimedReporter
     ]
-
-    if args.verbosity == 'normal':
-        plugin_list.insert(0, cli.DotsReporter)
-
-    return plugin_list
-
-def get_inner_plugin(args):
-    if args.capture:
-        return cli.StdOutCapturingReporter
-    return cli.VerboseReporter
-
-def apply_colouring(args, inner_plugin_cls):
-    if args.colour:
-        return cli.ColouringDecorator(inner_plugin_cls)
-    return inner_plugin_cls
-
-def apply_success_muting(args, maybe_coloured_cls):
-    if args.verbosity == 'normal':
-        return cli.FailureOnlyDecorator(maybe_coloured_cls)
-    return maybe_coloured_cls
 
 
 def activate_plugin(cls):

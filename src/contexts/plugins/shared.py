@@ -9,8 +9,8 @@ class StreamReporter(PluginInterface):
     def __init__(self, stream=sys.stdout):
         self.stream = stream
 
-    def _print(self, *args, sep=' ', end='\n', flush=True):
-        print(*args, sep=sep, end=end, file=self.stream, flush=flush)
+    def _print(self, string, end='\n'):
+        print(string, end=end, file=self.stream, flush=True)
 
     def __eq__(self, other):
         return type(self) == type(other) and self.stream == other.stream
