@@ -299,49 +299,64 @@ class UnColouriser(shared.StreamReporter):
         self.stream.write(colorama.Fore.RESET)
 
 
-
-def FailureOnlyDecorator(plugin_cls):
-    def instantiate(stream=sys.stdout):
-        return _FailureOnlyDecorator(plugin_cls, stream)
-    return instantiate
-
-class _FailureOnlyDecorator(object):
+class FailuresOnly(shared.StreamReporter):
     dashes = '-' * 70
 
-    def __init__(self, plugin_cls, stream):
-        self.plugin = plugin_cls(StringIO())
-        self.stream = stream
+    def __init__(self, stream):
+        super().__init__(stream)
+        self.plugins = []
         self.final_report = StringIO()
 
+    @classmethod
+    def locate(cls):
+        return (DotsReporter, Colouriser)
+
+    def initialise(self, args):
+        return args.verbosity == 'normal'
+
+    def request_plugins(self):
+        wanted_classes = [Colouriser, VerboseReporter, StdOutCapturingReporter, UnColouriser]
+        returned_plugins = yield wanted_classes
+        for cls in wanted_classes:
+            if cls in returned_plugins:
+                self.plugins.append(returned_plugins[cls])
+
     def context_started(self, name, example):
+        self.set_streams(StringIO())
         self.current_context_failed = False
-        self.plugin.context_started(name, example)
+        self.call_plugins("context_started", name, example)
+        return True
     def context_ended(self, name, example):
-        self.plugin.context_ended(name, example)
+        self.call_plugins("context_ended", name, example)
         if self.current_context_failed:
-            self.final_report.write(self.plugin.stream.getvalue())
-        self.plugin.stream = StringIO()
+            self.final_report.write(self.fake_stream.getvalue())
+        self.set_streams(StringIO())
+        return True
     def context_errored(self, name, example, exception):
-        self.plugin.context_errored(name, example, exception)
-        self.final_report.write(self.plugin.stream.getvalue())
-        self.plugin.stream = StringIO()
+        self.call_plugins("context_errored", name, example, exception)
+        self.final_report.write(self.fake_stream.getvalue())
+        self.set_streams(StringIO())
+        return True
 
     def assertion_passed(self, name):
         pass
     def assertion_failed(self, name, exception):
         # accumulate failures and errors and grab them at the end of the ctx
-        self.plugin.assertion_failed(name, exception)
+        self.call_plugins("assertion_failed", name, exception)
         self.current_context_failed = True
+        return True
     def assertion_errored(self, name, exception):
-        self.plugin.assertion_errored(name, exception)
+        self.call_plugins("assertion_errored", name, exception)
         self.current_context_failed = True
+        return True
 
     def unexpected_error(self, exception):
         # write the error directly to the report
-        orig_stream = self.plugin.stream
-        self.plugin.stream = self.final_report
-        self.plugin.unexpected_error(exception)
-        self.plugin.stream = orig_stream
+        orig_stream = self.fake_stream
+        self.set_streams(self.final_report)
+        self.call_plugins("unexpected_error", exception)
+        self.set_streams(orig_stream)
+        return True
 
     def test_run_ended(self):
         output = self.final_report.getvalue()
@@ -349,13 +364,17 @@ class _FailureOnlyDecorator(object):
             self.stream.write('\n' + self.dashes + '\n')
             self.stream.write(output.strip())
 
-    def __eq__(self, other):
-        return (type(self) == type(other)
-            and self.stream == other.stream
-            and type(self.plugin) == type(other.plugin))
+    def set_streams(self, stream):
+        self.fake_stream = stream
+        for plugin in self.plugins:
+            plugin.stream = stream
 
-    def __getattr__(self, name):
-        return getattr(self.plugin, name)
+    def call_plugins(self, name, *args, **kwargs):
+        for plugin in self.plugins:
+            if hasattr(plugin, name):
+                response = getattr(plugin, name)(*args, **kwargs)
+                if response is not None:
+                    return
 
 
 def pluralise(noun, num):

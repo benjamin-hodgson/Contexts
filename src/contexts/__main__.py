@@ -1,5 +1,6 @@
 import argparse
 import inspect
+import itertools
 import os
 import sys
 from . import main
@@ -14,20 +15,7 @@ from contexts.plugins.decorators import DecoratorBasedIdentifier
 
 
 def cmd():
-    builder = PluginListBuilder()
-    builder.add(ExitCodeReporter)
-    builder.add(Shuffler)
-    builder.add(Importer)
-    builder.add(AssertionRewritingImporter)
-    builder.add(DecoratorBasedIdentifier)
-    builder.add(NameBasedIdentifier)
-    builder.add(cli.DotsReporter)
-    builder.add(teamcity.TeamCityReporter)
-    builder.add(cli.VerboseReporter)
-    builder.add(cli.StdOutCapturingReporter)
-    builder.add(cli.Colouriser)
-    builder.add(cli.UnColouriser)
-    plugin_list = [activate_plugin(p) for p in builder.to_list()]
+    plugin_list = make_plugin_instances()
 
     parser = argparse.ArgumentParser()
 
@@ -36,8 +24,7 @@ def cmd():
             plug.setup_parser(parser)
 
     setup_parser(parser)
-
-    args = parser.parse_args(sys.argv[1:])
+    args = parse_args(parser)
 
     if "TEAMCITY_VERSION" in os.environ:
         args.teamcity = True
@@ -58,6 +45,21 @@ def cmd():
         include = plug.initialise(args)
         if include:
             new_list.append(plug)
+
+    for plug in new_list:
+        if hasattr(plug, 'request_plugins'):
+            gen = plug.request_plugins()
+            if gen is None:
+                continue
+            requested = next(gen)
+            to_send = {}
+            for requested_class, active_instance in itertools.product(requested, new_list):
+                if isinstance(active_instance, requested_class):
+                    to_send[requested_class] = active_instance
+            try:
+                gen.send(to_send)
+            except StopIteration:  # should happen every time
+                pass
 
     new_list.extend(activate_plugin(cls) for cls in create_reporting_plugins(args))
     main(os.path.realpath(args.path), new_list)
@@ -95,6 +97,26 @@ def activate_plugin(cls):
         return cls(sys.stdout)
 
     return cls()
+
+
+def make_plugin_instances():
+    builder = PluginListBuilder()
+    builder.add(ExitCodeReporter)
+    builder.add(Shuffler)
+    builder.add(Importer)
+    builder.add(AssertionRewritingImporter)
+    builder.add(DecoratorBasedIdentifier)
+    builder.add(NameBasedIdentifier)
+    builder.add(cli.DotsReporter)
+    builder.add(teamcity.TeamCityReporter)
+    builder.add(cli.VerboseReporter)
+    builder.add(cli.StdOutCapturingReporter)
+    builder.add(cli.Colouriser)
+    builder.add(cli.UnColouriser)
+    return [activate_plugin(p) for p in builder.to_list()]
+
+def parse_args(parser):
+    return parser.parse_args(sys.argv[1:])
 
 
 if __name__ == "__main__":

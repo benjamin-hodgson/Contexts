@@ -85,9 +85,15 @@ FAILED!
 
 
 class WhenOutputtingFailuresOnly:
-    def in_the_contexts_of_a_partly_successful_run(self):
+    def in_the_context_of_a_partly_successful_run(self):
         self.stringio = StringIO()
-        self.reporter = plugins.cli.FailureOnlyDecorator(plugins.cli.VerboseReporter)(self.stringio)
+        self.plugin = plugins.cli.FailuresOnly(self.stringio)
+        gen = self.plugin.request_plugins()
+        next(gen)
+        try:
+            gen.send({plugins.cli.VerboseReporter: plugins.cli.VerboseReporter(StringIO())})
+        except StopIteration:
+            pass
 
         context1 = tools.create_context('context1')
         context2 = tools.create_context('context2')
@@ -95,19 +101,19 @@ class WhenOutputtingFailuresOnly:
                ('another_made_up_file.py', 2, 'another_made_up_function', 'frame2')]
         exception = tools.build_fake_assertion_error(tb, "Gotcha")
 
-        self.reporter.context_started(context1.name, context1.example)
-        self.reporter.assertion_started('assertion1')
-        self.reporter.assertion_passed('assertion1')
-        self.reporter.assertion_started('assertion2')
-        self.reporter.assertion_failed('assertion2', exception)
-        self.reporter.context_ended(context1.name, context1.example)
+        self.plugin.context_started(context1.name, context1.example)
+        self.plugin.assertion_started('assertion1')
+        self.plugin.assertion_passed('assertion1')
+        self.plugin.assertion_started('assertion2')
+        self.plugin.assertion_failed('assertion2', exception)
+        self.plugin.context_ended(context1.name, context1.example)
 
-        self.reporter.context_started(context2.name, context2.example)
-        self.reporter.context_errored(context2.name, context2.example, exception)
+        self.plugin.context_started(context2.name, context2.example)
+        self.plugin.context_errored(context2.name, context2.example, exception)
 
     def because_the_test_run_ends(self):
         self.before = self.stringio.getvalue()
-        self.reporter.test_run_ended()
+        self.plugin.test_run_ended()
 
     def it_should_not_print_anything_before_the_test_run_ends(self):
         assert self.before == ''

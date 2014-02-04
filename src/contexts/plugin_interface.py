@@ -38,6 +38,18 @@ class PluginInterface(object):
         the plugin to be added to the list of plugins for this test run. Returning False
         will prevent this.
         """
+    def request_plugins(self):
+        """
+        Called after all plugins have been initialised.
+
+        Plugins which need to modify the behaviour of other plugins may request
+        instances of those plugins from the framework.
+
+        This must be a generator method. Yield an iterable of other plugin classes,
+        and you will be sent a dictionary mapping those classes to the active instances
+        of those plugins. Requested plugins that do not have an active instance will not be
+        present in the dict.
+        """
 
     def test_run_started(self):
         """Called at the beginning of a test run"""
