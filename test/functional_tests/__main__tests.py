@@ -90,11 +90,13 @@ class WhenRunningFromCommandLineWithNoArguments(MainSharedContext):
             DecoratorBasedIdentifier(),
             NameBasedIdentifier(),
             cli.DotsReporter(sys.stdout),
-            # FIXME: failures only
+            cli.FailuresOnlyBefore(),
             cli.Colouriser(sys.stdout),
             cli.VerboseReporter(sys.stdout),
             cli.StdOutCapturingReporter(sys.stdout),
             cli.UnColouriser(sys.stdout),
+            cli.FailuresOnlyAfter(),
+            cli.FailuresOnlyMaster(sys.stdout),
             cli.FinalCountsReporter(sys.stdout),
             cli.TimedReporter(sys.stdout),
         ]
@@ -116,11 +118,13 @@ class WhenSpecifyingAPath(MainSharedContext):
             DecoratorBasedIdentifier(),
             NameBasedIdentifier(),
             cli.DotsReporter(sys.stdout),
-            # FIXME: failures only
+            cli.FailuresOnlyBefore(),
             cli.Colouriser(sys.stdout),
             cli.VerboseReporter(sys.stdout),
             cli.StdOutCapturingReporter(sys.stdout),
             cli.UnColouriser(sys.stdout),
+            cli.FailuresOnlyAfter(),
+            cli.FailuresOnlyMaster(sys.stdout),
             cli.FinalCountsReporter(sys.stdout),
             cli.TimedReporter(sys.stdout),
         ]
@@ -172,9 +176,11 @@ class WhenUserDisablesColour(MainSharedContext):
             DecoratorBasedIdentifier(),
             NameBasedIdentifier(),
             cli.DotsReporter(sys.stdout),
-            # FIXME: failures only
+            cli.FailuresOnlyBefore(),
             cli.VerboseReporter(sys.stdout),
             cli.StdOutCapturingReporter(sys.stdout),
+            cli.FailuresOnlyAfter(),
+            cli.FailuresOnlyMaster(sys.stdout),
             cli.FinalCountsReporter(sys.stdout),
             cli.TimedReporter(sys.stdout),
         ]
@@ -228,10 +234,12 @@ class WhenUserDisablesStdOutCapturing(MainSharedContext):
             DecoratorBasedIdentifier(),
             NameBasedIdentifier(),
             cli.DotsReporter(sys.stdout),
-            # FIXME: failures only
+            cli.FailuresOnlyBefore(),
             cli.Colouriser(sys.stdout),
             cli.VerboseReporter(sys.stdout),
             cli.UnColouriser(sys.stdout),
+            cli.FailuresOnlyAfter(),
+            cli.FailuresOnlyMaster(sys.stdout),
             cli.FinalCountsReporter(sys.stdout),
             cli.TimedReporter(sys.stdout),
         ]
@@ -289,8 +297,10 @@ class WhenUserDisablesColourAndCapturing(MainSharedContext):
             DecoratorBasedIdentifier(),
             NameBasedIdentifier(),
             cli.DotsReporter(sys.stdout),
-            # FIXME: failures only
+            cli.FailuresOnlyBefore(),
             cli.VerboseReporter(sys.stdout),
+            cli.FailuresOnlyAfter(),
+            cli.FailuresOnlyMaster(sys.stdout),
             cli.FinalCountsReporter(sys.stdout),
             cli.TimedReporter(sys.stdout),
         ]
@@ -364,11 +374,13 @@ class WhenUserDisablesAssertionRewriting(MainSharedContext):
             DecoratorBasedIdentifier(),
             NameBasedIdentifier(),
             cli.DotsReporter(sys.stdout),
-            # FIXME: failures only
+            cli.FailuresOnlyBefore(),
             cli.Colouriser(sys.stdout),
             cli.VerboseReporter(sys.stdout),
             cli.StdOutCapturingReporter(sys.stdout),
             cli.UnColouriser(sys.stdout),
+            cli.FailuresOnlyAfter(),
+            cli.FailuresOnlyMaster(sys.stdout),
             cli.FinalCountsReporter(sys.stdout),
             cli.TimedReporter(sys.stdout),
         ]
@@ -428,11 +440,13 @@ class WhenUserDisablesShuffling(MainSharedContext):
             DecoratorBasedIdentifier(),
             NameBasedIdentifier(),
             cli.DotsReporter(sys.stdout),
-            # FIXME: failures only
+            cli.FailuresOnlyBefore(),
             cli.Colouriser(sys.stdout),
             cli.VerboseReporter(sys.stdout),
             cli.StdOutCapturingReporter(sys.stdout),
             cli.UnColouriser(sys.stdout),
+            cli.FailuresOnlyAfter(),
+            cli.FailuresOnlyMaster(sys.stdout),
             cli.FinalCountsReporter(sys.stdout),
             cli.TimedReporter(sys.stdout),
         ]
@@ -499,9 +513,11 @@ class WhenColoramaIsNotInstalled(MainSharedContext):
             DecoratorBasedIdentifier(),
             NameBasedIdentifier(),
             cli.DotsReporter(sys.stdout),
-            # FIXME: failures only
+            cli.FailuresOnlyBefore(),
             cli.VerboseReporter(sys.stdout),
             cli.StdOutCapturingReporter(sys.stdout),
+            cli.FailuresOnlyAfter(),
+            cli.FailuresOnlyMaster(sys.stdout),
             cli.FinalCountsReporter(sys.stdout),
             cli.TimedReporter(sys.stdout),
         ])
@@ -525,9 +541,11 @@ class WhenStdOutIsAPipe(MainSharedContext):
             DecoratorBasedIdentifier(),
             NameBasedIdentifier(),
             cli.DotsReporter(sys.stdout),
-            # FIXME: failures only
+            cli.FailuresOnlyBefore(),
             cli.VerboseReporter(sys.stdout),
             cli.StdOutCapturingReporter(sys.stdout),
+            cli.FailuresOnlyAfter(),
+            cli.FailuresOnlyMaster(sys.stdout),
             cli.FinalCountsReporter(sys.stdout),
             cli.TimedReporter(sys.stdout),
         ])

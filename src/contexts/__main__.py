@@ -113,6 +113,9 @@ def make_plugin_instances():
     builder.add(cli.StdOutCapturingReporter)
     builder.add(cli.Colouriser)
     builder.add(cli.UnColouriser)
+    builder.add(cli.FailuresOnlyMaster)
+    builder.add(cli.FailuresOnlyBefore)
+    builder.add(cli.FailuresOnlyAfter)
     return [activate_plugin(p) for p in builder.to_list()]
 
 def parse_args(parser):

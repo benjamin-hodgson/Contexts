@@ -84,60 +84,6 @@ FAILED!
         assert self.reporter.failed
 
 
-class WhenOutputtingFailuresOnly:
-    def in_the_context_of_a_partly_successful_run(self):
-        self.stringio = StringIO()
-        self.plugin = plugins.cli.FailuresOnly(self.stringio)
-        gen = self.plugin.request_plugins()
-        next(gen)
-        try:
-            gen.send({plugins.cli.VerboseReporter: plugins.cli.VerboseReporter(StringIO())})
-        except StopIteration:
-            pass
-
-        context1 = tools.create_context('context1')
-        context2 = tools.create_context('context2')
-        tb = [('made_up_file.py', 3, 'made_up_function', 'frame1'),
-               ('another_made_up_file.py', 2, 'another_made_up_function', 'frame2')]
-        exception = tools.build_fake_assertion_error(tb, "Gotcha")
-
-        self.plugin.context_started(context1.name, context1.example)
-        self.plugin.assertion_started('assertion1')
-        self.plugin.assertion_passed('assertion1')
-        self.plugin.assertion_started('assertion2')
-        self.plugin.assertion_failed('assertion2', exception)
-        self.plugin.context_ended(context1.name, context1.example)
-
-        self.plugin.context_started(context2.name, context2.example)
-        self.plugin.context_errored(context2.name, context2.example, exception)
-
-    def because_the_test_run_ends(self):
-        self.before = self.stringio.getvalue()
-        self.plugin.test_run_ended()
-
-    def it_should_not_print_anything_before_the_test_run_ends(self):
-        assert self.before == ''
-
-    def it_should_print_the_failures_at_the_end(self):
-        assert self.stringio.getvalue() == """
-----------------------------------------------------------------------
-context 1
-  FAIL: assertion 2
-    Traceback (most recent call last):
-      File "made_up_file.py", line 3, in made_up_function
-        frame1
-      File "another_made_up_file.py", line 2, in another_made_up_function
-        frame2
-    plugin_tests.tools.FakeAssertionError: Gotcha
-context 2
-  Traceback (most recent call last):
-    File "made_up_file.py", line 3, in made_up_function
-      frame1
-    File "another_made_up_file.py", line 2, in another_made_up_function
-      frame2
-  plugin_tests.tools.FakeAssertionError: Gotcha"""
-
-
 class WhenTimingATestRun:
     def context(self):
         self.fake_now = datetime.datetime(2013, 10, 22, 13, 41, 0)
