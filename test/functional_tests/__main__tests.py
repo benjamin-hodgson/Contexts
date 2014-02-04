@@ -49,15 +49,15 @@ class WhenAPluginRequestsOthers(MainSharedContext):
     # this test should target that module and not monkey-patch __main__
     def establish_various_ugly_mocks(self):
         class ActivePlugin:
-            def initialise(self, args):
+            def initialise(self, args, env):
                 return True
         class InactivePlugin:
-            def initialise(self, args):
+            def initialise(self, args, env):
                 return False
         class NoseyPlugin:
             def __init__(self):
                 self.plugs = None
-            def initialise(self, args):
+            def initialise(self, args, env):
                 return True
             def request_plugins(self):
                 self.plugs = yield [ActivePlugin, InactivePlugin]

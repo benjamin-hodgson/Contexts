@@ -20,7 +20,7 @@ class ExitCodeReporter(object):
     @classmethod
     def locate(cls):
         return (None, Shuffler)
-    def initialise(self, args):
+    def initialise(self, args, env):
         return True
 
     def __init__(self):

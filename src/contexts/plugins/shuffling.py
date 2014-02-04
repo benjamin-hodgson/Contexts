@@ -8,7 +8,7 @@ class Shuffler(object):
             dest='shuffle',
             default=True,
             help="Disable test order randomisation.")
-    def initialise(self, args):
+    def initialise(self, args, env):
         return args.shuffle
 
     def process_module_list(self, l):

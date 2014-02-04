@@ -10,8 +10,8 @@ class DotsReporter(shared.StreamReporter):
     @classmethod
     def locate(cls):
         return (NameBasedIdentifier, VerboseReporter)
-    def initialise(self, args):
-        return args.verbosity == 'normal' and not args.teamcity
+    def initialise(self, args, env):
+        return args.verbosity == 'normal' and not (args.teamcity or 'TEAMCITY_VERSION' in env)
 
     def assertion_passed(self, *args, **kwargs):
         super().assertion_passed(*args, **kwargs)
@@ -56,8 +56,8 @@ class VerboseReporter(shared.StreamReporter):
             default='normal',
             help="Disable progress reporting.")
 
-    def initialise(self, args):
-        return args.verbosity != "quiet" and not args.teamcity
+    def initialise(self, args, env):
+        return args.verbosity != "quiet" and not (args.teamcity or 'TEAMCITY_VERSION' in env)
 
     def context_started(self, name, example):
         super().context_started(name, example)
@@ -97,8 +97,8 @@ class FinalCountsReporter(shared.StreamReporter):
     def locate(cls):
         return (FailuresOnlyMaster, None)
 
-    def initialise(self, args):
-        return not args.teamcity and not args.verbosity == 'quiet'
+    def initialise(self, args, env):
+        return not (args.teamcity or 'TEAMCITY_VERSION' in env) and not args.verbosity == 'quiet'
 
     def __init__(self, stream=sys.stdout):
         super().__init__(stream)
@@ -175,8 +175,8 @@ class StdOutCapturingReporter(shared.StreamReporter):
             default=True,
             help="Disable capturing of stdout during tests.")
 
-    def initialise(self, args):
-        return args.capture and not args.teamcity and args.verbosity != "quiet"
+    def initialise(self, args, env):
+        return args.capture and not (args.teamcity or 'TEAMCITY_VERSION' in env) and args.verbosity != "quiet"
 
     def centred_dashes(self, string, indentation):
         num = str(70 - indentation)
@@ -218,8 +218,8 @@ class TimedReporter(shared.StreamReporter):
     @classmethod
     def locate(self):
         return (FinalCountsReporter, None)
-    def initialise(self, args):
-        return not args.teamcity and not args.verbosity == 'quiet'
+    def initialise(self, args, env):
+        return not (args.teamcity or 'TEAMCITY_VERSION' in env) and not args.verbosity == 'quiet'
     def test_run_started(self):
         super().test_run_started()
         self.start_time = datetime.datetime.now()
@@ -251,11 +251,16 @@ class Colouriser(shared.StreamReporter):
             # just means the other one already did it
             pass
 
-    def initialise(self, args):
+    def initialise(self, args, env):
+        if not sys.stdout.isatty():
+            args.colour = False
         if args.colour:
             global colorama
-            import colorama
-        return args.colour and not args.teamcity and args.verbosity != 'quiet'
+            try:
+                import colorama
+            except ImportError:
+                args.colour = False
+        return args.colour and not (args.teamcity or 'TEAMCITY_VERSION' in env) and args.verbosity != 'quiet'
 
     def context_errored(self, name, example, exception):
         self.stream.write(colorama.Fore.RED)
@@ -289,11 +294,16 @@ class UnColouriser(shared.StreamReporter):
             # just means the other one already did it
             pass
 
-    def initialise(self, args):
+    def initialise(self, args, env):
+        if not sys.stdout.isatty():
+            args.colour = False
         if args.colour:
             global colorama
-            import colorama
-        return args.colour and not args.teamcity and args.verbosity != 'quiet'
+            try:
+                import colorama
+            except ImportError:
+                args.colour = False
+        return args.colour and not (args.teamcity or 'TEAMCITY_VERSION' in env) and args.verbosity != 'quiet'
 
     def context_errored(self, name, example, exception):
         self.stream.write(colorama.Fore.RESET)
@@ -322,8 +332,8 @@ class FailuresOnlyMaster(shared.StreamReporter):
     def locate(cls):
         return (FailuresOnlyAfter, None)
 
-    def initialise(self, args):
-        return args.verbosity == 'normal' and not args.teamcity
+    def initialise(self, args, env):
+        return args.verbosity == 'normal' and not (args.teamcity or 'TEAMCITY_VERSION' in env)
 
     def request_plugins(self):
         wanted_classes = [Colouriser, VerboseReporter, StdOutCapturingReporter, UnColouriser]
@@ -346,8 +356,8 @@ class FailuresOnlyBefore(object):
     def locate(cls):
         return (DotsReporter, Colouriser)
 
-    def initialise(self, args):
-        return args.verbosity == 'normal' and not args.teamcity
+    def initialise(self, args, env):
+        return args.verbosity == 'normal' and not (args.teamcity or 'TEAMCITY_VERSION' in env)
 
     def request_plugins(self):
         returned_plugins = yield [FailuresOnlyMaster]
@@ -381,8 +391,8 @@ class FailuresOnlyAfter(object):
     def locate(cls):
         return (UnColouriser, None)
 
-    def initialise(self, args):
-        return args.verbosity == 'normal' and not args.teamcity
+    def initialise(self, args, env):
+        return args.verbosity == 'normal' and not (args.teamcity or 'TEAMCITY_VERSION' in env)
 
     def request_plugins(self):
         returned_plugins = yield [FailuresOnlyMaster]

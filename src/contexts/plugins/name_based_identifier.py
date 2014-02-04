@@ -15,7 +15,7 @@ cleanup_re = re.compile(r"[Cc]leanup")
 
 
 class NameBasedIdentifier(object):
-    def initialise(self, args):
+    def initialise(self, args, env):
         return True
 
     def identify_folder(self, folder):

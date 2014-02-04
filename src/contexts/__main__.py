@@ -15,62 +15,73 @@ from contexts.plugins.decorators import DecoratorBasedIdentifier
 
 
 def cmd():
-    plugin_list = make_plugin_instances()
-
     parser = argparse.ArgumentParser()
+    parser.add_argument('path',
+        action='store',
+        nargs='?',
+        default=os.getcwd(),
+        help="Path to the test file or directory to run. (Default: current directory)")
 
+    all_plugins = make_plugin_instances()
+
+    call_plugins_to_set_up_parser(all_plugins, parser)
+    args = parse_args(parser)
+
+    active_plugins = initialise_plugins(all_plugins, args)
+
+    inject_plugins_into_one_another(active_plugins)
+
+    main(os.path.realpath(args.path), active_plugins)
+
+
+def make_plugin_instances():
+    builder = PluginListBuilder()
+    for cls in [ExitCodeReporter,
+                Shuffler, Importer,
+                AssertionRewritingImporter,
+                DecoratorBasedIdentifier,
+                NameBasedIdentifier,
+                teamcity.TeamCityReporter,
+                cli.DotsReporter,
+                cli.VerboseReporter,
+                cli.StdOutCapturingReporter,
+                cli.Colouriser, cli.UnColouriser,
+                cli.FailuresOnlyMaster, cli.FailuresOnlyBefore, cli.FailuresOnlyAfter,
+                cli.FinalCountsReporter, cli.TimedReporter]:
+        builder.add(cls)
+    return [activate_plugin(p) for p in builder.to_list()]
+
+
+def call_plugins_to_set_up_parser(plugin_list, parser):
     for plug in plugin_list:
         if hasattr(plug, "setup_parser"):
             plug.setup_parser(parser)
 
-    setup_parser(parser)
-    args = parse_args(parser)
 
-    if "TEAMCITY_VERSION" in os.environ:
-        args.teamcity = True
-
-    if not sys.stdout.isatty():
-        args.colour = False
-
-    if args.colour:
-        try:
-            import colorama
-        except ImportError:
-            args.colour = False
-        else:
-            colorama.init()
-
+def initialise_plugins(plugin_list, args):
     new_list = []
     for plug in plugin_list:
-        include = plug.initialise(args)
+        include = plug.initialise(args, os.environ)
         if include:
             new_list.append(plug)
+    return new_list
 
-    for plug in new_list:
+
+def inject_plugins_into_one_another(active_plugins):
+    for plug in active_plugins:
         if hasattr(plug, 'request_plugins'):
             gen = plug.request_plugins()
             if gen is None:
                 continue
             requested = next(gen)
             to_send = {}
-            for requested_class, active_instance in itertools.product(requested, new_list):
+            for requested_class, active_instance in itertools.product(requested, active_plugins):
                 if isinstance(active_instance, requested_class):
                     to_send[requested_class] = active_instance
             try:
                 gen.send(to_send)
             except StopIteration:  # should happen every time
                 pass
-
-    main(os.path.realpath(args.path), new_list)
-
-
-def setup_parser(parser):
-    parser.add_argument('path',
-        action='store',
-        nargs='?',
-        default=os.getcwd(),
-        help="Path to the test file or directory to run. (Default: current directory)")
-    return parser
 
 
 def activate_plugin(cls):
@@ -87,28 +98,6 @@ def activate_plugin(cls):
         return cls(sys.stdout)
 
     return cls()
-
-
-def make_plugin_instances():
-    builder = PluginListBuilder()
-    builder.add(ExitCodeReporter)
-    builder.add(Shuffler)
-    builder.add(Importer)
-    builder.add(AssertionRewritingImporter)
-    builder.add(DecoratorBasedIdentifier)
-    builder.add(NameBasedIdentifier)
-    builder.add(cli.DotsReporter)
-    builder.add(teamcity.TeamCityReporter)
-    builder.add(cli.VerboseReporter)
-    builder.add(cli.StdOutCapturingReporter)
-    builder.add(cli.Colouriser)
-    builder.add(cli.UnColouriser)
-    builder.add(cli.FailuresOnlyMaster)
-    builder.add(cli.FailuresOnlyBefore)
-    builder.add(cli.FailuresOnlyAfter)
-    builder.add(cli.FinalCountsReporter)
-    builder.add(cli.TimedReporter)
-    return [activate_plugin(p) for p in builder.to_list()]
 
 def parse_args(parser):
     return parser.parse_args(sys.argv[1:])

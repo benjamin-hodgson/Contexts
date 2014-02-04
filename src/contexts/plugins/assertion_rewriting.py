@@ -8,7 +8,7 @@ class AssertionRewritingImporter(Importer):
     @classmethod
     def locate(cls):
         return (Shuffler, Importer)
-    def initialise(self, args):
+    def initialise(self, args, env):
         return args.rewriting
     def get_loader(self, module_name, filename):
         return AssertionRewritingLoader(module_name, filename)

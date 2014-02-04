@@ -26,13 +26,14 @@ class PluginInterface(object):
         the plugin needs to configure itself. See the standard library documentation
         for `argparse` for more information.
         """
-    def initialise(self, args):
+    def initialise(self, args, environ):
         """
         Called after command-line arguments are parsed.
 
-        `args` is the result of `ArgumentParser.parser_args()`
+        `args` is the result of `ArgumentParser.parser_args()`.
         (see the standard library documentation for `argparse` for more information).
-        Plugins should use this to set themselves up.
+        `environ` is the value of `os.environ`.
+        Plugins should use these to set themselves up.
 
         Plugins may return True or False from this method. Returning True will cause
         the plugin to be added to the list of plugins for this test run. Returning False

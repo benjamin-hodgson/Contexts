@@ -17,8 +17,8 @@ class TeamCityReporter(shared.StreamReporter):
             default=False,
             help="Enable teamcity test reporting.")
 
-    def initialise(self, args):
-        return args.teamcity
+    def initialise(self, args, env):
+        return args.teamcity or ('TEAMCITY_VERSION' in env)
 
     def suite_started(self, name):
         self.teamcity_print("testSuiteStarted", name=name)

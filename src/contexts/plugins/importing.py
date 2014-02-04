@@ -22,7 +22,7 @@ class Importer(object):
                 help='Disable assertion rewriting.')
         except argparse.ArgumentError:  # just means it's already been set up
             pass
-    def initialise(self, args):
+    def initialise(self, args, env):
         return not args.rewriting
 
     def import_module(self, dir_path, module_name):
