@@ -43,44 +43,6 @@ class MainSharedContext:
         colorama.init = self.real_colorama_init
 
 
-class WhenAPluginRequestsOthers(MainSharedContext):
-    # this test is not a good test.
-    # When plugin discovery has been fully built out,
-    # this test should target that module and not monkey-patch __main__
-    def establish_various_ugly_mocks(self):
-        class ActivePlugin:
-            def initialise(self, args, env):
-                return True
-        class InactivePlugin:
-            def initialise(self, args, env):
-                return False
-        class NoseyPlugin:
-            def __init__(self):
-                self.plugs = None
-            def initialise(self, args, env):
-                return True
-            def request_plugins(self):
-                self.plugs = yield [ActivePlugin, InactivePlugin]
-
-        self.plugs = [ActivePlugin(), InactivePlugin(), NoseyPlugin()]
-        self.nosey_plugin = self.plugs[2]
-
-        self.fake_make_plugin_instances = mock.Mock()
-        self.fake_make_plugin_instances.return_value = self.plugs
-        self.fake_parse_args = mock.Mock()
-        self.fake_parse_args.return_value.path = "fakepath"
-
-        self.expected = {ActivePlugin: self.plugs[0]}
-
-    def because_we_call_cmd(self):
-        with mock.patch.object(__main__, "parse_args", self.fake_parse_args):
-            with mock.patch.object(__main__, "make_plugin_instances", self.fake_make_plugin_instances):
-                __main__.cmd()
-
-    def it_should_send_a_dict_containing_the_active_requested_plugins_into_request_plugins(self):
-        assert self.nosey_plugin.plugs == self.expected
-
-
 class WhenRunningFromCommandLineWithNoArguments(MainSharedContext):
     def establish_arguments(self):
         self.expected_plugins = [
