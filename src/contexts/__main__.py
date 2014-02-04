@@ -78,7 +78,6 @@ def create_reporting_plugins(args):
     if args.teamcity or args.verbosity == 'quiet':
         return []
     return [
-        cli.FinalCountsReporter,
         cli.TimedReporter
     ]
 
@@ -116,6 +115,7 @@ def make_plugin_instances():
     builder.add(cli.FailuresOnlyMaster)
     builder.add(cli.FailuresOnlyBefore)
     builder.add(cli.FailuresOnlyAfter)
+    builder.add(cli.FinalCountsReporter)
     return [activate_plugin(p) for p in builder.to_list()]
 
 def parse_args(parser):

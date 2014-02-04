@@ -93,6 +93,13 @@ class VerboseReporter(shared.StreamReporter):
 class FinalCountsReporter(shared.StreamReporter):
     dashes = '-' * 70
 
+    @classmethod
+    def locate(cls):
+        return (FailuresOnlyMaster, None)
+
+    def initialise(self, args):
+        return not args.teamcity and not args.verbosity == 'quiet'
+
     def __init__(self, stream=sys.stdout):
         super().__init__(stream)
         self.context_count = 0
