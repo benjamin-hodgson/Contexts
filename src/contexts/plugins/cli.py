@@ -215,6 +215,11 @@ class StdOutCapturingReporter(shared.StreamReporter):
 
 
 class TimedReporter(shared.StreamReporter):
+    @classmethod
+    def locate(self):
+        return (FinalCountsReporter, None)
+    def initialise(self, args):
+        return not args.teamcity and not args.verbosity == 'quiet'
     def test_run_started(self):
         super().test_run_started()
         self.start_time = datetime.datetime.now()

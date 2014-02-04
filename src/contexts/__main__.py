@@ -61,7 +61,6 @@ def cmd():
             except StopIteration:  # should happen every time
                 pass
 
-    new_list.extend(activate_plugin(cls) for cls in create_reporting_plugins(args))
     main(os.path.realpath(args.path), new_list)
 
 
@@ -72,14 +71,6 @@ def setup_parser(parser):
         default=os.getcwd(),
         help="Path to the test file or directory to run. (Default: current directory)")
     return parser
-
-
-def create_reporting_plugins(args):
-    if args.teamcity or args.verbosity == 'quiet':
-        return []
-    return [
-        cli.TimedReporter
-    ]
 
 
 def activate_plugin(cls):
@@ -116,6 +107,7 @@ def make_plugin_instances():
     builder.add(cli.FailuresOnlyBefore)
     builder.add(cli.FailuresOnlyAfter)
     builder.add(cli.FinalCountsReporter)
+    builder.add(cli.TimedReporter)
     return [activate_plugin(p) for p in builder.to_list()]
 
 def parse_args(parser):
