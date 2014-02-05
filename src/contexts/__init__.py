@@ -1,6 +1,6 @@
 import sys
 from . import core
-from . import plugins
+from .plugins import shared, shuffling, assertion_rewriting, decorators, name_based_identifier, cli
 from .tools import catch, set_trace, time
 
 
@@ -39,9 +39,21 @@ def run(to_run=None, plugin_list=None):
     """
     if plugin_list is None:  # default list of plugins
         plugin_list = (
-            plugins.cli.DotsReporter(sys.stdout),
-            plugins.cli.StdOutCapturingReporter(sys.stdout),
-            plugins.cli.TimedReporter(sys.stdout)
+            shared.ExitCodeReporter(),
+            shuffling.Shuffler(),
+            assertion_rewriting.AssertionRewritingImporter(),
+            decorators.DecoratorBasedIdentifier(),
+            name_based_identifier.NameBasedIdentifier(),
+            cli.DotsReporter(sys.stdout),
+            cli.FailuresOnlyBefore(),
+            cli.Colouriser(sys.stdout),
+            cli.VerboseReporter(sys.stdout),
+            cli.StdOutCapturingReporter(sys.stdout),
+            cli.UnColouriser(sys.stdout),
+            cli.FailuresOnlyAfter(),
+            cli.FailuresOnlyMaster(sys.stdout),
+            cli.FinalCountsReporter(sys.stdout),
+            cli.TimedReporter(sys.stdout),
         )
 
     if to_run is None:
