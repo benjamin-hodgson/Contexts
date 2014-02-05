@@ -67,21 +67,21 @@ class PluginInterface(object):
         Called when a test context begins its run.
 
         `name` is the name of the test context. `example` is the current example,
-        which may be contexts.plugins.NO_EXAMPLE if it is not a parametrised test.
+        which may be contexts.plugin_interface.NO_EXAMPLE if it is not a parametrised test.
         """
     def context_ended(self, name, example):
         """
         Called when a test context completes its run
 
         `name` is the name of the test context. `example` is the current example,
-        which may be contexts.plugins.NO_EXAMPLE if it is not a parametrised test.
+        which may be contexts.plugin_interface.NO_EXAMPLE if it is not a parametrised test.
         """
     def context_errored(self, name, example, exception):
         """
         Called when a test context (not an assertion) throws an exception
 
         `name` is the name of the test context. `example` is the current example,
-        which may be contexts.plugins.NO_EXAMPLE if it is not a parametrised test.
+        which may be contexts.plugin_interface.NO_EXAMPLE if it is not a parametrised test.
         `exception` is the exception which got thrown.
         """
 
@@ -106,7 +106,7 @@ class PluginInterface(object):
             folder - the full path of the folder which the test runner wants to be identified
 
         Plugins may return:
-            contexts.plugins.TEST_FOLDER - plugin wishes the folder to be treated as a test folder
+            contexts.plugin_interface.TEST_FOLDER - plugin wishes the folder to be treated as a test folder
             None - plugin does not wish to identify the folder (though other plugins may still cause it to be run)
         """
     def identify_file(self, file):
@@ -118,7 +118,7 @@ class PluginInterface(object):
             file - the full path of the file which the test runner wants to be identified
 
         Plugins may return:
-            contexts.plugins.TEST_FILE - plugin wishes the file to be imported and run as a test file
+            contexts.plugin_interface.TEST_FILE - plugin wishes the file to be imported and run as a test file
             None - plugin does not wish to identify the file (though other plugins may still cause it to be run)
         """
     def identify_class(self, cls):
@@ -130,7 +130,7 @@ class PluginInterface(object):
             cls - the class object which the test runner wants to be identified.
 
         Plugins may return:
-            contexts.plugins.CONTEXT - plugin wishes the class to be treated as a test class
+            contexts.plugin_interface.CONTEXT - plugin wishes the class to be treated as a test class
             None - plugin does not wish to identify the class (though other plugins may still cause it to be run)
         """
     def identify_method(self, func):
@@ -144,11 +144,11 @@ class PluginInterface(object):
             func - the unbound method (or bound classmethod) which the test runner wants to be identified
 
         Plugins may return:
-            contexts.plugins.EXAMPLES - plugin wishes the method to be treated as an 'examples' method
-            contexts.plugins.SETUP - plugin wishes the method to be treated as an 'establish' method
-            contexts.plugins.ACTION - plugin wishes the method to be treated as a 'because'
-            contexts.plugins.ASSERTION - plugin wishes the method to be treated as an assertion method
-            contexts.plugins.TEARDOWN - plugin wishes the method to be treated as a teardown method
+            contexts.plugin_interface.EXAMPLES - plugin wishes the method to be treated as an 'examples' method
+            contexts.plugin_interface.SETUP - plugin wishes the method to be treated as an 'establish' method
+            contexts.plugin_interface.ACTION - plugin wishes the method to be treated as a 'because'
+            contexts.plugin_interface.ASSERTION - plugin wishes the method to be treated as an assertion method
+            contexts.plugin_interface.TEARDOWN - plugin wishes the method to be treated as a teardown method
             None - plugin does not wish to identify the method (though other plugins may still cause it to be run)
         """
 
@@ -177,11 +177,11 @@ class PluginInterface(object):
 
 
 TEST_FOLDER = type("_TestFolder", (), {})()
-TEST_FILE = "test file - DO NOT RELY ON THE VALUE OF THIS CONSTANT"
-CONTEXT = "context - DO NOT RELY ON THE VALUE OF THIS CONSTANT"
-EXAMPLES = "examples - DO NOT RELY ON THE VALUE OF THIS CONSTANT"
-SETUP = "setup - DO NOT RELY ON THE VALUE OF THIS CONSTANT"
-ACTION = "action - DO NOT RELY ON THE VALUE OF THIS CONSTANT"
-ASSERTION = "assertion - DO NOT RELY ON THE VALUE OF THIS CONSTANT"
-TEARDOWN = "teardown - DO NOT RELY ON THE VALUE OF THIS CONSTANT"
+TEST_FILE = type("_TestFile", (), {})()
+CONTEXT = type("_Context", (), {})()
+EXAMPLES = type("_Examples", (), {})()
+SETUP = type("_Setup", (), {})()
+ACTION = type("_Action", (), {})()
+ASSERTION = type("_Assertion", (), {})()
+TEARDOWN = type("_Teardown", (), {})()
 NO_EXAMPLE = type("_NoExample", (), {})()
