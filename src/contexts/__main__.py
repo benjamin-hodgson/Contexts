@@ -9,6 +9,12 @@ from .plugin_discovery import PluginListBuilder
 
 
 def cmd():
+    try:
+        import colorama
+    except ImportError:
+        pass
+    else:
+        colorama.init()
     parser = argparse.ArgumentParser()
     parser.add_argument('path',
         action='store',
