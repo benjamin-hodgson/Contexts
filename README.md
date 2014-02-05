@@ -20,11 +20,12 @@ but it aims to be useful for more than just acceptance testing (unlike Cucumber 
 
 Cool features
 -------------
-* Give your tests **descriptive names** so you can tell what's gone wrong when they fail!
+* Give your tests [**descriptive names**](https://github.com/benjamin-hodgson/Contexts/wiki/Guide#wiki-defining-tests)
+  so you can tell what's gone wrong when they fail!
 * Run **all the assertions** for each test case, even when one fails!
-* Practice 'Example-Driven-Development' with **parametrised tests**!
-* Extend Contexts by writing your own **plugins**!
-* Use the `assert` statement and still get **helpful failure messages**!
+* Practice 'Example-Driven-Development' with [**parametrised tests**](https://github.com/benjamin-hodgson/Contexts/wiki/Guide#wiki-triangulating)!
+* Extend Contexts by writing your own [**plugins**](https://github.com/benjamin-hodgson/Contexts/wiki/Plugins)!
+* Use the `assert` statement and still get [**helpful failure messages**](https://github.com/benjamin-hodgson/Contexts/wiki/Guide#wiki-making-assertions-about-your-action)!
 * **Test all the things**!
 
 Installation
@@ -80,6 +81,10 @@ class WhenRequestingAResourceThatDoesNotExist(object):
     def cleanup_the_session(self):
         self.session.close()
 ```
+
+Running your tests
+------------------
+Type `run-contexts` at the command line to discover and run test files and folders in your working directory.
 
 Help
 ----
