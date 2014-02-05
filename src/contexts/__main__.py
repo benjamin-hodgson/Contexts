@@ -3,15 +3,9 @@ import inspect
 import itertools
 import os
 import sys
+import pkg_resources
 from . import main
 from .plugin_discovery import PluginListBuilder
-from .plugins import cli, teamcity
-from .plugins.shared import ExitCodeReporter
-from .plugins.shuffling import Shuffler
-from .plugins.importing import Importer
-from .plugins.assertion_rewriting import AssertionRewritingImporter
-from contexts.plugins.name_based_identifier import NameBasedIdentifier
-from contexts.plugins.decorators import DecoratorBasedIdentifier
 
 
 def cmd():
@@ -23,6 +17,7 @@ def cmd():
         help="Path to the test file or directory to run. (Default: current directory)")
 
     plugin_activator = PluginActivator()
+    plugin_activator.load_plugins()
     plugin_activator.setup_parser(parser)
 
     args = parser.parse_args(sys.argv[1:])
@@ -34,21 +29,12 @@ def cmd():
 
 
 class PluginActivator(object):
-    def __init__(self):
+    def load_plugins(self):
         builder = PluginListBuilder()
-        for cls in [ExitCodeReporter,
-                    Shuffler, Importer,
-                    AssertionRewritingImporter,
-                    DecoratorBasedIdentifier,
-                    NameBasedIdentifier,
-                    teamcity.TeamCityReporter,
-                    cli.DotsReporter,
-                    cli.VerboseReporter,
-                    cli.StdOutCapturingReporter,
-                    cli.Colouriser, cli.UnColouriser,
-                    cli.FailuresOnlyMaster, cli.FailuresOnlyBefore, cli.FailuresOnlyAfter,
-                    cli.FinalCountsReporter, cli.TimedReporter]:
+        for entry_point in pkg_resources.iter_entry_points('contexts.plugins'):
+            cls = entry_point.load()
             builder.add(cls)
+
         self.plugins = [self.activate_plugin(p) for p in builder.to_list()]
 
     def setup_parser(self, parser):
