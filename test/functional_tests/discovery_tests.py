@@ -4,7 +4,7 @@ import shutil
 import types
 import contexts
 from unittest import mock
-from .tools import SpyReporter, UnorderedList
+from .tools import SpyReporter, UnorderedList, run_object
 from contexts.plugin_interface import PluginInterface, TEST_FOLDER, TEST_FILE, CONTEXT, ASSERTION
 from contexts.plugins.decorators import assertion
 
@@ -46,7 +46,7 @@ class WhenAPluginChoosesClasses:
         self.other_plugin.identify_class.return_value = None
 
     def because_we_run_the_module(self):
-        contexts.run(self.module, [self.plugin, self.other_plugin])
+        run_object(self.module, [self.plugin, self.other_plugin])
 
     def it_should_run_the_class_the_plugin_likes(self):
         assert self.module.ToRun1.was_run
@@ -93,7 +93,7 @@ class WhenAPluginModifiesAClassList:
         self.plugin.identify_method.return_value = ASSERTION
 
     def because_we_run_the_module(self):
-        contexts.run(self.module, [self.plugin])
+        run_object(self.module, [self.plugin])
 
     def it_should_pass_a_list_of_the_found_classes_into_process_class_list(self):
         assert isinstance(self.called_with, collections.abc.MutableSequence)
@@ -124,8 +124,8 @@ class WhenAPluginSuppliesAFileToRun:
         self.plugin.identify_class.return_value = CONTEXT
         self.plugin.identify_method.return_value = ASSERTION
 
-    def because_we_run_with_no_argument(self):
-        contexts.run(None, [self.plugin])
+    def because_we_run_with_the_plugin(self):
+        contexts.run([self.plugin])
 
     def it_should_run_the_spec_in_the_file(self):
         assert self.ran
@@ -171,7 +171,7 @@ class WhenRunningAFile:
         self.plugin_master.too_late_plugin = self.too_late_plugin
 
     def because_we_run_the_file(self):
-        contexts.run(self.filename, [
+        run_object(self.filename, [
             self.not_implemented_plugin,
             self.noop_plugin,
             self.plugin,
@@ -218,7 +218,7 @@ class WhenRunningAFileInAPackage:
         self.plugin.import_module.side_effect = self.module_list
 
     def because_we_run_the_file(self):
-        contexts.run(self.filename, [self.plugin])
+        run_object(self.filename, [self.plugin])
 
     def it_should_import_the_package_before_the_file(self):
         assert self.plugin.import_module.call_args_list == [
@@ -263,7 +263,7 @@ class WhenRunningAFileInASubPackage:
         self.plugin.import_module.side_effect = self.module_list
 
     def because_we_run_the_file(self):
-        contexts.run(self.filename, [self.plugin])
+        run_object(self.filename, [self.plugin])
 
     def it_should_import_the_package_before_the_file(self):
         assert self.plugin.import_module.call_args_list == [
@@ -304,7 +304,7 @@ class WhenRunningInitDotPy:
         self.plugin.import_module.return_value = self.module
 
     def because_we_run_the_file(self):
-        contexts.run(self.filename, [self.plugin])
+        run_object(self.filename, [self.plugin])
 
     def it_should_import_it_as_a_package(self):
         self.plugin.import_module.assert_called_once_with(TEST_DATA_DIR, self.package_name)
@@ -334,7 +334,7 @@ class WhenAPluginFailsToImportAModule:
         self.setup_filesystem()
 
     def because_we_run_the_folder(self):
-        contexts.run(self.filename, [self.plugin])
+        run_object(self.filename, [self.plugin])
 
     def it_should_pass_the_exception_into_unexpected_error_on_the_plugin(self):
         self.plugin.unexpected_error.assert_called_once_with(self.exception)
@@ -370,8 +370,8 @@ class WhenAPluginSuppliesAFolderToRun:
         self.plugin.identify_class.return_value = CONTEXT
         self.plugin.identify_method.return_value = ASSERTION
 
-    def because_we_run_with_no_argument(self):
-        contexts.run(None, [self.plugin])
+    def because_we_run_with_the_plugin(self):
+        contexts.run([self.plugin])
 
     def it_should_run_the_file(self):
         assert self.ran
@@ -418,7 +418,7 @@ class WhenRunningAFolderWhichIsNotAPackage:
         self.plugin.identify_method.return_value = ASSERTION
 
     def because_we_run_the_folder(self):
-        contexts.run(self.folder_path, [self.plugin])
+        run_object(self.folder_path, [self.plugin])
 
     def it_should_not_ask_permission_to_run_the_folder(self):
         assert not self.plugin.identify_folder.called
@@ -498,7 +498,7 @@ class WhenPluginsModifyAModuleList:
         self.plugin_master.plugin2 = self.plugin2
 
     def because_we_run_the_folder(self):
-        contexts.run(self.folder_path, [self.plugin, self.plugin2])
+        run_object(self.folder_path, [self.plugin, self.plugin2])
 
     def it_should_ask_the_plugins_to_process_the_module_list_in_order(self):
         self.plugin_master.assert_has_calls([
@@ -560,7 +560,7 @@ class WhenRunningAFolderWhichIsAPackage:
         self.plugin.identify_method.return_value = ASSERTION
 
     def because_we_run_the_folder(self):
-        contexts.run(self.folder_path, [self.plugin])
+        run_object(self.folder_path, [self.plugin])
 
     def it_should_import_the_package_first(self):
         assert self.plugin.import_module.call_args_list[0] == mock.call(TEST_DATA_DIR, self.package_name)
@@ -630,7 +630,7 @@ class WhenRunningAFolderWithSubfolders:
         self.plugin.identify_folder.side_effect = identify_folder
 
     def because_we_run_the_folder(self):
-        contexts.run(self.folder_path, [self.plugin])
+        run_object(self.folder_path, [self.plugin])
 
     def it_should_import_the_file_in_the_test_folder(self):
         self.plugin.import_module.assert_any_call(os.path.join(self.folder_path, "wanted_subfolder"), "test_file1")
@@ -691,7 +691,7 @@ class WhenRunningAPackageWithSubfolders:
         self.plugin.identify_folder.side_effect = identify_folder
 
     def because_we_run_the_package(self):
-        contexts.run(self.folder_path, [self.plugin])
+        run_object(self.folder_path, [self.plugin])
 
     def it_should_import_the_package_first(self):
         assert self.plugin.import_module.call_args_list[0] == mock.call(TEST_DATA_DIR, self.package_name)
@@ -776,7 +776,7 @@ class WhenRunningAFolderWithAFileThatFailsToImport:
         self.plugin.import_module.side_effect = [self.exception, self.module]
 
     def because_we_run_the_folder(self):
-        contexts.run(self.folder_path, [self.plugin])
+        run_object(self.folder_path, [self.plugin])
 
     def it_should_report_an_unexpected_error(self):
         self.plugin.unexpected_error.assert_called_once_with(self.exception)

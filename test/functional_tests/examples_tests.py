@@ -1,5 +1,5 @@
 from unittest import mock
-import contexts
+from .tools import run_object
 from contexts.plugin_interface import PluginInterface, EXAMPLES, SETUP, ACTION, ASSERTION, TEARDOWN
 
 
@@ -37,7 +37,7 @@ class WhenRunningAParametrisedSpec:
         }[meth]
 
     def because_we_run_the_class(self):
-        contexts.run(self.ParametrisedSpec, [self.plugin])
+        run_object(self.ParametrisedSpec, [self.plugin])
 
     def it_should_instantiate_the_class_twice(self):
         assert self.ParametrisedSpec.initialised == 2
@@ -75,7 +75,7 @@ class WhenRunningAParametrisedSpecAndExamplesYieldsTuples:
         }[meth]
 
     def because_we_run_the_class(self):
-        contexts.run(self.ParametrisedSpec, [self.plugin])
+        run_object(self.ParametrisedSpec, [self.plugin])
 
     def it_should_unpack_the_tuples(self):
         assert self.ParametrisedSpec.params == [1,2,3,4]
@@ -100,7 +100,7 @@ class WhenRunningAParametrisedSpecAndExamplesYieldsTuplesButTheMethodsOnlyAccept
         }[meth]
 
     def because_we_run_the_class(self):
-        contexts.run(self.ParametrisedSpec, [self.plugin])
+        run_object(self.ParametrisedSpec, [self.plugin])
 
     def it_should_not_unpack_the_tuples(self):
         assert self.ParametrisedSpec.params == [(1,2), (3,4)]
@@ -129,7 +129,7 @@ class WhenRunningAParametrisedSpecWithNonParametrisedMethods:
         }[meth]
 
     def because_we_run_the_class(self):
-        contexts.run(self.ParametrisedSpec, [self.plugin])
+        run_object(self.ParametrisedSpec, [self.plugin])
 
     def it_should_run_the_assertion_twice(self):
         assert self.ParametrisedSpec.assertions == 2
@@ -155,7 +155,7 @@ class WhenExamplesRaisesAnException:
         }[meth]
 
     def because_we_run_the_spec(self):
-        contexts.run(self.spec, [self.plugin])
+        run_object(self.spec, [self.plugin])
 
     def it_should_run_the_first_one(self):
         assert self.spec.total == 3
@@ -180,7 +180,7 @@ class WhenUserFailsToMakeExamplesAClassmethod:
         }[meth]
 
     def because_we_run_the_spec(self):
-        contexts.run(self.spec, [self.plugin])
+        run_object(self.spec, [self.plugin])
 
     def it_should_call_unexpected_error_on_the_reporter(self):
         assert self.plugin.unexpected_error.called
@@ -207,7 +207,7 @@ class WhenExamplesReturnsNone:
         }[meth]
 
     def because_we_run_the_spec(self):
-        contexts.run(self.spec, [self.plugin])
+        run_object(self.spec, [self.plugin])
 
     def it_should_run_the_spec_once(self):
         assert self.spec.times_run == 1

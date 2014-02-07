@@ -1,3 +1,6 @@
+import contexts
+
+
 class SpyReporter(object):
     # unittest.mock doesn't make it particularly easy to get hold of the
     # object a mock was called with. It was quicker just to write this myself.
@@ -46,3 +49,17 @@ class UnorderedList(object):
             if member not in self._list:
                 return False
         return True
+
+
+def run_object(to_run, plugins):
+    extra_plug = FakeObjectSupplier(to_run)
+    plugins.insert(0, extra_plug)
+    return contexts.run(plugins)
+
+
+class FakeObjectSupplier(object):
+    def __init__(self, to_run):
+        self.to_run = to_run
+    def get_object_to_run(self):
+        return self.to_run
+

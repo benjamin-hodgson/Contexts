@@ -1,14 +1,12 @@
 import sys
 from . import core
-from .plugins import shared, shuffling, assertion_rewriting, decorators, name_based_identifier, cli
+from .plugins import shared, shuffling, assertion_rewriting, decorators, name_based_identifier, cli, object_supplier
 from .tools import catch, set_trace, time
 
 
 __all__ = [
     'run', 'main',
-    'catch', 'set_trace', 'time',
-    'setup', 'action', 'assertion', 'teardown', 'examples',
-    'spec', 'context'
+    'catch', 'set_trace', 'time'
 ]
 
 
@@ -22,8 +20,8 @@ def main(*args, **kwargs):
     sys.exit(exit_code)
 
 
-# FIXME: to_run argument needs some work
-def run(to_run=None, plugin_list=None):
+# FIXME: run() currently assumes you're running on the cmd line
+def run(plugin_list=None):
     """
     Polymorphic test-running function.
 
@@ -40,6 +38,7 @@ def run(to_run=None, plugin_list=None):
     """
     if plugin_list is None:  # default list of plugins
         plugin_list = (
+            object_supplier.TestObjectSupplier(),
             shared.ExitCodeReporter(),
             shuffling.Shuffler(),
             assertion_rewriting.AssertionRewritingImporter(),
@@ -59,8 +58,7 @@ def run(to_run=None, plugin_list=None):
 
     composite = core.PluginComposite(plugin_list)
 
-    if to_run is None:
-        to_run = composite.call_plugins("get_object_to_run")
+    to_run = composite.call_plugins("get_object_to_run")
 
     test_run = core.TestRun(to_run, composite)
     test_run.run()

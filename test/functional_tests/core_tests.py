@@ -4,7 +4,7 @@ import contexts
 from contexts.plugin_interface import PluginInterface, EXAMPLES, SETUP, ACTION, ASSERTION, TEARDOWN, NO_EXAMPLE
 from contexts.plugins.name_based_identifier import NameBasedIdentifier
 from contexts.plugins.decorators import assertion
-from .tools import SpyReporter, UnorderedList
+from .tools import SpyReporter, UnorderedList, run_object
 
 core_file = repr(contexts.core.__file__)[1:-1]
 this_file = repr(__file__)[1:-1]
@@ -21,8 +21,8 @@ class WhenAPluginSuppliesAClassToRun:
         self.plugin.get_object_to_run.return_value = TestSpec
         self.plugin.identify_method.return_value = ASSERTION
 
-    def because_we_run_with_no_argument(self):
-        contexts.run(None, [self.plugin])
+    def because_we_run_with_the_plugin(self):
+        contexts.run([self.plugin])
 
     def it_should_run_the_method(self):
         assert self.ran_method
@@ -66,7 +66,7 @@ class WhenAPluginIdentifiesMethods:
 
 
     def because_we_run_the_spec(self):
-        contexts.run(self.spec, [self.none_plugin, self.deleted_plugin, self.plugin, self.too_late_plugin])
+        run_object(self.spec, [self.none_plugin, self.deleted_plugin, self.plugin, self.too_late_plugin])
 
     def it_should_not_ask_the_plugin_to_identify_the_class(self):
         # we are explicitly running this class, don't want to give plugs a chance to stop it
@@ -111,7 +111,7 @@ class WhenAPluginIdentifiesMultipleAssertions:
         self.plugin.identify_method.return_value = ASSERTION
 
     def because_we_run_the_spec(self):
-        contexts.run(self.spec, [self.plugin])
+        run_object(self.spec, [self.plugin])
 
     def it_should_run_both_assertions(self):
         assert self.log == ["assertion", "assertion"]
@@ -128,7 +128,7 @@ class WhenAPluginRefusesToIdentifyAMethod:
         self.plugin.identify_method.return_value = None
 
     def because_we_run_the_spec(self):
-        contexts.run(self.spec, [self.plugin])
+        run_object(self.spec, [self.plugin])
 
     def it_should_ignore_the_method(self):
         assert self.log == []
@@ -180,7 +180,7 @@ class WhenASpecHasASuperclassAndAPluginIdentifiesMethods:
         }[meth]
 
     def because_we_run_the_spec(self):
-        contexts.run(self.spec, [self.plugin])
+        run_object(self.spec, [self.plugin])
 
     def it_should_call_identify_method_with_the_superclass_methods_first(self):
         assert self.plugin.identify_method.call_args_list[:5] == UnorderedList([
@@ -239,7 +239,7 @@ class WhenAPluginReturnsMultipleMethodsOfTheSameType:
         self.plugin.identify_method.side_effect = side_effect
 
     def because_we_run_the_spec(self):
-        contexts.run(self.spec, [self.plugin])
+        run_object(self.spec, [self.plugin])
 
     def it_should_call_unexpected_error_with_a_TooManySpecialMethodsError(self):
         assert isinstance(self.plugin.unexpected_error.call_args[0][0], contexts.errors.TooManySpecialMethodsError)
@@ -268,7 +268,7 @@ class WhenRunningASpecWithReporters:
         self.reporter3 = SpyReporter()
 
     def because_we_run_the_spec(self):
-        contexts.run(self.spec, [NameBasedIdentifier(), self.reporter1, self.reporter2, self.reporter3])
+        run_object(self.spec, [NameBasedIdentifier(), self.reporter1, self.reporter2, self.reporter3])
 
     def it_should_call_test_run_started_first(self):
         assert self.reporter1.calls[0][0] == 'test_run_started'
@@ -352,7 +352,7 @@ class WhenAPluginModifiesAnAssertionList:
         self.plugin.process_assertion_list = modify_list
 
     def because_we_run_the_spec(self):
-        contexts.run(self.spec, [self.plugin])
+        run_object(self.spec, [self.plugin])
 
     def it_should_pass_a_list_of_the_found_assertions_into_process_assertion_list(self):
         assert isinstance(self.called_with, collections.abc.MutableSequence)
@@ -381,7 +381,7 @@ class WhenAnAssertionFails:
         self.reporter = SpyReporter()
 
     def because_we_run_the_spec(self):
-        contexts.run(self.spec, [NameBasedIdentifier(), self.reporter])
+        run_object(self.spec, [NameBasedIdentifier(), self.reporter])
 
     def it_should_call_assertion_failed(self):
         assert "assertion_failed" in [c[0] for c in self.reporter.calls]
@@ -421,7 +421,7 @@ class WhenAnAssertionErrors:
         self.reporter = SpyReporter()
 
     def because_we_run_the_spec(self):
-        contexts.run(self.spec, [NameBasedIdentifier(), self.reporter])
+        run_object(self.spec, [NameBasedIdentifier(), self.reporter])
 
     def it_should_call_assertion_errored(self):
         assert "assertion_errored" in [c[0] for c in self.reporter.calls]
@@ -465,7 +465,7 @@ class WhenAContextErrorsDuringTheSetup:
         self.reporter = SpyReporter()
 
     def because_we_run_the_specs(self):
-        contexts.run(self.spec, [NameBasedIdentifier(), self.reporter])
+        run_object(self.spec, [NameBasedIdentifier(), self.reporter])
 
     @assertion
     def it_should_call_context_errored(self):
@@ -510,7 +510,7 @@ class WhenAContextErrorsDuringTheAction:
         self.reporter = SpyReporter()
 
     def because_we_run_the_specs(self):
-        contexts.run(self.spec, [NameBasedIdentifier(), self.reporter])
+        run_object(self.spec, [NameBasedIdentifier(), self.reporter])
 
     @assertion
     def it_should_call_context_errored(self):
@@ -550,7 +550,7 @@ class WhenAContextErrorsDuringTheCleanup:
         self.reporter = SpyReporter()
 
     def because_we_run_the_specs(self):
-        contexts.run(self.spec, [NameBasedIdentifier(), self.reporter])
+        run_object(self.spec, [NameBasedIdentifier(), self.reporter])
 
     @assertion
     def it_should_call_context_errored(self):
@@ -580,7 +580,7 @@ class WhenAPluginSetsTheExitCode:
         self.plugin.get_exit_code.return_value = exitcode
 
     def because_we_run_something(self):
-        self.result = contexts.run(type('Spec', (), {}), [self.plugin])
+        self.result = run_object(type('Spec', (), {}), [self.plugin])
 
     def it_should_return_the_exit_code_from_the_plugin(self, exitcode):
         assert self.result == exitcode
@@ -606,7 +606,7 @@ class WhenRunningAClassContainingNoAssertions:
         }[meth]
 
     def because_we_run_the_spec(self):
-        contexts.run(self.spec, [self.plugin])
+        run_object(self.spec, [self.plugin])
 
     def it_should_not_run_the_class(self):
         assert self.spec.log == []

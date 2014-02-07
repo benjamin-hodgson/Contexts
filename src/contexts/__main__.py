@@ -10,7 +10,7 @@ def cmd():
     else:
         colorama.init()
 
-    main(None, load_plugins())
+    main(load_plugins())
 
 
 if __name__ == "__main__":
