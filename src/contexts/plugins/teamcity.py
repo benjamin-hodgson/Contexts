@@ -19,6 +19,12 @@ class TeamCityReporter(shared.StreamReporter):
     def initialise(self, args, env):
         return args.teamcity or ('TEAMCITY_VERSION' in env)
 
+    def test_run_started(self):
+        return True
+
+    def test_run_ended(self):
+        return True
+
     def suite_started(self, name):
         self.teamcity_print("testSuiteStarted", name=name)
         return True

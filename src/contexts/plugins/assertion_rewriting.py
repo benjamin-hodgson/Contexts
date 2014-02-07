@@ -4,6 +4,12 @@ from .importing import Importer
 
 
 class AssertionRewritingImporter(Importer):
+    def setup_parser(self, parser):
+        parser.add_argument('--no-assert',
+            action='store_false',
+            dest='rewriting',
+            default=True,
+            help='Disable assertion rewriting.')
     @classmethod
     def locate(cls):
         return (None, Importer)

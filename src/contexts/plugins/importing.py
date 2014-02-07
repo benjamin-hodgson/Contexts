@@ -5,17 +5,8 @@ import sys
 
 
 class Importer(object):
-    def setup_parser(self, parser):
-        try:
-            parser.add_argument('--no-assert',
-                action='store_false',
-                dest='rewriting',
-                default=True,
-                help='Disable assertion rewriting.')
-        except argparse.ArgumentError:  # just means it's already been set up
-            pass
     def initialise(self, args, env):
-        return not args.rewriting
+        return True
 
     def import_module(self, dir_path, module_name):
         filename = resolve_filename(dir_path, module_name)

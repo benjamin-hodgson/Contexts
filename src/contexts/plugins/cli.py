@@ -10,7 +10,7 @@ class DotsReporter(shared.StreamReporter):
     def locate(cls):
         return (None, VerboseReporter)
     def initialise(self, args, env):
-        return args.verbosity == 'normal' and not (args.teamcity or 'TEAMCITY_VERSION' in env)
+        return args.verbosity == 'normal'
 
     def assertion_passed(self, *args, **kwargs):
         super().assertion_passed(*args, **kwargs)
@@ -52,7 +52,7 @@ class VerboseReporter(shared.StreamReporter):
             help="Disable progress reporting.")
 
     def initialise(self, args, env):
-        return args.verbosity != "quiet" and not (args.teamcity or 'TEAMCITY_VERSION' in env)
+        return args.verbosity != "quiet"
 
     def context_started(self, name, example):
         super().context_started(name, example)
@@ -93,7 +93,7 @@ class FinalCountsReporter(shared.StreamReporter):
         return (VerboseReporter, None)
 
     def initialise(self, args, env):
-        return not (args.teamcity or 'TEAMCITY_VERSION' in env) and not args.verbosity == 'quiet'
+        return args.verbosity != 'quiet'
 
     def __init__(self, stream=sys.stdout):
         super().__init__(stream)
@@ -214,7 +214,7 @@ class TimedReporter(shared.StreamReporter):
     def locate(self):
         return (FinalCountsReporter, None)
     def initialise(self, args, env):
-        return not (args.teamcity or 'TEAMCITY_VERSION' in env) and not args.verbosity == 'quiet'
+        return not args.verbosity == 'quiet'
     def test_run_started(self):
         super().test_run_started()
         self.start_time = datetime.datetime.now()
@@ -248,14 +248,14 @@ class Colouriser(shared.StreamReporter):
 
     def initialise(self, args, env):
         if not sys.stdout.isatty():
-            args.colour = False
+            return False
         if args.colour:
             global colorama
             try:
                 import colorama
             except ImportError:
-                args.colour = False
-        return args.colour and not (args.teamcity or 'TEAMCITY_VERSION' in env) and args.verbosity != 'quiet'
+                return False
+            return True
 
     def context_errored(self, name, example, exception):
         self.stream.write(colorama.Fore.RED)
@@ -291,14 +291,14 @@ class UnColouriser(shared.StreamReporter):
 
     def initialise(self, args, env):
         if not sys.stdout.isatty():
-            args.colour = False
+            return False
         if args.colour:
             global colorama
             try:
                 import colorama
             except ImportError:
-                args.colour = False
-        return args.colour and not (args.teamcity or 'TEAMCITY_VERSION' in env) and args.verbosity != 'quiet'
+                return False
+            return True
 
     def context_errored(self, name, example, exception):
         self.stream.write(colorama.Fore.RESET)
@@ -328,7 +328,7 @@ class FailuresOnlyMaster(shared.StreamReporter):
         return (None, FinalCountsReporter)
 
     def initialise(self, args, env):
-        return args.verbosity == 'normal' and not (args.teamcity or 'TEAMCITY_VERSION' in env)
+        return args.verbosity == 'normal'
 
     def request_plugins(self):
         wanted_classes = [Colouriser, VerboseReporter, StdOutCapturingReporter, UnColouriser]
@@ -352,7 +352,7 @@ class FailuresOnlyBefore(object):
         return (DotsReporter, Colouriser)
 
     def initialise(self, args, env):
-        return args.verbosity == 'normal' and not (args.teamcity or 'TEAMCITY_VERSION' in env)
+        return args.verbosity == 'normal'
 
     def request_plugins(self):
         returned_plugins = yield [FailuresOnlyMaster]
@@ -387,7 +387,7 @@ class FailuresOnlyAfter(object):
         return (UnColouriser, None)
 
     def initialise(self, args, env):
-        return args.verbosity == 'normal' and not (args.teamcity or 'TEAMCITY_VERSION' in env)
+        return args.verbosity == 'normal'
 
     def request_plugins(self):
         returned_plugins = yield [FailuresOnlyMaster]
