@@ -10,6 +10,24 @@ core_file = repr(contexts.core.__file__)[1:-1]
 this_file = repr(__file__)[1:-1]
 
 
+class WhenAPluginSuppliesAClassToRun:
+    def context(self):
+        self.ran_method = False
+        class TestSpec:
+            def method(s):
+                self.ran_method = True
+        self.spec = TestSpec
+        self.plugin = mock.Mock(spec=PluginInterface)
+        self.plugin.get_object_to_run.return_value = TestSpec
+        self.plugin.identify_method.return_value = ASSERTION
+
+    def because_we_run_with_no_argument(self):
+        contexts.run(None, [self.plugin])
+
+    def it_should_run_the_method(self):
+        assert self.ran_method
+
+
 class WhenAPluginIdentifiesMethods:
     def context(self):
         self.log = []

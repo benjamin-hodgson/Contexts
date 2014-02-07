@@ -14,6 +14,7 @@ from contexts.plugins.teamcity import TeamCityReporter
 from contexts.plugins.assertion_rewriting import AssertionRewritingImporter
 from contexts.plugins.name_based_identifier import NameBasedIdentifier
 from contexts.plugins.decorators import DecoratorBasedIdentifier
+from contexts.plugins.object_supplier import TestObjectSupplier
 
 
 class WhenLoadingUpTheModule:
@@ -46,6 +47,7 @@ class MainSharedContext:
 class WhenRunningFromCommandLineWithNoArguments(MainSharedContext):
     def establish_arguments(self):
         self.expected_plugins = [
+            TestObjectSupplier(),
             ExitCodeReporter(),
             Shuffler(),
             AssertionRewritingImporter(),
@@ -68,36 +70,7 @@ class WhenRunningFromCommandLineWithNoArguments(MainSharedContext):
         __main__.cmd()
 
     def it_should_call_main_with_the_default_plugins(self):
-        self.mock_main.assert_called_once_with(os.getcwd(), self.expected_plugins)
-
-
-class WhenSpecifyingAPath(MainSharedContext):
-    def establish_arguments(self):
-        self.expected_plugins = [
-            ExitCodeReporter(),
-            Shuffler(),
-            AssertionRewritingImporter(),
-            DecoratorBasedIdentifier(),
-            NameBasedIdentifier(),
-            cli.DotsReporter(sys.stdout),
-            cli.FailuresOnlyBefore(),
-            cli.Colouriser(sys.stdout),
-            cli.VerboseReporter(sys.stdout),
-            cli.StdOutCapturingReporter(sys.stdout),
-            cli.UnColouriser(sys.stdout),
-            cli.FailuresOnlyAfter(),
-            cli.FailuresOnlyMaster(sys.stdout),
-            cli.FinalCountsReporter(sys.stdout),
-            cli.TimedReporter(sys.stdout),
-        ]
-        self.path = os.path.join(os.getcwd(),'made','up','path')
-        sys.argv = ['run-contexts', self.path]
-
-    def because_we_call_cmd(self):
-        __main__.cmd()
-
-    def it_should_call_main_with_the_path(self):
-        self.mock_main.assert_called_once_with(self.path, self.expected_plugins)
+        self.mock_main.assert_called_once_with(None, self.expected_plugins)
 
 
 class WhenUsingTheVerboseFlag(MainSharedContext):
@@ -108,6 +81,7 @@ class WhenUsingTheVerboseFlag(MainSharedContext):
 
     def establish_arguments(self, flag):
         self.expected_plugins = [
+            TestObjectSupplier(),
             ExitCodeReporter(),
             Shuffler(),
             AssertionRewritingImporter(),
@@ -126,12 +100,13 @@ class WhenUsingTheVerboseFlag(MainSharedContext):
         __main__.cmd()
 
     def it_should_call_main_with_a_verbose_reporter(self):
-        self.mock_main.assert_called_once_with(os.getcwd(), self.expected_plugins)
+        self.mock_main.assert_called_once_with(None, self.expected_plugins)
 
 
 class WhenUserDisablesColour(MainSharedContext):
     def establish_arguments(self):
         self.expected_plugins = [
+            TestObjectSupplier(),
             ExitCodeReporter(),
             Shuffler(),
             AssertionRewritingImporter(),
@@ -152,7 +127,7 @@ class WhenUserDisablesColour(MainSharedContext):
         __main__.cmd()
 
     def it_should_call_main_with_a_non_coloured_reporter(self):
-        self.mock_main.assert_called_once_with(os.getcwd(), self.expected_plugins)
+        self.mock_main.assert_called_once_with(None, self.expected_plugins)
 
 
 class WhenDisablingColourInVerboseMode(MainSharedContext):
@@ -163,6 +138,7 @@ class WhenDisablingColourInVerboseMode(MainSharedContext):
 
     def establish_arguments(self, args):
         self.expected_plugins = [
+            TestObjectSupplier(),
             ExitCodeReporter(),
             Shuffler(),
             AssertionRewritingImporter(),
@@ -179,7 +155,7 @@ class WhenDisablingColourInVerboseMode(MainSharedContext):
         __main__.cmd()
 
     def it_should_call_main_with_a_non_coloured_verbose_reporter(self):
-        self.mock_main.assert_called_once_with(os.getcwd(), self.expected_plugins)
+        self.mock_main.assert_called_once_with(None, self.expected_plugins)
 
 
 class WhenUserDisablesStdOutCapturing(MainSharedContext):
@@ -190,6 +166,7 @@ class WhenUserDisablesStdOutCapturing(MainSharedContext):
 
     def establish_arguments(self, arg):
         self.expected_plugins = [
+            TestObjectSupplier(),
             ExitCodeReporter(),
             Shuffler(),
             AssertionRewritingImporter(),
@@ -211,7 +188,7 @@ class WhenUserDisablesStdOutCapturing(MainSharedContext):
         __main__.cmd()
 
     def it_should_call_main_with_a_non_capturing_reporter(self):
-        self.mock_main.assert_called_once_with(os.getcwd(), self.expected_plugins)
+        self.mock_main.assert_called_once_with(None, self.expected_plugins)
 
 
 class WhenUserDisablesCapturingInVerboseMode(MainSharedContext):
@@ -225,6 +202,7 @@ class WhenUserDisablesCapturingInVerboseMode(MainSharedContext):
 
     def establish_arguments(self, args):
         self.expected_plugins = [
+            TestObjectSupplier(),
             ExitCodeReporter(),
             Shuffler(),
             AssertionRewritingImporter(),
@@ -242,7 +220,7 @@ class WhenUserDisablesCapturingInVerboseMode(MainSharedContext):
         __main__.cmd()
 
     def it_should_call_main_with_a_non_capturing_verbose_reporter(self):
-        self.mock_main.assert_called_once_with(os.getcwd(), self.expected_plugins)
+        self.mock_main.assert_called_once_with(None, self.expected_plugins)
 
 
 class WhenUserDisablesColourAndCapturing(MainSharedContext):
@@ -253,6 +231,7 @@ class WhenUserDisablesColourAndCapturing(MainSharedContext):
 
     def establish_arguments(self, args):
         self.expected_plugins = [
+            TestObjectSupplier(),
             ExitCodeReporter(),
             Shuffler(),
             AssertionRewritingImporter(),
@@ -272,7 +251,7 @@ class WhenUserDisablesColourAndCapturing(MainSharedContext):
         __main__.cmd()
 
     def it_should_call_main_with_a_non_coloured_non_capturing_reporter(self):
-        self.mock_main.assert_called_once_with(os.getcwd(), self.expected_plugins)
+        self.mock_main.assert_called_once_with(None, self.expected_plugins)
 
 
 class WhenUserDisablesColourAndCapturingInVerboseMode(MainSharedContext):
@@ -286,6 +265,7 @@ class WhenUserDisablesColourAndCapturingInVerboseMode(MainSharedContext):
 
     def establish_arguments(self, args):
         self.expected_plugins = [
+            TestObjectSupplier(),
             ExitCodeReporter(),
             Shuffler(),
             AssertionRewritingImporter(),
@@ -301,7 +281,7 @@ class WhenUserDisablesColourAndCapturingInVerboseMode(MainSharedContext):
         __main__.cmd()
 
     def it_should_call_main_with_a_non_coloured_non_capturing_verbose_reporter(self):
-        self.mock_main.assert_called_once_with(os.getcwd(), self.expected_plugins)
+        self.mock_main.assert_called_once_with(None, self.expected_plugins)
 
 
 class WhenRunningInQuietMode(MainSharedContext):
@@ -312,6 +292,7 @@ class WhenRunningInQuietMode(MainSharedContext):
 
     def establish_arguments(self, flag):
         self.expected_plugins = [
+            TestObjectSupplier(),
             ExitCodeReporter(),
             Shuffler(),
             AssertionRewritingImporter(),
@@ -324,12 +305,13 @@ class WhenRunningInQuietMode(MainSharedContext):
         __main__.cmd()
 
     def it_should_not_pass_in_anything_that_will_print(self):
-        self.mock_main.assert_called_once_with(os.getcwd(), self.expected_plugins)
+        self.mock_main.assert_called_once_with(None, self.expected_plugins)
 
 
 class WhenUserDisablesAssertionRewriting(MainSharedContext):
     def establish_arguments(self):
         self.expected_plugins = [
+            TestObjectSupplier(),
             ExitCodeReporter(),
             Shuffler(),
             Importer(),
@@ -352,12 +334,13 @@ class WhenUserDisablesAssertionRewriting(MainSharedContext):
         __main__.cmd()
 
     def it_should_tell_main_to_disable_assertion_rewriting(self):
-        self.mock_main.assert_called_once_with(os.getcwd(), self.expected_plugins)
+        self.mock_main.assert_called_once_with(None, self.expected_plugins)
 
 
 class WhenRunningOnTheCmdLineInTeamcityMode(MainSharedContext):
     def establish_arguments(self):
         self.expected_plugins = [
+            TestObjectSupplier(),
             ExitCodeReporter(),
             Shuffler(),
             AssertionRewritingImporter(),
@@ -371,12 +354,13 @@ class WhenRunningOnTheCmdLineInTeamcityMode(MainSharedContext):
         __main__.cmd()
 
     def it_should_call_main_with_a_teamcity_reporter(self):
-        self.mock_main.assert_called_once_with(os.getcwd(), self.expected_plugins)
+        self.mock_main.assert_called_once_with(None, self.expected_plugins)
 
 
 class WhenRunningInTeamcity(MainSharedContext):
     def establish_that_teamcity_is_in_the_environment_variables(self):
         self.expected_plugins = [
+            TestObjectSupplier(),
             ExitCodeReporter(),
             Shuffler(),
             AssertionRewritingImporter(),
@@ -391,12 +375,13 @@ class WhenRunningInTeamcity(MainSharedContext):
         __main__.cmd()
 
     def it_should_call_main_with_a_teamcity_reporter(self):
-        self.mock_main.assert_called_once_with(os.getcwd(), self.expected_plugins)
+        self.mock_main.assert_called_once_with(None, self.expected_plugins)
 
 
 class WhenUserDisablesShuffling(MainSharedContext):
     def establish_arguments(self):
         self.expected_plugins = [
+            TestObjectSupplier(),
             ExitCodeReporter(),
             AssertionRewritingImporter(),
             DecoratorBasedIdentifier(),
@@ -418,7 +403,7 @@ class WhenUserDisablesShuffling(MainSharedContext):
         __main__.cmd()
 
     def it_should_call_main_without_a_shuffler(self):
-        self.mock_main.assert_called_once_with(os.getcwd(), self.expected_plugins)
+        self.mock_main.assert_called_once_with(None, self.expected_plugins)
 
 
 class WhenArgumentsSpecifyMutuallyExclusiveOptions(MainSharedContext):
@@ -468,7 +453,8 @@ class WhenColoramaIsNotInstalled(MainSharedContext):
         __main__.cmd()
 
     def it_should_not_send_a_coloured_reporter_to_main(self):
-        self.mock_main.assert_called_once_with(os.getcwd(), [
+        self.mock_main.assert_called_once_with(None, [
+            TestObjectSupplier(),
             ExitCodeReporter(),
             Shuffler(),
             AssertionRewritingImporter(),
@@ -496,7 +482,8 @@ class WhenStdOutIsAPipe(MainSharedContext):
         __main__.cmd()
 
     def it_should_not_send_a_coloured_reporter_to_main(self):
-        self.mock_main.assert_called_once_with(os.getcwd(), [
+        self.mock_main.assert_called_once_with(None, [
+            TestObjectSupplier(),
             ExitCodeReporter(),
             Shuffler(),
             AssertionRewritingImporter(),

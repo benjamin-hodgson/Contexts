@@ -106,6 +106,39 @@ class WhenAPluginModifiesAClassList:
         assert not self.ran_reals
 
 
+class WhenAPluginSuppliesAFileToRun:
+    def establish_that_there_is_a_file_in_the_filesystem(self):
+        self.module_name = "test_file"
+        self.write_file()
+
+        self.module = types.ModuleType(self.module_name)
+        self.ran = False
+        class When:
+            def it(s):
+                self.ran = True
+        self.module.When = When
+
+        self.plugin = mock.Mock(spec=PluginInterface)
+        self.plugin.get_object_to_run.return_value = self.filename
+        self.plugin.import_module.return_value = self.module
+        self.plugin.identify_class.return_value = CONTEXT
+        self.plugin.identify_method.return_value = ASSERTION
+
+    def because_we_run_with_no_argument(self):
+        contexts.run(None, [self.plugin])
+
+    def it_should_run_the_spec_in_the_file(self):
+        assert self.ran
+
+    def cleanup_the_file_system(self):
+        os.remove(self.filename)
+
+    def write_file(self):
+        self.filename = os.path.join(TEST_DATA_DIR, self.module_name+".py")
+        with open(self.filename, 'w+') as f:
+            f.write('')
+
+
 class WhenRunningAFile:
     def establish_that_there_is_a_file_in_the_filesystem(self):
         self.module_name = "test_file"
@@ -316,6 +349,43 @@ class WhenAPluginFailsToImportAModule:
         self.filename = os.path.join(self.folder_path, self.module_name+".py")
         with open(self.filename, 'w+') as f:
             f.write("")
+
+
+class WhenAPluginSuppliesAFolderToRun:
+    def establish_that_there_is_a_folder_containing_modules(self):
+        self.module_name = "wanted_file1"
+        self.setup_filesystem()
+
+        self.ran = False
+        self.module = types.ModuleType(self.module_name)
+        class Class:
+            def it(s):
+                self.ran = True
+        self.module.Class = Class
+
+        self.plugin = mock.Mock(spec=PluginInterface)
+        self.plugin.get_object_to_run.return_value = self.folder_path
+        self.plugin.identify_file.return_value = TEST_FILE
+        self.plugin.import_module.return_value = self.module
+        self.plugin.identify_class.return_value = CONTEXT
+        self.plugin.identify_method.return_value = ASSERTION
+
+    def because_we_run_with_no_argument(self):
+        contexts.run(None, [self.plugin])
+
+    def it_should_run_the_file(self):
+        assert self.ran
+
+    def cleanup_the_file_system(self):
+        shutil.rmtree(self.folder_path)
+
+    def setup_filesystem(self):
+        self.folder_path = os.path.join(TEST_DATA_DIR, 'non_package_folder')
+        os.mkdir(self.folder_path)
+
+        filename = os.path.join(self.folder_path, self.module_name+".py")
+        with open(filename, 'w+') as f:
+            f.write('')
 
 
 class WhenRunningAFolderWhichIsNotAPackage:

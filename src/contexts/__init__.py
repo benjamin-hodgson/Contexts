@@ -22,6 +22,7 @@ def main(*args, **kwargs):
     sys.exit(exit_code)
 
 
+# FIXME: to_run argument needs some work
 def run(to_run=None, plugin_list=None):
     """
     Polymorphic test-running function.
@@ -56,10 +57,11 @@ def run(to_run=None, plugin_list=None):
             cli.TimedReporter(sys.stdout),
         )
 
-    if to_run is None:
-        to_run = sys.modules['__main__']
-
     composite = core.PluginComposite(plugin_list)
+
+    if to_run is None:
+        to_run = composite.call_plugins("get_object_to_run")
+
     test_run = core.TestRun(to_run, composite)
     test_run.run()
 

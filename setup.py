@@ -4,6 +4,7 @@ from setuptools import setup, find_packages
 
 
 builtin_plugins = [
+    'TestObjectSupplier = contexts.plugins.object_supplier:TestObjectSupplier',
     'ExitCodeReporter = contexts.plugins.shared:ExitCodeReporter',
     'Shuffler = contexts.plugins.shuffling:Shuffler',
     'Importer = contexts.plugins.importing:Importer',

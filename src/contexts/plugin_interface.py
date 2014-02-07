@@ -97,6 +97,18 @@ class PluginInterface(object):
     def unexpected_error(self, exception):
         """Called when an error occurs outside of a Context or Assertion"""
 
+    def get_object_to_run(self):
+        """
+        Called before the start of the test run, when the test runner wants to know
+        what it should run.
+
+        Plugins may return:
+            a class - the test runner will run the identified methods in this class
+            a file path - the test runner will run the identified classes in this file
+            a folder path - the test runner will run the identified
+                            files and subfolders in this folder
+            None - the plugin doesn't want to choose what to run
+        """
     def identify_folder(self, folder):
         """
         Called when the test runner encounters a folder and wants to know if it should
