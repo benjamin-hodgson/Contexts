@@ -10,6 +10,11 @@ class TestObjectSupplier(object):
             help="Path to the test file or directory to run. (Default: current directory)")
 
     def initialise(self, args, env):
+        path = os.path.realpath(args.path)
+
+        if not os.path.isfile(path) and not os.path.isdir(path):
+            raise ValueError("You have to supply a real path")
+
         self.to_run = args.path
         return True
 

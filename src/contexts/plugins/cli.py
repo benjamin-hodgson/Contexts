@@ -322,6 +322,7 @@ class FailuresOnlyMaster(shared.StreamReporter):
         super().__init__(stream)
         self.plugins = []
         self.final_report = StringIO()
+        self.fake_stream = StringIO()
 
     @classmethod
     def locate(cls):
@@ -333,15 +334,12 @@ class FailuresOnlyMaster(shared.StreamReporter):
     def request_plugins(self):
         wanted_classes = [Colouriser, VerboseReporter, StdOutCapturingReporter, UnColouriser]
         returned_plugins = yield wanted_classes
-        for cls in wanted_classes:
-            if cls in returned_plugins:
-                self.plugins.append(returned_plugins[cls])
+        self.plugins = returned_plugins.values()
 
     def set_streams(self, stream):
         self.fake_stream = stream
         for plugin in self.plugins:
             plugin.stream = stream
-
 
 
 class FailuresOnlyBefore(object):
