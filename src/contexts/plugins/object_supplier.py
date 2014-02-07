@@ -1,11 +1,7 @@
 import os
-from .shared import ExitCodeReporter
 
 
 class TestObjectSupplier(object):
-    @classmethod
-    def locate(cls):
-        return (None, ExitCodeReporter)
     def setup_parser(self, parser):
         parser.add_argument('path',
             action='store',

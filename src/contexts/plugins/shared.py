@@ -2,7 +2,6 @@ import re
 import sys
 import traceback
 from ..plugin_interface import PluginInterface, NO_EXAMPLE
-from .shuffling import Shuffler
 
 
 class StreamReporter(PluginInterface):
@@ -17,9 +16,6 @@ class StreamReporter(PluginInterface):
 
 
 class ExitCodeReporter(object):
-    @classmethod
-    def locate(cls):
-        return (None, Shuffler)
     def initialise(self, args, env):
         return True
 

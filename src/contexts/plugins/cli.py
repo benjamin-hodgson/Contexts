@@ -3,13 +3,12 @@ import datetime
 import sys
 from io import StringIO
 from . import shared
-from .name_based_identifier import NameBasedIdentifier
 
 
 class DotsReporter(shared.StreamReporter):
     @classmethod
     def locate(cls):
-        return (NameBasedIdentifier, VerboseReporter)
+        return (None, VerboseReporter)
     def initialise(self, args, env):
         return args.verbosity == 'normal' and not (args.teamcity or 'TEAMCITY_VERSION' in env)
 
@@ -36,10 +35,6 @@ class DotsReporter(shared.StreamReporter):
 
 class VerboseReporter(shared.StreamReporter):
     dashes = '-' * 70
-
-    @classmethod
-    def locate(cls):
-        return (NameBasedIdentifier, None)
 
     def setup_parser(self, parser):
         group = parser.add_mutually_exclusive_group(required=False)
@@ -95,7 +90,7 @@ class FinalCountsReporter(shared.StreamReporter):
 
     @classmethod
     def locate(cls):
-        return (FailuresOnlyMaster, None)
+        return (VerboseReporter, None)
 
     def initialise(self, args, env):
         return not (args.teamcity or 'TEAMCITY_VERSION' in env) and not args.verbosity == 'quiet'
@@ -166,7 +161,7 @@ class FinalCountsReporter(shared.StreamReporter):
 class StdOutCapturingReporter(shared.StreamReporter):
     @classmethod
     def locate(cls):
-        return (VerboseReporter, None)
+        return (VerboseReporter, FinalCountsReporter)
 
     def setup_parser(self, parser):
         parser.add_argument('-s', '--no-capture',
@@ -330,7 +325,7 @@ class FailuresOnlyMaster(shared.StreamReporter):
 
     @classmethod
     def locate(cls):
-        return (FailuresOnlyAfter, None)
+        return (None, FinalCountsReporter)
 
     def initialise(self, args, env):
         return args.verbosity == 'normal' and not (args.teamcity or 'TEAMCITY_VERSION' in env)

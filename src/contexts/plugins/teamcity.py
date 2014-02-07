@@ -2,13 +2,12 @@ import sys
 from io import StringIO
 from . import shared
 from . import cli
-from .name_based_identifier import NameBasedIdentifier
 
 
 class TeamCityReporter(shared.StreamReporter):
     @classmethod
     def locate(cls):
-        return (NameBasedIdentifier, cli.DotsReporter)
+        return (None, cli.DotsReporter)
 
     def setup_parser(self, parser):
         parser.add_argument('--teamcity',

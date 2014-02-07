@@ -2,17 +2,9 @@ import argparse
 import importlib
 import os
 import sys
-from .shuffling import Shuffler
 
 
 class Importer(object):
-    @classmethod
-    def locate(cls):
-        # this is such a hack :(
-        # Just trying to get the tests for __main__ to pass.
-        # hopefully I can delete those tests (and this method) soon since the
-        # logic of __main__ will be much simpler
-        return (Shuffler, None)
     def setup_parser(self, parser):
         try:
             parser.add_argument('--no-assert',

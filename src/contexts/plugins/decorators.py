@@ -1,6 +1,5 @@
 import types
 from ..plugin_interface import CONTEXT, EXAMPLES, SETUP, ACTION, ASSERTION, TEARDOWN
-from .importing import Importer
 from .name_based_identifier import NameBasedIdentifier
 
 
@@ -16,7 +15,7 @@ class DecoratorBasedIdentifier(object):
 
     @classmethod
     def locate(self):
-        return (Importer, NameBasedIdentifier)
+        return (None, NameBasedIdentifier)
 
     def initialise(self, args, env):
         return True
