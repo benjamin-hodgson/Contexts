@@ -1,6 +1,6 @@
 import sys
 from . import core
-from .plugins import shared, shuffling, assertion_rewriting, decorators, name_based_identifier, cli, object_supplier
+from .plugin_discovery import load_plugins
 from .tools import catch, set_trace, time
 
 
@@ -37,24 +37,7 @@ def run(plugin_list=None):
         exit code if the test run succeeded, and 1 if it failed.
     """
     if plugin_list is None:  # default list of plugins
-        plugin_list = (
-            object_supplier.TestObjectSupplier(),
-            shared.ExitCodeReporter(),
-            shuffling.Shuffler(),
-            assertion_rewriting.AssertionRewritingImporter(),
-            decorators.DecoratorBasedIdentifier(),
-            name_based_identifier.NameBasedIdentifier(),
-            cli.DotsReporter(sys.stdout),
-            cli.FailuresOnlyBefore(),
-            cli.Colouriser(sys.stdout),
-            cli.VerboseReporter(sys.stdout),
-            cli.StdOutCapturingReporter(sys.stdout),
-            cli.UnColouriser(sys.stdout),
-            cli.FailuresOnlyAfter(),
-            cli.FailuresOnlyMaster(sys.stdout),
-            cli.FinalCountsReporter(sys.stdout),
-            cli.TimedReporter(sys.stdout),
-        )
+        plugin_list = load_plugins()
 
     composite = core.PluginComposite(plugin_list)
 

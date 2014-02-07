@@ -1,5 +1,4 @@
 from . import main
-from .plugin_discovery import load_plugins
 
 
 def cmd():
@@ -10,7 +9,7 @@ def cmd():
     else:
         colorama.init()
 
-    main(load_plugins())
+    main()
 
 
 if __name__ == "__main__":
