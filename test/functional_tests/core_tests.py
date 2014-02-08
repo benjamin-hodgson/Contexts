@@ -2,8 +2,8 @@ import collections.abc
 from unittest import mock
 import contexts
 from contexts.plugin_interface import PluginInterface, EXAMPLES, SETUP, ACTION, ASSERTION, TEARDOWN, NO_EXAMPLE
-from contexts.plugins.name_based_identifier import NameBasedIdentifier
-from contexts.plugins.decorators import assertion
+from contexts.plugins.identification import NameBasedIdentifier
+from contexts import assertion
 from .tools import SpyReporter, UnorderedList, run_object
 
 

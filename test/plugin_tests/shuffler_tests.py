@@ -1,5 +1,5 @@
 from contexts.plugins.shuffling import Shuffler
-from contexts.plugins.decorators import action
+from contexts import action
 
 class ShufflerSharedContext:
     def establish_that_shuffle_is_true(self):

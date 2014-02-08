@@ -6,7 +6,7 @@ import contexts
 from unittest import mock
 from .tools import SpyReporter, UnorderedList, run_object
 from contexts.plugin_interface import PluginInterface, TEST_FOLDER, TEST_FILE, CONTEXT, ASSERTION
-from contexts.plugins.decorators import assertion
+from contexts import assertion
 
 
 THIS_FILE = os.path.realpath(__file__)

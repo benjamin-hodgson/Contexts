@@ -1,6 +1,6 @@
 import types
-from ..plugin_interface import CONTEXT, EXAMPLES, SETUP, ACTION, ASSERTION, TEARDOWN
-from .name_based_identifier import NameBasedIdentifier
+from contexts.plugin_interface import CONTEXT, EXAMPLES, SETUP, ACTION, ASSERTION, TEARDOWN
+from . import NameBasedIdentifier
 
 
 class DecoratorBasedIdentifier(object):
@@ -43,6 +43,17 @@ class DecoratorBasedIdentifier(object):
 
     def __eq__(self, other):
         return type(self) == type(other)
+
+
+def spec(cls):
+    """
+    Class decorator. Marks a class as a test class.
+    """
+    assert_not_multiple_decorators(cls, "contexts")
+    DecoratorBasedIdentifier.decorated_items["contexts"].add(cls)
+    return cls
+
+context = spec
 
 
 def setup(func):
@@ -88,17 +99,6 @@ def examples(func):
     assert_not_multiple_decorators(func, "examples")
     DecoratorBasedIdentifier.decorated_items["examples"].add(func)
     return func
-
-
-def spec(cls):
-    """
-    Class decorator. Marks a class as a test class.
-    """
-    assert_not_multiple_decorators(cls, "contexts")
-    DecoratorBasedIdentifier.decorated_items["contexts"].add(cls)
-    return cls
-
-context = spec
 
 
 def assert_not_multiple_decorators(item, decorator_type):

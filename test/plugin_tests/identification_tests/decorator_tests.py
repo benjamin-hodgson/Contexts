@@ -1,5 +1,5 @@
 from contexts.plugin_interface import CONTEXT, EXAMPLES, SETUP, ACTION, ASSERTION, TEARDOWN
-from contexts.plugins.decorators import DecoratorBasedIdentifier, spec, context, examples, setup, action, assertion, teardown
+from contexts.plugins.identification.decorators import DecoratorBasedIdentifier, spec, context, examples, setup, action, assertion, teardown
 from contexts import catch
 
 

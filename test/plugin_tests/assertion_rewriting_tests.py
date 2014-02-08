@@ -2,9 +2,8 @@ import importlib
 import os
 import shutil
 import sys
-import traceback
 import contexts
-from contexts.plugins.decorators import action, assertion
+from contexts import action, assertion
 from contexts.plugins.assertion_rewriting import AssertionRewritingImporter
 
 

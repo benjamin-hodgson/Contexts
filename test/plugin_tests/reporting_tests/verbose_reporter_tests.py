@@ -1,6 +1,6 @@
 from io import StringIO
 from contexts.plugins.reporting import cli
-from contexts.plugins.decorators import action
+from contexts import action
 from .. import tools
 
 

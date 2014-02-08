@@ -2,7 +2,7 @@ import sys
 from io import StringIO
 import re
 from contexts.plugins.reporting import teamcity
-from contexts.plugins.decorators import setup, action, assertion
+from contexts import setup, action, assertion
 from .. import tools
 
 

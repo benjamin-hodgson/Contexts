@@ -1,8 +1,8 @@
 import os.path
 import contexts
 from contexts.plugin_interface import TEST_FOLDER, TEST_FILE, CONTEXT, EXAMPLES, SETUP, ACTION, ASSERTION, TEARDOWN
-from contexts.plugins.name_based_identifier import NameBasedIdentifier
-from contexts.plugins.decorators import assertion
+from contexts.plugins.identification import NameBasedIdentifier
+from contexts import assertion
 
 
 class WhenIdentifyingAFolder:

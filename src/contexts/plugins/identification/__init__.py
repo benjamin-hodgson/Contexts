@@ -1,7 +1,7 @@
 import os.path
 import re
-from ..plugin_interface import TEST_FOLDER, TEST_FILE, CONTEXT, EXAMPLES, SETUP, ACTION, ASSERTION, TEARDOWN
-from .. import errors
+from contexts.plugin_interface import TEST_FOLDER, TEST_FILE, CONTEXT, EXAMPLES, SETUP, ACTION, ASSERTION, TEARDOWN
+from contexts import errors
 
 
 folder_re = re.compile(r"[Ss]pec|[Tt]est")

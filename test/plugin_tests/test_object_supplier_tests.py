@@ -2,7 +2,7 @@ import argparse
 import os.path
 import contexts
 from contexts.plugins.object_supplier import TestObjectSupplier
-from contexts.plugins.decorators import action
+from contexts import action
 
 
 class WhenUserSpecifiesARealFile:
