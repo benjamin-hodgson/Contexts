@@ -1,6 +1,4 @@
 import collections
-import types
-import contexts
 from contexts.plugin_interface import NO_EXAMPLE
 
 

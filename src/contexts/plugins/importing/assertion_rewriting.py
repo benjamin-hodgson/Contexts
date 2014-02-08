@@ -1,6 +1,6 @@
 import ast
 import importlib.abc
-from .importer import Importer
+from . import Importer
 
 
 class AssertionRewritingImporter(Importer):

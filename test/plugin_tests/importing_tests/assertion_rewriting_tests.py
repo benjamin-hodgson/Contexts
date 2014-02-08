@@ -4,7 +4,7 @@ import shutil
 import sys
 import contexts
 from contexts import action, assertion
-from contexts.plugins.assertion_rewriting import AssertionRewritingImporter
+from contexts.plugins.importing.assertion_rewriting import AssertionRewritingImporter
 
 
 THIS_FILE = os.path.realpath(__file__)
