@@ -1,8 +1,8 @@
 import sys
 from io import StringIO
-from contexts import plugins
+from contexts.plugins.reporting import cli
 from contexts.plugins.decorators import action
-from . import tools
+from .. import tools
 
 
 class StdOutCapturingSharedContext:
@@ -13,7 +13,7 @@ class StdOutCapturingSharedContext:
         sys.stderr = self.fake_stderr = StringIO()
 
         self.stringio = StringIO()
-        self.reporter = plugins.cli.StdOutCapturingReporter(self.stringio)
+        self.reporter = cli.StdOutCapturingReporter(self.stringio)
 
     def cleanup_stdout_and_stderr(self):
         sys.stdout = self.real_stdout

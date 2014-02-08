@@ -1,4 +1,4 @@
-from contexts import plugins
+from contexts.plugins import reporting
 
 
 class WhenMakingANameHumanReadable:
@@ -21,7 +21,7 @@ class WhenMakingANameHumanReadable:
         yield "Does.EverythingAT_once.TOBe100Percent_Certain", "Does everything AT once TO be 100 percent certain"
 
     def because_we_make_the_string_readable(self, input, expected):
-        self.result = plugins.shared.make_readable(input)
+        self.result = reporting.make_readable(input)
 
     def it_should_return_a_string_with_appropriate_spaces(self, input, expected):
         assert self.result == expected
@@ -29,7 +29,7 @@ class WhenMakingANameHumanReadable:
 
 class WhenGettingExitCodeForASuccessfulRun:
     def in_the_context_of_a_successful_run(self):
-        self.plugin = plugins.shared.ExitCodeReporter()
+        self.plugin = reporting.ExitCodeReporter()
 
     def because_we_ask_for_the_exit_code(self):
         self.result = self.plugin.get_exit_code()
@@ -40,7 +40,7 @@ class WhenGettingExitCodeForASuccessfulRun:
 
 class WhenGettingExitCodeAfterAnAssertionFailure:
     def establish_that_an_assertion_failed(self):
-        self.plugin = plugins.shared.ExitCodeReporter()
+        self.plugin = reporting.ExitCodeReporter()
         self.plugin.assertion_failed('', Exception())
 
     def because_we_ask_for_the_exit_code(self):
@@ -52,7 +52,7 @@ class WhenGettingExitCodeAfterAnAssertionFailure:
 
 class WhenGettingExitCodeAfterAnAssertionError:
     def establish_that_an_assertion_errored(self):
-        self.plugin = plugins.shared.ExitCodeReporter()
+        self.plugin = reporting.ExitCodeReporter()
         self.plugin.assertion_errored('', Exception())
 
     def because_we_ask_for_the_exit_code(self):
@@ -64,7 +64,7 @@ class WhenGettingExitCodeAfterAnAssertionError:
 
 class WhenGettingExitCodeAfterAContextError:
     def establish_that_a_context_errored(self):
-        self.plugin = plugins.shared.ExitCodeReporter()
+        self.plugin = reporting.ExitCodeReporter()
         self.plugin.context_errored('', None, Exception())
 
     def because_we_ask_for_the_exit_code(self):
@@ -76,7 +76,7 @@ class WhenGettingExitCodeAfterAContextError:
 
 class WhenGettingExitCodeAfterAnUnexpectedError:
     def establish_that_a_context_errored(self):
-        self.plugin = plugins.shared.ExitCodeReporter()
+        self.plugin = reporting.ExitCodeReporter()
         self.plugin.unexpected_error(Exception())
 
     def because_we_ask_for_the_exit_code(self):

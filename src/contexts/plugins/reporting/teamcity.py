@@ -1,10 +1,10 @@
 import sys
 from io import StringIO
-from . import shared
 from . import cli
+from . import StreamReporter, context_name, format_exception, make_readable
 
 
-class TeamCityReporter(shared.StreamReporter):
+class TeamCityReporter(StreamReporter):
     @classmethod
     def locate(cls):
         return (None, cli.DotsReporter)
@@ -36,7 +36,7 @@ class TeamCityReporter(shared.StreamReporter):
     def context_started(self, name, example):
         self.real_stdout, self.real_stderr = sys.stdout, sys.stderr
         sys.stdout, sys.stderr = self.stdout_buffer, self.stderr_buffer = StringIO(), StringIO()
-        self.context_name_prefix = shared.context_name(name, example) + ' -> '
+        self.context_name_prefix = context_name(name, example) + ' -> '
         return True
 
     def context_ended(self, name, example):
@@ -46,8 +46,8 @@ class TeamCityReporter(shared.StreamReporter):
 
     def context_errored(self, name, example, exception):
         self.context_name_prefix = ''
-        name = shared.context_name(name, example)
-        error_summary = shared.format_exception(exception)
+        name = context_name(name, example)
+        error_summary = format_exception(exception)
 
         self.teamcity_print("testStarted", name=name)
         self.output_buffers(name)
@@ -64,19 +64,19 @@ class TeamCityReporter(shared.StreamReporter):
         return True
 
     def assertion_started(self, name):
-        readable_name = self.context_name_prefix + shared.make_readable(name)
+        readable_name = self.context_name_prefix + make_readable(name)
         self.teamcity_print("testStarted", name=readable_name)
         return True
 
     def assertion_passed(self, name):
-        name = self.context_name_prefix + shared.make_readable(name)
+        name = self.context_name_prefix + make_readable(name)
         self.output_buffers(name)
         self.teamcity_print("testFinished", name=name)
         return True
 
     def assertion_failed(self, name, exception):
-        name = self.context_name_prefix + shared.make_readable(name)
-        error_summary = shared.format_exception(exception)
+        name = self.context_name_prefix + make_readable(name)
+        error_summary = format_exception(exception)
 
         self.output_buffers(name)
         self.teamcity_print(
@@ -90,8 +90,8 @@ class TeamCityReporter(shared.StreamReporter):
         return True
 
     def assertion_errored(self, name, exception):
-        name = self.context_name_prefix + shared.make_readable(name)
-        error_summary = shared.format_exception(exception)
+        name = self.context_name_prefix + make_readable(name)
+        error_summary = format_exception(exception)
 
         self.output_buffers(name)
         self.teamcity_print(
@@ -105,7 +105,7 @@ class TeamCityReporter(shared.StreamReporter):
         return True
 
     def unexpected_error(self, exception):
-        error_summary = shared.format_exception(exception)
+        error_summary = format_exception(exception)
         self.context_name_prefix = ''
         self.teamcity_print("testStarted", name='Test error')
         self.teamcity_print("testFailed", name='Test error', message=error_summary[-1], details='\n'.join(error_summary))

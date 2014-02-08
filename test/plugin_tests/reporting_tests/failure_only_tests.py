@@ -1,12 +1,12 @@
 from io import StringIO
-from contexts.plugins.cli import FailuresOnlyMaster, FailuresOnlyBefore, FailuresOnlyAfter
+from contexts.plugins.reporting import cli
 
 
 class WhenAnUnexpectedErrorOccurs:
     def context(self):
-        self.master = FailuresOnlyMaster(StringIO())
-        self.before = FailuresOnlyBefore()
-        self.after = FailuresOnlyAfter()
+        self.master = cli.FailuresOnlyMaster(StringIO())
+        self.before = cli.FailuresOnlyBefore()
+        self.after = cli.FailuresOnlyAfter()
 
         send_instances(self.master, [])
         send_instances(self.before, [self.master])

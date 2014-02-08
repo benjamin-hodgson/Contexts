@@ -2,10 +2,10 @@ import argparse
 import datetime
 import sys
 from io import StringIO
-from . import shared
+from . import StreamReporter, context_name, format_exception, make_readable
 
 
-class DotsReporter(shared.StreamReporter):
+class DotsReporter(StreamReporter):
     @classmethod
     def locate(cls):
         return (None, VerboseReporter)
@@ -33,7 +33,7 @@ class DotsReporter(shared.StreamReporter):
         self._print('E', end='')
 
 
-class VerboseReporter(shared.StreamReporter):
+class VerboseReporter(StreamReporter):
     dashes = '-' * 70
 
     def setup_parser(self, parser):
@@ -56,36 +56,36 @@ class VerboseReporter(shared.StreamReporter):
 
     def context_started(self, name, example):
         super().context_started(name, example)
-        self._print(shared.context_name(name, example))
+        self._print(context_name(name, example))
 
     def context_errored(self, name, example, exception):
         super().context_errored(name, example, exception)
-        for line in shared.format_exception(exception):
+        for line in format_exception(exception):
             self._print('  ' + line)
 
     def assertion_passed(self, name):
         super().assertion_passed(name)
-        self._print('  PASS: ' + shared.make_readable(name))
+        self._print('  PASS: ' + make_readable(name))
 
     def assertion_failed(self, name, exception):
         super().assertion_failed(name, exception)
-        self._print('  FAIL: ' + shared.make_readable(name))
-        for line in shared.format_exception(exception):
+        self._print('  FAIL: ' + make_readable(name))
+        for line in format_exception(exception):
             self._print('    ' + line)
 
     def assertion_errored(self, name, exception):
         super().assertion_errored(name, exception)
-        self._print('  ERROR: ' + shared.make_readable(name))
-        for line in shared.format_exception(exception):
+        self._print('  ERROR: ' + make_readable(name))
+        for line in format_exception(exception):
             self._print('    ' + line)
 
     def unexpected_error(self, exception):
         super().unexpected_error(exception)
-        for line in shared.format_exception(exception):
+        for line in format_exception(exception):
             self._print(line)
 
 
-class FinalCountsReporter(shared.StreamReporter):
+class FinalCountsReporter(StreamReporter):
     dashes = '-' * 70
 
     @classmethod
@@ -158,7 +158,7 @@ class FinalCountsReporter(shared.StreamReporter):
             pluralise("error", self.error_count))
 
 
-class StdOutCapturingReporter(shared.StreamReporter):
+class StdOutCapturingReporter(StreamReporter):
     @classmethod
     def locate(cls):
         return (VerboseReporter, FinalCountsReporter)
@@ -209,7 +209,7 @@ class StdOutCapturingReporter(shared.StreamReporter):
                 self._print(' '*(indentation) + line)
 
 
-class TimedReporter(shared.StreamReporter):
+class TimedReporter(StreamReporter):
     @classmethod
     def locate(self):
         return (FinalCountsReporter, None)
@@ -230,7 +230,7 @@ class TimedReporter(shared.StreamReporter):
         self._print("({} seconds)".format(rounded))
 
 
-class Colouriser(shared.StreamReporter):
+class Colouriser(StreamReporter):
     @classmethod
     def locate(cls):
         return (DotsReporter, VerboseReporter)
@@ -273,7 +273,7 @@ class Colouriser(shared.StreamReporter):
         self.stream.write(colorama.Fore.RED)
 
 
-class UnColouriser(shared.StreamReporter):
+class UnColouriser(StreamReporter):
     @classmethod
     def locate(cls):
         return (StdOutCapturingReporter, None)
@@ -317,7 +317,7 @@ class UnColouriser(shared.StreamReporter):
 
 
 # these three are kinda hideous
-class FailuresOnlyMaster(shared.StreamReporter):
+class FailuresOnlyMaster(StreamReporter):
     def __init__(self, stream):
         super().__init__(stream)
         self.plugins = []

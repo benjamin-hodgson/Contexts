@@ -1,13 +1,13 @@
 from io import StringIO
-from contexts import plugins
+from contexts.plugins.reporting import cli
 from contexts.plugins.decorators import action
-from . import tools
+from .. import tools
 
 
 class VerboseReporterSharedContext:
     def context(self):
         self.stringio = StringIO()
-        self.reporter = plugins.cli.VerboseReporter(self.stringio)
+        self.reporter = cli.VerboseReporter(self.stringio)
         self.outputs = []
 
 class WhenPrintingVerboselyAndAContextStarts(VerboseReporterSharedContext):

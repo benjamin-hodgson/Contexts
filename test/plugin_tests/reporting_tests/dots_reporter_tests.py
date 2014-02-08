@@ -1,12 +1,12 @@
 from io import StringIO
-from contexts import plugins
-from . import tools
+from contexts.plugins.reporting import cli
+from .. import tools
 
 
 class DotsReporterSharedContext:
     def context(self):
         self.stringio = StringIO()
-        self.reporter = plugins.cli.DotsReporter(self.stringio)
+        self.reporter = cli.DotsReporter(self.stringio)
 
 class WhenWatchingForDotsAndAnAssertionPasses(DotsReporterSharedContext):
     def because_an_assertion_passes(self):

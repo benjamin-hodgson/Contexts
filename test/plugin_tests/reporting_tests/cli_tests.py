@@ -1,14 +1,14 @@
 import datetime
 from io import StringIO
 from unittest import mock
-from contexts import plugins
-from . import tools
+from contexts.plugins.reporting import cli
+from .. import tools
 
 
 class WhenPrintingFinalCountsForAnEmptyRun:
     def context(self):
         self.stringio = StringIO()
-        self.reporter = plugins.cli.FinalCountsReporter(self.stringio)
+        self.reporter = cli.FinalCountsReporter(self.stringio)
     def because_a_test_run_ends(self):
         self.reporter.test_run_ended()
     def it_should_output_a_summary(self):
@@ -22,7 +22,7 @@ PASSED!
 class WhenPrintingFinalCountsForASuccessfulRun:
     def in_the_context_of_a_successful_run(self):
         self.stringio = StringIO()
-        self.reporter = plugins.cli.FinalCountsReporter(self.stringio)
+        self.reporter = cli.FinalCountsReporter(self.stringio)
 
         ctx1 = tools.create_context()
         ctx2 = tools.create_context()
@@ -57,7 +57,7 @@ PASSED!
 class WhenPrintingFinalCountsForAFailedRun:
     def establish_that_a_test_has_failed(self):
         self.stringio = StringIO()
-        self.reporter = plugins.cli.FinalCountsReporter(self.stringio)
+        self.reporter = cli.FinalCountsReporter(self.stringio)
 
         context = tools.create_context("made.up_context")
         tb1 = [('made_up_file.py', 3, 'made_up_function', 'frame1'),
@@ -94,7 +94,7 @@ class WhenTimingATestRun:
         self.FakeDateTime = FakeDateTime
 
         self.stringio = StringIO()
-        self.reporter = plugins.cli.TimedReporter(self.stringio)
+        self.reporter = cli.TimedReporter(self.stringio)
 
     def because_we_run_a_test_run(self):
         with mock.patch('datetime.datetime', self.FakeDateTime):

@@ -6,6 +6,7 @@ from contexts.plugins.name_based_identifier import NameBasedIdentifier
 from contexts.plugins.decorators import assertion
 from .tools import SpyReporter, UnorderedList, run_object
 
+
 core_file = repr(contexts.core.__file__)[1:-1]
 this_file = repr(__file__)[1:-1]
 

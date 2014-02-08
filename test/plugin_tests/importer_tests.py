@@ -3,7 +3,7 @@ import shutil
 import sys
 import types
 import contexts
-from contexts.plugins.importing import Importer
+from contexts.plugins.importer import Importer
 
 
 THIS_FILE = os.path.realpath(__file__)

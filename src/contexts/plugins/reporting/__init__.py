@@ -1,7 +1,7 @@
 import re
 import sys
 import traceback
-from ..plugin_interface import PluginInterface, NO_EXAMPLE
+from ...plugin_interface import PluginInterface, NO_EXAMPLE
 
 
 class StreamReporter(PluginInterface):
