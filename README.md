@@ -10,7 +10,7 @@ no `.feature` files, no fuss.
 
 Contexts is a 'Context-Specification'-style test framework for Python 3.3 and above, inspired by C#'s
 [`Machine.Specifications`](https://github.com/machine/machine.specifications).
-It aims to be flexible and extensible, and is appropriate for unit, integration and acceptance testing.
+It aims to be flexible and extensible, and is appropriate for unit, integration and acceptance testing. Read more at the [Huddle Dev Blog](http://tldr.huddle.com/blog/Write-Your-Tests-In-Another-Language/).
 
 Test written with Contexts resemble the grammar of ['Given/When/Then'](http://martinfowler.com/bliki/GivenWhenThen.html)-style
 specifications. Writing tests which read like user-centric sentences can encourage you to
