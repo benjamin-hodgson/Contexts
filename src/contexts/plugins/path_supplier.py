@@ -1,7 +1,7 @@
 import os
 
 
-class TestObjectSupplier(object):
+class PathSupplier(object):
     def setup_parser(self, parser):
         parser.add_argument('path',
             action='store',
