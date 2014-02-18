@@ -54,7 +54,7 @@ class UnorderedList(object):
 def run_object(to_run, plugins):
     extra_plug = FakeObjectSupplier(to_run)
     plugins.insert(0, extra_plug)
-    return contexts.run(plugins)
+    return contexts.run_with_plugins(plugins)
 
 
 class FakeObjectSupplier(object):

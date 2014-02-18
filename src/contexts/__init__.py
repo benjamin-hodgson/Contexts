@@ -23,24 +23,19 @@ def main(*args, **kwargs):
 
 
 # FIXME: run() currently assumes you're running on the cmd line
-def run(plugin_list=None):
+def run():
     """
-    Polymorphic test-running function.
-
-    run() - run all the test classes in the main module
-    run(class) - run the test class
-    run(module) - run all the test classes in the module
-    run(file_path:string) - run all the test classes found in the file
-    run(folder_path:string) - run all the test classes found in the folder and subfolders
-    run(package_path:string) - run all the test classes found in the package and subfolders
+    Run all the test classes in the main module.
 
     Returns: exit code as an integer.
         The default behaviour (which may be overridden by plugins) is to return a 0
         exit code if the test run succeeded, and 1 if it failed.
     """
-    if plugin_list is None:  # default list of plugins
-        plugin_list = load_plugins()
+    plugin_list = load_plugins()
+    return run_with_plugins(plugin_list)
 
+
+def run_with_plugins(plugin_list):
     composite = core.PluginComposite(plugin_list)
 
     to_run = composite.call_plugins("get_object_to_run")
@@ -49,3 +44,4 @@ def run(plugin_list=None):
     test_run.run()
 
     return composite.call_plugins('get_exit_code')
+

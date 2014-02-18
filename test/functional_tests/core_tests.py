@@ -23,7 +23,7 @@ class WhenAPluginSuppliesAClassToRun:
         self.plugin.identify_method.return_value = ASSERTION
 
     def because_we_run_with_the_plugin(self):
-        contexts.run([self.plugin])
+        contexts.run_with_plugins([self.plugin])
 
     def it_should_run_the_method(self):
         assert self.ran_method
