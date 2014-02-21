@@ -53,7 +53,7 @@ def spec(cls):
     DecoratorBasedIdentifier.decorated_items["contexts"].add(cls)
     return cls
 
-context = spec
+context = scenario = spec
 
 
 def setup(func):

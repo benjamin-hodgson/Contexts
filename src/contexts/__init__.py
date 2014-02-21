@@ -2,14 +2,14 @@ import sys
 from . import core
 from .plugin_discovery import load_plugins
 from .tools import catch, set_trace, time
-from .plugins.identification.decorators import context, spec, examples, setup, action, assertion, teardown
+from .plugins.identification.decorators import context, spec, scenario, examples, setup, action, assertion, teardown
 from .plugins.test_target_suppliers import ObjectSupplier
 
 
 __all__ = [
-    'run', 'main',
+    'run', 'main', 'run_with_plugins',
     'catch', 'set_trace', 'time',
-    'context', 'spec', 'examples', 'setup', 'action', 'assertion', 'teardown'
+    'context', 'spec', 'scenario', 'examples', 'setup', 'action', 'assertion', 'teardown'
 ]
 
 
@@ -45,6 +45,16 @@ def run():
 
 
 def run_with_plugins(plugin_list):
+    """
+    Carry out a test run with the supplied list of plugin instances.
+    The plugins are expected to identify the object to run.
+
+    Parameters:
+        plugin_list: a list of plugin instances (objects which implement some subset of PluginInterface)
+    Returns: exit code as an integer.
+        The default behaviour (which may be overridden by plugins) is to return a 0
+        exit code if the test run succeeded, and 1 if it failed.
+    """
     composite = core.PluginComposite(plugin_list)
 
     to_run = composite.get_object_to_run()
