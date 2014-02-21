@@ -20,7 +20,7 @@ class TestRun(object):
                 test_class.run()
             else:
                 modules = self.import_modules()
-                self.plugin_composite.call_plugins('process_module_list', modules)
+                self.plugin_composite.process_module_list(modules)
                 for module in modules:
                     suite = Suite(module, self.plugin_composite)
                     suite.run()
@@ -51,7 +51,7 @@ class TestRun(object):
         replacement = []
         for dirname in dirnames:
             full_path = os.path.realpath(os.path.join(parent, dirname))
-            reply = self.plugin_composite.call_plugins("identify_folder", full_path)
+            reply = self.plugin_composite.identify_folder(full_path)
             if reply is TEST_FOLDER:
                 replacement.append(dirname)
         dirnames[:] = replacement
@@ -66,7 +66,7 @@ class Suite(object):
         self.exception_handler = ExceptionHandler(self.plugin_composite)
 
         self.classes = self.get_classes()
-        self.plugin_composite.call_plugins('process_class_list', self.classes)
+        self.plugin_composite.process_class_list(self.classes)
 
     def run(self):
         with self.exception_handler.run_suite(self):
@@ -77,7 +77,7 @@ class Suite(object):
     def get_classes(self):
         classes = []
         for name, cls in inspect.getmembers(self.module, inspect.isclass):
-            response = self.plugin_composite.call_plugins("identify_class", cls)
+            response = self.plugin_composite.identify_class(cls)
             if response is CONTEXT:
                 classes.append(cls)
         return classes
@@ -135,7 +135,7 @@ class TestClass(object):
             val = getattr(cls, name)
 
             if callable(val) and not isprivate(name):
-                response = self.plugin_composite.call_plugins("identify_method", val)
+                response = self.plugin_composite.identify_method(val)
 
                 if response is EXAMPLES and bottom_of_tree:
                     assert_not_too_many_special_methods(self.examples_method, cls, val)
@@ -183,7 +183,7 @@ class Context(object):
         self.teardowns = bind_methods(unbound_teardowns, self.instance)
 
     def run(self):
-        self.plugin_composite.call_plugins('process_assertion_list', self.assertions)
+        self.plugin_composite.process_assertion_list(self.assertions)
         self.assertions = [Assertion(f, self.plugin_composite) for f in self.assertions]
         with self.exception_handler.run_context(self):
             try:
@@ -242,62 +242,64 @@ class ExceptionHandler(object):
 
     @contextmanager
     def run_test_run(self, test_run):
-        self.plugin_composite.call_plugins("test_run_started")
+        self.plugin_composite.test_run_started()
         try:
             yield
         except Exception as e:
-            self.plugin_composite.call_plugins("unexpected_error", e)
-        self.plugin_composite.call_plugins("test_run_ended")
+            self.plugin_composite.unexpected_error(e)
+        self.plugin_composite.test_run_ended()
 
     @contextmanager
     def importing(self, folder, filename):
         try:
             yield
         except Exception as e:
-            self.plugin_composite.call_plugins("unexpected_error", e)
+            self.plugin_composite.unexpected_error(e)
 
     @contextmanager
     def run_suite(self, suite):
-        self.plugin_composite.call_plugins("suite_started", suite.name)
+        self.plugin_composite.suite_started(suite.name)
         yield
-        self.plugin_composite.call_plugins("suite_ended", suite.name)
+        self.plugin_composite.suite_ended(suite.name)
 
     @contextmanager
     def run_class(self, test_class):
         try:
             yield
         except Exception as e:
-            self.plugin_composite.call_plugins("unexpected_error", e)
+            self.plugin_composite.unexpected_error(e)
 
     @contextmanager
     def run_context(self, context):
-        self.plugin_composite.call_plugins("context_started", context.name, context.example)
+        self.plugin_composite.context_started(context.name, context.example)
         try:
             yield
         except Exception as e:
-            self.plugin_composite.call_plugins("context_errored", context.name, context.example, e)
+            self.plugin_composite.context_errored(context.name, context.example, e)
         else:
-            self.plugin_composite.call_plugins("context_ended", context.name, context.example)
+            self.plugin_composite.context_ended(context.name, context.example)
 
     @contextmanager
     def run_assertion(self, assertion):
-        self.plugin_composite.call_plugins("assertion_started", assertion.name)
+        self.plugin_composite.assertion_started(assertion.name)
         try:
             yield
         except AssertionError as e:
-            self.plugin_composite.call_plugins("assertion_failed", assertion.name, e)
+            self.plugin_composite.assertion_failed(assertion.name, e)
         except Exception as e:
-            self.plugin_composite.call_plugins("assertion_errored", assertion.name, e)
+            self.plugin_composite.assertion_errored(assertion.name, e)
         else:
-            self.plugin_composite.call_plugins("assertion_passed", assertion.name)
+            self.plugin_composite.assertion_passed(assertion.name)
 
 
 class PluginComposite(object):
     def __init__(self, plugins):
         self.plugins = plugins
 
-    def call_plugins(self, method, *args):
-        for plugin in self.plugins:
-            reply = getattr(plugin, method, lambda *_: None)(*args)
-            if reply is not None:
-                return reply
+    def __getattr__(self, name):
+        def plugin_method(*args, **kwargs):
+            for plugin in self.plugins:
+                reply = getattr(plugin, name, lambda *_: None)(*args)
+                if reply is not None:
+                    return reply
+        return plugin_method

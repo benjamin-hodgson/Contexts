@@ -21,7 +21,7 @@ class Importer(object):
             full_path = os.path.realpath(os.path.join(self.directory, filename))
             if not os.path.isfile(full_path) or filename == '__init__.py':
                 continue
-            if self.plugin_composite.call_plugins("identify_file", full_path) is TEST_FILE:
+            if self.plugin_composite.identify_file(full_path) is TEST_FILE:
                 module_name = self.module_prefix + remove_extension(filename)
                 specs.append(ModuleSpecification(self.location, module_name))
         return specs
@@ -41,7 +41,7 @@ class FolderModuleImporter(Importer):
     def import_file(self, filename):
         module_name = os.path.splitext(filename)[0]
         with self.exception_handler.importing(self.directory, module_name):
-            return self.plugin_composite.call_plugins('import_module', self.directory, module_name)
+            return self.plugin_composite.import_module(self.directory, module_name)
 
 
 class PackageModuleImporter(Importer):
@@ -86,7 +86,7 @@ class ModuleList(object):
         self.exception_handler = exception_handler
     def add(self, folder, module_name):
         with self.exception_handler.importing(folder, module_name):
-            module = self.plugin_composite.call_plugins('import_module', folder, module_name)
+            module = self.plugin_composite.import_module(folder, module_name)
             self.modules.append(module)
 
 

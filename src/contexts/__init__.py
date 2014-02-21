@@ -38,10 +38,10 @@ def run():
 def run_with_plugins(plugin_list):
     composite = core.PluginComposite(plugin_list)
 
-    to_run = composite.call_plugins("get_object_to_run")
+    to_run = composite.get_object_to_run()
 
     test_run = core.TestRun(to_run, composite)
     test_run.run()
 
-    return composite.call_plugins('get_exit_code')
+    return composite.get_exit_code()
 
