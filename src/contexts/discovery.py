@@ -7,11 +7,11 @@ PackageSpecification = namedtuple('PackageSpecification', ['parent_folder', 'pac
 ModuleSpecification = namedtuple('ModuleSpecification', ['parent_folder', 'module_name'])
 
 
-def create_importer(folder, plugin_composite):
+def create_importer(folder, plugin_composite, exception_handler):
     if ispackage(folder):
-        return PackageModuleImporter(folder, plugin_composite)
+        return PackageModuleImporter(folder, plugin_composite, exception_handler)
     else:
-        return FolderModuleImporter(folder, plugin_composite)
+        return FolderModuleImporter(folder, plugin_composite, exception_handler)
 
 
 class Importer(object):
@@ -28,35 +28,37 @@ class Importer(object):
 
 
 class FolderModuleImporter(Importer):
-    def __init__(self, directory, plugin_composite):
+    def __init__(self, directory, plugin_composite, exception_handler):
         self.directory = directory
         self.location = self.directory
         self.module_prefix = ''
         self.plugin_composite = plugin_composite
+        self.exception_handler = exception_handler
 
     def module_specs(self):
         return self.get_file_details()
 
     def import_file(self, filename):
         module_name = os.path.splitext(filename)[0]
-        with self.plugin_composite.importing(self.directory, module_name):
+        with self.exception_handler.importing(self.directory, module_name):
             return self.plugin_composite.call_plugins('import_module', self.directory, module_name)
 
 
 class PackageModuleImporter(Importer):
-    def __init__(self, directory, plugin_composite):
+    def __init__(self, directory, plugin_composite, exception_handler):
         self.package_spec = get_package_specification(directory)
 
         self.directory = directory
         self.location = self.package_spec[0]
         self.module_prefix = self.package_spec[1] + '.'
         self.plugin_composite = plugin_composite
+        self.exception_handler = exception_handler
 
     def module_specs(self):
         return [self.package_spec] + self.get_file_details()
 
     def import_file(self, filename):
-        module_list = ModuleList(self.plugin_composite)
+        module_list = ModuleList(self.plugin_composite, self.exception_handler)
         top_folder, package_name = self.package_spec
         add_parent_packages_to_list(module_list, top_folder, package_name)
         if filename != '__init__.py':
@@ -78,11 +80,12 @@ def add_parent_packages_to_list(module_list, top_folder, package_name):
 # list of modules and then populating it inside run(), or importing the modules in the constructor
 # So, until i come up with a better idea, this class lives on and will only be used inside import_file()
 class ModuleList(object):
-    def __init__(self, plugin_composite):
+    def __init__(self, plugin_composite, exception_handler):
         self.modules = []
         self.plugin_composite = plugin_composite
+        self.exception_handler = exception_handler
     def add(self, folder, module_name):
-        with self.plugin_composite.importing(folder, module_name):
+        with self.exception_handler.importing(folder, module_name):
             module = self.plugin_composite.call_plugins('import_module', folder, module_name)
             self.modules.append(module)
 

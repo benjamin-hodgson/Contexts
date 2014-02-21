@@ -11,9 +11,10 @@ class TestRun(object):
     def __init__(self, source, plugin_composite):
         self.source = source
         self.plugin_composite = plugin_composite
+        self.exception_handler = ExceptionHandler(self.plugin_composite)
 
     def run(self):
-        with self.plugin_composite.run_test_run(self):
+        with self.exception_handler.run_test_run(self):
             if isinstance(self.source, type):
                 test_class = TestClass(self.source, self.plugin_composite)
                 test_class.run()
@@ -29,7 +30,7 @@ class TestRun(object):
             return [self.source]
         if os.path.isfile(self.source):
             folder, filename = os.path.split(self.source)
-            importer = discovery.create_importer(folder, self.plugin_composite)
+            importer = discovery.create_importer(folder, self.plugin_composite, self.exception_handler)
             module = importer.import_file(filename)
             if module is None:
                 return []
@@ -38,10 +39,10 @@ class TestRun(object):
             return self.import_modules_from_folder(self.source)
 
     def import_modules_from_folder(self, directory):
-        module_list = discovery.ModuleList(self.plugin_composite)
+        module_list = discovery.ModuleList(self.plugin_composite, self.exception_handler)
         for folder, dirnames, _ in os.walk(directory):
             self.remove_non_test_folders(folder, dirnames)
-            importer = discovery.create_importer(folder, self.plugin_composite)
+            importer = discovery.create_importer(folder, self.plugin_composite, self.exception_handler)
             for folder, filename in importer.module_specs():
                 module_list.add(folder, filename)
         return module_list.modules
@@ -62,11 +63,13 @@ class Suite(object):
         self.module = module
         self.name = self.module.__name__
         self.plugin_composite = plugin_composite
+        self.exception_handler = ExceptionHandler(self.plugin_composite)
+
         self.classes = self.get_classes()
         self.plugin_composite.call_plugins('process_class_list', self.classes)
 
     def run(self):
-        with self.plugin_composite.run_suite(self):
+        with self.exception_handler.run_suite(self):
             for cls in self.classes:
                 test_class = TestClass(cls, self.plugin_composite)
                 test_class.run()
@@ -80,11 +83,11 @@ class Suite(object):
         return classes
 
 
-
 class TestClass(object):
     def __init__(self, cls, plugin_composite):
         self.cls = cls
         self.plugin_composite = plugin_composite
+        self.exception_handler = ExceptionHandler(self.plugin_composite)
 
         self.examples_method = None
         self.unbound_setups = []
@@ -106,7 +109,7 @@ class TestClass(object):
         if not self.unbound_assertions:
             return
 
-        with self.plugin_composite.run_class(self):
+        with self.exception_handler.run_class(self):
             for example in self.get_examples():
                 context = Context(
                     self.cls(), example,
@@ -168,6 +171,8 @@ class Context(object):
                  unbound_setups, unbound_action, unbound_assertions, unbound_teardowns,
                  plugin_composite):
         self.plugin_composite = plugin_composite
+        self.exception_handler = ExceptionHandler(self.plugin_composite)
+
         self.instance = instance
         self.example = example
         self.name = instance.__class__.__name__
@@ -180,7 +185,7 @@ class Context(object):
     def run(self):
         self.plugin_composite.call_plugins('process_assertion_list', self.assertions)
         self.assertions = [Assertion(f, self.plugin_composite) for f in self.assertions]
-        with self.plugin_composite.run_context(self):
+        with self.exception_handler.run_context(self):
             try:
                 self.run_setup()
                 self.run_action()
@@ -213,9 +218,10 @@ class Assertion(object):
         self.func = func
         self.name = func.__name__
         self.plugin_composite = plugin_composite
+        self.exception_handler = ExceptionHandler(self.plugin_composite)
 
     def run(self, test_data):
-        with self.plugin_composite.run_assertion(self):
+        with self.exception_handler.run_assertion(self):
             run_with_test_data(self.func, test_data)
 
 
@@ -230,60 +236,65 @@ def run_with_test_data(func, test_data):
         func()
 
 
-class PluginComposite(object):
-    def __init__(self, plugins):
-        self.plugins = plugins
+class ExceptionHandler(object):
+    def __init__(self, plugin_composite):
+        self.plugin_composite = plugin_composite
 
     @contextmanager
     def run_test_run(self, test_run):
-        self.call_plugins("test_run_started")
+        self.plugin_composite.call_plugins("test_run_started")
         try:
             yield
         except Exception as e:
-            self.call_plugins("unexpected_error", e)
-        self.call_plugins("test_run_ended")
+            self.plugin_composite.call_plugins("unexpected_error", e)
+        self.plugin_composite.call_plugins("test_run_ended")
 
     @contextmanager
     def importing(self, folder, filename):
         try:
             yield
         except Exception as e:
-            self.call_plugins("unexpected_error", e)
+            self.plugin_composite.call_plugins("unexpected_error", e)
 
     @contextmanager
     def run_suite(self, suite):
-        self.call_plugins("suite_started", suite.name)
+        self.plugin_composite.call_plugins("suite_started", suite.name)
         yield
-        self.call_plugins("suite_ended", suite.name)
+        self.plugin_composite.call_plugins("suite_ended", suite.name)
 
     @contextmanager
     def run_class(self, test_class):
         try:
             yield
         except Exception as e:
-            self.call_plugins("unexpected_error", e)
+            self.plugin_composite.call_plugins("unexpected_error", e)
 
     @contextmanager
     def run_context(self, context):
-        self.call_plugins("context_started", context.name, context.example)
+        self.plugin_composite.call_plugins("context_started", context.name, context.example)
         try:
             yield
         except Exception as e:
-            self.call_plugins("context_errored", context.name, context.example, e)
+            self.plugin_composite.call_plugins("context_errored", context.name, context.example, e)
         else:
-            self.call_plugins("context_ended", context.name, context.example)
+            self.plugin_composite.call_plugins("context_ended", context.name, context.example)
 
     @contextmanager
     def run_assertion(self, assertion):
-        self.call_plugins("assertion_started", assertion.name)
+        self.plugin_composite.call_plugins("assertion_started", assertion.name)
         try:
             yield
         except AssertionError as e:
-            self.call_plugins("assertion_failed", assertion.name, e)
+            self.plugin_composite.call_plugins("assertion_failed", assertion.name, e)
         except Exception as e:
-            self.call_plugins("assertion_errored", assertion.name, e)
+            self.plugin_composite.call_plugins("assertion_errored", assertion.name, e)
         else:
-            self.call_plugins("assertion_passed", assertion.name)
+            self.plugin_composite.call_plugins("assertion_passed", assertion.name)
+
+
+class PluginComposite(object):
+    def __init__(self, plugins):
+        self.plugins = plugins
 
     def call_plugins(self, method, *args):
         for plugin in self.plugins:
