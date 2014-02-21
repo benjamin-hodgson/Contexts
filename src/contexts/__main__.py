@@ -1,4 +1,6 @@
-from . import main
+import sys
+from .plugin_discovery import load_plugins
+from . import run_with_plugins, main
 
 
 def cmd():
@@ -9,7 +11,9 @@ def cmd():
     else:
         colorama.init()
 
-    main()
+    plugin_list = load_plugins()
+    exit_code = run_with_plugins(plugin_list)
+    sys.exit(exit_code)
 
 
 if __name__ == "__main__":

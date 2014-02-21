@@ -3,6 +3,7 @@ from . import core
 from .plugin_discovery import load_plugins
 from .tools import catch, set_trace, time
 from .plugins.identification.decorators import context, spec, examples, setup, action, assertion, teardown
+from .plugins.test_target_suppliers import ObjectSupplier
 
 
 __all__ = [
@@ -12,17 +13,21 @@ __all__ = [
 ]
 
 
-def main(*args, **kwargs):
+def main():
     """
     Call contexts.run() with the sepcified arguments,
     exiting with code 0 if the test run was successful,
     code 1 if unsuccessful.
     """
-    exit_code = run(*args, **kwargs)
+    plugin_list = load_plugins()
+
+    module = sys.modules['__main__']
+    plugin_list.insert(0, ObjectSupplier(module))
+
+    exit_code = run_with_plugins(plugin_list)
     sys.exit(exit_code)
 
 
-# FIXME: run() currently assumes you're running on the cmd line
 def run():
     """
     Run all the test classes in the main module.
@@ -32,6 +37,10 @@ def run():
         exit code if the test run succeeded, and 1 if it failed.
     """
     plugin_list = load_plugins()
+
+    module = sys.modules['__main__']
+    plugin_list.insert(0, ObjectSupplier(module))
+
     return run_with_plugins(plugin_list)
 
 

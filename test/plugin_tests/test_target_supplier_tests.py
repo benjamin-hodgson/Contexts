@@ -1,7 +1,7 @@
 import argparse
 import os.path
 import contexts
-from contexts.plugins.path_supplier import PathSupplier
+from contexts.plugins.test_target_suppliers import PathSupplier, ObjectSupplier
 from contexts import action
 
 
@@ -41,9 +41,21 @@ class WhenUserSpecifiesSomethingThatIsNotAFolder:
         self.args = argparse.Namespace()
         self.args.path = "made/up/path"
 
-    @action
-    def because_the_framework_asks_what_it_should_run(self):
+    def because_we_try_to_initialise_the_plugin(self):
         self.exception = contexts.catch(self.path_supplier.initialise, self.args, {})
 
     def it_should_throw_a_ValueError(self):
         assert isinstance(self.exception, ValueError)
+
+
+class WhenClientSpecifiesAnObject:
+    def establish_that_something_has_been_injected(self):
+        self.target = object()
+        self.object_supplier = ObjectSupplier(self.target)
+
+    @action
+    def because_the_framework_asks_what_it_should_run(self):
+        self.result = self.object_supplier.get_object_to_run()
+
+    def it_should_return_what_was_injected(self):
+        assert self.result is self.target

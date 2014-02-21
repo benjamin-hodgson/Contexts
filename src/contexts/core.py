@@ -57,7 +57,6 @@ class TestRun(object):
         dirnames[:] = replacement
 
 
-
 class Suite(object):
     def __init__(self, module, plugin_composite):
         self.module = module
