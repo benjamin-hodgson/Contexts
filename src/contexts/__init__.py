@@ -19,12 +19,7 @@ def main():
     exiting with code 0 if the test run was successful,
     code 1 if unsuccessful.
     """
-    plugin_list = load_plugins()
-
-    module = sys.modules['__main__']
-    plugin_list.insert(0, ObjectSupplier(module))
-
-    exit_code = run_with_plugins(plugin_list)
+    exit_code = run()
     sys.exit(exit_code)
 
 

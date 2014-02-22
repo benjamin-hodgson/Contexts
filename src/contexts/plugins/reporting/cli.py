@@ -346,6 +346,8 @@ class FailuresOnlyBefore(object):
     def context_started(self, name, example):
         self.master.set_streams(StringIO())
         self.master.current_context_failed = False
+    def assertion_passed(self, name):
+        return True
     def assertion_failed(self, name, exception):
         self.master.current_context_failed = True
     def assertion_errored(self, name, exception):
