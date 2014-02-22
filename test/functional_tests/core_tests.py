@@ -277,35 +277,29 @@ class WhenRunningASpecWithReporters:
     @assertion
     def it_should_call_context_started_next(self):
         assert self.reporter1.calls[1][0] == 'context_started'
-
     @assertion
     def it_should_pass_in_the_context_name(self):
         assert self.reporter1.calls[1][1] == 'TestSpec'
-
     @assertion
     def it_should_pass_in_no_example(self):
         assert self.reporter1.calls[1][2] is NO_EXAMPLE
 
     def it_should_call_assertion_started_for_the_assertion(self):
         assert self.reporter1.calls[2][0] == 'assertion_started'
-
     def it_should_pass_the_assertion_name_into_assertion_started(self):
         assert self.reporter1.calls[2][1] == 'method_with_should_in_the_name'
 
     def it_should_call_assertion_passed_for_the_assertion(self):
         assert self.reporter1.calls[3][0] == 'assertion_passed'
-
     def it_should_pass_the_name_into_assertion_passed(self):
         assert self.reporter1.calls[3][1] == 'method_with_should_in_the_name'
 
     @assertion
     def it_should_call_context_ended_next(self):
         assert self.reporter1.calls[4][0] == 'context_ended'
-
     @assertion
     def it_should_pass_in_the_context_name_again(self):
         assert self.reporter1.calls[4][1] == 'TestSpec'
-
     @assertion
     def it_should_pass_in_no_example_again(self):
         assert self.reporter1.calls[4][2] is NO_EXAMPLE
@@ -315,7 +309,6 @@ class WhenRunningASpecWithReporters:
 
     def it_should_do_exactly_the_same_to_the_second_reporter(self):
         assert self.reporter2.calls == self.reporter1.calls
-
     def it_should_do_exactly_the_same_to_the_third_reporter(self):
         assert self.reporter3.calls == self.reporter1.calls
 
@@ -471,24 +464,19 @@ class WhenAContextErrorsDuringTheSetup:
     @assertion
     def it_should_call_context_errored(self):
         assert self.reporter.calls[2][0] == "context_errored"
-
     @assertion
     def it_should_pass_in_the_context_name(self):
         assert self.reporter.calls[2][1] == self.spec.__name__
-
     @assertion
     def it_should_pass_in_no_example(self):
         assert self.reporter.calls[2][2] is NO_EXAMPLE
-
     def it_should_pass_in_the_exception(self):
         assert self.reporter.calls[2][3] is self.exception
 
     def it_should_not_run_the_action(self):
         assert not self.spec.ran_because
-
     def it_should_not_run_the_assertion(self):
         assert not self.spec.ran_assertion
-
     @assertion
     def it_should_still_run_the_cleanup(self):
         assert self.spec.ran_cleanup

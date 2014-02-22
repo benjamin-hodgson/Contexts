@@ -1,6 +1,7 @@
 from unittest import mock
 from .tools import run_object
 from contexts.plugin_interface import PluginInterface, EXAMPLES, SETUP, ACTION, ASSERTION, TEARDOWN
+from contexts import assertion
 
 
 class WhenRunningAParametrisedSpec:
@@ -133,6 +134,52 @@ class WhenRunningAParametrisedSpecWithNonParametrisedMethods:
 
     def it_should_run_the_assertion_twice(self):
         assert self.ParametrisedSpec.assertions == 2
+
+
+class WhenNotifyingAPluginOfExamples:
+    def context(self):
+        class ParametrisedSpec:
+            @classmethod
+            def examples(cls):
+                yield 1
+                yield 2
+            def it(self):
+                pass
+        self.ParametrisedSpec = ParametrisedSpec
+
+        self.plugin = mock.Mock(spec=PluginInterface)
+        self.plugin.identify_method.side_effect = lambda meth:{
+            ParametrisedSpec.examples: EXAMPLES,
+            ParametrisedSpec.it: ASSERTION
+        }[meth]
+
+    def because_we_run_the_class(self):
+        run_object(self.ParametrisedSpec, [self.plugin])
+
+    def it_should_call_test_class_started_once(self):
+        assert self.plugin.mock_calls[3] == mock.call.test_class_started(self.ParametrisedSpec)
+        assert self.plugin.test_class_started.call_count == 1
+
+    @assertion
+    def it_should_call_context_started_with_the_first_example(self):
+        assert self.plugin.context_started.mock_calls[0] == mock.call("ParametrisedSpec", 1)
+
+    @assertion
+    def it_should_call_context_ended_with_the_first_example(self):
+        assert self.plugin.context_ended.mock_calls[0] == mock.call("ParametrisedSpec", 1)
+
+    @assertion
+    def it_should_call_context_started_with_the_second_example(self):
+        assert self.plugin.context_started.mock_calls[1] == mock.call("ParametrisedSpec", 2)
+
+    @assertion
+    def it_should_call_context_ended_with_the_first_example(self):
+        assert self.plugin.context_ended.mock_calls[1] == mock.call("ParametrisedSpec", 2)
+
+    def it_should_call_test_class_ended_once(self):
+        assert self.plugin.mock_calls[-3] == mock.call.test_class_ended(self.ParametrisedSpec)
+        assert self.plugin.test_class_ended.call_count == 1
+
 
 
 class WhenExamplesRaisesAnException:

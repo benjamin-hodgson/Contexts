@@ -4,7 +4,7 @@ import types
 from contextlib import contextmanager
 from . import discovery
 from . import errors
-from .plugin_interface import TEST_FOLDER, CONTEXT, EXAMPLES, SETUP, ACTION, ASSERTION, TEARDOWN, NO_EXAMPLE
+from .plugin_interface import PluginInterface, TEST_FOLDER, CONTEXT, EXAMPLES, SETUP, ACTION, ASSERTION, TEARDOWN, NO_EXAMPLE
 
 
 class TestRun(object):
@@ -263,10 +263,13 @@ class ExceptionHandler(object):
 
     @contextmanager
     def run_class(self, test_class):
+        self.plugin_composite.test_class_started(test_class.cls)
         try:
             yield
         except Exception as e:
             self.plugin_composite.unexpected_error(e)
+        else:
+            self.plugin_composite.test_class_ended(test_class.cls)
 
     @contextmanager
     def run_context(self, context):
@@ -296,6 +299,10 @@ class PluginComposite(object):
         self.plugins = plugins
 
     def __getattr__(self, name):
+        # not expecting this to happen
+        if name not in PluginInterface.__dict__:
+            raise AttributeError('The method {} is not part of the plugin interface'.format(name))
+
         def plugin_method(*args, **kwargs):
             for plugin in self.plugins:
                 reply = getattr(plugin, name, lambda *_: None)(*args)

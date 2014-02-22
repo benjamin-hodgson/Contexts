@@ -62,6 +62,22 @@ class PluginInterface(object):
     def suite_ended(self, name):
         """Called at the end of a test module"""
 
+    def test_class_started(self, cls):
+        """
+        Called when a test class begins its run.
+
+        A test class may contain one or more test contexts.
+        (Test classes with examples will generally contain more than one.)
+
+        `cls` is the class object that is being run.
+        """
+    def test_class_ended(self, cls):
+        """
+        Called when a test class ends its run.
+
+        `cls` is the class object that is being run.
+        """
+
     def context_started(self, name, example):
         """
         Called when a test context begins its run.
