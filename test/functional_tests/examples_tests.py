@@ -181,7 +181,6 @@ class WhenNotifyingAPluginOfExamples:
         assert self.plugin.test_class_ended.call_count == 1
 
 
-
 class WhenExamplesRaisesAnException:
     def context(self):
         self.exception = Exception()
@@ -208,7 +207,7 @@ class WhenExamplesRaisesAnException:
         assert self.spec.total == 3
 
     def it_should_send_an_exception_to_the_plugin(self):
-        self.plugin.unexpected_error.assert_called_once_with(self.exception)
+        self.plugin.test_class_errored.assert_called_once_with(self.spec, self.exception)
 
 
 class WhenUserFailsToMakeExamplesAClassmethod:
@@ -229,11 +228,9 @@ class WhenUserFailsToMakeExamplesAClassmethod:
     def because_we_run_the_spec(self):
         run_object(self.spec, [self.plugin])
 
-    def it_should_call_unexpected_error_on_the_reporter(self):
-        assert self.plugin.unexpected_error.called
-
-    def it_should_pass_in_a_TypeError(self):
-        assert isinstance(self.plugin.unexpected_error.call_args[0][0], TypeError)
+    def it_should_call_test_class_errored_with_the_class_and_the_exception(self):
+        self.plugin.test_class_errored.assert_called_once_with(self.spec, mock.ANY)
+        assert isinstance(self.plugin.test_class_errored.call_args[0][1], TypeError)
 
 
 class WhenExamplesReturnsNone:

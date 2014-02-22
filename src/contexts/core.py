@@ -267,7 +267,7 @@ class ExceptionHandler(object):
         try:
             yield
         except Exception as e:
-            self.plugin_composite.unexpected_error(e)
+            self.plugin_composite.test_class_errored(test_class.cls, e)
         else:
             self.plugin_composite.test_class_ended(test_class.cls)
 

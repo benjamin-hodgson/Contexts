@@ -77,6 +77,12 @@ class PluginInterface(object):
 
         `cls` is the class object that is being run.
         """
+    def test_class_errored(self, cls, exception):
+        """
+        Called when a test class unexpectedly errors.
+
+        `cls` is the class object that is being run. `exception` is the exception that got thrown.
+        """
 
     def context_started(self, name, example):
         """
