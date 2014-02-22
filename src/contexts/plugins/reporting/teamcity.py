@@ -25,6 +25,28 @@ class TeamCityReporter(StreamReporter):
     def test_run_ended(self):
         return True
 
+    def test_class_started(self, cls):
+        self.teamcity_print("testClassStarted", name=cls.__name__)
+        return True
+
+    def test_class_ended(self, cls):
+        self.teamcity_print("testClassFinished", name=cls.__name__)
+        return True
+
+    def test_class_errored(self, cls, exception):
+        error_summary = format_exception(exception)
+
+        self.teamcity_print("testStarted", name=cls.__name__)
+        self.teamcity_print(
+            "testFailed",
+            name=cls.__name__,
+            message=error_summary[-1],
+            details='\n'.join(error_summary)
+        )
+        self.teamcity_print("testFinished", name=cls.__name__)
+        self.teamcity_print("testClassFinished", name=cls.__name__)
+        return True
+
     def suite_started(self, name):
         self.teamcity_print("testSuiteStarted", name=name)
         return True

@@ -41,6 +41,62 @@ class WhenASuiteEndsInTeamCity(TeamCitySharedContext):
 
 
 ###########################################################
+# Suite tests
+###########################################################
+
+class WhenATestClassStartsInTeamCity(TeamCitySharedContext):
+    def context(self):
+        self.class_name = 'abc'
+    def because_the_suite_starts(self):
+        self.reporter.test_class_started(type(self.class_name, (), {}))
+    def it_should_tell_team_city_the_class_started(self):
+        assert teamcity_parse(self.stringio.getvalue()) == ("testClassStarted", {'name':self.class_name})
+
+
+class WhenATestClassEndsInTeamCity(TeamCitySharedContext):
+    def context(self):
+        self.class_name = 'abc'
+    def because_the_suite_ends(self):
+        self.reporter.test_class_ended(type(self.class_name, (), {}))
+    def it_should_tell_team_city_the_class_ended(self):
+        assert teamcity_parse(self.stringio.getvalue()) == ("testClassFinished", {'name':self.class_name})
+
+
+class WhenATestClassErrorsInTeamCity(TeamCitySharedContext):
+    def context(self):
+        self.class_name = 'abc'
+
+        tb = [('made_up_file.py', 3, 'made_up_function', 'frame1'),
+              ('another_made_up_file.py', 2, 'another_made_up_function', 'frame2')]
+        self.exception = tools.build_fake_exception(tb, "Gotcha")
+        self.formatted_tb = (
+            'Traceback (most recent call last):|n'
+            '  File "made_up_file.py", line 3, in made_up_function|n'
+            '    frame1|n'
+            '  File "another_made_up_file.py", line 2, in another_made_up_function|n'
+            '    frame2|n'
+            'plugin_tests.tools.FakeException: Gotcha')
+
+    def because_the_suite_ends(self):
+        self.reporter.test_class_errored(type(self.class_name, (), {}), self.exception)
+
+    def it_should_tell_team_city_a_test_started(self):
+        assert self.parse_line(0) == ("testStarted", {'name':self.class_name})
+    def it_should_tell_team_city_the_test_failed(self):
+        assert self.parse_line(1) == (
+            "testFailed",
+            {
+                'name':self.class_name,
+                'message':'plugin_tests.tools.FakeException: Gotcha',
+                'details':self.formatted_tb
+            })
+    def it_should_tell_team_city_the_test_finished(self):
+        assert self.parse_line(2) == ("testFinished", {'name':self.class_name})
+    def it_should_tell_team_city_the_class_finished(self):
+        assert self.parse_line(3) == ("testClassFinished", {'name':self.class_name})
+
+
+###########################################################
 # assertion_started tests
 ###########################################################
 
