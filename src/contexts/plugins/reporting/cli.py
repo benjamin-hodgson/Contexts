@@ -320,8 +320,7 @@ class FailuresOnlyMaster(StreamReporter):
         return args.verbosity == 'normal'
 
     def request_plugins(self):
-        wanted_classes = [Colouriser, VerboseReporter, StdOutCapturingReporter, UnColouriser]
-        returned_plugins = yield wanted_classes
+        returned_plugins = yield [Colouriser, VerboseReporter, StdOutCapturingReporter, UnColouriser]
         self.plugins = returned_plugins.values()
 
     def set_streams(self, stream):

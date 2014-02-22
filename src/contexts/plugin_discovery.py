@@ -64,7 +64,7 @@ class PluginLoader(object):
     def to_list(self):
         return self.plugins
 
-
+    # this function should go
     def activate_plugin(self, cls):
         try:
             sig = inspect.signature(cls)

@@ -56,9 +56,9 @@ and [more examples](https://github.com/benjamin-hodgson/Contexts/wiki/Examples).
 
 ```python
 import requests
-import contexts
+# no need to import contexts!
 
-class WhenRequestingAResourceThatDoesNotExist(object):
+class WhenRequestingAResourceThatDoesNotExist:  # no custom base class!
     def establish_that_we_are_asking_for_a_made_up_resource(self):
         self.uri = "http://www.github.com/itdontexistman"
         self.session = requests.Session()
@@ -71,12 +71,6 @@ class WhenRequestingAResourceThatDoesNotExist(object):
 
     def the_response_should_have_an_HTML_content_type(self):
         assert self.response.headers['content-type'] == 'text/html'
-
-    def it_should_raise_an_HTTPError_when_we_ask_it_to(self):
-        # In the real world, this assertion would be a whole test class of its own.
-        # I put it in because I wanted to demonstrate 'catch()'!
-        exception = contexts.catch(self.response.raise_for_status)
-        assert isinstance(exception, requests.exceptions.HTTPError)
 
     def cleanup_the_session(self):
         self.session.close()
