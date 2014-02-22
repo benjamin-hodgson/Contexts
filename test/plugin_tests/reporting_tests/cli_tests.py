@@ -11,7 +11,7 @@ class WhenPrintingFinalCountsForAnEmptyRun:
         self.reporter = cli.FinalCountsReporter(self.stringio)
     def because_a_test_run_ends(self):
         self.reporter.test_run_ended()
-    def it_should_output_a_summary(self):
+    def it_should_output_zeroes(self):
         assert self.stringio.getvalue() == ("""
 ----------------------------------------------------------------------
 PASSED!
@@ -27,22 +27,22 @@ class WhenPrintingFinalCountsForASuccessfulRun:
         ctx1 = tools.create_context()
         ctx2 = tools.create_context()
 
-        self.reporter.context_started(ctx1.name, ctx1.example)
-        self.reporter.assertion_started("assertion1")
-        self.reporter.assertion_passed("assertion1")
-        self.reporter.assertion_started("assertion2")
-        self.reporter.assertion_passed("assertion2")
-        self.reporter.context_ended(ctx1.name, ctx1.example)
+        self.reporter.context_started('','')
+        self.reporter.assertion_started("")
+        self.reporter.assertion_passed("")
+        self.reporter.assertion_started("")
+        self.reporter.assertion_passed("")
+        self.reporter.context_ended('','')
 
-        self.reporter.context_started(ctx2.name, ctx2.example)
-        self.reporter.assertion_started("assertion3")
-        self.reporter.assertion_passed("assertion3")
-        self.reporter.context_ended(ctx2.name, ctx2.example)
+        self.reporter.context_started('','')
+        self.reporter.assertion_started("")
+        self.reporter.assertion_passed("")
+        self.reporter.context_ended('','')
 
     def because_the_test_run_ends(self):
         self.reporter.test_run_ended()
 
-    def it_should_print_the_summary_to_the_stream(self):
+    def it_should_output_the_correct_numbers(self):
         assert self.stringio.getvalue() == (
 """
 ----------------------------------------------------------------------
@@ -50,38 +50,81 @@ PASSED!
 2 contexts, 3 assertions
 """)
 
-    def it_should_say_it_passed(self):
-        assert not self.reporter.failed
 
-
-class WhenPrintingFinalCountsForAFailedRun:
-    def establish_that_a_test_has_failed(self):
+class WhenPrintingFinalCountsAfterAnAssertionFails:
+    def establish_that_an_assertion_has_failed(self):
         self.stringio = StringIO()
         self.reporter = cli.FinalCountsReporter(self.stringio)
 
-        context = tools.create_context("made.up_context")
-        tb1 = [('made_up_file.py', 3, 'made_up_function', 'frame1'),
-               ('another_made_up_file.py', 2, 'another_made_up_function', 'frame2')]
-        exception = tools.build_fake_assertion_error(tb1, "Gotcha")
-
-        self.reporter.context_started(context.name, context.example)
-        self.reporter.assertion_started("made.up.assertion_1")
-        self.reporter.assertion_failed("made.up.assertion_1", exception)
-        self.reporter.context_ended(context.name, context.example)
+        self.reporter.assertion_failed("", Exception())
 
     def because_the_test_run_ends(self):
         self.reporter.test_run_ended()
 
-    def it_should_print_the_failure_tracebacks(self):
+    def it_should_count_one_failure(self):
         assert self.stringio.getvalue() == (
 """
 ----------------------------------------------------------------------
 FAILED!
-1 context, 1 assertion: 1 failed, 0 errors
+0 contexts, 0 assertions: 1 failed, 0 errors
 """)
 
-    def it_should_say_it_failed(self):
-        assert self.reporter.failed
+
+class WhenPrintingFinalCountsAfterAnAssertionErrors:
+    def establish_that_a_test_has_failed(self):
+        self.stringio = StringIO()
+        self.reporter = cli.FinalCountsReporter(self.stringio)
+
+        self.reporter.assertion_errored("", Exception())
+
+    def because_the_test_run_ends(self):
+        self.reporter.test_run_ended()
+
+    def it_should_count_one_error(self):
+        assert self.stringio.getvalue() == (
+"""
+----------------------------------------------------------------------
+FAILED!
+0 contexts, 0 assertions: 0 failed, 1 error
+""")
+
+
+class WhenPrintingFinalCountsAfterAContextErrors:
+    def establish_that_a_test_has_failed(self):
+        self.stringio = StringIO()
+        self.reporter = cli.FinalCountsReporter(self.stringio)
+
+        self.reporter.context_errored("", '', Exception())
+
+    def because_the_test_run_ends(self):
+        self.reporter.test_run_ended()
+
+    def it_should_count_one_error(self):
+        assert self.stringio.getvalue() == (
+"""
+----------------------------------------------------------------------
+FAILED!
+0 contexts, 0 assertions: 0 failed, 1 error
+""")
+
+
+class WhenPrintingFinalCountsAfterATestClassErrors:
+    def establish_that_a_test_has_failed(self):
+        self.stringio = StringIO()
+        self.reporter = cli.FinalCountsReporter(self.stringio)
+
+        self.reporter.test_class_errored("", Exception())
+
+    def because_the_test_run_ends(self):
+        self.reporter.test_run_ended()
+
+    def it_should_count_one_error(self):
+        assert self.stringio.getvalue() == (
+"""
+----------------------------------------------------------------------
+FAILED!
+0 contexts, 0 assertions: 0 failed, 1 error
+""")
 
 
 class WhenTimingATestRun:

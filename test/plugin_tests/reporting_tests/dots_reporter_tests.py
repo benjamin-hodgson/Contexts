@@ -34,6 +34,14 @@ class WhenWatchingForDotsAndAContextErrors(DotsReporterSharedContext):
     def it_should_print_an_E_for_the_error(self):
         assert self.stringio.getvalue() == 'E'
 
+class WhenWatchingForDotsAndATestClassErrors(DotsReporterSharedContext):
+    def context(self):
+        self.ctx = tools.create_context()
+    def because_an_assertion_fails(self):
+        self.reporter.test_class_errored(type('',(),{}), Exception())
+    def it_should_print_an_E_for_the_error(self):
+        assert self.stringio.getvalue() == 'E'
+
 class WhenWatchingForDotsAndAnUnexpectedErrorOccurs(DotsReporterSharedContext):
     def because_an_assertion_fails(self):
         self.reporter.unexpected_error(Exception())

@@ -86,6 +86,40 @@ class WhenPrintingVerboselyAndAContextErrors(VerboseReporterSharedContext):
   plugin_tests.tools.FakeException: out
 """)
 
+class WhenPrintingVerboselyAndATestClassErrors(VerboseReporterSharedContext):
+    def context(self):
+        tb = [('made_up_file_16.py', 3, 'made_up_function_3', 'frame3'),
+               ('made_up_file_17.py', 4, 'made_up_function_4', 'frame4')]
+        self.exception = tools.build_fake_exception(tb, "out")
+    def because_an_unexpected_error_occurs(self):
+        self.reporter.test_class_errored(type('',(),{}), self.exception)
+    def it_should_output_a_stack_trace(self):
+        assert self.stringio.getvalue() == (
+"""Traceback (most recent call last):
+  File "made_up_file_16.py", line 3, in made_up_function_3
+    frame3
+  File "made_up_file_17.py", line 4, in made_up_function_4
+    frame4
+plugin_tests.tools.FakeException: out
+""")
+
+class WhenPrintingVerboselyAndAnUnexpectedErrorOccurs(VerboseReporterSharedContext):
+    def context(self):
+        tb = [('made_up_file_16.py', 3, 'made_up_function_3', 'frame3'),
+               ('made_up_file_17.py', 4, 'made_up_function_4', 'frame4')]
+        self.exception = tools.build_fake_exception(tb, "out")
+    def because_an_unexpected_error_occurs(self):
+        self.reporter.unexpected_error(self.exception)
+    def it_should_output_a_stack_trace(self):
+        assert self.stringio.getvalue() == (
+"""Traceback (most recent call last):
+  File "made_up_file_16.py", line 3, in made_up_function_3
+    frame3
+  File "made_up_file_17.py", line 4, in made_up_function_4
+    frame4
+plugin_tests.tools.FakeException: out
+""")
+
 class WhenPrintingVerboselyAndAnUnexpectedErrorOccurs(VerboseReporterSharedContext):
     def context(self):
         tb = [('made_up_file_16.py', 3, 'made_up_function_3', 'frame3'),

@@ -1,5 +1,6 @@
 from io import StringIO
 from contexts.plugins.reporting import cli
+import contexts
 
 
 class WhenAnUnexpectedErrorOccurs:
@@ -13,10 +14,10 @@ class WhenAnUnexpectedErrorOccurs:
         send_instances(self.after, [self.master])
 
     def because_an_unexpected_error_occurs(self):
-        self.before.unexpected_error(Exception())
+        self.exception = contexts.catch(self.before.unexpected_error, Exception())
 
     def it_should_be_ok(self):
-        pass
+        assert self.exception is None
 
 
 def send_instances(plug, instances):

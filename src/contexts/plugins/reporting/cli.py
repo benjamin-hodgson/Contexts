@@ -13,23 +13,23 @@ class DotsReporter(StreamReporter):
         return args.verbosity == 'normal'
 
     def assertion_passed(self, *args, **kwargs):
-        super().assertion_passed(*args, **kwargs)
-        self._print('.', end='')
-
+        self.dot()
     def assertion_failed(self, *args, **kwargs):
-        super().assertion_failed(*args, **kwargs)
-        self._print('F', end='')
-
+        self.F()
     def assertion_errored(self, *args, **kwargs):
-        super().assertion_errored(*args, **kwargs)
-        self._print('E', end='')
-
+        self.E()
     def context_errored(self, *args, **kwargs):
-        super().context_errored(*args, **kwargs)
-        self._print('E', end='')
-
+        self.E()
+    def test_class_errored(self, *args, **kwargs):
+        self.E()
     def unexpected_error(self, *args, **kwargs):
-        super().unexpected_error(*args, **kwargs)
+        self.E()
+
+    def dot(self):
+        self._print('.', end='')
+    def F(self):
+        self._print('F', end='')
+    def E(self):
         self._print('E', end='')
 
 
@@ -55,32 +55,30 @@ class VerboseReporter(StreamReporter):
         return args.verbosity != "quiet"
 
     def context_started(self, name, example):
-        super().context_started(name, example)
         self._print(context_name(name, example))
 
     def context_errored(self, name, example, exception):
-        super().context_errored(name, example, exception)
         for line in format_exception(exception):
             self._print('  ' + line)
 
+    def test_class_errored(self, cls, exception):
+        for line in format_exception(exception):
+            self._print(line)
+
     def assertion_passed(self, name):
-        super().assertion_passed(name)
         self._print('  PASS: ' + make_readable(name))
 
     def assertion_failed(self, name, exception):
-        super().assertion_failed(name, exception)
         self._print('  FAIL: ' + make_readable(name))
         for line in format_exception(exception):
             self._print('    ' + line)
 
     def assertion_errored(self, name, exception):
-        super().assertion_errored(name, exception)
         self._print('  ERROR: ' + make_readable(name))
         for line in format_exception(exception):
             self._print('    ' + line)
 
     def unexpected_error(self, exception):
-        super().unexpected_error(exception)
         for line in format_exception(exception):
             self._print(line)
 
@@ -104,35 +102,32 @@ class FinalCountsReporter(StreamReporter):
         self.failed = False
 
     def context_started(self, name, example):
-        super().context_started(name, example)
         self.context_count += 1
 
     def context_errored(self, name, example, exception):
-        super().context_errored(name, example, exception)
         self.error_count += 1
         self.failed = True
 
     def assertion_started(self, name):
-        super().assertion_started(name)
         self.assertion_count += 1
 
     def assertion_failed(self, name, exception):
-        super().assertion_failed(name, exception)
         self.failure_count += 1
         self.failed = True
 
     def assertion_errored(self, name, exception):
-        super().assertion_errored(name, exception)
         self.error_count += 1
         self.failed = True
 
     def unexpected_error(self, exception):
-        super().unexpected_error(exception)
+        self.error_count += 1
+        self.failed = True
+
+    def test_class_errored(self, cls, exception):
         self.error_count += 1
         self.failed = True
 
     def test_run_ended(self):
-        super().test_run_ended()
         self.summarise()
 
     def summarise(self):
@@ -178,26 +173,21 @@ class StdOutCapturingReporter(StreamReporter):
         return ("{:-^"+num+"}").format(string)
 
     def context_started(self, name, example):
-        super().context_started(name, example)
         self.real_stdout = sys.stdout
         self.buffer = StringIO()
         sys.stdout = self.buffer
 
     def context_ended(self, name, example):
-        super().context_ended(name, example)
         sys.stdout = self.real_stdout
 
     def context_errored(self, name, example, exception):
-        super().context_errored(name, example, exception)
         sys.stdout = self.real_stdout
         self.output_buffer(2)
 
     def assertion_failed(self, name, exception):
-        super().assertion_failed(name, exception)
         self.output_buffer(4)
 
     def assertion_errored(self, name, exception):
-        super().assertion_errored(name, exception)
         self.output_buffer(4)
 
     def output_buffer(self, indentation):
@@ -216,11 +206,9 @@ class TimedReporter(StreamReporter):
     def initialise(self, args, env):
         return not args.verbosity == 'quiet'
     def test_run_started(self):
-        super().test_run_started()
         self.start_time = datetime.datetime.now()
 
     def test_run_ended(self):
-        super().test_run_ended()
         self.end_time = datetime.datetime.now()
         self.print_time()
 

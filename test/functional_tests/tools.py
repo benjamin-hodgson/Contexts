@@ -1,4 +1,5 @@
 import contexts
+from contexts.plugins.test_target_suppliers import ObjectSupplier
 
 
 class SpyReporter(object):
@@ -52,14 +53,7 @@ class UnorderedList(object):
 
 
 def run_object(to_run, plugins):
-    extra_plug = FakeObjectSupplier(to_run)
+    extra_plug = ObjectSupplier(to_run)
     plugins.insert(0, extra_plug)
     return contexts.run_with_plugins(plugins)
-
-
-class FakeObjectSupplier(object):
-    def __init__(self, to_run):
-        self.to_run = to_run
-    def get_object_to_run(self):
-        return self.to_run
 
