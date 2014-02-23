@@ -24,6 +24,8 @@ class DotsReporter(StreamReporter):
         self.E()
     def unexpected_error(self, *args, **kwargs):
         self.E()
+    def test_run_ended(self):
+        self._print('')
 
     def dot(self):
         self._print('.', end='')
@@ -131,7 +133,6 @@ class FinalCountsReporter(StreamReporter):
         self.summarise()
 
     def summarise(self):
-        self._print('')
         self._print(self.dashes)
         if self.failure_count or self.error_count:
             self._print('FAILED!')
@@ -361,8 +362,8 @@ class FailuresOnlyBefore(object):
     def test_run_ended(self):
         output = self.master.final_report.getvalue()
         if output:
-            self.master.stream.write('\n' + self.dashes + '\n')
-            self.master.stream.write(output.strip())
+            self.master.stream.write(self.dashes + '\n')
+            self.master.stream.write(output.strip() + '\n')
 
     def __eq__(self, other):
         return type(self) == type(other)
