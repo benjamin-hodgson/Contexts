@@ -22,7 +22,6 @@ def load_plugins():
     return plugin_loader.to_list()
 
 
-
 class PluginLoader(object):
     def load_plugins(self):
         builder = PluginListBuilder()

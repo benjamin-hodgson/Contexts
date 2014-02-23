@@ -2,7 +2,6 @@ import collections.abc
 from unittest import mock
 import contexts
 from contexts.plugin_interface import PluginInterface, EXAMPLES, SETUP, ACTION, ASSERTION, TEARDOWN, NO_EXAMPLE
-from contexts.plugins.identification import NameBasedIdentifier
 from contexts import assertion
 from .tools import SpyReporter, UnorderedList, run_object
 
@@ -267,9 +266,16 @@ class WhenRunningASpecWithReporters:
         self.reporter1 = SpyReporter()
         self.reporter2 = SpyReporter()
         self.reporter3 = SpyReporter()
+        self.identifier = mock.Mock(wraps=PluginInterface())
+        self.identifier.identify_method = lambda meth: {
+            TestSpec.method_with_establish_in_the_name: SETUP,
+            TestSpec.method_with_because_in_the_name: ACTION,
+            TestSpec.method_with_should_in_the_name: ASSERTION,
+            TestSpec.method_with_cleanup_in_the_name: TEARDOWN
+        }[meth]
 
     def because_we_run_the_spec(self):
-        run_object(self.spec, [NameBasedIdentifier(), self.reporter1, self.reporter2, self.reporter3])
+        run_object(self.spec, [self.identifier, self.reporter1, self.reporter2, self.reporter3])
 
     def it_should_call_test_run_started_first(self):
         assert self.reporter1.calls[0][0] == 'test_run_started'
@@ -373,9 +379,16 @@ class WhenAnAssertionFails:
 
         self.spec = TestSpec
         self.reporter = SpyReporter()
+        self.identifier = mock.Mock(wraps=PluginInterface())
+        self.identifier.identify_method = lambda meth: {
+            TestSpec.failing_should_method: ASSERTION,
+            TestSpec.second_should_method: ASSERTION,
+            TestSpec.cleanup: TEARDOWN
+        }[meth]
+
 
     def because_we_run_the_spec(self):
-        run_object(self.spec, [NameBasedIdentifier(), self.reporter])
+        run_object(self.spec, [self.identifier, self.reporter])
 
     def it_should_call_assertion_failed(self):
         assert "assertion_failed" in [c[0] for c in self.reporter.calls]
@@ -413,9 +426,15 @@ class WhenAnAssertionErrors:
 
         self.spec = TestSpec
         self.reporter = SpyReporter()
+        self.identifier = mock.Mock(wraps=PluginInterface())
+        self.identifier.identify_method = lambda meth: {
+            TestSpec.erroring_should_method: ASSERTION,
+            TestSpec.second_should_method: ASSERTION,
+            TestSpec.cleanup: TEARDOWN
+        }[meth]
 
     def because_we_run_the_spec(self):
-        run_object(self.spec, [NameBasedIdentifier(), self.reporter])
+        run_object(self.spec, [self.identifier, self.reporter])
 
     def it_should_call_assertion_errored(self):
         assert "assertion_errored" in [c[0] for c in self.reporter.calls]
@@ -457,9 +476,16 @@ class WhenAContextErrorsDuringTheSetup:
 
         self.spec = ErrorInSetup
         self.reporter = SpyReporter()
+        self.identifier = mock.Mock(wraps=PluginInterface())
+        self.identifier.identify_method = lambda meth: {
+            ErrorInSetup.context: SETUP,
+            ErrorInSetup.because: ACTION,
+            ErrorInSetup.it: ASSERTION,
+            ErrorInSetup.cleanup: TEARDOWN
+        }[meth]
 
     def because_we_run_the_specs(self):
-        run_object(self.spec, [NameBasedIdentifier(), self.reporter])
+        run_object(self.spec, [self.identifier, self.reporter])
 
     @assertion
     def it_should_call_context_errored(self):
@@ -497,9 +523,15 @@ class WhenAContextErrorsDuringTheAction:
 
         self.spec = ErrorInAction
         self.reporter = SpyReporter()
+        self.identifier = mock.Mock(wraps=PluginInterface())
+        self.identifier.identify_method = lambda meth: {
+            ErrorInAction.because: ACTION,
+            ErrorInAction.it: ASSERTION,
+            ErrorInAction.cleanup: TEARDOWN
+        }[meth]
 
     def because_we_run_the_specs(self):
-        run_object(self.spec, [NameBasedIdentifier(), self.reporter])
+        run_object(self.spec, [self.identifier, self.reporter])
 
     @assertion
     def it_should_call_context_errored(self):
@@ -537,9 +569,14 @@ class WhenAContextErrorsDuringTheCleanup:
 
         self.spec = ErrorInTeardown
         self.reporter = SpyReporter()
+        self.identifier = mock.Mock(wraps=PluginInterface())
+        self.identifier.identify_method = lambda meth: {
+            ErrorInTeardown.it: ASSERTION,
+            ErrorInTeardown.cleanup: TEARDOWN
+        }[meth]
 
     def because_we_run_the_specs(self):
-        run_object(self.spec, [NameBasedIdentifier(), self.reporter])
+        run_object(self.spec, [self.identifier, self.reporter])
 
     @assertion
     def it_should_call_context_errored(self):
