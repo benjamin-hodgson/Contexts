@@ -4,7 +4,7 @@ import shutil
 import types
 import contexts
 from unittest import mock
-from .tools import SpyReporter, UnorderedList, run_object
+from .tools import UnorderedList, run_object
 from contexts.plugin_interface import PluginInterface, TEST_FOLDER, TEST_FILE, CONTEXT, ASSERTION
 from contexts import assertion
 
@@ -143,7 +143,6 @@ class WhenRunningAFile:
     def establish_that_there_is_a_file_in_the_filesystem(self):
         self.module_name = "test_file"
         self.write_file()
-        self.reporter = SpyReporter()
 
         self.module = types.ModuleType(self.module_name)
         class When:

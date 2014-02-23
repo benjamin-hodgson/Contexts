@@ -3,7 +3,7 @@ from unittest import mock
 import contexts
 from contexts.plugin_interface import PluginInterface, EXAMPLES, SETUP, ACTION, ASSERTION, TEARDOWN, NO_EXAMPLE
 from contexts import assertion
-from .tools import SpyReporter, UnorderedList, run_object
+from .tools import UnorderedList, run_object
 
 
 core_file = repr(contexts.core.__file__)[1:-1]
@@ -248,7 +248,7 @@ class WhenAPluginReturnsMultipleMethodsOfTheSameType:
         assert not self.ran_a_method
 
 
-class WhenRunningASpecWithReporters:
+class WhenRunningASpecWithPlugins:
     def context(self):
         class TestSpec:
             log = ""
@@ -263,60 +263,49 @@ class WhenRunningASpecWithReporters:
 
         self.spec = TestSpec
 
-        self.reporter1 = SpyReporter()
-        self.reporter2 = SpyReporter()
-        self.reporter3 = SpyReporter()
-        self.identifier = mock.Mock(wraps=PluginInterface())
-        self.identifier.identify_method = lambda meth: {
+        self.plugin1 = mock.Mock(wraps=PluginInterface())
+        del self.plugin1.process_assertion_list
+        self.plugin1.identify_method = lambda meth: {
             TestSpec.method_with_establish_in_the_name: SETUP,
             TestSpec.method_with_because_in_the_name: ACTION,
             TestSpec.method_with_should_in_the_name: ASSERTION,
             TestSpec.method_with_cleanup_in_the_name: TEARDOWN
         }[meth]
+        self.plugin2 = mock.Mock(wraps=PluginInterface())
+        del self.plugin2.process_assertion_list
 
     def because_we_run_the_spec(self):
-        run_object(self.spec, [self.identifier, self.reporter1, self.reporter2, self.reporter3])
+        run_object(self.spec, [self.plugin1, self.plugin2])
+        self.calls = self.plugin1.mock_calls
 
     def it_should_call_test_run_started_first(self):
-        assert self.reporter1.calls[0][0] == 'test_run_started'
+        assert self.calls[0] == mock.call.test_run_started()
+
+    def it_should_call_test_class_started_next(self):
+        assert self.calls[1] == mock.call.test_class_started(self.spec)
 
     @assertion
-    def it_should_call_context_started_next(self):
-        assert self.reporter1.calls[1][0] == 'context_started'
-    @assertion
-    def it_should_pass_in_the_context_name(self):
-        assert self.reporter1.calls[1][1] == 'TestSpec'
-    @assertion
-    def it_should_pass_in_no_example(self):
-        assert self.reporter1.calls[1][2] is NO_EXAMPLE
+    def it_should_call_context_started_with_the_name_and_the_example(self):
+        assert self.calls[2] == mock.call.context_started('TestSpec', NO_EXAMPLE)
 
     def it_should_call_assertion_started_for_the_assertion(self):
-        assert self.reporter1.calls[2][0] == 'assertion_started'
-    def it_should_pass_the_assertion_name_into_assertion_started(self):
-        assert self.reporter1.calls[2][1] == 'method_with_should_in_the_name'
+        assert self.calls[3] == mock.call.assertion_started('method_with_should_in_the_name')
 
     def it_should_call_assertion_passed_for_the_assertion(self):
-        assert self.reporter1.calls[3][0] == 'assertion_passed'
-    def it_should_pass_the_name_into_assertion_passed(self):
-        assert self.reporter1.calls[3][1] == 'method_with_should_in_the_name'
+        assert self.calls[4] == mock.call.assertion_passed('method_with_should_in_the_name')
 
     @assertion
     def it_should_call_context_ended_next(self):
-        assert self.reporter1.calls[4][0] == 'context_ended'
-    @assertion
-    def it_should_pass_in_the_context_name_again(self):
-        assert self.reporter1.calls[4][1] == 'TestSpec'
-    @assertion
-    def it_should_pass_in_no_example_again(self):
-        assert self.reporter1.calls[4][2] is NO_EXAMPLE
+        assert self.calls[5] == mock.call.context_ended('TestSpec', NO_EXAMPLE)
 
-    def it_should_call_test_run_ended_last(self):
-        assert self.reporter1.calls[-1][0] == 'test_run_ended'
+    def it_should_call_test_class_ended(self):
+        assert self.calls[6] == mock.call.test_class_ended(self.spec)
 
-    def it_should_do_exactly_the_same_to_the_second_reporter(self):
-        assert self.reporter2.calls == self.reporter1.calls
-    def it_should_do_exactly_the_same_to_the_third_reporter(self):
-        assert self.reporter3.calls == self.reporter1.calls
+    def finally_it_should_call_test_run_ended(self):
+        assert self.calls[7] == mock.call.test_run_ended()
+
+    def it_should_do_exactly_the_same_to_the_other_plugin(self):
+        assert self.plugin2.mock_calls == self.calls
 
 
 class WhenAPluginModifiesAnAssertionList:
@@ -378,9 +367,8 @@ class WhenAnAssertionFails:
                 s.__class__.ran_cleanup = True
 
         self.spec = TestSpec
-        self.reporter = SpyReporter()
-        self.identifier = mock.Mock(wraps=PluginInterface())
-        self.identifier.identify_method = lambda meth: {
+        self.plugin = mock.Mock(spec=PluginInterface)
+        self.plugin.identify_method = lambda meth: {
             TestSpec.failing_should_method: ASSERTION,
             TestSpec.second_should_method: ASSERTION,
             TestSpec.cleanup: TEARDOWN
@@ -388,18 +376,10 @@ class WhenAnAssertionFails:
 
 
     def because_we_run_the_spec(self):
-        run_object(self.spec, [self.identifier, self.reporter])
+        run_object(self.spec, [self.plugin])
 
-    def it_should_call_assertion_failed(self):
-        assert "assertion_failed" in [c[0] for c in self.reporter.calls]
-
-    def it_should_pass_in_the_assertion_name(self):
-        name = [c for c in self.reporter.calls if c[0] == "assertion_failed"][0][1]
-        assert name == "failing_should_method"
-
-    def it_should_pass_in_the_exception(self):
-        exception = [c for c in self.reporter.calls if c[0] == "assertion_failed"][0][2]
-        assert exception is self.exception
+    def it_should_call_assertion_failed_with_the_name_and_the_exception(self):
+        self.plugin.assertion_failed.assert_called_once_with("failing_should_method", self.exception)
 
     def it_should_still_run_the_other_assertion(self):
         # not a great test - we can't guarantee that the second should method
@@ -425,32 +405,20 @@ class WhenAnAssertionErrors:
                 s.__class__.ran_cleanup = True
 
         self.spec = TestSpec
-        self.reporter = SpyReporter()
-        self.identifier = mock.Mock(wraps=PluginInterface())
-        self.identifier.identify_method = lambda meth: {
+        self.plugin = mock.Mock(wraps=PluginInterface())
+        self.plugin.identify_method = lambda meth: {
             TestSpec.erroring_should_method: ASSERTION,
             TestSpec.second_should_method: ASSERTION,
             TestSpec.cleanup: TEARDOWN
         }[meth]
 
     def because_we_run_the_spec(self):
-        run_object(self.spec, [self.identifier, self.reporter])
+        run_object(self.spec, [self.plugin])
 
-    def it_should_call_assertion_errored(self):
-        assert "assertion_errored" in [c[0] for c in self.reporter.calls]
-
-    def it_should_pass_in_the_name(self):
-        name = [c for c in self.reporter.calls if c[0] == "assertion_errored"][0][1]
-        assert name == "erroring_should_method"
-
-    def it_should_pass_in_the_exception(self):
-        exception = [c for c in self.reporter.calls if c[0] == "assertion_errored"][0][2]
-        assert exception is self.exception
+    def it_should_call_assertion_errored_with_the_name_and_the_exception(self):
+        self.plugin.assertion_errored.assert_called_once_with("erroring_should_method", self.exception)
 
     def it_should_still_run_the_other_assertion(self):
-        # not a great test - we can't guarantee that the second should method
-        # will get executed after the failing one. If this starts failing it may only fail
-        # sometimes.
         assert self.spec.ran_second
 
     @assertion
@@ -475,9 +443,8 @@ class WhenAContextErrorsDuringTheSetup:
                 s.__class__.ran_cleanup = True
 
         self.spec = ErrorInSetup
-        self.reporter = SpyReporter()
-        self.identifier = mock.Mock(wraps=PluginInterface())
-        self.identifier.identify_method = lambda meth: {
+        self.plugin = mock.Mock(wraps=PluginInterface())
+        self.plugin.identify_method = lambda meth: {
             ErrorInSetup.context: SETUP,
             ErrorInSetup.because: ACTION,
             ErrorInSetup.it: ASSERTION,
@@ -485,19 +452,11 @@ class WhenAContextErrorsDuringTheSetup:
         }[meth]
 
     def because_we_run_the_specs(self):
-        run_object(self.spec, [self.identifier, self.reporter])
+        run_object(self.spec, [self.plugin])
 
     @assertion
-    def it_should_call_context_errored(self):
-        assert self.reporter.calls[2][0] == "context_errored"
-    @assertion
-    def it_should_pass_in_the_context_name(self):
-        assert self.reporter.calls[2][1] == self.spec.__name__
-    @assertion
-    def it_should_pass_in_no_example(self):
-        assert self.reporter.calls[2][2] is NO_EXAMPLE
-    def it_should_pass_in_the_exception(self):
-        assert self.reporter.calls[2][3] is self.exception
+    def it_should_call_context_errored_with_the_name_and_no_example_and_the_exception(self):
+        self.plugin.context_errored.assert_called_once_with(self.spec.__name__, NO_EXAMPLE, self.exception)
 
     def it_should_not_run_the_action(self):
         assert not self.spec.ran_because
@@ -522,31 +481,19 @@ class WhenAContextErrorsDuringTheAction:
                 s.__class__.ran_cleanup = True
 
         self.spec = ErrorInAction
-        self.reporter = SpyReporter()
-        self.identifier = mock.Mock(wraps=PluginInterface())
-        self.identifier.identify_method = lambda meth: {
+        self.plugin = mock.Mock(wraps=PluginInterface())
+        self.plugin.identify_method = lambda meth: {
             ErrorInAction.because: ACTION,
             ErrorInAction.it: ASSERTION,
             ErrorInAction.cleanup: TEARDOWN
         }[meth]
 
     def because_we_run_the_specs(self):
-        run_object(self.spec, [self.identifier, self.reporter])
+        run_object(self.spec, [self.plugin])
 
     @assertion
-    def it_should_call_context_errored(self):
-        assert self.reporter.calls[2][0] == "context_errored"
-
-    @assertion
-    def it_should_pass_in_the_context_name(self):
-        assert self.reporter.calls[2][1] == self.spec.__name__
-
-    @assertion
-    def it_should_pass_in_no_example(self):
-        assert self.reporter.calls[2][2] is NO_EXAMPLE
-
-    def it_should_pass_in_the_exception(self):
-        assert self.reporter.calls[2][3] is self.exception
+    def it_should_call_context_errored_with_the_name_and_no_example_and_the_exception(self):
+        self.plugin.context_errored.assert_called_once_with(self.spec.__name__, NO_EXAMPLE, self.exception)
 
     def it_should_not_run_the_assertion(self):
         assert not self.spec.ran_assertion
@@ -563,35 +510,21 @@ class WhenAContextErrorsDuringTheCleanup:
             def it(s):
                 pass
             def cleanup(s):
-                # assertion errors that get raised outside of a
-                # 'should' method should be considered context errors
                 raise self.exception
 
         self.spec = ErrorInTeardown
-        self.reporter = SpyReporter()
-        self.identifier = mock.Mock(wraps=PluginInterface())
-        self.identifier.identify_method = lambda meth: {
+        self.plugin = mock.Mock(wraps=PluginInterface())
+        self.plugin.identify_method = lambda meth: {
             ErrorInTeardown.it: ASSERTION,
             ErrorInTeardown.cleanup: TEARDOWN
         }[meth]
 
     def because_we_run_the_specs(self):
-        run_object(self.spec, [self.identifier, self.reporter])
+        run_object(self.spec, [self.plugin])
 
     @assertion
-    def it_should_call_context_errored(self):
-        assert self.reporter.calls[4][0] == "context_errored"
-
-    @assertion
-    def it_should_pass_in_the_context_name(self):
-        assert self.reporter.calls[4][1] == self.spec.__name__
-
-    @assertion
-    def it_should_pass_in_no_example(self):
-        assert self.reporter.calls[4][2] is NO_EXAMPLE
-
-    def it_should_pass_in_the_exception(self):
-        assert self.reporter.calls[4][3] is self.exception
+    def it_should_call_context_errored_with_the_name_and_no_example_and_the_exception(self):
+        self.plugin.context_errored.assert_called_once_with(self.spec.__name__, NO_EXAMPLE, self.exception)
 
 
 class WhenAPluginSetsTheExitCode:
