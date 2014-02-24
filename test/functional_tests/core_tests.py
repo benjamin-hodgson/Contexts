@@ -216,7 +216,6 @@ class WhenASpecHasASuperclassAndAPluginIdentifiesMethods:
 
     def it_should_run_the_subclass_teardown_before_the_superclass_teardown(self):
         assert self.log[-2:] == ["sub teardown", "super teardown"]
-        assert False
 
 
 class WhenAPluginReturnsMultipleMethodsOfTheSameType:
