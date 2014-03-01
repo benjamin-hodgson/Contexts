@@ -59,7 +59,7 @@ import requests
 # no need to import contexts!
 
 class WhenRequestingAResourceThatDoesNotExist:  # no custom base class!
-    def establish_that_we_are_asking_for_a_made_up_resource(self):
+    def given_that_we_are_asking_for_a_made_up_resource(self):
         self.uri = "http://www.github.com/itdontexistman"
         self.session = requests.Session()
 
