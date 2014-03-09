@@ -3,6 +3,8 @@ from contexts.plugins.reporting import cli
 import contexts
 
 
+# TODO: test_class_started, failed, errored, etc
+
 class WhenAnUnexpectedErrorOccurs:
     def context(self):
         self.master = cli.FailuresOnlyMaster(StringIO())

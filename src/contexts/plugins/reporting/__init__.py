@@ -31,6 +31,8 @@ class ExitCodeReporter(object):
         self.exit_code = 1
     def context_errored(self, name, example, exception):
         self.exit_code = 1
+    def test_class_errored(self, cls, exception):
+        self.exit_code = 1
     def unexpected_error(self, exception):
         self.exit_code = 1
     def __eq__(self, other):

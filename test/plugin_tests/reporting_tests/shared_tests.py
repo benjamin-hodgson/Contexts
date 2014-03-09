@@ -74,6 +74,18 @@ class WhenGettingExitCodeAfterAContextError:
         assert self.result == 1
 
 
+class WhenGettingExitCodeAfterATestClassError:
+    def establish_that_a_context_errored(self):
+        self.plugin = reporting.ExitCodeReporter()
+        self.plugin.test_class_errored(type('',(),{}), Exception())
+
+    def because_we_ask_for_the_exit_code(self):
+        self.result = self.plugin.get_exit_code()
+
+    def it_should_return_1(self):
+        assert self.result == 1
+
+
 class WhenGettingExitCodeAfterAnUnexpectedError:
     def establish_that_a_context_errored(self):
         self.plugin = reporting.ExitCodeReporter()
