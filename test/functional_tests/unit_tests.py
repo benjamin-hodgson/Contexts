@@ -1,7 +1,8 @@
 import collections.abc
+import types
 from unittest import mock
 import contexts
-from contexts.plugin_interface import PluginInterface, EXAMPLES, SETUP, ACTION, ASSERTION, TEARDOWN, NO_EXAMPLE
+from contexts.plugin_interface import PluginInterface, CONTEXT, EXAMPLES, SETUP, ACTION, ASSERTION, TEARDOWN, NO_EXAMPLE
 from contexts import assertion
 from .tools import UnorderedList, run_object
 
@@ -569,6 +570,99 @@ class WhenRunningAClassContainingNoAssertions:
 
     def it_should_not_run_the_class(self):
         assert self.spec.log == []
+
+
+class WhenAPluginChoosesClasses:
+    def context(self):
+        class ToRun1:
+            was_run = False
+            def it_should_run_this(self):
+                self.__class__.was_run = True
+        class ToRun2:
+            was_run = False
+            def it_should_run_this(self):
+                self.__class__.was_run = True
+        class NotToRun:
+            was_instantiated = False
+            def __init__(self):
+                self.__class__.was_instantiated = True
+        self.module = types.ModuleType('fake_specs')
+        self.module.ToRun1 = ToRun1
+        self.module.ToRun2 = ToRun2
+        self.module.NotToRun = NotToRun
+
+        self.plugin = mock.Mock(spec=PluginInterface)
+        self.plugin.identify_class.side_effect = lambda cls: {
+            ToRun1: CONTEXT,
+            ToRun2: CONTEXT,
+            NotToRun: None
+        }[cls]
+        self.plugin.identify_method.side_effect = lambda meth: {
+            ToRun1.it_should_run_this: ASSERTION,
+            ToRun2.it_should_run_this: ASSERTION,
+        }[meth]
+        self.other_plugin = mock.Mock()
+        self.other_plugin.identify_class.return_value = None
+
+    def because_we_run_the_module(self):
+        run_object(self.module, [self.plugin, self.other_plugin])
+
+    def it_should_run_the_class_the_plugin_likes(self):
+        assert self.module.ToRun1.was_run
+
+    def it_should_run_the_other_class_the_plugin_likes(self):
+        assert self.module.ToRun2.was_run
+
+    def it_should_only_ask_the_second_plugin_what_to_do_with_the_class_its_not_sure_about(self):
+        self.other_plugin.identify_class.assert_called_once_with(self.module.NotToRun)
+
+    def it_should_not_run_the_class_which_neither_plugin_wanted(self):
+        assert not self.module.NotToRun.was_instantiated
+
+
+class WhenAPluginModifiesAClassList:
+    def establish_that_a_plugin_is_fiddling_with_the_list(self):
+        self.ran_reals = False
+        class FoundClass1:
+            def it_should_run_this(s):
+                self.ran_reals = True
+        class FoundClass2:
+            def it_should_run_this(s):
+                self.ran_reals = True
+
+        self.ran_spies = []
+        class AnotherClass1:
+            def it_should_run_this(s):
+                self.ran_spies.append('AnotherClass1')
+        class AnotherClass2:
+            def it_should_run_this(s):
+                self.ran_spies.append('AnotherClass2')
+        self.module = types.ModuleType('fake_specs')
+        self.module.FoundClass1 = FoundClass1
+        self.module.FoundClass2 = FoundClass2
+        self.AnotherClass1 = AnotherClass1
+        self.AnotherClass2 = AnotherClass2
+
+        def modify_list(l):
+            self.called_with = l.copy()
+            l[:] = [AnotherClass1, AnotherClass2]
+        self.plugin = mock.Mock()
+        self.plugin.process_class_list = modify_list
+        self.plugin.identify_class.return_value = CONTEXT
+        self.plugin.identify_method.return_value = ASSERTION
+
+    def because_we_run_the_module(self):
+        run_object(self.module, [self.plugin])
+
+    def it_should_pass_a_list_of_the_found_classes_into_process_class_list(self):
+        assert isinstance(self.called_with, collections.abc.MutableSequence)
+        assert set(self.called_with) == {self.module.FoundClass1, self.module.FoundClass2}
+
+    def it_should_run_the_classes_in_the_list_that_the_plugin_modified(self):
+        assert self.ran_spies == ['AnotherClass1', 'AnotherClass2']
+
+    def it_should_not_run_the_old_version_of_the_list(self):
+        assert not self.ran_reals
 
 
 if __name__ == "__main__":
