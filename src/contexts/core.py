@@ -40,12 +40,14 @@ class TestRun(object):
 
     def import_modules_from_folder(self, directory):
         module_list = discovery.ModuleList(self.plugin_composite, self.exception_handler)
+
         for folder, dirnames, _ in os.walk(directory):
             self.remove_non_test_folders(folder, dirnames)
             importer = discovery.create_importer(folder, self.plugin_composite, self.exception_handler)
             for folder, filename in importer.module_specs():
                 module_list.add(folder, filename)
-        return module_list.modules
+
+        return [m for m in module_list.modules if m is not None]
 
     def remove_non_test_folders(self, parent, dirnames):
         replacement = []

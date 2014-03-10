@@ -55,7 +55,7 @@ class PackageModuleImporter(Importer):
         self.exception_handler = exception_handler
 
     def module_specs(self):
-        return [self.package_spec] + self.get_file_details()
+        return get_parent_package_specs(*self.package_spec) + self.get_file_details()
 
     def import_file(self, filename):
         module_list = ModuleList(self.plugin_composite, self.exception_handler)
@@ -68,10 +68,20 @@ class PackageModuleImporter(Importer):
 
 
 def add_parent_packages_to_list(module_list, top_folder, package_name):
+    for top_folder, full_name in get_parent_package_specs(top_folder, package_name):
+        module_list.add(top_folder, full_name)
+
+
+def get_parent_package_specs(top_folder, package_name):
+    parent_package_specs = []
+
     i = 1
     while i <= len(package_name.split('.')):
-        module_list.add(top_folder, '.'.join(package_name.split('.')[:i]))
+        spec = PackageSpecification(top_folder, '.'.join(package_name.split('.')[:i]))
+        parent_package_specs.append(spec)
         i += 1
+
+    return parent_package_specs
 
 
 # FIXME: i don't think it's right for ModuleList to exist. TestRun is a list of
@@ -97,6 +107,7 @@ def get_package_specification(directory):
     while ispackage(current_parent):
         dirpath, current_parent = current_parent, os.path.dirname(current_parent)
         package_names.append(os.path.basename(dirpath))
+
     full_package_name = '.'.join(reversed(package_names))
     return PackageSpecification(current_parent, full_package_name)
 

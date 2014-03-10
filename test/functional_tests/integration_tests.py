@@ -690,7 +690,7 @@ class WhenRunningAFolderWithAFileThatFailsToImport:
     def it_should_still_import_the_second_module(self):
         assert self.plugin.import_module.call_count == 2
 
-    def cleanup_the_file_system_and_sys_dot_modules(self):
+    def cleanup_the_file_system(self):
         shutil.rmtree(self.folder_path)
 
     def setup_filesystem(self):
@@ -703,6 +703,55 @@ class WhenRunningAFolderWithAFileThatFailsToImport:
         with open(self.filenames[1], 'w+') as f:
             f.write('')
 
+
+class WhenRunningASubpackage:
+    def establish_a_subpackage(self):
+        self.package_name = 'running_a_subpackage'
+        self.expected_pkg_name = "wanted_subpackage"
+        self.other_pkg_name = "another_subpackage"
+        self.tree = {
+            self.expected_pkg_name: ["__init__"],
+            self.other_pkg_name: ["__init__"]
+        }
+        self.create_tree()
+
+        self.plugin = mock.Mock()
+        self.plugin.identify_file.return_value = TEST_FILE
+        self.expected_module = types.ModuleType(self.expected_pkg_name)
+        self.plugin.import_module.side_effect = [types.ModuleType(self.package_name), self.expected_module]
+
+    def because_we_run_the_subpackage(self):
+        run_object(os.path.join(self.folder_path, self.expected_pkg_name), [self.plugin])
+
+    def it_should_import_the_top_package_first(self):
+        assert self.plugin.import_module.call_args_list[0] == mock.call(TEST_DATA_DIR, self.package_name)
+
+    def it_should_import_the_subpackage_we_asked_for(self):
+        assert self.plugin.import_module.call_args_list[1] == mock.call(TEST_DATA_DIR, self.package_name + '.' + self.expected_pkg_name)
+
+    def it_should_not_import_anything_else(self):
+        assert len(self.plugin.import_module.call_args_list) == 2
+
+    # FIXME: this test fails
+    # def it_should_only_run_the_module_we_asked_for(self):
+    #     self.plugin.process_module_list.assert_called_once_with([self.expected_module])
+
+    def cleanup_the_file_system(self):
+        shutil.rmtree(self.folder_path)
+
+    def create_tree(self):
+        self.folder_path = os.path.join(TEST_DATA_DIR, self.package_name)
+        os.mkdir(self.folder_path)
+
+        with open(os.path.join(self.folder_path, "__init__.py"), 'w+') as f:
+            f.write('')
+
+        for subfolder in self.tree:
+            folder_path = os.path.join(self.folder_path, subfolder)
+            os.mkdir(folder_path)
+            for module_name in self.tree[subfolder]:
+                with open(os.path.join(folder_path, module_name) + ".py", 'w+') as f:
+                    f.write('')
 
 
 if __name__ == "__main__":
