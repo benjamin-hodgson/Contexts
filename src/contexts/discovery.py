@@ -46,6 +46,7 @@ class FolderModuleImporter(Importer):
 
 class PackageModuleImporter(Importer):
     def __init__(self, directory, plugin_composite, exception_handler):
+        directory = os.path.realpath(directory)
         self.package_spec = get_package_specification(directory)
 
         self.directory = directory
