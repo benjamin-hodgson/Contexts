@@ -49,7 +49,7 @@ class AssertionRewriter(ast.NodeTransformer):
 
         for s in statements:
             ast.copy_location(s, assert_node)
-            ast.fix_missing_locations(s)  # apply the same location to children
+            ast.fix_missing_locations(s)
         return statements
 
 
@@ -132,8 +132,11 @@ class AssertionChildVisitor(ast.NodeVisitor):
 
     def visit_Name(self, name_node):
         if name_node.id == 'False':
-            msg = ast.Str("Explicitly asserted False")
-            return [ast.Assert(name_node, msg)]
+            return self.asserted_false_result(name_node)
+
+    def visit_NameConstant(self, nameconst_node):
+        if nameconst_node.value == False:
+            return self.asserted_false_result(nameconst_node)
 
     def visit_UnaryOp(self, unaryop_node):
         if isinstance(unaryop_node.op, ast.Not):
@@ -191,3 +194,7 @@ class AssertionChildVisitor(ast.NodeVisitor):
 
     def getattr(self, node, name):
         return ast.Attribute(node, name, ast.Load())
+
+    def asserted_false_result(self, node):
+        msg = ast.Str("Explicitly asserted False")
+        return [ast.Assert(node, msg)]
