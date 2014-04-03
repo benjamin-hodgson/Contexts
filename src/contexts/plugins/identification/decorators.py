@@ -14,7 +14,7 @@ class DecoratorBasedIdentifier(object):
     }
 
     @classmethod
-    def locate(self):
+    def locate(cls):
         return (None, NameBasedIdentifier)
 
     def initialise(self, args, env):

@@ -118,5 +118,4 @@ def ispackage(directory):
 
 
 def remove_extension(filename):
-    name, extension = os.path.splitext(filename)
-    return name
+    return os.path.splitext(filename)[0]

@@ -20,7 +20,7 @@ class Importer(object):
         return importlib.machinery.SourceFileLoader(module_name, filename)
 
     def __eq__(self, other):
-        return (type(self) == type(other))
+        return type(self) == type(other)
 
 
 def resolve_filename(dir_path, module_name):

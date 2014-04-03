@@ -78,7 +78,7 @@ class AssertionChildVisitor(ast.NodeVisitor):
         name = '@contexts_formatparam'
         if isinstance(compare_node.ops[0], ast.Lt):
             ternary_expression = ast.IfExp(
-                ast.Compare(new_comparators[0], [ast.Gt()],[new_comparators[1]]),
+                ast.Compare(new_comparators[0], [ast.Gt()], [new_comparators[1]]),
                 ast.Str('it to be greater'),
                 ast.Str('them to be equal')
             )

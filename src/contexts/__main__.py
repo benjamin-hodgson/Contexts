@@ -1,6 +1,6 @@
 import sys
 from .plugin_discovery import load_plugins
-from . import run_with_plugins, main
+from . import run_with_plugins
 
 
 def cmd():
@@ -31,4 +31,4 @@ def print_version():
 
 
 if __name__ == "__main__":
-	cmd()
+    cmd()

@@ -29,7 +29,7 @@ class PluginLoader(object):
             cls = entry_point.load()
             builder.add(cls)
 
-        self.plugins = [self.activate_plugin(p) for p in builder.to_list()]
+        self.plugins = [activate_plugin(p) for p in builder.to_list()]
 
     def setup_parser(self, parser):
         for plug in self.plugins:
@@ -63,21 +63,21 @@ class PluginLoader(object):
     def to_list(self):
         return self.plugins
 
-    # this function should go
-    def activate_plugin(self, cls):
-        try:
-            sig = inspect.signature(cls)
-        except ValueError:
-            # working around a bug in inspect.signature :(
-            # http://bugs.python.org/issue20308
-            # hopefully it'll be backported to a future version of 3.3
-            # so I can take this out
-            return cls()
 
-        if sig.parameters:
-            return cls(sys.stdout)
-
+def activate_plugin(cls):
+    try:
+        sig = inspect.signature(cls)
+    except ValueError:
+        # working around a bug in inspect.signature :(
+        # http://bugs.python.org/issue20308
+        # hopefully it'll be backported to a future version of 3.3
+        # so I can take this out
         return cls()
+
+    if sig.parameters:
+        return cls(sys.stdout)
+
+    return cls()
 
 
 class PluginListBuilder(object):

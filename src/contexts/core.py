@@ -77,7 +77,7 @@ class Suite(object):
 
     def get_classes(self):
         classes = []
-        for name, cls in inspect.getmembers(self.module, inspect.isclass):
+        for _, cls in inspect.getmembers(self.module, inspect.isclass):
             response = self.plugin_composite.identify_class(cls)
             if response is CONTEXT:
                 classes.append(cls)
@@ -178,14 +178,16 @@ class Context(object):
         self.example = example
         self.name = instance.__class__.__name__
 
+        bound_assertions = bind_methods(unbound_assertions, self.instance)
+        self.plugin_composite.process_assertion_list(bound_assertions)
+
+        # Refactoring hint: Maybe these method attributes belong in an extracted class
         self.setups = bind_methods(unbound_setups, self.instance)
         self.action = types.MethodType(unbound_action, self.instance)
-        self.assertions = bind_methods(unbound_assertions, self.instance)
+        self.assertions = [Assertion(f, self.plugin_composite) for f in bound_assertions]
         self.teardowns = bind_methods(unbound_teardowns, self.instance)
 
     def run(self):
-        self.plugin_composite.process_assertion_list(self.assertions)
-        self.assertions = [Assertion(f, self.plugin_composite) for f in self.assertions]
         with self.exception_handler.run_context(self):
             try:
                 self.run_setup()
@@ -301,13 +303,12 @@ class PluginComposite(object):
         self.plugins = plugins
 
     def __getattr__(self, name):
-        # not expecting this to happen
-        if name not in PluginInterface.__dict__:
+        if name not in PluginInterface.__dict__:  # not expecting this to happen
             raise AttributeError('The method {} is not part of the plugin interface'.format(name))
 
         def plugin_method(*args, **kwargs):
             for plugin in self.plugins:
-                reply = getattr(plugin, name, lambda *_: None)(*args)
+                reply = getattr(plugin, name, lambda *_: None)(*args, **kwargs)
                 if reply is not None:
                     return reply
         return plugin_method
