@@ -47,12 +47,12 @@ class TeamCityReporter(StreamReporter):
         self.teamcity_print("testClassFinished", name=cls.__name__)
         return True
 
-    def suite_started(self, name):
-        self.teamcity_print("testSuiteStarted", name=name)
+    def suite_started(self, module):
+        self.teamcity_print("testSuiteStarted", name=module.__name__)
         return True
 
-    def suite_ended(self, name):
-        self.teamcity_print("testSuiteFinished", name=name)
+    def suite_ended(self, module):
+        self.teamcity_print("testSuiteFinished", name=module.__name__)
         return True
 
     def context_started(self, cls, example):

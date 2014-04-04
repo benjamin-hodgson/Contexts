@@ -1,6 +1,7 @@
-import sys
 from io import StringIO
 import re
+import types
+import sys
 from contexts.plugins.reporting import teamcity
 from contexts import setup, action, assertion
 from .. import tools
@@ -24,20 +25,20 @@ class TeamCitySharedContext:
 
 class WhenASuiteStartsInTeamCity(TeamCitySharedContext):
     def context(self):
-        self.suite_name = 'test_suite'
+        self.module = types.ModuleType('test_suite')
     def because_the_suite_starts(self):
-        self.reporter.suite_started(self.suite_name)
+        self.reporter.suite_started(self.module)
     def it_should_tell_team_city_the_suite_started(self):
-        assert teamcity_parse(self.stringio.getvalue()) == ("testSuiteStarted", {'name':self.suite_name})
+        assert teamcity_parse(self.stringio.getvalue()) == ("testSuiteStarted", {'name':self.module.__name__})
 
 
 class WhenASuiteEndsInTeamCity(TeamCitySharedContext):
     def context(self):
-        self.suite_name = 'mah_suite'
+        self.module = types.ModuleType('mah_suite')
     def because_the_suite_ends(self):
-        self.reporter.suite_ended(self.suite_name)
+        self.reporter.suite_ended(self.module)
     def it_should_tell_team_city_the_suite_ended(self):
-        assert teamcity_parse(self.stringio.getvalue()) == ("testSuiteFinished", {'name':self.suite_name})
+        assert teamcity_parse(self.stringio.getvalue()) == ("testSuiteFinished", {'name':self.module.__name__})
 
 
 ###########################################################

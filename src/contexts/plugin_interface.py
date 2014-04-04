@@ -57,10 +57,18 @@ class PluginInterface(object):
     def test_run_ended(self):
         """Called at the end of a test run"""
 
-    def suite_started(self, name):
-        """Called at the start of a test module"""
-    def suite_ended(self, name):
-        """Called at the end of a test module"""
+    def suite_started(self, module):
+        """
+        Called at the start of a test module.
+
+        `module` is the Python module (an instance of `types.ModuleType`) that is about to be run.
+        """
+    def suite_ended(self, module):
+        """
+        Called at the end of a test module.
+
+        `module` is the Python module (an instance of `types.ModuleType`) that was just run.
+        """
 
     def test_class_started(self, cls):
         """

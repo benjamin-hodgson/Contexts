@@ -261,9 +261,9 @@ class ExceptionHandler(object):
 
     @contextmanager
     def run_suite(self, suite):
-        self.plugin_composite.suite_started(suite.name)
+        self.plugin_composite.suite_started(suite.module)
         yield
-        self.plugin_composite.suite_ended(suite.name)
+        self.plugin_composite.suite_ended(suite.module)
 
     @contextmanager
     def run_class(self, test_class):

@@ -97,11 +97,11 @@ class WhenRunningAFile:
     def it_should_run_the_module_that_the_plugin_imported(self):
         assert self.module.When.ran
 
-    def it_should_call_suite_started_with_the_module_name(self):
-        self.plugin.suite_started.assert_called_once_with(self.module_name)
+    def it_should_call_suite_started_with_the_module(self):
+        self.plugin.suite_started.assert_called_once_with(self.module)
 
-    def it_should_call_suite_ended_with_the_module_name(self):
-        self.plugin.suite_started.assert_called_once_with(self.module_name)
+    def it_should_call_suite_ended_with_the_module(self):
+        self.plugin.suite_started.assert_called_once_with(self.module)
 
     def cleanup_the_file_system(self):
         os.remove(self.filename)
@@ -346,14 +346,14 @@ class WhenRunningAFolderWhichIsNotAPackage:
 
     def it_should_call_suite_started_with_the_name_of_each_module(self):
         self.plugin.suite_started.assert_has_calls([
-            mock.call(self.module1.__name__),
-            mock.call(self.module2.__name__)
+            mock.call(self.module1),
+            mock.call(self.module2)
             ], any_order=True)
 
     def it_should_call_suite_ended_with_the_name_of_each_module(self):
         self.plugin.suite_ended.assert_has_calls([
-            mock.call(self.module1.__name__),
-            mock.call(self.module2.__name__)
+            mock.call(self.module1),
+            mock.call(self.module2)
             ], any_order=True)
 
     def cleanup_the_file_system(self):
@@ -491,16 +491,16 @@ class WhenRunningAFolderWhichIsAPackage:
 
     def it_should_call_suite_started_for_three_modules(self):
         assert self.plugin.suite_started.call_args_list == [
-            mock.call(self.module1.__name__),
-            mock.call(self.module2.__name__),
-            mock.call(self.module3.__name__)
+            mock.call(self.module1),
+            mock.call(self.module2),
+            mock.call(self.module3)
         ]
 
     def it_should_call_suite_ended_for_three_modules(self):
         assert self.plugin.suite_ended.call_args_list == [
-            mock.call(self.module1.__name__),
-            mock.call(self.module2.__name__),
-            mock.call(self.module3.__name__)
+            mock.call(self.module1),
+            mock.call(self.module2),
+            mock.call(self.module3)
         ]
 
     def cleanup_the_file_system(self):
