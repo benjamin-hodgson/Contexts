@@ -39,13 +39,13 @@ class WhenAPluginIdentifiesMethods:
                 yield 1
                 yield 2
             def method_one(s, example):
-                self.log.append(("setup",example))
+                self.log.append(("setup", example))
             def method_two(s, example):
-                self.log.append(("action",example))
+                self.log.append(("action", example))
             def method_three(s, example):
-                self.log.append(("assertion",example))
+                self.log.append(("assertion", example))
             def method_four(s, example):
-                self.log.append(("teardown",example))
+                self.log.append(("teardown", example))
         self.spec = TestSpec
 
         self.none_plugin = mock.Mock(spec=PluginInterface)
@@ -287,7 +287,7 @@ class WhenRunningASpecWithPlugins:
 
     @assertion
     def it_should_call_context_started_with_the_name_and_the_example(self):
-        assert self.calls[2] == mock.call.context_started('TestSpec', NO_EXAMPLE)
+        assert self.calls[2] == mock.call.context_started(self.spec, NO_EXAMPLE)
 
     def it_should_call_assertion_started_for_the_assertion(self):
         assert self.calls[3] == mock.call.assertion_started('method_with_should_in_the_name')
@@ -297,7 +297,7 @@ class WhenRunningASpecWithPlugins:
 
     @assertion
     def it_should_call_context_ended_next(self):
-        assert self.calls[5] == mock.call.context_ended('TestSpec', NO_EXAMPLE)
+        assert self.calls[5] == mock.call.context_ended(self.spec, NO_EXAMPLE)
 
     def it_should_call_test_class_ended(self):
         assert self.calls[6] == mock.call.test_class_ended(self.spec)
@@ -456,8 +456,8 @@ class WhenAContextErrorsDuringTheSetup:
         run_object(self.spec, [self.plugin])
 
     @assertion
-    def it_should_call_context_errored_with_the_name_and_no_example_and_the_exception(self):
-        self.plugin.context_errored.assert_called_once_with(self.spec.__name__, NO_EXAMPLE, self.exception)
+    def it_should_call_context_errored_with_the_class_and_no_example_and_the_exception(self):
+        self.plugin.context_errored.assert_called_once_with(self.spec, NO_EXAMPLE, self.exception)
 
     def it_should_not_run_the_action(self):
         assert not self.spec.ran_because
@@ -493,8 +493,8 @@ class WhenAContextErrorsDuringTheAction:
         run_object(self.spec, [self.plugin])
 
     @assertion
-    def it_should_call_context_errored_with_the_name_and_no_example_and_the_exception(self):
-        self.plugin.context_errored.assert_called_once_with(self.spec.__name__, NO_EXAMPLE, self.exception)
+    def it_should_call_context_errored_with_the_class_and_no_example_and_the_exception(self):
+        self.plugin.context_errored.assert_called_once_with(self.spec, NO_EXAMPLE, self.exception)
 
     def it_should_not_run_the_assertion(self):
         assert not self.spec.ran_assertion
@@ -524,8 +524,8 @@ class WhenAContextErrorsDuringTheCleanup:
         run_object(self.spec, [self.plugin])
 
     @assertion
-    def it_should_call_context_errored_with_the_name_and_no_example_and_the_exception(self):
-        self.plugin.context_errored.assert_called_once_with(self.spec.__name__, NO_EXAMPLE, self.exception)
+    def it_should_call_context_errored_with_the_class_and_no_example_and_the_exception(self):
+        self.plugin.context_errored.assert_called_once_with(self.spec, NO_EXAMPLE, self.exception)
 
 
 class WhenAPluginSetsTheExitCode:

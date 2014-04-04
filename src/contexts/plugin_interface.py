@@ -30,7 +30,7 @@ class PluginInterface(object):
         """
         Called after command-line arguments are parsed.
 
-        `args` is the result of `ArgumentParser.parser_args()`.
+        `args` is the result of `ArgumentParser.parse_args()`.
         (see the standard library documentation for `argparse` for more information).
         `environ` is the value of `os.environ`.
         Plugins should use these to set themselves up.
@@ -84,25 +84,25 @@ class PluginInterface(object):
         `cls` is the class object that is being run. `exception` is the exception that got thrown.
         """
 
-    def context_started(self, name, example):
+    def context_started(self, cls, example):
         """
         Called when a test context begins its run.
 
-        `name` is the name of the test context. `example` is the current example,
+        `cls` is the class object of the test being run. `example` is the current example,
         which may be contexts.plugin_interface.NO_EXAMPLE if it is not a parametrised test.
         """
-    def context_ended(self, name, example):
+    def context_ended(self, cls, example):
         """
         Called when a test context completes its run
 
-        `name` is the name of the test context. `example` is the current example,
+        `cls` is the class object of the test being run. `example` is the current example,
         which may be contexts.plugin_interface.NO_EXAMPLE if it is not a parametrised test.
         """
-    def context_errored(self, name, example, exception):
+    def context_errored(self, cls, example, exception):
         """
         Called when a test context (not an assertion) throws an exception
 
-        `name` is the name of the test context. `example` is the current example,
+        `cls` is the class object of the test being run. `example` is the current example,
         which may be contexts.plugin_interface.NO_EXAMPLE if it is not a parametrised test.
         `exception` is the exception which got thrown.
         """

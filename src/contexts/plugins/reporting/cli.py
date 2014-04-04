@@ -56,8 +56,8 @@ class VerboseReporter(StreamReporter):
     def initialise(self, args, env):
         return args.verbosity != "quiet"
 
-    def context_started(self, name, example):
-        self._print(context_name(name, example))
+    def context_started(self, cls, example):
+        self._print(context_name(cls.__name__, example))
 
     def context_errored(self, name, example, exception):
         for line in format_exception(exception):

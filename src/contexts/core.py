@@ -277,13 +277,13 @@ class ExceptionHandler(object):
 
     @contextmanager
     def run_context(self, context):
-        self.plugin_composite.context_started(context.name, context.example)
+        self.plugin_composite.context_started(context.instance.__class__, context.example)
         try:
             yield
         except Exception as e:
-            self.plugin_composite.context_errored(context.name, context.example, e)
+            self.plugin_composite.context_errored(context.instance.__class__, context.example, e)
         else:
-            self.plugin_composite.context_ended(context.name, context.example)
+            self.plugin_composite.context_ended(context.instance.__class__, context.example)
 
     @contextmanager
     def run_assertion(self, assertion):

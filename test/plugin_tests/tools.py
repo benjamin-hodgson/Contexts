@@ -82,6 +82,7 @@ def build_fake_assertion_error(*args):
     return build_fake_exception(*args, cls=FakeAssertionError)
 
 
-context_spec = collections.namedtuple("context_spec", ["name", "example"])
+context_spec = collections.namedtuple("context_spec", ["cls", "name", "example"])
 def create_context(name='context', example=NO_EXAMPLE):
-    return context_spec(name, example)
+    cls = type(name, (), {})
+    return context_spec(cls, name, example)

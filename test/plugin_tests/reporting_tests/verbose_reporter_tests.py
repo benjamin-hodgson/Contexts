@@ -13,9 +13,10 @@ class VerboseReporterSharedContext:
 class WhenPrintingVerboselyAndAContextStarts(VerboseReporterSharedContext):
     def context(self):
         self.ctx = tools.create_context("made.up_context_1")
+        self.cls = type("madeUpContext_1", (), {})
     @action
     def because_a_context_starts(self):
-        self.reporter.context_started(self.ctx.name, self.ctx.example)
+        self.reporter.context_started(self.cls, self.ctx.example)
     def it_should_print_its_name(self):
         assert self.stringio.getvalue() == "made up context 1\n"
 

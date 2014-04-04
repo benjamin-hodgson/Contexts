@@ -24,13 +24,13 @@ class WhenCapturingStdOutAndATestPasses(StdOutCapturingSharedContext):
         self.ctx = tools.create_context("context")
 
     def because_the_assertion_passes(self):
-        self.reporter.context_started(self.ctx.name, self.ctx.example)
+        self.reporter.context_started(self.ctx.cls, self.ctx.example)
         print("passing context")
         self.reporter.assertion_started("assertion")
         print("passing assertion")
         print("to stderr", file=sys.stderr)
         self.reporter.assertion_passed("assertion")
-        self.reporter.context_ended(self.ctx.name, self.ctx.example)
+        self.reporter.context_ended(self.ctx.cls, self.ctx.example)
 
     def it_should_not_print_anything_to_stdout(self):
         assert self.fake_stdout.getvalue() == ''
@@ -46,12 +46,12 @@ class WhenCapturingStdOutAndATestFails(StdOutCapturingSharedContext):
         self.ctx = tools.create_context("context")
 
     def because_the_test_fails_and_we_print_something(self):
-        self.reporter.context_started(self.ctx.name, self.ctx.example)
+        self.reporter.context_started(self.ctx.cls, self.ctx.example)
         print("failing context")
         self.reporter.assertion_started("assertion")
         print("failing assertion")
         self.reporter.assertion_failed("assertion", tools.FakeAssertionError())
-        self.reporter.context_ended(self.ctx.name, self.ctx.example)
+        self.reporter.context_ended(self.ctx.cls, self.ctx.example)
 
     def it_should_not_print_anything_to_stdout(self):
         assert self.fake_stdout.getvalue() == ''
@@ -69,12 +69,12 @@ class WhenCapturingStdOutAndATestErrors(StdOutCapturingSharedContext):
         self.ctx = tools.create_context("context")
 
     def because_the_test_errors_and_we_print_something(self):
-        self.reporter.context_started(self.ctx.name, self.ctx.example)
+        self.reporter.context_started(self.ctx.cls, self.ctx.example)
         print("failing context")
         self.reporter.assertion_started("assertion")
         print("erroring assertion")
         self.reporter.assertion_errored("assertion", tools.FakeException())
-        self.reporter.context_ended(self.ctx.name, self.ctx.example)
+        self.reporter.context_ended(self.ctx.cls, self.ctx.example)
 
     def it_should_not_print_anything_to_stdout(self):
         assert self.fake_stdout.getvalue() == ''
@@ -90,7 +90,7 @@ class WhenCapturingStdOutAndATestErrors(StdOutCapturingSharedContext):
 class WhenCapturingStdOutAndAContextErrors(StdOutCapturingSharedContext):
     def establish_that_we_have_printed_something(self):
         self.ctx = tools.create_context("context")
-        self.reporter.context_started(self.ctx.name, self.ctx.example)
+        self.reporter.context_started(self.ctx.cls, self.ctx.example)
         print("erroring context")
         self.reporter.assertion_started("assertion")
         print("assertion in erroring context")
@@ -98,7 +98,7 @@ class WhenCapturingStdOutAndAContextErrors(StdOutCapturingSharedContext):
 
     @action
     def because_the_context_errors(self):
-        self.reporter.context_errored(self.ctx.name, self.ctx.example, tools.FakeException())
+        self.reporter.context_errored(self.ctx.cls, self.ctx.example, tools.FakeException())
 
     def it_should_not_print_anything_to_stdout(self):
         assert self.fake_stdout.getvalue() == ''
@@ -117,11 +117,11 @@ class WhenCapturingStdOutButNotPrinting(StdOutCapturingSharedContext):
         self.assertion_name = "assertion_name"
 
     def because_an_assertion_fails_but_we_dont_print(self):
-        self.reporter.context_started(self.ctx.name, self.ctx.example)
+        self.reporter.context_started(self.ctx.cls, self.ctx.example)
         self.reporter.assertion_started(self.assertion_name)
         # don't print anything
         self.reporter.assertion_failed(self.assertion_name, tools.FakeAssertionError())
-        self.reporter.context_ended(self.ctx.name, self.ctx.example)
+        self.reporter.context_ended(self.ctx.cls, self.ctx.example)
 
     def it_should_not_print_anything_to_stdout(self):
         assert self.fake_stdout.getvalue() == ''

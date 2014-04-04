@@ -55,20 +55,20 @@ class TeamCityReporter(StreamReporter):
         self.teamcity_print("testSuiteFinished", name=name)
         return True
 
-    def context_started(self, name, example):
+    def context_started(self, cls, example):
         self.real_stdout, self.real_stderr = sys.stdout, sys.stderr
         sys.stdout, sys.stderr = self.stdout_buffer, self.stderr_buffer = StringIO(), StringIO()
-        self.context_name_prefix = context_name(name, example) + ' -> '
+        self.context_name_prefix = context_name(cls.__name__, example) + ' -> '
         return True
 
-    def context_ended(self, name, example):
+    def context_ended(self, cls, example):
         sys.stdout, sys.stderr = self.real_stdout, self.real_stderr
         self.context_name_prefix = ''
         return True
 
-    def context_errored(self, name, example, exception):
+    def context_errored(self, cls, example, exception):
         self.context_name_prefix = ''
-        name = context_name(name, example)
+        name = context_name(cls.__name__, example)
         error_summary = format_exception(exception)
 
         self.teamcity_print("testStarted", name=name)

@@ -162,19 +162,19 @@ class WhenNotifyingAPluginOfExamples:
 
     @assertion
     def it_should_call_context_started_with_the_first_example(self):
-        assert self.plugin.context_started.mock_calls[0] == mock.call("ParametrisedSpec", 1)
+        assert self.plugin.context_started.mock_calls[0] == mock.call(self.ParametrisedSpec, 1)
 
     @assertion
     def it_should_call_context_ended_with_the_first_example(self):
-        assert self.plugin.context_ended.mock_calls[0] == mock.call("ParametrisedSpec", 1)
+        assert self.plugin.context_ended.mock_calls[0] == mock.call(self.ParametrisedSpec, 1)
 
     @assertion
     def it_should_call_context_started_with_the_second_example(self):
-        assert self.plugin.context_started.mock_calls[1] == mock.call("ParametrisedSpec", 2)
+        assert self.plugin.context_started.mock_calls[1] == mock.call(self.ParametrisedSpec, 2)
 
     @assertion
-    def it_should_call_context_ended_with_the_first_example(self):
-        assert self.plugin.context_ended.mock_calls[1] == mock.call("ParametrisedSpec", 2)
+    def it_should_call_context_ended_with_the_second_example(self):
+        assert self.plugin.context_ended.mock_calls[1] == mock.call(self.ParametrisedSpec, 2)
 
     def it_should_call_test_class_ended_once(self):
         assert self.plugin.mock_calls[-3] == mock.call.test_class_ended(self.ParametrisedSpec)

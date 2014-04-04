@@ -25,20 +25,20 @@ class WhenPrintingFinalCountsForASuccessfulRun:
         self.stringio = StringIO()
         self.reporter = cli.FinalCountsReporter(self.stringio)
 
-        ctx1 = tools.create_context()
-        ctx2 = tools.create_context()
+        ctx1 = type('', (), {})
+        ctx2 = type('', (), {})
 
-        self.reporter.context_started('','')
+        self.reporter.context_started(ctx1,'')
         self.reporter.assertion_started("")
         self.reporter.assertion_passed("")
         self.reporter.assertion_started("")
         self.reporter.assertion_passed("")
-        self.reporter.context_ended('','')
+        self.reporter.context_ended(ctx1,'')
 
-        self.reporter.context_started('','')
+        self.reporter.context_started(ctx2,'')
         self.reporter.assertion_started("")
         self.reporter.assertion_passed("")
-        self.reporter.context_ended('','')
+        self.reporter.context_ended(ctx2,'')
 
     def because_the_test_run_ends(self):
         self.reporter.test_run_ended()
