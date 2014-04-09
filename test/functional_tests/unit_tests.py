@@ -319,19 +319,16 @@ class WhenAPluginModifiesAnAssertionList:
                 self.ran_reals = True
             def not_an_assertion(s):
                 pass
-            def __new__(cls):
-                cls.instance = super().__new__(cls)
-                return cls.instance
         self.spec = Spec
 
         self.ran_spies = []
-        def spy_assertion_method1():
+        def spy_assertion_method1(s):
             self.ran_spies.append('spy_assertion_method1')
-        def spy_assertion_method2():
+        def spy_assertion_method2(s):
             self.ran_spies.append('spy_assertion_method2')
 
-        def modify_list(l):
-            self.called_with = l.copy()
+        def modify_list(cls, l):
+            self.called_with = (cls, l.copy())
             l[:] = [spy_assertion_method1, spy_assertion_method2]
         self.plugin = mock.Mock(spec=PluginInterface)
         self.plugin.identify_method.side_effect = lambda meth:{
@@ -344,9 +341,12 @@ class WhenAPluginModifiesAnAssertionList:
     def because_we_run_the_spec(self):
         run_object(self.spec, [self.plugin])
 
+    def it_should_pass_the_test_class_into_process_assertion_list(self):
+        assert self.called_with[0] is self.spec
+
     def it_should_pass_a_list_of_the_found_assertions_into_process_assertion_list(self):
-        assert isinstance(self.called_with, collections.abc.MutableSequence)
-        assert set(self.called_with) == {self.spec.instance.should1, self.spec.instance.should2}
+        assert isinstance(self.called_with[1], collections.abc.MutableSequence)
+        assert set(self.called_with[1]) == {self.spec.should1, self.spec.should2}
 
     def it_should_run_the_methods_in_the_list_that_the_plugin_modified(self):
         assert self.ran_spies == ['spy_assertion_method1', 'spy_assertion_method2']

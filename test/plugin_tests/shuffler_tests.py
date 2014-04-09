@@ -29,10 +29,8 @@ class WhenProcessingAClassListAndShuffleIsTrue(ShufflerSharedContext):
 class WhenProcessingAnAssertionListAndShuffleIsTrue(ShufflerSharedContext):
     @action
     def because_we_ask_it_to_process_the_list_of_assertions(self):
-        self.shuffler.process_assertion_list(self.list)
-
+        self.shuffler.process_assertion_list(None, self.list)
     def it_should_shuffle_the_list_in_place(self):
         assert self.list != self.original_list
-
     def it_should_not_change_the_contents_of_the_list(self):
         assert set(self.list) == set(self.original_list)

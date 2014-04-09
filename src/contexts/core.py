@@ -178,8 +178,8 @@ class Context(object):
         self.example = example
         self.name = instance.__class__.__name__
 
+        self.plugin_composite.process_assertion_list(self.instance.__class__, unbound_assertions)
         bound_assertions = bind_methods(unbound_assertions, self.instance)
-        self.plugin_composite.process_assertion_list(bound_assertions)
 
         # Refactoring hint: Maybe these method attributes belong in an extracted class
         self.setups = bind_methods(unbound_setups, self.instance)
@@ -212,8 +212,8 @@ class Context(object):
             run_with_test_data(teardown, self.example)
 
 
-def bind_methods(methods, instance):
-    return [types.MethodType(func, instance) for func in methods]
+def bind_methods(funcs, instance):
+    return [types.MethodType(func, instance) for func in funcs]
 
 
 class Assertion(object):
