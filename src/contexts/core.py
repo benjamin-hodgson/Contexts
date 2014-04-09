@@ -67,7 +67,7 @@ class Suite(object):
         self.exception_handler = ExceptionHandler(self.plugin_composite)
 
         self.classes = self.get_classes()
-        self.plugin_composite.process_class_list(self.classes)
+        self.plugin_composite.process_class_list(self.module, self.classes)
 
     def run(self):
         with self.exception_handler.run_suite(self):
@@ -167,6 +167,7 @@ def assert_not_too_many_special_methods(previously_found, cls, just_found):
         raise errors.TooManySpecialMethodsError(msg)
 
 
+# This class and its relationship to TestClass is becoming awkward - figure out how best to split them up
 class Context(object):
     def __init__(self, instance, example,
                  unbound_setups, unbound_action, unbound_assertions, unbound_teardowns,

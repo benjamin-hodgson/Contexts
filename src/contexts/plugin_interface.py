@@ -196,8 +196,15 @@ class PluginInterface(object):
 
     def process_module_list(self, modules):
         """Called with the full list of found modules. Plugins may modify the list in-place."""
-    def process_class_list(self, classes):
-        """Called with the list of classes found in a module. Plugins may modify the list in-place."""
+    def process_class_list(self, module, classes):
+        """
+        Called with the list of classes found in a module.
+        Plugins may modify the list in-place.
+
+        Arguments:
+            module - the Python module in which the classes were found
+            classes - the classes found in that module
+        """
     def process_assertion_list(self, cls, functions):
         """
         Called with the list of (unbound) assertion methods found in a class.

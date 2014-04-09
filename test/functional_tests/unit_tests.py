@@ -643,8 +643,8 @@ class WhenAPluginModifiesAClassList:
         self.AnotherClass1 = AnotherClass1
         self.AnotherClass2 = AnotherClass2
 
-        def modify_list(l):
-            self.called_with = l.copy()
+        def modify_list(mod, l):
+            self.called_with = (mod, l.copy())
             l[:] = [AnotherClass1, AnotherClass2]
         self.plugin = mock.Mock()
         self.plugin.process_class_list = modify_list
@@ -654,9 +654,12 @@ class WhenAPluginModifiesAClassList:
     def because_we_run_the_module(self):
         run_object(self.module, [self.plugin])
 
+    def it_should_pass_the_test_module_into_process_class_list(self):
+        assert self.called_with[0] == self.module
+
     def it_should_pass_a_list_of_the_found_classes_into_process_class_list(self):
-        assert isinstance(self.called_with, collections.abc.MutableSequence)
-        assert set(self.called_with) == {self.module.FoundClass1, self.module.FoundClass2}
+        assert isinstance(self.called_with[1], collections.abc.MutableSequence)
+        assert set(self.called_with[1]) == {self.module.FoundClass1, self.module.FoundClass2}
 
     def it_should_run_the_classes_in_the_list_that_the_plugin_modified(self):
         assert self.ran_spies == ['AnotherClass1', 'AnotherClass2']
