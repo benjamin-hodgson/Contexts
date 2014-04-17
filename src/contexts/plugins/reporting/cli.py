@@ -167,7 +167,8 @@ class StdOutCapturingReporter(StreamReporter):
             help="Disable capturing of stdout during tests.")
 
     def initialise(self, args, env):
-        return args.capture and not (args.teamcity or 'TEAMCITY_VERSION' in env) and args.verbosity != "quiet"
+        self.quiet = args.verbosity == "quiet"
+        return args.capture and not (args.teamcity or 'TEAMCITY_VERSION' in env)
 
     def centred_dashes(self, string, indentation):
         num = str(70 - indentation)
@@ -192,7 +193,7 @@ class StdOutCapturingReporter(StreamReporter):
         self.output_buffer(4)
 
     def output_buffer(self, indentation):
-        if self.buffer.getvalue():
+        if self.buffer.getvalue() and not self.quiet:
             lines = [self.centred_dashes(" >> begin captured stdout << ", indentation)]
             lines.extend(self.buffer.getvalue().strip().split('\n'))
             lines.append(self.centred_dashes(" >> end captured stdout << ", indentation))

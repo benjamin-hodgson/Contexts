@@ -1,3 +1,4 @@
+import argparse
 import sys
 from io import StringIO
 from contexts.plugins.reporting import cli
@@ -14,6 +15,15 @@ class StdOutCapturingSharedContext:
 
         self.stringio = StringIO()
         self.reporter = cli.StdOutCapturingReporter(self.stringio)
+
+        # hacky - initialise() gets called again, with different arguments,
+        # in the setup of WhenCapturingStdOutInQuietMode
+        args = argparse.Namespace()
+        args.capture = True
+        args.verbosity = "normal"
+        args.teamcity = False
+
+        self.reporter.initialise(args, {})
 
     def cleanup_stdout_and_stderr(self):
         sys.stdout = self.real_stdout
@@ -128,3 +138,28 @@ class WhenCapturingStdOutButNotPrinting(StdOutCapturingSharedContext):
 
     def it_should_not_output_the_delimiters(self):
         assert not self.stringio.getvalue()
+
+class WhenCapturingStdOutInQuietMode(StdOutCapturingSharedContext):
+    def context(self):
+        args = argparse.Namespace()
+        args.capture = True
+        args.verbosity = "quiet"
+        args.teamcity = False
+
+        self.reporter.initialise(args, {})
+
+        self.ctx = tools.create_context("context")
+
+    def because_the_test_fails_and_we_print_something(self):
+        self.reporter.context_started(self.ctx.cls, self.ctx.example)
+        print("failing context")
+        self.reporter.assertion_started("assertion")
+        print("failing assertion")
+        self.reporter.assertion_failed("assertion", tools.FakeAssertionError())
+        self.reporter.context_ended(self.ctx.cls, self.ctx.example)
+
+    def it_should_not_print_anything_to_stdout(self):
+        assert self.fake_stdout.getvalue() == ''
+
+    def it_should_not_print_the_captured_stdout_either(self):
+        assert self.stringio.getvalue() == ''
