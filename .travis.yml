@@ -5,7 +5,7 @@ python:
   - '3.4'
 
 install:
-  - pip install colorama --use-mirrors
+  - pip install colorama
   - python setup.py install
 
 script:
