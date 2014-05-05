@@ -10,6 +10,7 @@ install:
   - python setup.py install
 
 script:
+  - cat /home/travis/virtualenv/python3.3.5/lib/python3.3/site-packages/Contexts-0.9.2-py3.3.egg/contexts/plugins/test_target_suppliers.py
   - run-contexts -v
 
 deploy:
