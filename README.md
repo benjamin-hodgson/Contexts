@@ -1,6 +1,5 @@
 Contexts
 ========
-[![Trello board](http://codehum.com/static/media/project/trello-icon2.png)](https://trello.com/b/uPgp50AF/contexts-development)
 [![Build Status](https://travis-ci.org/benjamin-hodgson/Contexts.png?branch=master)](https://travis-ci.org/benjamin-hodgson/Contexts)
 
 Dead simple descriptive testing for Python. No custom decorators, no context managers,
