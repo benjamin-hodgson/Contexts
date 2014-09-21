@@ -26,6 +26,7 @@ Table of contents
    :maxdepth: 2
 
    guide
+   plugins
 
 * :ref:`genindex`
 * :ref:`modindex`
