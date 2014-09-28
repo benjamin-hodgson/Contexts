@@ -9,7 +9,6 @@ might have written, if they were using Contexts. See the :ref:`Guide <guide>` fo
 ::
 
     import requests
-    import contexts
 
     class WhenRequestingAResourceThatDoesNotExist:
         def establish_that_we_are_asking_for_a_made_up_resource(self):

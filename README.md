@@ -19,12 +19,12 @@ but it aims to be useful for more than just acceptance testing (unlike Cucumber 
 
 Cool features
 -------------
-* Give your tests [**descriptive names**](https://github.com/benjamin-hodgson/Contexts/wiki/Guide#wiki-defining-tests)
+* Give your tests [**descriptive names**](http://contexts.readthedocs.org/en/latest/guide.html#defining-tests)
   so you can tell what's gone wrong when they fail!
 * Run **all the assertions** for each test case, even when one fails!
-* Practice 'Example-Driven-Development' with [**parametrised tests**](https://github.com/benjamin-hodgson/Contexts/wiki/Guide#wiki-triangulating)!
-* Extend Contexts by writing your own [**plugins**](https://github.com/benjamin-hodgson/Contexts/wiki/Plugins)!
-* Use the `assert` statement and still get [**helpful failure messages**](https://github.com/benjamin-hodgson/Contexts/wiki/Guide#wiki-making-assertions-about-your-action)!
+* Practice 'Example-Driven-Development' with [**parametrised tests**](http://contexts.readthedocs.org/en/latest/guide.html#examples-triangulating)!
+* Extend Contexts by writing your own [**plugins**](http://contexts.readthedocs.org/en/latest/plugins.html)!
+* Use the `assert` statement and still get [**helpful failure messages**](http://contexts.readthedocs.org/en/latest/guide.html#should-assertions)!
 * **Test all the things**!
 
 Installation
@@ -45,19 +45,19 @@ Contexts has no compulsory external dependencies. There is an optional dependenc
 if you like red and green colours in the output from your test runner
 (and who doesn't!), you need to install [Colorama](https://pypi.python.org/pypi/colorama).
 
-Example
--------
+Quick start
+-----------
 Here's an example of a test case that the authors of [Requests](https://github.com/kennethreitz/requests)
 might have written, if they were using Contexts.
-See the [wiki](https://github.com/benjamin-hodgson/Contexts/wiki)
-for [details](https://github.com/benjamin-hodgson/Contexts/wiki/Guide)
-and [more examples](https://github.com/benjamin-hodgson/Contexts/wiki/Examples).
+See the [documentation](http://contexts.readthedocs.org/en/latest)
+for [details](http://contexts.readthedocs.org/en/latest/guide.html)
+and [more examples](http://contexts.readthedocs.org/en/latest/samples.html).
 
 ```python
 import requests
 # no need to import contexts!
 
-class WhenRequestingAResourceThatDoesNotExist:  # no custom base class!
+class WhenRequestingAResourceThatDoesNotExist:
     def given_that_we_are_asking_for_a_made_up_resource(self):
         self.uri = "http://www.github.com/itdontexistman"
         self.session = requests.Session()
@@ -75,10 +75,9 @@ class WhenRequestingAResourceThatDoesNotExist:  # no custom base class!
         self.session.close()
 ```
 
-Running your tests
-------------------
+### Running your tests
 Type `run-contexts` at the command line to discover and run test files and folders in your working directory.
 
 Help
 ----
-All the documentation is stored in the [wiki](https://github.com/benjamin-hodgson/Contexts/wiki).
+All the documentation is stored [on readthedocs](http://contexts.readthedocs.org/en/latest/index.html).
