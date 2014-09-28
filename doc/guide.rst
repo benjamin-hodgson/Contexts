@@ -1,3 +1,5 @@
+.. _guide:
+
 Guide
 =====
 
@@ -41,7 +43,7 @@ If a *package* has the words 'test' or 'spec' in its name, Contexts will
 import it, and scan the package's contents for modules and subfolders matching this pattern.
 
 If a class has **spec** or **when** in the name, Contexts will treat it as a test case. Test classes
-can inherit from ``object`` - there's no need to subclass `TestCase` for Contexts to pick up your tests.
+can inherit from ``object`` - there's no need to subclass ``TestCase`` for Contexts to pick up your tests.
 
 
 Defining tests
@@ -254,15 +256,15 @@ reports any activity on stdout and stderr.
 List of keywords
 ================
 
-========================================================== ================================================
-                         Meaning                                          Keywords
-========================================================== ================================================
-:ref:`Test folder <test-discovery>`                        ``test``, ``spec``
-:ref:`Test file <test-discovery>`                          ``test``, ``spec``
-:ref:`Test class <test-discovery>`                         ``test``, ``spec``
-:ref:`Examples <examples>`                                 ``example``, ``data``
-:ref:`Setup <setup>`                                       ``establish``, ``context``, ``given``
-:ref:`Action <action>`                                     ``because``, ``since``, ``after``, ``when``
-:ref:`Assertion <assertion>`                               ``it``, ``should``, ``must``, ``will``, ``then``
-:ref:`Cleanup <cleanup>`                                   ``cleanup``
-========================================================== ================================================
+=================================== ================================================
+Meaning                             Keywords
+=================================== ================================================
+:ref:`Test folder <test-discovery>` ``test``, ``spec``
+:ref:`Test file <test-discovery>`   ``test``, ``spec``
+:ref:`Test class <test-discovery>`  ``test``, ``spec``
+:ref:`Examples <examples>`          ``example``, ``data``
+:ref:`Setup <setup>`                ``establish``, ``context``, ``given``
+:ref:`Action <action>`              ``because``, ``since``, ``after``, ``when``
+:ref:`Assertion <assertion>`        ``it``, ``should``, ``must``, ``will``, ``then``
+:ref:`Cleanup <cleanup>`            ``cleanup``
+=================================== ================================================

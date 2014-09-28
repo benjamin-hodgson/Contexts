@@ -27,6 +27,7 @@ Table of contents
 
    guide
    plugins
+   samples
 
 * :ref:`genindex`
 * :ref:`modindex`
