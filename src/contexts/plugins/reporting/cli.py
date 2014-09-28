@@ -259,6 +259,9 @@ class Colouriser(StreamReporter):
     def assertion_errored(self, func, exception):
         self.stream.write(colorama.Fore.RED)
 
+    def test_class_errored(self, cls, exception):
+        self.stream.write(colorama.Fore.RED)
+
     def unexpected_error(self, exception):
         self.stream.write(colorama.Fore.RED)
 
@@ -300,6 +303,9 @@ class UnColouriser(StreamReporter):
         self.stream.write(colorama.Fore.RESET)
 
     def assertion_errored(self, func, exception):
+        self.stream.write(colorama.Fore.RESET)
+
+    def test_class_errored(self, cls, exception):
         self.stream.write(colorama.Fore.RESET)
 
     def unexpected_error(self, exception):
@@ -354,6 +360,9 @@ class FailuresOnlyBefore(object):
         self.master.current_context_failed = True
     def assertion_errored(self, func, exception):
         self.master.current_context_failed = True
+
+    def test_class_errored(self, cls, exception):
+        self.unexpected_error(exception)
 
     def unexpected_error(self, exception):
         # write the error directly to the report
