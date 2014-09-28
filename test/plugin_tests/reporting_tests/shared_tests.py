@@ -41,7 +41,7 @@ class WhenGettingExitCodeForASuccessfulRun:
 class WhenGettingExitCodeAfterAnAssertionFailure:
     def establish_that_an_assertion_failed(self):
         self.plugin = reporting.ExitCodeReporter()
-        self.plugin.assertion_failed('', Exception())
+        self.plugin.assertion_failed(lambda: None, Exception())
 
     def because_we_ask_for_the_exit_code(self):
         self.result = self.plugin.get_exit_code()
@@ -53,7 +53,7 @@ class WhenGettingExitCodeAfterAnAssertionFailure:
 class WhenGettingExitCodeAfterAnAssertionError:
     def establish_that_an_assertion_errored(self):
         self.plugin = reporting.ExitCodeReporter()
-        self.plugin.assertion_errored('', Exception())
+        self.plugin.assertion_errored(lambda: None, Exception())
 
     def because_we_ask_for_the_exit_code(self):
         self.result = self.plugin.get_exit_code()

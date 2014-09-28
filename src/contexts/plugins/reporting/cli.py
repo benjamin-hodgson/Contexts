@@ -67,16 +67,16 @@ class VerboseReporter(StreamReporter):
         for line in format_exception(exception):
             self._print(line)
 
-    def assertion_passed(self, name):
-        self._print('  PASS: ' + make_readable(name))
+    def assertion_passed(self, func):
+        self._print('  PASS: ' + make_readable(func.__name__))
 
-    def assertion_failed(self, name, exception):
-        self._print('  FAIL: ' + make_readable(name))
+    def assertion_failed(self, func, exception):
+        self._print('  FAIL: ' + make_readable(func.__name__))
         for line in format_exception(exception):
             self._print('    ' + line)
 
-    def assertion_errored(self, name, exception):
-        self._print('  ERROR: ' + make_readable(name))
+    def assertion_errored(self, func, exception):
+        self._print('  ERROR: ' + make_readable(func.__name__))
         for line in format_exception(exception):
             self._print('    ' + line)
 
@@ -110,14 +110,14 @@ class FinalCountsReporter(StreamReporter):
         self.error_count += 1
         self.failed = True
 
-    def assertion_started(self, name):
+    def assertion_started(self, func):
         self.assertion_count += 1
 
-    def assertion_failed(self, name, exception):
+    def assertion_failed(self, func, exception):
         self.failure_count += 1
         self.failed = True
 
-    def assertion_errored(self, name, exception):
+    def assertion_errored(self, func, exception):
         self.error_count += 1
         self.failed = True
 
@@ -186,10 +186,10 @@ class StdOutCapturingReporter(StreamReporter):
         sys.stdout = self.real_stdout
         self.output_buffer(2)
 
-    def assertion_failed(self, name, exception):
+    def assertion_failed(self, func, exception):
         self.output_buffer(4)
 
-    def assertion_errored(self, name, exception):
+    def assertion_errored(self, func, exception):
         self.output_buffer(4)
 
     def output_buffer(self, indentation):
@@ -250,13 +250,13 @@ class Colouriser(StreamReporter):
     def context_errored(self, name, example, exception):
         self.stream.write(colorama.Fore.RED)
 
-    def assertion_passed(self, name):
+    def assertion_passed(self, func):
         self.stream.write(colorama.Fore.GREEN)
 
-    def assertion_failed(self, name, exception):
+    def assertion_failed(self, func, exception):
         self.stream.write(colorama.Fore.RED)
 
-    def assertion_errored(self, name, exception):
+    def assertion_errored(self, func, exception):
         self.stream.write(colorama.Fore.RED)
 
     def unexpected_error(self, exception):
@@ -293,13 +293,13 @@ class UnColouriser(StreamReporter):
     def context_errored(self, name, example, exception):
         self.stream.write(colorama.Fore.RESET)
 
-    def assertion_passed(self, name):
+    def assertion_passed(self, func):
         self.stream.write(colorama.Fore.RESET)
 
-    def assertion_failed(self, name, exception):
+    def assertion_failed(self, func, exception):
         self.stream.write(colorama.Fore.RESET)
 
-    def assertion_errored(self, name, exception):
+    def assertion_errored(self, func, exception):
         self.stream.write(colorama.Fore.RESET)
 
     def unexpected_error(self, exception):
@@ -348,11 +348,11 @@ class FailuresOnlyBefore(object):
     def context_started(self, name, example):
         self.master.set_streams(StringIO())
         self.master.current_context_failed = False
-    def assertion_passed(self, name):
+    def assertion_passed(self, func):
         return True
-    def assertion_failed(self, name, exception):
+    def assertion_failed(self, func, exception):
         self.master.current_context_failed = True
-    def assertion_errored(self, name, exception):
+    def assertion_errored(self, func, exception):
         self.master.current_context_failed = True
 
     def unexpected_error(self, exception):

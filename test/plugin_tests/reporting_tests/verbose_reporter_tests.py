@@ -21,8 +21,11 @@ class WhenPrintingVerboselyAndAContextStarts(VerboseReporterSharedContext):
         assert self.stringio.getvalue() == "made up context 1\n"
 
 class WhenPrintingVerboselyAndAnAssertionPasses(VerboseReporterSharedContext):
+    def establish_assertion(self):
+        self.assertion = lambda: None
+        self.assertion.__name__ = "assertion1"
     def because_an_assertion_passes(self):
-        self.reporter.assertion_passed("assertion1")
+        self.reporter.assertion_passed(self.assertion)
     def it_should_say_the_assertion_passed(self):
         assert self.stringio.getvalue() == '  PASS: assertion 1\n'
 
@@ -32,8 +35,11 @@ class WhenPrintingVerboselyAndAnAssertionFails(VerboseReporterSharedContext):
               ('made_up_file_11.py', 2, 'made_up_function_2', 'frame2')]
         self.exception = tools.build_fake_assertion_error(tb, "you fail")
 
+        self.assertion = lambda: None
+        self.assertion.__name__ = "assertion2"
+
     def because_an_assertion_fails(self):
-        self.reporter.assertion_failed("assertion2", self.exception)
+        self.reporter.assertion_failed(self.assertion, self.exception)
 
     def it_should_output_a_stack_trace(self):
         assert self.stringio.getvalue() == (
@@ -52,8 +58,11 @@ class WhenPrintingVerboselyAndAnAssertionErrors(VerboseReporterSharedContext):
               ('made_up_file_13.py', 4, 'made_up_function_4', 'frame4')]
         self.exception = tools.build_fake_exception(tb, "no")
 
+        self.assertion = lambda: None
+        self.assertion.__name__ = "assertion3"
+
     def because_an_assertion_errors(self):
-        self.reporter.assertion_errored("assertion3", self.exception)
+        self.reporter.assertion_errored(self.assertion, self.exception)
 
     def it_should_output_a_stack_trace(self):
         assert self.stringio.getvalue() == (

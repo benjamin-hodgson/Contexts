@@ -261,6 +261,8 @@ class WhenRunningASpecWithPlugins:
                 s.__class__.log += "assert "
             def method_with_cleanup_in_the_name(s):
                 s.__class__.log += "teardown "
+            def __init__(self):
+                TestSpec.instance = self
 
         self.spec = TestSpec
 
@@ -290,10 +292,10 @@ class WhenRunningASpecWithPlugins:
         assert self.calls[2] == mock.call.context_started(self.spec, NO_EXAMPLE)
 
     def it_should_call_assertion_started_for_the_assertion(self):
-        assert self.calls[3] == mock.call.assertion_started('method_with_should_in_the_name')
+        assert self.calls[3] == mock.call.assertion_started(self.spec.instance.method_with_should_in_the_name)
 
     def it_should_call_assertion_passed_for_the_assertion(self):
-        assert self.calls[4] == mock.call.assertion_passed('method_with_should_in_the_name')
+        assert self.calls[4] == mock.call.assertion_passed(self.spec.instance.method_with_should_in_the_name)
 
     @assertion
     def it_should_call_context_ended_next(self):
@@ -366,6 +368,8 @@ class WhenAnAssertionFails:
                 s.__class__.ran_second = True
             def cleanup(s):
                 s.__class__.ran_cleanup = True
+            def __init__(self):
+                TestSpec.instance = self
 
         self.spec = TestSpec
         self.plugin = mock.Mock(spec=PluginInterface)
@@ -380,7 +384,7 @@ class WhenAnAssertionFails:
         run_object(self.spec, [self.plugin])
 
     def it_should_call_assertion_failed_with_the_name_and_the_exception(self):
-        self.plugin.assertion_failed.assert_called_once_with("failing_should_method", self.exception)
+        self.plugin.assertion_failed.assert_called_once_with(self.spec.instance.failing_should_method, self.exception)
 
     def it_should_still_run_the_other_assertion(self):
         # not a great test - we can't guarantee that the second should method
@@ -404,6 +408,8 @@ class WhenAnAssertionErrors:
                 s.__class__.ran_second = True
             def cleanup(s):
                 s.__class__.ran_cleanup = True
+            def __init__(self):
+                TestSpec.instance = self
 
         self.spec = TestSpec
         self.plugin = mock.Mock(wraps=PluginInterface())
@@ -417,7 +423,7 @@ class WhenAnAssertionErrors:
         run_object(self.spec, [self.plugin])
 
     def it_should_call_assertion_errored_with_the_name_and_the_exception(self):
-        self.plugin.assertion_errored.assert_called_once_with("erroring_should_method", self.exception)
+        self.plugin.assertion_errored.assert_called_once_with(self.spec.instance.erroring_should_method, self.exception)
 
     def it_should_still_run_the_other_assertion(self):
         assert self.spec.ran_second

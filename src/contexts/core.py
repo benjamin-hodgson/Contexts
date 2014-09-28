@@ -288,15 +288,15 @@ class ExceptionHandler(object):
 
     @contextmanager
     def run_assertion(self, assertion):
-        self.plugin_composite.assertion_started(assertion.name)
+        self.plugin_composite.assertion_started(assertion.func)
         try:
             yield
         except AssertionError as e:
-            self.plugin_composite.assertion_failed(assertion.name, e)
+            self.plugin_composite.assertion_failed(assertion.func, e)
         except Exception as e:
-            self.plugin_composite.assertion_errored(assertion.name, e)
+            self.plugin_composite.assertion_errored(assertion.func, e)
         else:
-            self.plugin_composite.assertion_passed(assertion.name)
+            self.plugin_composite.assertion_passed(assertion.func)
 
 
 class PluginComposite(object):

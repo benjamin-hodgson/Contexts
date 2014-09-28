@@ -36,10 +36,10 @@ class WhenCapturingStdOutAndATestPasses(StdOutCapturingSharedContext):
     def because_the_assertion_passes(self):
         self.reporter.context_started(self.ctx.cls, self.ctx.example)
         print("passing context")
-        self.reporter.assertion_started("assertion")
+        self.reporter.assertion_started(lambda: None)
         print("passing assertion")
         print("to stderr", file=sys.stderr)
-        self.reporter.assertion_passed("assertion")
+        self.reporter.assertion_passed(lambda: None)
         self.reporter.context_ended(self.ctx.cls, self.ctx.example)
 
     def it_should_not_print_anything_to_stdout(self):
@@ -58,9 +58,9 @@ class WhenCapturingStdOutAndATestFails(StdOutCapturingSharedContext):
     def because_the_test_fails_and_we_print_something(self):
         self.reporter.context_started(self.ctx.cls, self.ctx.example)
         print("failing context")
-        self.reporter.assertion_started("assertion")
+        self.reporter.assertion_started(lambda: None)
         print("failing assertion")
-        self.reporter.assertion_failed("assertion", tools.FakeAssertionError())
+        self.reporter.assertion_failed(lambda: None, tools.FakeAssertionError())
         self.reporter.context_ended(self.ctx.cls, self.ctx.example)
 
     def it_should_not_print_anything_to_stdout(self):
@@ -81,9 +81,9 @@ class WhenCapturingStdOutAndATestErrors(StdOutCapturingSharedContext):
     def because_the_test_errors_and_we_print_something(self):
         self.reporter.context_started(self.ctx.cls, self.ctx.example)
         print("failing context")
-        self.reporter.assertion_started("assertion")
+        self.reporter.assertion_started(lambda: None)
         print("erroring assertion")
-        self.reporter.assertion_errored("assertion", tools.FakeException())
+        self.reporter.assertion_errored(lambda: None, tools.FakeException())
         self.reporter.context_ended(self.ctx.cls, self.ctx.example)
 
     def it_should_not_print_anything_to_stdout(self):
@@ -102,9 +102,9 @@ class WhenCapturingStdOutAndAContextErrors(StdOutCapturingSharedContext):
         self.ctx = tools.create_context("context")
         self.reporter.context_started(self.ctx.cls, self.ctx.example)
         print("erroring context")
-        self.reporter.assertion_started("assertion")
+        self.reporter.assertion_started(lambda: None)
         print("assertion in erroring context")
-        self.reporter.assertion_passed("assertion")
+        self.reporter.assertion_passed(lambda: None)
 
     @action
     def because_the_context_errors(self):
@@ -124,13 +124,12 @@ class WhenCapturingStdOutAndAContextErrors(StdOutCapturingSharedContext):
 class WhenCapturingStdOutButNotPrinting(StdOutCapturingSharedContext):
     def context(self):
         self.ctx = tools.create_context("context")
-        self.assertion_name = "assertion_name"
 
     def because_an_assertion_fails_but_we_dont_print(self):
         self.reporter.context_started(self.ctx.cls, self.ctx.example)
-        self.reporter.assertion_started(self.assertion_name)
+        self.reporter.assertion_started(lambda: None)
         # don't print anything
-        self.reporter.assertion_failed(self.assertion_name, tools.FakeAssertionError())
+        self.reporter.assertion_failed(lambda: None, tools.FakeAssertionError())
         self.reporter.context_ended(self.ctx.cls, self.ctx.example)
 
     def it_should_not_print_anything_to_stdout(self):
@@ -153,9 +152,9 @@ class WhenCapturingStdOutInQuietMode(StdOutCapturingSharedContext):
     def because_the_test_fails_and_we_print_something(self):
         self.reporter.context_started(self.ctx.cls, self.ctx.example)
         print("failing context")
-        self.reporter.assertion_started("assertion")
+        self.reporter.assertion_started(lambda: None)
         print("failing assertion")
-        self.reporter.assertion_failed("assertion", tools.FakeAssertionError())
+        self.reporter.assertion_failed(lambda: None, tools.FakeAssertionError())
         self.reporter.context_ended(self.ctx.cls, self.ctx.example)
 
     def it_should_not_print_anything_to_stdout(self):

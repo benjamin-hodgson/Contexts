@@ -29,15 +29,15 @@ class WhenPrintingFinalCountsForASuccessfulRun:
         ctx2 = type('', (), {})
 
         self.reporter.context_started(ctx1,'')
-        self.reporter.assertion_started("")
-        self.reporter.assertion_passed("")
-        self.reporter.assertion_started("")
-        self.reporter.assertion_passed("")
+        self.reporter.assertion_started(lambda: None)
+        self.reporter.assertion_passed(lambda: None)
+        self.reporter.assertion_started(lambda: None)
+        self.reporter.assertion_passed(lambda: None)
         self.reporter.context_ended(ctx1,'')
 
         self.reporter.context_started(ctx2,'')
-        self.reporter.assertion_started("")
-        self.reporter.assertion_passed("")
+        self.reporter.assertion_started(lambda: None)
+        self.reporter.assertion_passed(lambda: None)
         self.reporter.context_ended(ctx2,'')
 
     def because_the_test_run_ends(self):
@@ -57,7 +57,7 @@ class WhenPrintingFinalCountsAfterAnAssertionFails:
         self.stringio = StringIO()
         self.reporter = cli.FinalCountsReporter(self.stringio)
 
-        self.reporter.assertion_failed("", Exception())
+        self.reporter.assertion_failed(lambda: None, Exception())
 
     def because_the_test_run_ends(self):
         self.reporter.test_run_ended()
@@ -76,7 +76,7 @@ class WhenPrintingFinalCountsAfterAnAssertionErrors:
         self.stringio = StringIO()
         self.reporter = cli.FinalCountsReporter(self.stringio)
 
-        self.reporter.assertion_errored("", Exception())
+        self.reporter.assertion_errored(lambda: None, Exception())
 
     def because_the_test_run_ends(self):
         self.reporter.test_run_ended()

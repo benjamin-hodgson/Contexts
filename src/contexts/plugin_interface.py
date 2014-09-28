@@ -120,30 +120,30 @@ class PluginInterface(object):
         :param exception: The exception that caused the error.
         """
 
-    def assertion_started(self, name):
+    def assertion_started(self, func):
         """
         Called when an assertion begins.
 
-        :param name str: The name of the assertion method being run.
+        :param func: The assertion method being run.
         """
-    def assertion_passed(self, name):
+    def assertion_passed(self, func):
         """
         Called when an assertion passes.
 
-        :param name str: The name of the assertion method being run.
+        :param func: The assertion method being run.
         """
-    def assertion_errored(self, name, exception):
+    def assertion_errored(self, func, exception):
         """
         Called when an assertion throws an exception.
 
-        :param name str: The name of the assertion method being run.
+        :param func: The assertion method being run.
         :param exception: The exception that caused the error.
         """
-    def assertion_failed(self, name, exception):
+    def assertion_failed(self, func, exception):
         """
         Called when an assertion throws an AssertionError.
 
-        :param name str: The name of the assertion method being run.
+        :param func: The assertion method being run.
         :param exception: The exception that caused the failure.
         """
 

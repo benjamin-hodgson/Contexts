@@ -25,9 +25,9 @@ class ExitCodeReporter(object):
         self.exit_code = 0
     def get_exit_code(self):
         return self.exit_code
-    def assertion_failed(self, name, exception):
+    def assertion_failed(self, func, exception):
         self.exit_code = 1
-    def assertion_errored(self, name, exception):
+    def assertion_errored(self, func, exception):
         self.exit_code = 1
     def context_errored(self, name, example, exception):
         self.exit_code = 1

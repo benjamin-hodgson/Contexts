@@ -85,19 +85,19 @@ class TeamCityReporter(StreamReporter):
         self.failed = True
         return True
 
-    def assertion_started(self, name):
-        readable_name = self.context_name_prefix + make_readable(name)
+    def assertion_started(self, func):
+        readable_name = self.context_name_prefix + make_readable(func.__name__)
         self.teamcity_print("testStarted", name=readable_name)
         return True
 
-    def assertion_passed(self, name):
-        name = self.context_name_prefix + make_readable(name)
+    def assertion_passed(self, func):
+        name = self.context_name_prefix + make_readable(func.__name__)
         self.output_buffers(name)
         self.teamcity_print("testFinished", name=name)
         return True
 
-    def assertion_failed(self, name, exception):
-        name = self.context_name_prefix + make_readable(name)
+    def assertion_failed(self, func, exception):
+        name = self.context_name_prefix + make_readable(func.__name__)
         error_summary = format_exception(exception)
 
         self.output_buffers(name)
@@ -111,8 +111,8 @@ class TeamCityReporter(StreamReporter):
         self.failed = True
         return True
 
-    def assertion_errored(self, name, exception):
-        name = self.context_name_prefix + make_readable(name)
+    def assertion_errored(self, func, exception):
+        name = self.context_name_prefix + make_readable(func.__name__)
         error_summary = format_exception(exception)
 
         self.output_buffers(name)
