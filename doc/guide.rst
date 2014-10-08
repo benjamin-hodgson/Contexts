@@ -15,6 +15,12 @@ Command line usage
 ``run-contexts {directory}`` will run the tests in the specified directory (or package)
 and any subdirectories (or packages).
 
+``run-contexts {filename}:{classname}`` will run a single test. Example: ``run-contexts test/my_test.py:MyTestClass``.
+
+.. note::
+    Running a single class is currently not compatible with :ref:`assertion rewriting <_assertion>`.
+
+
 ``run-contexts`` accepts the following command-line flags:
 
 * ``-h`` or ``--help``: Print a help message and exit.
@@ -27,7 +33,7 @@ and any subdirectories (or packages).
 * ``--no-colour``: Disable output colouring.
 * ``--no-random``: Disable test order randomisation. Note that, even with randomisation disabled,
   Contexts makes no promises about the order in which tests will be run.
-* ``--no-assert``: Disable 'assertion rewriting' - don't try to add helpful messages to assertions made with
+* ``--no-assert``: Disable :ref:`assertion rewriting <_assertion>` - don't try to add helpful messages to assertions made with
   the `assert` statement.
 
 
