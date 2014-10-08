@@ -7,7 +7,7 @@ from contexts.plugins.importing import Importer
 
 
 THIS_FILE = os.path.realpath(__file__)
-TEST_DATA_DIR = os.path.join(os.path.dirname(THIS_FILE), "test_data")
+TEST_DATA_DIR = os.path.join(os.path.dirname(THIS_FILE), os.pardir, "test_data")
 
 
 class WhenImportingAModule:
