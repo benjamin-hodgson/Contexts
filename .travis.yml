@@ -18,4 +18,5 @@ deploy:
     secure: "RxxMi03He8ewTxT/bpelHuiCYFzQsqQNOhkEMuAx+sJJRHdLoh6aLb93HA99Vfp5MJwaZPem7VWq3ke4OOkAjRCHKYWrDcE9SRL1Yn3nauTmQ5hh6hmBzIF9ZmXYdx88IMy4sOkg6eL8gmuVSJD/3iVCdoNltoWgkIF/ecedVng="
   on:
     tags: true
-  distributions: "sdist bdist_wheel"
+    all_branches: true
+  distributions: "sdist bdist_wheel bdist_egg"
