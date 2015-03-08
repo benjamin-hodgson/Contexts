@@ -60,7 +60,11 @@ def assert_not_ambiguous(name, keywords):
 
     for word in get_lowercase_words(name):
         if any(word in s for s in all_keyword_sets):
-            msg = "The method {} is ambiguously named".format(name)
+            msg = """The method {} is ambiguously named.
+You can override this check by explicitly marking your
+method using one of the decorators in the 'contexts' module:
+http://contexts.readthedocs.org/en/latest/guide.html#overriding-name-based-usage
+""".format(name)
             raise errors.MethodNamingError(msg)
 
 
