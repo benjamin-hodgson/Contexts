@@ -2,16 +2,18 @@ import os.path
 import re
 from contexts.plugin_interface import TEST_FOLDER, TEST_FILE, CONTEXT, EXAMPLES, SETUP, ACTION, ASSERTION, TEARDOWN
 from contexts import errors
+from .. import cleverly_get_words
 
 
 folder_re = re.compile(r"[Ss]pec|[Tt]est")
 file_re = re.compile(r"([Ss]pec|[Tt]est).*?\.py$")
 class_re = re.compile(r"[Ss]pec|[Ww]hen")
-example_re = re.compile(r"[Ee]xample|[Dd]ata")
-establish_re = re.compile(r"[Ee]stablish|[Cc]ontext|[Gg]iven")
-because_re = re.compile(r"[Bb]ecause|[Ww]hen|[Ss]ince|[Aa]fter")
-should_re = re.compile(r"[Ss]hould|((^|[a-z]|_)I|(^|_)i)t|[Mm]ust|[Ww]ill|[Tt]hen")
-cleanup_re = re.compile(r"[Cc]leanup")
+
+example_words = frozenset(("example", "examples", "data"))
+setup_words = frozenset(("establish", "context", "given"))
+action_words = frozenset(("because", "when", "since", "after"))
+assertion_words = frozenset(("should", "it", "must", "will", "then"))
+cleanup_words = frozenset(("cleanup",))
 
 
 class NameBasedIdentifier(object):
@@ -34,27 +36,33 @@ class NameBasedIdentifier(object):
 
     def identify_method(self, method):
         d = {
-            example_re: EXAMPLES,
-            establish_re: SETUP,
-            because_re: ACTION,
-            should_re: ASSERTION,
-            cleanup_re: TEARDOWN
+            example_words: EXAMPLES,
+            setup_words: SETUP,
+            action_words: ACTION,
+            assertion_words: ASSERTION,
+            cleanup_words: TEARDOWN
         }
         name = method.__name__
 
-        for regex in d:
-            if regex.search(name):
-                assert_not_ambiguous(name, regex)
-                return d[regex]
+        for word in get_lowercase_words(name):
+            for keywords in d:
+                if word in keywords:
+                    assert_not_ambiguous(name, keywords)
+                    return d[keywords]
 
     def __eq__(self, other):
         return type(self) == type(other)
 
 
-def assert_not_ambiguous(name, regex):
-    all_regexes = {example_re, establish_re, because_re, should_re, cleanup_re}
-    all_regexes.remove(regex)
+def assert_not_ambiguous(name, keywords):
+    all_keyword_sets = {example_words, setup_words, action_words, assertion_words, cleanup_words}
+    all_keyword_sets.remove(keywords)
 
-    if any(r.search(name) for r in all_regexes):
-        msg = "The method {} is ambiguously named".format(name)
-        raise errors.MethodNamingError(msg)
+    for word in get_lowercase_words(name):
+        if any(word in s for s in all_keyword_sets):
+            msg = "The method {} is ambiguously named".format(name)
+            raise errors.MethodNamingError(msg)
+
+
+def get_lowercase_words(string):
+    return (s.lower() for s in cleverly_get_words(string))

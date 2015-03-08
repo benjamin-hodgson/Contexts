@@ -2,7 +2,7 @@ import os.path
 import contexts
 from contexts.plugin_interface import TEST_FOLDER, TEST_FILE, CONTEXT, EXAMPLES, SETUP, ACTION, ASSERTION, TEARDOWN
 from contexts.plugins.identification import NameBasedIdentifier
-from contexts import assertion
+from contexts import assertion, examples
 
 
 class WhenIdentifyingAFolder:
@@ -474,6 +474,24 @@ class WhenIdentiyingANormalMethod:
         self.identifier = NameBasedIdentifier()
 
     def because_the_framework_asks_the_plugin_to_identify_the_method(self, method):
+        self.result = self.identifier.identify_method(method)
+
+    def it_should_ignore_it(self):
+        assert self.result is None
+
+
+class WhenAMethodContainsAKeywordAsPartOfAWord:
+    @classmethod
+    @examples
+    def examples_of_methods_with_it_in_part_of_a_word(self):
+        def itinerary(self):
+            pass
+        yield itinerary
+
+    def given_an_identifier(self):
+        self.identifier = NameBasedIdentifier()
+
+    def when_i_identify_the_method(self, method):
         self.result = self.identifier.identify_method(method)
 
     def it_should_ignore_it(self):

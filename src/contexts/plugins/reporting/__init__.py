@@ -1,7 +1,7 @@
-import re
 import sys
 import traceback
 from ...plugin_interface import PluginInterface, NO_EXAMPLE
+from .. import cleverly_get_words
 
 
 class StreamReporter(PluginInterface):
@@ -40,19 +40,18 @@ class ExitCodeReporter(object):
 
 
 def make_readable(string):
-    regex = re.compile(r'(_|\.|{}|{}|{})'.format(
-        r'(?<=[^A-Z])(?=[A-Z])',
-        r'(?<=[A-Z])(?=[A-Z][a-z])',
-        r'(?<=[A-Za-z])(?=[^A-Za-z])'
-    ))
-    words = regex.sub(' ', string).split(' ')
+    words = cleverly_get_words(string)
+    cased_words = cleverly_adjust_case(words)
+    return ' '.join(cased_words)
 
+
+def cleverly_adjust_case(words):
     cased_words = [words[0]]
     for word in words[1:]:
         should_lowerise = (not word.isupper()) or (len(word) == 1)
         cased_word = word.lower() if should_lowerise else word
         cased_words.append(cased_word)
-    return ' '.join(cased_words)
+    return cased_words
 
 
 def context_name(name, example):
