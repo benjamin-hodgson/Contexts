@@ -24,7 +24,7 @@ class CommandLineSupplier(object):
         path = os.path.realpath(path)
 
         if not os.path.isfile(path) and not os.path.isdir(path):
-            raise ValueError("You have to supply a real path")
+            raise ValueError("File or folder not found: {}".format(path))
 
         # i feel awful about this
         if classname:
