@@ -100,8 +100,20 @@ class AssertionChildVisitor(ast.NodeVisitor):
         return statements
 
     def visit_Call(self, call_node):
-        func_name = call_node.func
-        if hasattr(func_name, 'id') and func_name.id == "isinstance":
+        func_node = call_node.func
+        if isinstance(func_node, ast.Name) and func_node.id == "isinstance":
+            # original code was:
+            # assert isinstance(obj, cls_or_tuple)
+            #
+            # generated code is:
+            #
+            # @contexts_assertion_var1 = obj
+            # @contexts_assertion_var2 = cls_or_tuple
+            # @contexts_assertion_var3 = obj.__class__
+            # @contexts_assertion_var4 = (tuple(@x.__name__ for @x in @contexts_assertion_var2)
+            #                             if isinstance(@contexts_assertion_var2, tuple)
+            #                             else @contexts_assertion_var2.__name__)
+            # assert isinstance(@contexts_assertion_var1, @contexts_assertion_var2), 'Asserted isinstance({0}, {1}) but found it to be a {2}'.format(@contexts_assertion_var1, repr(@contexts_assertion_var4).replace("'", ""), @contexts_assertion_var3)
             return [
                 self.assign('@contexts_assertion_var1', call_node.args[0]),
                 self.assign('@contexts_assertion_var2', call_node.args[1]),
@@ -127,7 +139,30 @@ class AssertionChildVisitor(ast.NodeVisitor):
                         self.repr(self.load('@contexts_assertion_var1')),
                         ast.Call(func=self.getattr(self.repr(self.load('@contexts_assertion_var4')), 'replace'), args=[ast.Str("'"), ast.Str("")], keywords=[]),
                         self.load('@contexts_assertion_var3'),
-                ])),
+                ]))
+            ]
+        if isinstance(func_node, ast.Name) and func_node.id == "all":
+            # original code was:
+            #
+            # assert all(iterable)
+            #
+            # generated code is:
+            #
+            # @contexts_assertion_var1 = iterable
+            # for @contexts_assertion_var_ix, @contexts_assertion_var_elem in enumerate(@contexts_assertion_var1):
+            #     assert x, "Not all elements of {} were truthy. First falsy element: {} at position {}".format(@contexts_assertion_var1, @contexts_assertion_var_ix, @contexts_assertion_var_elem)
+            return [
+                self.assign('@contexts_assertion_var1', call_node.args[0]),
+                ast.For(ast.Tuple([ast.Name("@contexts_assertion_var_ix", ast.Store()),
+                                   ast.Name("@contexts_assertion_var_elem", ast.Store())], ast.Store()), ast.Call(self.load("enumerate"), [self.load('@contexts_assertion_var1')], [], None, None), [
+                    ast.Assert(
+                        self.load('@contexts_assertion_var_elem'),
+                        self.format("Not all elements of {0} were truthy. First falsy element: {1} at position {2}", [
+                            self.repr(self.load('@contexts_assertion_var1')),
+                            self.repr(self.load('@contexts_assertion_var_elem')),
+                            self.load('@contexts_assertion_var_ix'),
+                    ]))
+                ], [])
             ]
 
     def visit_Name(self, name_node):

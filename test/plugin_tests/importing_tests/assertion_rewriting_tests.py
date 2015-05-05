@@ -222,7 +222,7 @@ def assertion_func():
         assert self.exc.args[0] == "Asserted {0} == {1} but found them not to be equal".format(repr(x), repr(y))
 
 
-# this is a test for one of the weirdest bugs i've ever seen.
+# this is a test for a super weird bug.
 # Commented for now because i don't know how to fix it
 # class WhenAnAssertionTakesUpMultipleLines(AssertionRewritingSharedContext):
 #     def context(self):
@@ -712,3 +712,21 @@ def assertion_func():
         # FIXME: this should have a more useful message.
         # At the moment, the test is just making sure that the message doesn't lie outright.
         assert self.exc.args[0] == "Asserted False but found it to be falsy"
+
+
+class WhenAssertingAll(AssertionRewritingSharedContext):
+    def context(self):
+        self.code = """
+def assertion_func():
+    assert all([True, 1, 0, False, "", "hello"])
+"""
+        self.write_file()
+
+    @action
+    def when_we_import_the_module_and_prompt_it_to_raise_the_exception(self):
+        self.module = self.importer.import_module(TEST_DATA_DIR, self.module_name)
+        self.exc = contexts.catch(self.module.assertion_func)
+
+    @assertion
+    def the_exception_should_be_given_a_generated_message(self):
+        assert self.exc.args[0] == "Not all elements of [True, 1, 0, False, '', 'hello'] were truthy. First falsy element: 0 at position 2"
