@@ -26,7 +26,7 @@ builtin_plugins = [
 
 setup(
     name="Contexts",
-    version="0.10.1",
+    version="0.10.2",
     author="Benjamin Hodgson",
     author_email="benjamin.hodgson@huddle.net",
     url="https://github.com/benjamin-hodgson/Contexts",
