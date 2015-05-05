@@ -714,6 +714,42 @@ def assertion_func():
         assert self.exc.args[0] == "Asserted False but found it to be falsy"
 
 
+class WhenAssertingAnd(AssertionRewritingSharedContext):
+    def context(self):
+        self.code = """
+def assertion_func():
+    assert True and '' and 1
+"""
+        self.write_file()
+
+    @action
+    def when_we_import_the_module_and_prompt_it_to_raise_the_exception(self):
+        self.module = self.importer.import_module(TEST_DATA_DIR, self.module_name)
+        self.exc = contexts.catch(self.module.assertion_func)
+
+    @assertion
+    def the_exception_should_be_given_a_generated_message(self):
+        assert self.exc.args[0] == "Asserted True and '' and 1 but found one to be falsy"
+
+
+class WhenAssertingOr(AssertionRewritingSharedContext):
+    def context(self):
+        self.code = """
+def assertion_func():
+    assert False or '' or 0
+"""
+        self.write_file()
+
+    @action
+    def when_we_import_the_module_and_prompt_it_to_raise_the_exception(self):
+        self.module = self.importer.import_module(TEST_DATA_DIR, self.module_name)
+        self.exc = contexts.catch(self.module.assertion_func)
+
+    @assertion
+    def the_exception_should_be_given_a_generated_message(self):
+        assert self.exc.args[0] == "Asserted False or '' or 0 but found them all to be falsy"
+
+
 class WhenAssertingAll(AssertionRewritingSharedContext):
     def context(self):
         self.code = """

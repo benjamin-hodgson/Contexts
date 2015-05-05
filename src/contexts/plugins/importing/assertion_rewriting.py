@@ -58,6 +58,25 @@ class AssertionChildVisitor(ast.NodeVisitor):
         ret = super().visit(node)
         return ret if ret is not None else self.visit_unknown_node(node)
 
+    def visit_BoolOp(self, boolop_node):
+        statements = []
+        format_params = []
+        new_comparators = []
+        for i, comparator in enumerate(boolop_node.values):
+            name = '@contexts_assertion_var' + str(i)
+            statements.append(self.assign(name, comparator))
+            new_comparators.append(self.load(name))
+            format_params.append(self.repr(self.load(name)))
+        if isinstance(boolop_node.op, ast.And):
+            format_string = "Asserted " + (" and ".join("{}" for _ in format_params)) + " but found one to be falsy"
+            msg = self.format(format_string, format_params)
+        elif isinstance(boolop_node.op, ast.Or):
+            format_string = "Asserted " + (" or ".join("{}" for _ in format_params)) + " but found them all to be falsy"
+            msg = self.format(format_string, format_params)
+
+        statements.append(ast.Assert(ast.BoolOp(boolop_node.op, new_comparators), msg))
+        return statements
+
     def visit_Compare(self, compare_node):
         if len(compare_node.comparators) > 1:
             return
