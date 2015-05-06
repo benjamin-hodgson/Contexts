@@ -1,5 +1,6 @@
 import re
 
+
 def cleverly_get_words(string):
     regex = re.compile(r'(_|\.|{}|{}|{})'.format(
         r'(?<=[^A-Z])(?=[A-Z])',

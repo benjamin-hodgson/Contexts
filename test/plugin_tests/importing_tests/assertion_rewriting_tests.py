@@ -123,7 +123,7 @@ class WhenUserAssertsNot(AssertionRewritingSharedContext):
         yield 1
         yield 12.3
         yield 'a'
-        yield {'fantastic':'wonderful'}
+        yield {'fantastic': 'wonderful'}
         yield [{}]
 
     def context(self, x):
@@ -201,7 +201,7 @@ class WhenUserAssertsEqual(AssertionRewritingSharedContext):
         yield 1, 2
         yield 'a', 'b'
         yield (), 3.2
-        yield {'fantastic':'wonderful'}, {'fantastic':['not equal']}
+        yield {'fantastic': 'wonderful'}, {'fantastic': ['not equal']}
 
     def context(self, x, y):
         self.code = """
@@ -222,7 +222,7 @@ def assertion_func():
         assert self.exc.args[0] == "Asserted {0} == {1} but found them not to be equal".format(repr(x), repr(y))
 
 
-# this is a test for a super weird bug.
+# FIXME: this is a test for a super weird bug.
 # Commented for now because i don't know how to fix it
 # class WhenAnAssertionTakesUpMultipleLines(AssertionRewritingSharedContext):
 #     def context(self):
@@ -251,7 +251,7 @@ class WhenUserAssertsEqualOnACustomObject(AssertionRewritingSharedContext):
         yield 1
         yield 'a'
         yield ()
-        yield {'fantastic':'wonderful'}
+        yield {'fantastic': 'wonderful'}
 
     def context(self, x):
         self.code = """
@@ -284,7 +284,7 @@ class WhenUserAssertsEqualOnAFunctionCallOnTheLeft(AssertionRewritingSharedConte
         yield 1, 2
         yield 'a', 'b'
         yield (), 3.2
-        yield {'fantastic':'wonderful'}, {'fantastic':['not equal']}
+        yield {'fantastic': 'wonderful'}, {'fantastic': ['not equal']}
 
     def context(self, x, y):
         self.code = """
@@ -316,7 +316,7 @@ class WhenUserAssertsEqualOnAFunctionCallOnTheRight(AssertionRewritingSharedCont
         yield 1, 2
         yield 'a', 'b'
         yield (), 3.2
-        yield {'fantastic':'wonderful'}, {'fantastic':['not equal']}
+        yield {'fantastic': 'wonderful'}, {'fantastic': ['not equal']}
 
     def context(self, x, y):
         self.code = """
@@ -349,7 +349,7 @@ class WhenUserAssertsNotEqual(AssertionRewritingSharedContext):
         yield 12.3
         yield 'a'
         yield ()
-        yield {'fantastic':'wonderful'}
+        yield {'fantastic': 'wonderful'}
 
     def context(self, x):
         self.code = """
@@ -561,7 +561,7 @@ def assertion_func():
 class WhenUserAssertsNotIn(AssertionRewritingSharedContext):
     @classmethod
     def examples_of_things_that_are_contained_by_their_partners(cls):
-        yield 1, [1,2,'z']
+        yield 1, [1, 2, 'z']
         yield 12.3, {18.4: 'hello', 12.3: 'there'}
         yield 'a', 'zabc'
         yield (1, 3), (2, 1, (1, 3))
@@ -592,7 +592,7 @@ class WhenUserAssertsIs(AssertionRewritingSharedContext):
         yield 'a', 'b'
         yield (), 3.2
         # objects that compare equal but are not the same object
-        yield {'fantastic':'wonderful'}, {'fantastic':'wonderful'}
+        yield {'fantastic': 'wonderful'}, {'fantastic': 'wonderful'}
 
     def context(self, x, y):
         self.code = """
@@ -620,7 +620,7 @@ class WhenUserAssertsIsNot(AssertionRewritingSharedContext):
         yield 12.3
         yield 'a'
         yield ()
-        yield {'fantastic':'wonderful'}
+        yield {'fantastic': 'wonderful'}
 
     def context(self, x):
         self.code = """

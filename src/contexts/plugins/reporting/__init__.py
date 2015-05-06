@@ -7,8 +7,10 @@ from .. import cleverly_get_words
 class StreamReporter(PluginInterface):
     def __init__(self, stream=sys.stdout):
         self.stream = stream
+
     def _print(self, string, end='\n'):
         print(string, end=end, file=self.stream, flush=True)
+
     def __eq__(self, other):
         return type(self) == type(other) and self.stream == other.stream
 
@@ -18,23 +20,31 @@ class ExitCodeReporter(object):
     def locate(cls):
         from .cli import FailuresOnlyBefore
         return (None, FailuresOnlyBefore)
+
     def initialise(self, args, env):
         return True
 
     def __init__(self):
         self.exit_code = 0
+
     def get_exit_code(self):
         return self.exit_code
+
     def assertion_failed(self, func, exception):
         self.exit_code = 1
+
     def assertion_errored(self, func, exception):
         self.exit_code = 1
+
     def context_errored(self, name, example, exception):
         self.exit_code = 1
+
     def test_class_errored(self, cls, exception):
         self.exit_code = 1
+
     def unexpected_error(self, exception):
         self.exit_code = 1
+
     def __eq__(self, other):
         return type(self) == type(other)
 

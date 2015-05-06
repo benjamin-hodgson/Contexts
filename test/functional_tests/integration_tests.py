@@ -1,4 +1,3 @@
-import collections.abc
 import os
 import shutil
 import types
@@ -20,6 +19,7 @@ class WhenAPluginSuppliesAFileToRun:
 
         self.module = types.ModuleType(self.module_name)
         self.ran = False
+
         class When:
             def it(s):
                 self.ran = True
@@ -41,7 +41,7 @@ class WhenAPluginSuppliesAFileToRun:
         os.remove(self.filename)
 
     def write_file(self):
-        self.filename = os.path.join(TEST_DATA_DIR, self.module_name+".py")
+        self.filename = os.path.join(TEST_DATA_DIR, self.module_name + ".py")
         with open(self.filename, 'w+') as f:
             f.write('')
 
@@ -52,8 +52,10 @@ class WhenRunningAFile:
         self.write_file()
 
         self.module = types.ModuleType(self.module_name)
+
         class When:
             ran = False
+
             def it(self):
                 self.__class__.ran = True
         self.module.When = When
@@ -88,7 +90,7 @@ class WhenRunningAFile:
         self.plugin_master.assert_has_calls([
             mock.call.noop_plugin.import_module(TEST_DATA_DIR, self.module_name),
             mock.call.plugin.import_module(TEST_DATA_DIR, self.module_name)
-            ])
+        ])
 
     @assertion
     def it_should_not_ask_any_plugins_after_the_one_that_returned(self):
@@ -107,7 +109,7 @@ class WhenRunningAFile:
         os.remove(self.filename)
 
     def write_file(self):
-        self.filename = os.path.join(TEST_DATA_DIR, self.module_name+".py")
+        self.filename = os.path.join(TEST_DATA_DIR, self.module_name + ".py")
         with open(self.filename, 'w+') as f:
             f.write('')
 
@@ -146,7 +148,7 @@ class WhenRunningAFileInAPackage:
         self.folder_location = os.path.join(TEST_DATA_DIR, self.package_name)
         os.mkdir(self.folder_location)
 
-        self.filename = os.path.join(self.folder_location, self.module_name+".py")
+        self.filename = os.path.join(self.folder_location, self.module_name + ".py")
         with open(os.path.join(self.folder_location, '__init__.py'), 'w+') as f:
             f.write('')
         with open(self.filename, 'w+') as f:
@@ -194,7 +196,7 @@ class WhenRunningAFileInASubPackage:
         with open(os.path.join(subpackage_folder, '__init__.py'), 'w+') as f:
             f.write('')
 
-        self.filename = os.path.join(subpackage_folder, self.module_name+".py")
+        self.filename = os.path.join(subpackage_folder, self.module_name + ".py")
         with open(self.filename, 'w+') as f:
             f.write('')
 
@@ -252,7 +254,7 @@ class WhenAPluginFailsToImportAModule:
         self.folder_path = os.path.join(TEST_DATA_DIR, 'plugin_failing_folder')
         os.mkdir(self.folder_path)
 
-        self.filename = os.path.join(self.folder_path, self.module_name+".py")
+        self.filename = os.path.join(self.folder_path, self.module_name + ".py")
         with open(self.filename, 'w+') as f:
             f.write("")
 
@@ -264,9 +266,11 @@ class WhenAPluginSuppliesAFolderToRun:
 
         self.ran = False
         self.module = types.ModuleType(self.module_name)
+
         class Class:
             def it(s):
                 self.ran = True
+
         self.module.Class = Class
 
         self.plugin = mock.Mock(spec=PluginInterface)
@@ -289,7 +293,7 @@ class WhenAPluginSuppliesAFolderToRun:
         self.folder_path = os.path.join(TEST_DATA_DIR, 'non_package_folder')
         os.mkdir(self.folder_path)
 
-        filename = os.path.join(self.folder_path, self.module_name+".py")
+        filename = os.path.join(self.folder_path, self.module_name + ".py")
         with open(filename, 'w+') as f:
             f.write('')
 
@@ -300,21 +304,27 @@ class WhenRunningAFolderWhichIsNotAPackage:
         self.setup_filesystem()
 
         self.module1 = types.ModuleType(self.module_names[0])
+
         class Class1:
             ran = False
+
             def it(self):
                 self.__class__.ran = True
+
         self.module1.Class1 = Class1
         self.module2 = types.ModuleType(self.module_names[1])
+
         class Class2:
             ran = False
+
             def it(self):
                 self.__class__.ran = True
+
         self.module2.Class2 = Class2
 
         def identify_file(path):
-            if (path == os.path.join(self.folder_path, self.module_names[0]+'.py') or
-                path == os.path.join(self.folder_path, self.module_names[1]+'.py')):
+            if (path == os.path.join(self.folder_path, self.module_names[0] + '.py') or
+                path == os.path.join(self.folder_path, self.module_names[1] + '.py')):  # noqa
                 return TEST_FILE
 
         self.plugin = mock.Mock(spec=PluginInterface)
@@ -348,13 +358,13 @@ class WhenRunningAFolderWhichIsNotAPackage:
         self.plugin.suite_started.assert_has_calls([
             mock.call(self.module1),
             mock.call(self.module2)
-            ], any_order=True)
+        ], any_order=True)
 
     def it_should_call_suite_ended_with_the_name_of_each_module(self):
         self.plugin.suite_ended.assert_has_calls([
             mock.call(self.module1),
             mock.call(self.module2)
-            ], any_order=True)
+        ], any_order=True)
 
     def cleanup_the_file_system(self):
         shutil.rmtree(self.folder_path)
@@ -364,7 +374,7 @@ class WhenRunningAFolderWhichIsNotAPackage:
         os.mkdir(self.folder_path)
 
         for module_name in self.module_names:
-            filename = os.path.join(self.folder_path, module_name+".py")
+            filename = os.path.join(self.folder_path, module_name + ".py")
             with open(filename, 'w+') as f:
                 f.write('')
 
@@ -375,12 +385,15 @@ class WhenPluginsModifyAModuleList:
         self.setup_filesystem()
 
         self.ran_spies = []
+
         class Class1:
             def it_should_run_this(s):
                 self.ran_spies.append('module1')
+
         class Class2:
             def it_should_run_this(s):
                 self.ran_spies.append('module2')
+
         self.module1 = types.ModuleType('module1')
         self.module1.Class1 = Class1
         self.module2 = types.ModuleType('module2')
@@ -429,7 +442,7 @@ class WhenPluginsModifyAModuleList:
         os.mkdir(self.folder_path)
 
         for module_name in self.module_names:
-            filename = os.path.join(self.folder_path, module_name+".py")
+            filename = os.path.join(self.folder_path, module_name + ".py")
             with open(filename, 'w+') as f:
                 f.write('')
 
@@ -441,22 +454,31 @@ class WhenRunningAFolderWhichIsAPackage:
         self.setup_filesystem()
 
         self.module1 = types.ModuleType(self.package_name)
+
         class Class1:
             ran = False
+
             def it(self):
                 self.__class__.ran = True
+
         self.module1.Class1 = Class1
         self.module2 = types.ModuleType(self.package_name + '.' + self.module_names[1])
+
         class Class2:
             ran = False
+
             def it(self):
                 self.__class__.ran = True
+
         self.module2.Class2 = Class2
         self.module3 = types.ModuleType(self.package_name + '.' + self.module_names[2])
+
         class Class3:
             ran = False
+
             def it(self):
                 self.__class__.ran = True
+
         self.module3.Class3 = Class3
 
         self.plugin = mock.Mock()
@@ -511,7 +533,7 @@ class WhenRunningAFolderWhichIsAPackage:
         os.mkdir(self.folder_path)
 
         for module_name in self.module_names:
-            filename = os.path.join(self.folder_path, module_name+".py")
+            filename = os.path.join(self.folder_path, module_name + ".py")
             with open(filename, 'w+') as f:
                 f.write('')
 
@@ -529,7 +551,7 @@ class WhenRunningAFolderWithSubfolders:
 
         def identify_folder(folder_path):
             if (folder_path == os.path.join(self.folder_path, "wanted_subfolder") or
-                folder_path == os.path.join(self.folder_path, "wanted_subpackage")):
+                folder_path == os.path.join(self.folder_path, "wanted_subpackage")):  # noqa
                 return TEST_FOLDER
         self.plugin = mock.Mock(spec=PluginInterface)
         self.plugin.identify_file.return_value = TEST_FILE
@@ -548,7 +570,7 @@ class WhenRunningAFolderWithSubfolders:
         self.plugin.import_module.assert_has_calls([
             mock.call(self.folder_path, "wanted_subpackage"),
             mock.call(self.folder_path, "wanted_subpackage.test_file2")
-            ])
+        ])
 
     def it_should_not_import_the_non_test_package(self):
         assert mock.call(mock.ANY, "another_subpackage") not in self.plugin.import_module.call_args_list
@@ -590,7 +612,7 @@ class WhenRunningAPackageWithSubfolders:
 
         def identify_folder(folder_path):
             if (folder_path == os.path.join(self.folder_path, "wanted_subfolder") or
-                folder_path == os.path.join(self.folder_path, "wanted_subpackage")):
+                folder_path == os.path.join(self.folder_path, "wanted_subpackage")):  # noqa
                 return TEST_FOLDER
         self.plugin = mock.Mock(spec=PluginInterface)
         self.plugin.identify_file.return_value = TEST_FILE
@@ -670,10 +692,13 @@ class WhenRunningAFolderWithAFileThatFailsToImport:
         self.setup_filesystem()
 
         self.module = types.ModuleType(self.module_names[1])
+
         class Spec:
             ran = False
+
             def it(self):
                 self.__class__.ran = True
+
         self.module.Spec = Spec
 
         self.exception = Exception()
@@ -697,7 +722,7 @@ class WhenRunningAFolderWithAFileThatFailsToImport:
         self.folder_path = os.path.join(TEST_DATA_DIR, 'problematic_folder')
         os.mkdir(self.folder_path)
 
-        self.filenames = [os.path.join(self.folder_path, n+".py") for n in self.module_names]
+        self.filenames = [os.path.join(self.folder_path, n + ".py") for n in self.module_names]
         with open(self.filenames[0], 'w+') as f:
             f.write('')
         with open(self.filenames[1], 'w+') as f:

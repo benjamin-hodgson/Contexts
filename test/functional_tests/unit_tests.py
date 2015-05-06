@@ -14,9 +14,11 @@ this_file = repr(__file__)[1:-1]
 class WhenAPluginSuppliesAClassToRun:
     def context(self):
         self.ran_method = False
+
         class TestSpec:
             def method(s):
                 self.ran_method = True
+
         self.spec = TestSpec
         self.plugin = mock.Mock(spec=PluginInterface)
         self.plugin.get_object_to_run.return_value = TestSpec
@@ -32,20 +34,26 @@ class WhenAPluginSuppliesAClassToRun:
 class WhenAPluginIdentifiesMethods:
     def context(self):
         self.log = []
+
         class TestSpec:
             @classmethod
             def method_zero(cls):
                 self.log.append("examples")
                 yield 1
                 yield 2
+
             def method_one(s, example):
                 self.log.append(("setup", example))
+
             def method_two(s, example):
                 self.log.append(("action", example))
+
             def method_three(s, example):
                 self.log.append(("assertion", example))
+
             def method_four(s, example):
                 self.log.append(("teardown", example))
+
         self.spec = TestSpec
 
         self.none_plugin = mock.Mock(spec=PluginInterface)
@@ -65,7 +73,6 @@ class WhenAPluginIdentifiesMethods:
 
         self.too_late_plugin = mock.Mock(spec=PluginInterface)
 
-
     def because_we_run_the_spec(self):
         run_object(self.spec, [self.none_plugin, self.deleted_plugin, self.plugin, self.too_late_plugin])
 
@@ -75,12 +82,12 @@ class WhenAPluginIdentifiesMethods:
 
     def it_should_ask_the_plugin_to_identify_each_method(self):
         self.plugin.identify_method.assert_has_calls([
-                mock.call(self.spec.method_zero),
-                mock.call(self.spec.method_one),
-                mock.call(self.spec.method_two),
-                mock.call(self.spec.method_three),
-                mock.call(self.spec.method_four)
-            ], any_order=True)
+            mock.call(self.spec.method_zero),
+            mock.call(self.spec.method_one),
+            mock.call(self.spec.method_two),
+            mock.call(self.spec.method_three),
+            mock.call(self.spec.method_four)
+        ], any_order=True)
 
     def it_should_not_ask_the_one_that_was_too_late(self):
         assert not self.too_late_plugin.identify_method.called
@@ -102,11 +109,14 @@ class WhenAPluginIdentifiesMethods:
 class WhenAPluginIdentifiesMultipleAssertions:
     def establish_that_the_plugin_identifies_two_assertions(self):
         self.log = []
+
         class Spec:
             def method_one(s):
                 self.log.append('assertion')
+
             def method_two(s):
                 self.log.append('assertion')
+
         self.spec = Spec
         self.plugin = mock.Mock(spec=PluginInterface)
         self.plugin.identify_method.return_value = ASSERTION
@@ -121,9 +131,11 @@ class WhenAPluginIdentifiesMultipleAssertions:
 class WhenAPluginRefusesToIdentifyAMethod:
     def establish_that_the_plugin_returns_none(self):
         self.log = []
+
         class Spec:
             def method_one(s):
                 self.log.append("should not happen")
+
         self.spec = Spec
         self.plugin = mock.Mock(spec=PluginInterface)
         self.plugin.identify_method.return_value = None
@@ -138,31 +150,42 @@ class WhenAPluginRefusesToIdentifyAMethod:
 class WhenASpecHasASuperclassAndAPluginIdentifiesMethods:
     def establish_spec_with_superclass(self):
         self.log = []
+
         class Super:
             @classmethod
             def method_zero(s):
                 self.log.append("super examples")
+
             def method_one(s):
                 self.log.append("super setup")
+
             def method_two(s):
                 self.log.append("super action")
+
             def method_three(s):
                 self.log.append("super assertion")
+
             def method_four(s):
                 self.log.append("super teardown")
+
         class Spec(Super):
             @classmethod
             def method_zero_point_five(s):
                 self.log.append("sub examples")
                 yield 1
+
             def method_five(s):
                 self.log.append("sub setup")
+
             def method_six(s):
                 self.log.append("sub action")
+
             def method_seven(s):
                 self.log.append("sub assertion")
+
             def method_eight(s):
                 self.log.append("sub teardown")
+
         self.super = Super
         self.spec = Spec
 
@@ -229,11 +252,14 @@ class WhenAPluginReturnsMultipleMethodsOfTheSameType:
 
     def context(self, side_effect):
         self.ran_a_method = False
+
         class Spec:
             def method_one(s):
                 self.ran_a_method = True
+
             def method_two(s):
                 self.ran_a_method = True
+
         self.spec = Spec
 
         self.plugin = mock.Mock(spec=PluginInterface)
@@ -253,14 +279,19 @@ class WhenRunningASpecWithPlugins:
     def context(self):
         class TestSpec:
             log = ""
+
             def method_with_establish_in_the_name(s):
                 s.__class__.log += "arrange "
+
             def method_with_because_in_the_name(s):
                 s.__class__.log += "act "
+
             def method_with_should_in_the_name(s):
                 s.__class__.log += "assert "
+
             def method_with_cleanup_in_the_name(s):
                 s.__class__.log += "teardown "
+
             def __init__(self):
                 TestSpec.instance = self
 
@@ -314,18 +345,23 @@ class WhenRunningASpecWithPlugins:
 class WhenAPluginModifiesAnAssertionList:
     def context(self):
         self.ran_reals = False
+
         class Spec:
             def should1(s):
                 self.ran_reals = True
+
             def should2(s):
                 self.ran_reals = True
+
             def not_an_assertion(s):
                 pass
         self.spec = Spec
 
         self.ran_spies = []
+
         def spy_assertion_method1(s):
             self.ran_spies.append('spy_assertion_method1')
+
         def spy_assertion_method2(s):
             self.ran_spies.append('spy_assertion_method2')
 
@@ -333,7 +369,7 @@ class WhenAPluginModifiesAnAssertionList:
             self.called_with = (cls, l.copy())
             l[:] = [spy_assertion_method1, spy_assertion_method2]
         self.plugin = mock.Mock(spec=PluginInterface)
-        self.plugin.identify_method.side_effect = lambda meth:{
+        self.plugin.identify_method.side_effect = lambda meth: {
             Spec.should1: ASSERTION,
             Spec.should2: ASSERTION,
             Spec.not_an_assertion: None
@@ -360,14 +396,19 @@ class WhenAPluginModifiesAnAssertionList:
 class WhenAnAssertionFails:
     def context(self):
         self.exception = AssertionError()
+
         class TestSpec:
             ran_cleanup = False
+
             def failing_should_method(s):
                 raise self.exception
+
             def second_should_method(s):
                 s.__class__.ran_second = True
+
             def cleanup(s):
                 s.__class__.ran_cleanup = True
+
             def __init__(self):
                 TestSpec.instance = self
 
@@ -378,7 +419,6 @@ class WhenAnAssertionFails:
             TestSpec.second_should_method: ASSERTION,
             TestSpec.cleanup: TEARDOWN
         }[meth]
-
 
     def because_we_run_the_spec(self):
         run_object(self.spec, [self.plugin])
@@ -400,14 +440,19 @@ class WhenAnAssertionFails:
 class WhenAnAssertionErrors:
     def context(self):
         self.exception = Exception()
+
         class TestSpec:
             ran_cleanup = False
+
             def erroring_should_method(s):
                 raise self.exception
+
             def second_should_method(s):
                 s.__class__.ran_second = True
+
             def cleanup(s):
                 s.__class__.ran_cleanup = True
+
             def __init__(self):
                 TestSpec.instance = self
 
@@ -436,16 +481,21 @@ class WhenAnAssertionErrors:
 class WhenAContextErrorsDuringTheSetup:
     def context(self):
         self.exception = Exception()
+
         class ErrorInSetup:
             ran_cleanup = False
             ran_because = False
             ran_assertion = False
+
             def context(s):
                 raise self.exception
+
             def because(s):
                 s.__class__.ran_because = True
+
             def it(s):
                 s.__class__.ran_assertion = True
+
             def cleanup(s):
                 s.__class__.ran_cleanup = True
 
@@ -467,8 +517,10 @@ class WhenAContextErrorsDuringTheSetup:
 
     def it_should_not_run_the_action(self):
         assert not self.spec.ran_because
+
     def it_should_not_run_the_assertion(self):
         assert not self.spec.ran_assertion
+
     @assertion
     def it_should_still_run_the_cleanup(self):
         assert self.spec.ran_cleanup
@@ -477,13 +529,17 @@ class WhenAContextErrorsDuringTheSetup:
 class WhenAContextErrorsDuringTheAction:
     def context(self):
         self.exception = Exception()
+
         class ErrorInAction:
             ran_cleanup = False
             ran_assertion = False
+
             def because(s):
                 raise self.exception
+
             def it(s):
                 s.__class__.ran_assertion = True
+
             def cleanup(s):
                 s.__class__.ran_cleanup = True
 
@@ -513,9 +569,11 @@ class WhenAContextErrorsDuringTheAction:
 class WhenAContextErrorsDuringTheCleanup:
     def context(self):
         self.exception = Exception()
+
         class ErrorInTeardown:
             def it(s):
                 pass
+
             def cleanup(s):
                 raise self.exception
 
@@ -556,12 +614,16 @@ class WhenRunningAClassContainingNoAssertions:
     def context(self):
         class NoAssertions:
             log = []
+
             def context(self):
                 self.__class__.log.append('arrange')
+
             def because(self):
                 self.__class__.log.append('act')
+
             def cleanup(self):
                 self.__class__.log.append('teardown')
+
         self.spec = NoAssertions
 
         self.plugin = mock.Mock(spec=PluginInterface)
@@ -582,16 +644,22 @@ class WhenAPluginChoosesClasses:
     def context(self):
         class ToRun1:
             was_run = False
+
             def it_should_run_this(self):
                 self.__class__.was_run = True
+
         class ToRun2:
             was_run = False
+
             def it_should_run_this(self):
                 self.__class__.was_run = True
+
         class NotToRun:
             was_instantiated = False
+
             def __init__(self):
                 self.__class__.was_instantiated = True
+
         self.module = types.ModuleType('fake_specs')
         self.module.ToRun1 = ToRun1
         self.module.ToRun2 = ToRun2
@@ -629,20 +697,25 @@ class WhenAPluginChoosesClasses:
 class WhenAPluginModifiesAClassList:
     def establish_that_a_plugin_is_fiddling_with_the_list(self):
         self.ran_reals = False
+
         class FoundClass1:
             def it_should_run_this(s):
                 self.ran_reals = True
+
         class FoundClass2:
             def it_should_run_this(s):
                 self.ran_reals = True
 
         self.ran_spies = []
+
         class AnotherClass1:
             def it_should_run_this(s):
                 self.ran_spies.append('AnotherClass1')
+
         class AnotherClass2:
             def it_should_run_this(s):
                 self.ran_spies.append('AnotherClass2')
+
         self.module = types.ModuleType('fake_specs')
         self.module.FoundClass1 = FoundClass1
         self.module.FoundClass2 = FoundClass2

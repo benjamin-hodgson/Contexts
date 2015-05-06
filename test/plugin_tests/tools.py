@@ -49,6 +49,7 @@ class FakeException(Exception):
         self._tb = value
         return self
 
+
 class FakeAssertionError(FakeException, AssertionError):
     pass
 
@@ -69,7 +70,7 @@ def build_fake_exception(tb_list, *args, cls=FakeException):
 
     for filename, lineno, funcname, line in tb_list:
         code = FakeCode(filename, funcname)
-        source_list = ['']*(lineno - 1)
+        source_list = [''] * (lineno - 1)
         source_list.append(line)
         source = '\n'.join(source_list)
         frames.append(FakeFrame(code, source))
@@ -78,11 +79,14 @@ def build_fake_exception(tb_list, *args, cls=FakeException):
     tb = FakeTraceback(frames, line_nums)
     return exc.with_traceback(tb)
 
+
 def build_fake_assertion_error(*args):
     return build_fake_exception(*args, cls=FakeAssertionError)
 
 
 context_spec = collections.namedtuple("context_spec", ["cls", "name", "example"])
+
+
 def create_context(name='context', example=NO_EXAMPLE):
     cls = type(name, (), {})
     return context_spec(cls, name, example)

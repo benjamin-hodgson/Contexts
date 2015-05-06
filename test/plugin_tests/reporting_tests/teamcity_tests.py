@@ -26,19 +26,23 @@ class TeamCitySharedContext:
 class WhenASuiteStartsInTeamCity(TeamCitySharedContext):
     def context(self):
         self.module = types.ModuleType('test_suite')
+
     def because_the_suite_starts(self):
         self.reporter.suite_started(self.module)
+
     def it_should_tell_team_city_the_suite_started(self):
-        assert teamcity_parse(self.stringio.getvalue()) == ("testSuiteStarted", {'name':self.module.__name__})
+        assert teamcity_parse(self.stringio.getvalue()) == ("testSuiteStarted", {'name': self.module.__name__})
 
 
 class WhenASuiteEndsInTeamCity(TeamCitySharedContext):
     def context(self):
         self.module = types.ModuleType('mah_suite')
+
     def because_the_suite_ends(self):
         self.reporter.suite_ended(self.module)
+
     def it_should_tell_team_city_the_suite_ended(self):
-        assert teamcity_parse(self.stringio.getvalue()) == ("testSuiteFinished", {'name':self.module.__name__})
+        assert teamcity_parse(self.stringio.getvalue()) == ("testSuiteFinished", {'name': self.module.__name__})
 
 
 ###########################################################
@@ -48,19 +52,23 @@ class WhenASuiteEndsInTeamCity(TeamCitySharedContext):
 class WhenATestClassStartsInTeamCity(TeamCitySharedContext):
     def context(self):
         self.class_name = 'abc'
+
     def because_the_suite_starts(self):
         self.reporter.test_class_started(type(self.class_name, (), {}))
+
     def it_should_tell_team_city_the_class_started(self):
-        assert teamcity_parse(self.stringio.getvalue()) == ("testClassStarted", {'name':self.class_name})
+        assert teamcity_parse(self.stringio.getvalue()) == ("testClassStarted", {'name': self.class_name})
 
 
 class WhenATestClassEndsInTeamCity(TeamCitySharedContext):
     def context(self):
         self.class_name = 'abc'
+
     def because_the_suite_ends(self):
         self.reporter.test_class_ended(type(self.class_name, (), {}))
+
     def it_should_tell_team_city_the_class_ended(self):
-        assert teamcity_parse(self.stringio.getvalue()) == ("testClassFinished", {'name':self.class_name})
+        assert teamcity_parse(self.stringio.getvalue()) == ("testClassFinished", {'name': self.class_name})
 
 
 class WhenATestClassErrorsInTeamCity(TeamCitySharedContext):
@@ -82,19 +90,22 @@ class WhenATestClassErrorsInTeamCity(TeamCitySharedContext):
         self.reporter.test_class_errored(type(self.class_name, (), {}), self.exception)
 
     def it_should_tell_team_city_a_test_started(self):
-        assert self.parse_line(0) == ("testStarted", {'name':self.class_name})
+        assert self.parse_line(0) == ("testStarted", {'name': self.class_name})
+
     def it_should_tell_team_city_the_test_failed(self):
         assert self.parse_line(1) == (
             "testFailed",
             {
-                'name':self.class_name,
-                'message':'plugin_tests.tools.FakeException: Gotcha',
-                'details':self.formatted_tb
+                'name': self.class_name,
+                'message': 'plugin_tests.tools.FakeException: Gotcha',
+                'details': self.formatted_tb
             })
+
     def it_should_tell_team_city_the_test_finished(self):
-        assert self.parse_line(2) == ("testFinished", {'name':self.class_name})
+        assert self.parse_line(2) == ("testFinished", {'name': self.class_name})
+
     def it_should_tell_team_city_the_class_finished(self):
-        assert self.parse_line(3) == ("testClassFinished", {'name':self.class_name})
+        assert self.parse_line(3) == ("testClassFinished", {'name': self.class_name})
 
 
 ###########################################################
@@ -112,7 +123,7 @@ class WhenAnAssertionStartsInTeamCity(TeamCitySharedContext):
         self.reporter.assertion_started(self.assertion)
 
     def it_should_tell_team_city_it_started(self):
-        assert self.parse_line(0) == ("testStarted", {'name':'My nice context -> a lovely assertion'})
+        assert self.parse_line(0) == ("testStarted", {'name': 'My nice context -> a lovely assertion'})
 
 
 class WhenAnAssertionInAContextWithExamplesStartsInTeamCity(TeamCitySharedContext):
@@ -141,10 +152,12 @@ class WhenAnAssertionPassesInTeamCity(TeamCitySharedContext):
         self.reporter.context_started(context.cls, context.example)
         self.assertion = lambda: None
         self.assertion.__name__ = 'aLovelyAssertion'
+
     def because_the_assertion_ends(self):
         self.reporter.assertion_passed(self.assertion)
+
     def it_should_tell_team_city_it_passed(self):
-        assert self.parse_line(0) == ("testFinished", {'name':'My nice context -> a lovely assertion'})
+        assert self.parse_line(0) == ("testFinished", {'name': 'My nice context -> a lovely assertion'})
 
 
 class WhenAnAssertionInAContextWithExamplesPassesInTeamCity(TeamCitySharedContext):
@@ -154,8 +167,10 @@ class WhenAnAssertionInAContextWithExamplesPassesInTeamCity(TeamCitySharedContex
         self.reporter.context_started(context.cls, context.example)
         self.assertion = lambda: None
         self.assertion.__name__ = 'aLovelyAssertion'
+
     def because_the_assertion_passes(self):
         self.reporter.assertion_passed(self.assertion)
+
     @assertion
     def it_should_report_the_example(self):
         assert self.parse_line(0)[1]['name'] == 'Context with examples -> 12.3 -> a lovely assertion'
@@ -180,13 +195,15 @@ class WhenSomethingGetsPrintedDuringAPassingAssertionInTeamCity(TeamCitySharedCo
 
     def it_should_not_print_anything_to_stdout(self):
         assert self.fake_stdout.getvalue() == ''
+
     def it_should_not_print_anything_to_stderr(self):
         assert self.fake_stderr.getvalue() == ''
 
     def it_should_report_what_went_to_stdout(self):
-        assert self.parse_line(0) == ("testStdOut", {'name':'Context -> assertion', 'out':'to stdout|n'})
+        assert self.parse_line(0) == ("testStdOut", {'name': 'Context -> assertion', 'out': 'to stdout|n'})
+
     def it_should_report_what_went_to_stderr(self):
-        assert self.parse_line(1) == ("testStdErr", {'name':'Context -> assertion', 'out':'to stderr|n'})
+        assert self.parse_line(1) == ("testStdErr", {'name': 'Context -> assertion', 'out': 'to stderr|n'})
 
     def cleanup_stdout_and_stderr(self):
         sys.stdout, sys.stderr = self.real_stdout, self.real_stderr
@@ -204,12 +221,12 @@ class WhenAnAssertionFailsInTeamCity(TeamCitySharedContext):
               ('another_made_up_file.py', 2, 'another_made_up_function', 'frame2')]
         self.exception = tools.build_fake_assertion_error(tb, "Gotcha")
         self.formatted_tb = (
-'Traceback (most recent call last):|n'
-'  File "made_up_file.py", line 3, in made_up_function|n'
-'    frame1|n'
-'  File "another_made_up_file.py", line 2, in another_made_up_function|n'
-'    frame2|n'
-'plugin_tests.tools.FakeAssertionError: Gotcha')
+            'Traceback (most recent call last):|n'
+            '  File "made_up_file.py", line 3, in made_up_function|n'
+            '    frame1|n'
+            '  File "another_made_up_file.py", line 2, in another_made_up_function|n'
+            '    frame2|n'
+            'plugin_tests.tools.FakeAssertionError: Gotcha')
 
         self.reporter.context_started(context.cls, context.example)
 
@@ -223,12 +240,13 @@ class WhenAnAssertionFailsInTeamCity(TeamCitySharedContext):
         assert self.parse_line(0) == (
             "testFailed",
             {
-                'name':'Fake context -> Fake assertion',
-                'message':'plugin_tests.tools.FakeAssertionError: Gotcha',
-                'details':self.formatted_tb
+                'name': 'Fake context -> Fake assertion',
+                'message': 'plugin_tests.tools.FakeAssertionError: Gotcha',
+                'details': self.formatted_tb
             })
+
     def it_should_tell_team_city_it_finished(self):
-        assert self.parse_line(1) == ("testFinished", {'name':'Fake context -> Fake assertion'})
+        assert self.parse_line(1) == ("testFinished", {'name': 'Fake context -> Fake assertion'})
 
 
 class WhenAnAssertionInAContextWithExamplesFailsInTeamCity(TeamCitySharedContext):
@@ -266,13 +284,15 @@ class WhenSomethingGetsPrintedDuringAFailingAssertionInTeamCity(TeamCitySharedCo
 
     def it_should_not_print_anything_to_stdout(self):
         assert self.fake_stdout.getvalue() == ''
+
     def it_should_not_print_anything_to_stderr(self):
         assert self.fake_stderr.getvalue() == ''
 
     def it_should_report_what_went_to_stdout(self):
-        assert self.parse_line(0) == ("testStdOut", {'name':'context -> assertion', 'out':'to stdout|n'})
+        assert self.parse_line(0) == ("testStdOut", {'name': 'context -> assertion', 'out': 'to stdout|n'})
+
     def it_should_report_what_went_to_stderr(self):
-        assert self.parse_line(1) == ("testStdErr", {'name':'context -> assertion', 'out':'to stderr|n'})
+        assert self.parse_line(1) == ("testStdErr", {'name': 'context -> assertion', 'out': 'to stderr|n'})
 
     def cleanup_stdout_and_stderr(self):
         sys.stdout, sys.stderr = self.real_stdout, self.real_stderr
@@ -290,12 +310,12 @@ class WhenAnAssertionErrorsInTeamCity(TeamCitySharedContext):
               ('another_made_up_file.py', 2, 'another_made_up_function', 'frame2')]
         self.exception = tools.build_fake_assertion_error(tb, "Gotcha")
         self.formatted_tb = (
-'Traceback (most recent call last):|n'
-'  File "made_up_file.py", line 3, in made_up_function|n'
-'    frame1|n'
-'  File "another_made_up_file.py", line 2, in another_made_up_function|n'
-'    frame2|n'
-'plugin_tests.tools.FakeAssertionError: Gotcha')
+            'Traceback (most recent call last):|n'
+            '  File "made_up_file.py", line 3, in made_up_function|n'
+            '    frame1|n'
+            '  File "another_made_up_file.py", line 2, in another_made_up_function|n'
+            '    frame2|n'
+            'plugin_tests.tools.FakeAssertionError: Gotcha')
 
         self.reporter.context_started(context.cls, context.example)
 
@@ -309,12 +329,13 @@ class WhenAnAssertionErrorsInTeamCity(TeamCitySharedContext):
         assert self.parse_line(0) == (
             "testFailed",
             {
-                'name':'Fake context -> Fake assertion',
-                'message':'plugin_tests.tools.FakeAssertionError: Gotcha',
-                'details':self.formatted_tb
+                'name': 'Fake context -> Fake assertion',
+                'message': 'plugin_tests.tools.FakeAssertionError: Gotcha',
+                'details': self.formatted_tb
             })
+
     def it_should_tell_team_city_it_finished(self):
-        assert self.parse_line(1) == ("testFinished", {'name':'Fake context -> Fake assertion'})
+        assert self.parse_line(1) == ("testFinished", {'name': 'Fake context -> Fake assertion'})
 
 
 class WhenAnAssertionInAContextWithExamplesErrorsInTeamCity(TeamCitySharedContext):
@@ -354,13 +375,15 @@ class WhenSomethingGetsPrintedDuringAnErroringAssertionInTeamCity(TeamCityShared
 
     def it_should_not_print_anything_to_the_real_stdout(self):
         assert self.fake_stdout.getvalue() == ''
+
     def it_should_not_print_anything_to_the_real_stderr(self):
         assert self.fake_stdout.getvalue() == ''
 
     def it_should_tell_team_city_what_went_to_stdout(self):
-        assert self.parse_line(0) == ("testStdOut", {'name':'Fake context -> Fake assertion 4', 'out':'to stdout|n'})
+        assert self.parse_line(0) == ("testStdOut", {'name': 'Fake context -> Fake assertion 4', 'out': 'to stdout|n'})
+
     def it_should_tell_team_city_what_went_to_stderr(self):
-        assert self.parse_line(1) == ("testStdErr", {'name':'Fake context -> Fake assertion 4', 'out':'to stderr|n'})
+        assert self.parse_line(1) == ("testStdErr", {'name': 'Fake context -> Fake assertion 4', 'out': 'to stderr|n'})
 
     def cleanup_stdout_and_stderr(self):
         sys.stdout, sys.stderr = self.real_stdout, self.real_stderr
@@ -378,12 +401,12 @@ class WhenAContextErrorsInTeamCity(TeamCitySharedContext):
               ('another_made_up_file.py', 2, 'another_made_up_function', 'frame2')]
         self.exception = tools.build_fake_exception(tb, "Gotcha")
         self.formatted_tb = (
-'Traceback (most recent call last):|n'
-'  File "made_up_file.py", line 3, in made_up_function|n'
-'    frame1|n'
-'  File "another_made_up_file.py", line 2, in another_made_up_function|n'
-'    frame2|n'
-'plugin_tests.tools.FakeException: Gotcha')
+            'Traceback (most recent call last):|n'
+            '  File "made_up_file.py", line 3, in made_up_function|n'
+            '    frame1|n'
+            '  File "another_made_up_file.py", line 2, in another_made_up_function|n'
+            '    frame2|n'
+            'plugin_tests.tools.FakeException: Gotcha')
 
         self.reporter.context_started(self.context.cls, self.context.example)
 
@@ -391,17 +414,19 @@ class WhenAContextErrorsInTeamCity(TeamCitySharedContext):
         self.reporter.context_errored(self.context.cls, self.context.example, self.exception)
 
     def it_should_tell_team_city_a_test_started(self):
-        assert self.parse_line(0) == ("testStarted", {'name':'Fake context'})
+        assert self.parse_line(0) == ("testStarted", {'name': 'Fake context'})
+
     def it_should_tell_team_city_the_test_failed(self):
         assert self.parse_line(1) == (
             "testFailed",
             {
-                'name':'Fake context',
-                'message':'plugin_tests.tools.FakeException: Gotcha',
-                'details':self.formatted_tb
+                'name': 'Fake context',
+                'message': 'plugin_tests.tools.FakeException: Gotcha',
+                'details': self.formatted_tb
             })
+
     def it_should_tell_team_city_the_test_finished(self):
-        assert self.parse_line(2) == ("testFinished", {'name':'Fake context'})
+        assert self.parse_line(2) == ("testFinished", {'name': 'Fake context'})
 
 
 class WhenAContextWithExamplesErrorsInTeamCity(TeamCitySharedContext):
@@ -435,13 +460,15 @@ class WhenSomethingGetsPrintedDuringAnErroringContextInTeamCity(TeamCitySharedCo
 
     def it_should_not_print_anything_to_the_real_stdout(self):
         assert self.fake_stdout.getvalue() == ''
+
     def it_should_not_print_anything_to_the_real_stderr(self):
         assert self.fake_stdout.getvalue() == ''
 
     def it_should_tell_team_city_what_went_to_stdout(self):
-        assert self.parse_line(1) == ("testStdOut", {'name':'Fake context', 'out':'to stdout|n'})
+        assert self.parse_line(1) == ("testStdOut", {'name': 'Fake context', 'out': 'to stdout|n'})
+
     def it_should_tell_team_city_what_went_to_stderr(self):
-        assert self.parse_line(2) == ("testStdErr", {'name':'Fake context', 'out':'to stderr|n'})
+        assert self.parse_line(2) == ("testStdErr", {'name': 'Fake context', 'out': 'to stderr|n'})
 
     def cleanup_stdout_and_stderr(self):
         sys.stdout, sys.stderr = self.real_stdout, self.real_stderr
@@ -454,31 +481,33 @@ class WhenSomethingGetsPrintedDuringAnErroringContextInTeamCity(TeamCitySharedCo
 class WhenAnUnexpectedErrorOccursInTeamCity(TeamCitySharedContext):
     def establish_the_exception(self):
         tb = [('made_up_file_7.py', 1, 'made_up_function_7', 'frame7'),
-               ('made_up_file_8.py', 2, 'made_up_function_8', 'frame8')]
+              ('made_up_file_8.py', 2, 'made_up_function_8', 'frame8')]
         self.exception = tools.build_fake_exception(tb, "another exception")
         self.formatted_tb = (
-'Traceback (most recent call last):|n'
-'  File "made_up_file_7.py", line 1, in made_up_function_7|n'
-'    frame7|n'
-'  File "made_up_file_8.py", line 2, in made_up_function_8|n'
-'    frame8|n'
-'plugin_tests.tools.FakeException: another exception')
+            'Traceback (most recent call last):|n'
+            '  File "made_up_file_7.py", line 1, in made_up_function_7|n'
+            '    frame7|n'
+            '  File "made_up_file_8.py", line 2, in made_up_function_8|n'
+            '    frame8|n'
+            'plugin_tests.tools.FakeException: another exception')
 
     def because_an_unexpected_error_occurs(self):
         self.reporter.unexpected_error(self.exception)
 
     def it_should_tell_team_city_a_test_started(self):
-        assert self.parse_line(0) == ("testStarted", {'name':'Test error'})
+        assert self.parse_line(0) == ("testStarted", {'name': 'Test error'})
+
     def it_should_tell_team_city_the_test_failed(self):
         assert self.parse_line(1) == (
             "testFailed",
             {
-                'name':'Test error',
-                'message':'plugin_tests.tools.FakeException: another exception',
-                'details':self.formatted_tb
+                'name': 'Test error',
+                'message': 'plugin_tests.tools.FakeException: another exception',
+                'details': self.formatted_tb
             })
+
     def it_should_tell_team_city_the_test_finished(self):
-        assert self.parse_line(2) == ("testFinished", {'name':'Test error'})
+        assert self.parse_line(2) == ("testFinished", {'name': 'Test error'})
 
 
 ###########################################################
@@ -537,7 +566,7 @@ class WhenParsingATeamCityMessage:
     def examples(self):
         yield "##teamcity[hello]", ('hello', {})
         yield "##teamcity[hello2 ]", ('hello2', {})
-        yield "##teamcity[msgName one='value one' two='value two']", ('msgName', {'one':'value one', 'two':'value two'})
+        yield "##teamcity[msgName one='value one' two='value two']", ('msgName', {'one': 'value one', 'two': 'value two'})
         yield "##teamcity[escaped1 name='|'']", ('escaped1', {'name': "|'"})
         yield "##teamcity[escaped2 name='|]']", ('escaped2', {'name': "|]"})
 

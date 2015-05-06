@@ -29,6 +29,7 @@ class StdOutCapturingSharedContext:
         sys.stdout = self.real_stdout
         sys.stderr = self.real_stderr
 
+
 class WhenCapturingStdOutAndATestPasses(StdOutCapturingSharedContext):
     def context(self):
         self.ctx = tools.create_context("context")
@@ -50,6 +51,7 @@ class WhenCapturingStdOutAndATestPasses(StdOutCapturingSharedContext):
 
     def it_should_not_output_the_captured_stdout(self):
         assert not self.stringio.getvalue()
+
 
 class WhenCapturingStdOutAndATestFails(StdOutCapturingSharedContext):
     def context(self):
@@ -74,6 +76,7 @@ class WhenCapturingStdOutAndATestFails(StdOutCapturingSharedContext):
     ------------------- >> end captured stdout << --------------------
 """)
 
+
 class WhenCapturingStdOutAndATestErrors(StdOutCapturingSharedContext):
     def context(self):
         self.ctx = tools.create_context("context")
@@ -96,6 +99,7 @@ class WhenCapturingStdOutAndATestErrors(StdOutCapturingSharedContext):
     erroring assertion
     ------------------- >> end captured stdout << --------------------
 """)
+
 
 class WhenCapturingStdOutAndAContextErrors(StdOutCapturingSharedContext):
     def establish_that_we_have_printed_something(self):
@@ -121,6 +125,7 @@ class WhenCapturingStdOutAndAContextErrors(StdOutCapturingSharedContext):
   -------------------- >> end captured stdout << ---------------------
 """)
 
+
 class WhenCapturingStdOutButNotPrinting(StdOutCapturingSharedContext):
     def context(self):
         self.ctx = tools.create_context("context")
@@ -137,6 +142,7 @@ class WhenCapturingStdOutButNotPrinting(StdOutCapturingSharedContext):
 
     def it_should_not_output_the_delimiters(self):
         assert not self.stringio.getvalue()
+
 
 class WhenCapturingStdOutInQuietMode(StdOutCapturingSharedContext):
     def context(self):

@@ -7,7 +7,7 @@ class WhenCatchingAnException:
         self.thrown = ValueError("test exception")
 
         def throwing_function(a, b, c, d=[]):
-            self.call_args = (a,b,c,d)
+            self.call_args = (a, b, c, d)
             raise self.thrown
         self.throwing_function = throwing_function
 
@@ -23,11 +23,13 @@ class WhenCatchingAnException:
 
 class WhenTimingSomething:
     def context(self):
-        self.mock_clock = mock.Mock(return_value = 10)
+        self.mock_clock = mock.Mock(return_value=10)
         self.time_diff = 100.7
-        def slow_function(a,b,c,d=[]):
-            self.call_args = (a,b,c,d)
+
+        def slow_function(a, b, c, d=[]):
+            self.call_args = (a, b, c, d)
             self.mock_clock.return_value += self.time_diff
+
         self.slow_function = slow_function
 
     def because_we_run_a_slow_function(self):

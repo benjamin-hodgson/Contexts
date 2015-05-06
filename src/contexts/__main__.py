@@ -29,6 +29,5 @@ def print_version():
     print("Running on Python version " + py_version)
 
 
-
 if __name__ == "__main__":
     cmd()

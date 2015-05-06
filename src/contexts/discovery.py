@@ -95,6 +95,7 @@ class ModuleList(object):
         self.modules = []
         self.plugin_composite = plugin_composite
         self.exception_handler = exception_handler
+
     def add(self, folder, module_name):
         with self.exception_handler.importing(folder, module_name):
             module = self.plugin_composite.import_module(folder, module_name)

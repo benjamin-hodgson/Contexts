@@ -42,7 +42,7 @@ class WhenImportingAModule:
         del sys.modules[self.module_name]
 
     def write_file(self):
-        self.filename = os.path.join(TEST_DATA_DIR, self.module_name+".py")
+        self.filename = os.path.join(TEST_DATA_DIR, self.module_name + ".py")
         with open(self.filename, 'w+') as f:
             f.write(self.code)
 
@@ -169,7 +169,7 @@ class WhenAFileFailsToImport:
         os.remove(self.filename)
 
     def write_file(self):
-        self.filename = os.path.join(TEST_DATA_DIR, self.module_name+".py")
+        self.filename = os.path.join(TEST_DATA_DIR, self.module_name + ".py")
         with open(self.filename, 'w+') as f:
             f.write(self.code)
 

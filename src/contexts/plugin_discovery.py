@@ -129,7 +129,7 @@ class Graph(object):
 
     def create_if_necessary(self, node):
         if node not in self.nodes:
-            self.nodes[node] = {'edges_to':set(), 'added':False}
+            self.nodes[node] = {'edges_to': set(), 'added': False}
 
 
 class TopologicalSorter(object):
@@ -137,7 +137,7 @@ class TopologicalSorter(object):
     def __init__(self, graph):
         self.nodes = {}
         for key, dct in graph.nodes.items():
-            self.nodes[key] = {'edges_to':dct['edges_to'], 'temp_mark':False, 'perm_mark':not dct['added']}
+            self.nodes[key] = {'edges_to': dct['edges_to'], 'temp_mark': False, 'perm_mark': not dct['added']}
         self.output = []
 
     def sort(self):
@@ -160,5 +160,3 @@ class TopologicalSorter(object):
 
         self.output.append(node)
         node_data['perm_mark'] = True
-
-

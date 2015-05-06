@@ -77,7 +77,7 @@ class WhenGettingExitCodeAfterAContextError:
 class WhenGettingExitCodeAfterATestClassError:
     def establish_that_a_context_errored(self):
         self.plugin = reporting.ExitCodeReporter()
-        self.plugin.test_class_errored(type('',(),{}), Exception())
+        self.plugin.test_class_errored(type('', (), {}), Exception())
 
     def because_we_ask_for_the_exit_code(self):
         self.result = self.plugin.get_exit_code()

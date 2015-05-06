@@ -82,9 +82,12 @@ class WhenIdentifyingAClass:
     def examples_of_legal_test_class_names(self):
         class ClassWithWhenInTheName:
             pass
+
         yield ClassWithWhenInTheName
+
         class ClassWithSpecInTheName:
             pass
+
         yield ClassWithSpecInTheName
 
     def establish(self):
@@ -103,9 +106,12 @@ class WhenIdentifyingANormalClass:
     def examples_of_legal_test_class_names(self):
         class ANormalClass:
             pass
+
         yield ANormalClass
+
         class AnotherNormalClass:
             pass
+
         yield AnotherNormalClass
 
     def establish(self):
@@ -123,9 +129,12 @@ class WhenIdentifyingAnExamplesMethod:
     def examples_of_legal_examples_names(self):
         def method_with_example_in_the_name():
             pass
+
         yield method_with_example_in_the_name
+
         def method_with_data_in_the_name(self):
             pass
+
         yield method_with_data_in_the_name
 
     def establish(self):
@@ -144,15 +153,22 @@ class WhenAnExamplesMethodIsAmbiguous:
     def examples_of_ambiguous_examples_names(self):
         def method_with_example_and_establish_in_the_name():
             pass
+
         yield method_with_example_and_establish_in_the_name
+
         def method_with_example_and_because_in_the_name():
             pass
+
         yield method_with_example_and_because_in_the_name
+
         def method_with_example_and_should_in_the_name():
             pass
+
         yield method_with_example_and_should_in_the_name
+
         def method_with_example_and_cleanup_in_the_name():
             pass
+
         yield method_with_example_and_cleanup_in_the_name
 
     def establish(self):
@@ -188,12 +204,17 @@ class WhenIdentifyingASetupMethod:
     def examples_of_legal_setup_names(self):
         def method_with_establish_in_the_name():
             pass
+
         yield method_with_establish_in_the_name
+
         def method_with_context_in_the_name(self):
             pass
+
         yield method_with_context_in_the_name
+
         def method_with_given_in_the_name(self):
             pass
+
         yield method_with_given_in_the_name
 
     def establish(self):
@@ -211,15 +232,22 @@ class WhenASetupMethodIsAmbiguous:
     def examples_of_ambiguous_setup_names(self):
         def method_with_establish_and_examples_in_the_name():
             pass
+
         yield method_with_establish_and_examples_in_the_name
+
         def method_with_establish_and_because_in_the_name():
             pass
+
         yield method_with_establish_and_because_in_the_name
+
         def method_with_establish_and_should_in_the_name():
             pass
+
         yield method_with_establish_and_should_in_the_name
+
         def method_with_establish_and_cleanup_in_the_name():
             pass
+
         yield method_with_establish_and_cleanup_in_the_name
 
     def establish(self):
@@ -237,12 +265,17 @@ class WhenASetupMethodIsNotSoAmbiguous:
     def examples_of_not_so_ambiguous_setup_names(self):
         def method_with_establish_and_context_in_the_name():
             pass
+
         yield method_with_establish_and_context_in_the_name
+
         def method_with_context_and_given_in_the_name():
             pass
+
         yield method_with_context_and_given_in_the_name
+
         def method_with_given_and_establish_in_the_name():
             pass
+
         yield method_with_given_and_establish_in_the_name
 
     def establish(self):
@@ -260,15 +293,22 @@ class WhenIdentifyingAnActionMethod:
     def examples_of_legal_action_names(self):
         def method_with_because_in_the_name():
             pass
+
         yield method_with_because_in_the_name
+
         def method_with_when_in_the_name(self):
             pass
+
         yield method_with_when_in_the_name
+
         def method_with_since_in_the_name(self):
             pass
+
         yield method_with_since_in_the_name
+
         def method_with_after_in_the_name(self):
             pass
+
         yield method_with_after_in_the_name
 
     def establish(self):
@@ -286,15 +326,22 @@ class WhenAnActionMethodIsAmbiguous:
     def examples_of_ambiguous_action_names(self):
         def method_with_because_and_examples_in_the_name():
             pass
+
         yield method_with_because_and_examples_in_the_name
+
         def method_with_because_and_establish_in_the_name():
             pass
+
         yield method_with_because_and_establish_in_the_name
+
         def method_with_because_and_should_in_the_name():
             pass
+
         yield method_with_because_and_should_in_the_name
+
         def method_with_because_and_cleanup_in_the_name():
             pass
+
         yield method_with_because_and_cleanup_in_the_name
 
     def establish(self):
@@ -312,15 +359,22 @@ class WhenAnActionMethodIsNotSoAmbiguous:
     def examples_of_not_so_ambiguous_action_names(self):
         def method_with_because_and_when_in_the_name():
             pass
+
         yield method_with_because_and_when_in_the_name
+
         def method_with_when_and_since_in_the_name(self):
             pass
+
         yield method_with_when_and_since_in_the_name
+
         def method_with_since_and_after_in_the_name(self):
             pass
+
         yield method_with_since_and_after_in_the_name
+
         def method_with_after_and_because_in_the_name(self):
             pass
+
         yield method_with_after_and_because_in_the_name
 
     def establish(self):
@@ -338,18 +392,27 @@ class WhenIdentifyingAnAssertionMethod:
     def examples_of_legal_assertion_names(self):
         def method_with_it_in_the_name():
             pass
+
         yield method_with_it_in_the_name
+
         def method_with_should_in_the_name(self):
             pass
+
         yield method_with_should_in_the_name
+
         def method_with_then_in_the_name(self):
             pass
+
         yield method_with_then_in_the_name
+
         def method_with_must_in_the_name(self):
             pass
+
         yield method_with_must_in_the_name
+
         def method_with_will_in_the_name(self):
             pass
+
         yield method_with_will_in_the_name
 
     def establish(self):
@@ -367,15 +430,22 @@ class WhenAnAssertionMethodIsAmbiguous:
     def examples_of_ambiguous_assertion_names(self):
         def method_with_should_and_examples_in_the_name():
             pass
+
         yield method_with_should_and_examples_in_the_name
+
         def method_with_should_and_establish_in_the_name():
             pass
+
         yield method_with_should_and_establish_in_the_name
+
         def method_with_should_and_because_in_the_name():
             pass
+
         yield method_with_should_and_because_in_the_name
+
         def method_with_should_and_cleanup_in_the_name():
             pass
+
         yield method_with_should_and_cleanup_in_the_name
 
     def establish(self):
@@ -393,18 +463,27 @@ class WhenAnAssertionMethodIsNotSoAmbiguous:
     def examples_of_not_so_ambiguous_assertion_names(self):
         def method_with_it_and_should_in_the_name():
             pass
+
         yield method_with_it_and_should_in_the_name
+
         def method_with_should_and_then_in_the_name(self):
             pass
+
         yield method_with_should_and_then_in_the_name
+
         def method_with_then_and_must_in_the_name(self):
             pass
+
         yield method_with_then_and_must_in_the_name
+
         def method_with_must_and_will_in_the_name(self):
             pass
+
         yield method_with_must_and_will_in_the_name
+
         def method_with_will_and_it_in_the_name(self):
             pass
+
         yield method_with_will_and_it_in_the_name
 
     def establish(self):
@@ -422,6 +501,7 @@ class WhenIdentifyingATeardownMethod:
     def examples_of_legal_teardown_names(self):
         def method_with_cleanup_in_the_name():
             pass
+
         yield method_with_cleanup_in_the_name
 
     def establish(self):
@@ -439,15 +519,22 @@ class WhenATeardownMethodIsAmbiguous:
     def examples_of_ambiguous_assertion_names(self):
         def method_with_cleanup_and_examples_in_the_name():
             pass
+
         yield method_with_cleanup_and_examples_in_the_name
+
         def method_with_cleanup_and_establish_in_the_name():
             pass
+
         yield method_with_cleanup_and_establish_in_the_name
+
         def method_with_cleanup_and_because_in_the_name():
             pass
+
         yield method_with_cleanup_and_because_in_the_name
+
         def method_with_cleanup_and_should_in_the_name():
             pass
+
         yield method_with_cleanup_and_should_in_the_name
 
     def establish(self):
@@ -465,9 +552,12 @@ class WhenIdentiyingANormalMethod:
     def examples_of_uninteresting_names(self):
         def an_innocuous_function(self):
             pass
+
         yield an_innocuous_function
+
         def another_method(self):
             pass
+
         yield another_method
 
     def establish(self):

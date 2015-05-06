@@ -10,24 +10,31 @@ class VerboseReporterSharedContext:
         self.reporter = cli.VerboseReporter(self.stringio)
         self.outputs = []
 
+
 class WhenPrintingVerboselyAndAContextStarts(VerboseReporterSharedContext):
     def context(self):
         self.ctx = tools.create_context("made.up_context_1")
         self.cls = type("madeUpContext_1", (), {})
+
     @action
     def because_a_context_starts(self):
         self.reporter.context_started(self.cls, self.ctx.example)
+
     def it_should_print_its_name(self):
         assert self.stringio.getvalue() == "made up context 1\n"
+
 
 class WhenPrintingVerboselyAndAnAssertionPasses(VerboseReporterSharedContext):
     def establish_assertion(self):
         self.assertion = lambda: None
         self.assertion.__name__ = "assertion1"
+
     def because_an_assertion_passes(self):
         self.reporter.assertion_passed(self.assertion)
+
     def it_should_say_the_assertion_passed(self):
         assert self.stringio.getvalue() == '  PASS: assertion 1\n'
+
 
 class WhenPrintingVerboselyAndAnAssertionFails(VerboseReporterSharedContext):
     def context(self):
@@ -42,8 +49,8 @@ class WhenPrintingVerboselyAndAnAssertionFails(VerboseReporterSharedContext):
         self.reporter.assertion_failed(self.assertion, self.exception)
 
     def it_should_output_a_stack_trace(self):
-        assert self.stringio.getvalue() == (
-"""  FAIL: assertion 2
+        assert self.stringio.getvalue() == ("""\
+  FAIL: assertion 2
     Traceback (most recent call last):
       File "made_up_file_10.py", line 1, in made_up_function_1
         frame1
@@ -51,6 +58,7 @@ class WhenPrintingVerboselyAndAnAssertionFails(VerboseReporterSharedContext):
         frame2
     plugin_tests.tools.FakeAssertionError: you fail
 """)
+
 
 class WhenPrintingVerboselyAndAnAssertionErrors(VerboseReporterSharedContext):
     def context(self):
@@ -65,8 +73,8 @@ class WhenPrintingVerboselyAndAnAssertionErrors(VerboseReporterSharedContext):
         self.reporter.assertion_errored(self.assertion, self.exception)
 
     def it_should_output_a_stack_trace(self):
-        assert self.stringio.getvalue() == (
-"""  ERROR: assertion 3
+        assert self.stringio.getvalue() == ("""\
+  ERROR: assertion 3
     Traceback (most recent call last):
       File "made_up_file_12.py", line 3, in made_up_function_3
         frame3
@@ -75,10 +83,11 @@ class WhenPrintingVerboselyAndAnAssertionErrors(VerboseReporterSharedContext):
     plugin_tests.tools.FakeException: no
 """)
 
+
 class WhenPrintingVerboselyAndAContextErrors(VerboseReporterSharedContext):
     def context(self):
         tb = [('made_up_file_14.py', 3, 'made_up_function_3', 'frame3'),
-               ('made_up_file_15.py', 4, 'made_up_function_4', 'frame4')]
+              ('made_up_file_15.py', 4, 'made_up_function_4', 'frame4')]
         self.exception = tools.build_fake_exception(tb, "out")
         self.ctx = tools.create_context("made.up_context_2", ["abc", 123])
 
@@ -87,8 +96,8 @@ class WhenPrintingVerboselyAndAContextErrors(VerboseReporterSharedContext):
         self.reporter.context_errored(self.ctx.name, self.ctx.example, self.exception)
 
     def it_should_output_a_stack_trace(self):
-        assert self.stringio.getvalue() == (
-"""  Traceback (most recent call last):
+        assert self.stringio.getvalue() == ("""\
+  Traceback (most recent call last):
     File "made_up_file_14.py", line 3, in made_up_function_3
       frame3
     File "made_up_file_15.py", line 4, in made_up_function_4
@@ -96,16 +105,19 @@ class WhenPrintingVerboselyAndAContextErrors(VerboseReporterSharedContext):
   plugin_tests.tools.FakeException: out
 """)
 
+
 class WhenPrintingVerboselyAndATestClassErrors(VerboseReporterSharedContext):
     def context(self):
         tb = [('made_up_file_16.py', 3, 'made_up_function_3', 'frame3'),
-               ('made_up_file_17.py', 4, 'made_up_function_4', 'frame4')]
+              ('made_up_file_17.py', 4, 'made_up_function_4', 'frame4')]
         self.exception = tools.build_fake_exception(tb, "out")
+
     def because_an_unexpected_error_occurs(self):
-        self.reporter.test_class_errored(type('',(),{}), self.exception)
+        self.reporter.test_class_errored(type('', (), {}), self.exception)
+
     def it_should_output_a_stack_trace(self):
-        assert self.stringio.getvalue() == (
-"""Traceback (most recent call last):
+        assert self.stringio.getvalue() == ("""\
+Traceback (most recent call last):
   File "made_up_file_16.py", line 3, in made_up_function_3
     frame3
   File "made_up_file_17.py", line 4, in made_up_function_4
@@ -113,33 +125,19 @@ class WhenPrintingVerboselyAndATestClassErrors(VerboseReporterSharedContext):
 plugin_tests.tools.FakeException: out
 """)
 
-class WhenPrintingVerboselyAndAnUnexpectedErrorOccurs(VerboseReporterSharedContext):
-    def context(self):
-        tb = [('made_up_file_16.py', 3, 'made_up_function_3', 'frame3'),
-               ('made_up_file_17.py', 4, 'made_up_function_4', 'frame4')]
-        self.exception = tools.build_fake_exception(tb, "out")
-    def because_an_unexpected_error_occurs(self):
-        self.reporter.unexpected_error(self.exception)
-    def it_should_output_a_stack_trace(self):
-        assert self.stringio.getvalue() == (
-"""Traceback (most recent call last):
-  File "made_up_file_16.py", line 3, in made_up_function_3
-    frame3
-  File "made_up_file_17.py", line 4, in made_up_function_4
-    frame4
-plugin_tests.tools.FakeException: out
-""")
 
 class WhenPrintingVerboselyAndAnUnexpectedErrorOccurs(VerboseReporterSharedContext):
     def context(self):
         tb = [('made_up_file_16.py', 3, 'made_up_function_3', 'frame3'),
-               ('made_up_file_17.py', 4, 'made_up_function_4', 'frame4')]
+              ('made_up_file_17.py', 4, 'made_up_function_4', 'frame4')]
         self.exception = tools.build_fake_exception(tb, "out")
+
     def because_an_unexpected_error_occurs(self):
         self.reporter.unexpected_error(self.exception)
+
     def it_should_output_a_stack_trace(self):
-        assert self.stringio.getvalue() == (
-"""Traceback (most recent call last):
+        assert self.stringio.getvalue() == ("""\
+Traceback (most recent call last):
   File "made_up_file_16.py", line 3, in made_up_function_3
     frame3
   File "made_up_file_17.py", line 4, in made_up_function_4

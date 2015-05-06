@@ -6,15 +6,18 @@ from . import Importer
 class AssertionRewritingImporter(Importer):
     def setup_parser(self, parser):
         parser.add_argument('--no-assert',
-            action='store_false',
-            dest='rewriting',
-            default=True,
-            help='Disable assertion rewriting.')
+                            action='store_false',
+                            dest='rewriting',
+                            default=True,
+                            help='Disable assertion rewriting.')
+
     @classmethod
     def locate(cls):
         return (None, Importer)
+
     def initialise(self, args, env):
         return args.rewriting
+
     def get_loader(self, module_name, filename):
         return AssertionRewritingLoader(module_name, filename)
 
@@ -141,12 +144,12 @@ class AssertionChildVisitor(ast.NodeVisitor):
                     ast.Call(func=self.load('isinstance'), args=[
                         self.load('@contexts_assertion_var2'),
                         self.load('tuple'),
-                      ], keywords=[]),
+                    ], keywords=[]),
                     ast.Call(func=self.load('tuple'), args=[
                         ast.GeneratorExp(self.clsname(self.load('@x')), [
                             ast.comprehension(ast.Name('@x', ast.Store()), self.load('@contexts_assertion_var2'), []),
-                          ]),
-                      ], keywords=[]),
+                        ]),
+                    ], keywords=[]),
                     self.clsname(self.load('@contexts_assertion_var2'))
                 )),
                 ast.Assert(
@@ -158,7 +161,7 @@ class AssertionChildVisitor(ast.NodeVisitor):
                         self.repr(self.load('@contexts_assertion_var1')),
                         ast.Call(func=self.getattr(self.repr(self.load('@contexts_assertion_var4')), 'replace'), args=[ast.Str("'"), ast.Str("")], keywords=[]),
                         self.load('@contexts_assertion_var3'),
-                ]))
+                    ]))
             ]
         if isinstance(func_node, ast.Name) and func_node.id == "all":
             # original code was:
@@ -180,7 +183,7 @@ class AssertionChildVisitor(ast.NodeVisitor):
                             self.repr(self.load('@contexts_assertion_var1')),
                             self.repr(self.load('@contexts_assertion_var_elem')),
                             self.load('@contexts_assertion_var_ix'),
-                    ]))
+                        ]))
                 ], [])
             ]
 
@@ -189,7 +192,7 @@ class AssertionChildVisitor(ast.NodeVisitor):
             return self.asserted_false_result(name_node)
 
     def visit_NameConstant(self, nameconst_node):
-        if nameconst_node.value == False:
+        if nameconst_node.value == False:  # noqa
             return self.asserted_false_result(nameconst_node)
 
     def visit_UnaryOp(self, unaryop_node):

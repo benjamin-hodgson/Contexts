@@ -12,24 +12,30 @@ class WhenRunningAParametrisedSpec:
             actions = []
             assertions = []
             teardowns = []
+
             @classmethod
             def examples(cls):
                 yield 1
                 yield 2
+
             def __init__(self):
                 self.__class__.initialised += 1
+
             def context(self, example):
                 self.__class__.setups.append(example)
+
             def because(self, example):
                 self.__class__.actions.append(example)
+
             def it(self, example):
                 self.__class__.assertions.append(example)
+
             def cleanup(self, example):
                 self.__class__.teardowns.append(example)
         self.ParametrisedSpec = ParametrisedSpec
 
         self.plugin = mock.Mock(spec=PluginInterface)
-        self.plugin.identify_method.side_effect = lambda meth:{
+        self.plugin.identify_method.side_effect = lambda meth: {
             ParametrisedSpec.examples: EXAMPLES,
             ParametrisedSpec.context: SETUP,
             ParametrisedSpec.because: ACTION,
@@ -44,33 +50,35 @@ class WhenRunningAParametrisedSpec:
         assert self.ParametrisedSpec.initialised == 2
 
     def it_should_run_the_setup_twice(self):
-        assert self.ParametrisedSpec.setups == [1,2]
+        assert self.ParametrisedSpec.setups == [1, 2]
 
     def it_should_run_the_assertion_twice(self):
-        assert self.ParametrisedSpec.assertions == [1,2]
+        assert self.ParametrisedSpec.assertions == [1, 2]
 
     def it_should_run_the_action_twice(self):
-        assert self.ParametrisedSpec.actions == [1,2]
+        assert self.ParametrisedSpec.actions == [1, 2]
 
     def it_should_run_the_teardown_twice(self):
-        assert self.ParametrisedSpec.teardowns == [1,2]
+        assert self.ParametrisedSpec.teardowns == [1, 2]
 
 
 class WhenRunningAParametrisedSpecAndExamplesYieldsTuples:
     def given_a_parametrised_test(self):
         class ParametrisedSpec:
             params = []
+
             @classmethod
             def examples(cls):
                 yield 1, 2
                 yield 3, 4
+
             def it(self, a, b):
                 self.__class__.params.append(a)
                 self.__class__.params.append(b)
         self.ParametrisedSpec = ParametrisedSpec
 
         self.plugin = mock.Mock(spec=PluginInterface)
-        self.plugin.identify_method.side_effect = lambda meth:{
+        self.plugin.identify_method.side_effect = lambda meth: {
             ParametrisedSpec.examples: EXAMPLES,
             ParametrisedSpec.it: ASSERTION
         }[meth]
@@ -79,23 +87,25 @@ class WhenRunningAParametrisedSpecAndExamplesYieldsTuples:
         run_object(self.ParametrisedSpec, [self.plugin])
 
     def it_should_unpack_the_tuples(self):
-        assert self.ParametrisedSpec.params == [1,2,3,4]
+        assert self.ParametrisedSpec.params == [1, 2, 3, 4]
 
 
 class WhenRunningAParametrisedSpecAndExamplesYieldsTuplesButTheMethodsOnlyAcceptOneArgument:
     def given_a_parametrised_test(self):
         class ParametrisedSpec:
             params = []
+
             @classmethod
             def examples(cls):
                 yield 1, 2
                 yield 3, 4
+
             def it(self, a):
                 self.__class__.params.append(a)
         self.ParametrisedSpec = ParametrisedSpec
 
         self.plugin = mock.Mock(spec=PluginInterface)
-        self.plugin.identify_method.side_effect = lambda meth:{
+        self.plugin.identify_method.side_effect = lambda meth: {
             ParametrisedSpec.examples: EXAMPLES,
             ParametrisedSpec.it: ASSERTION
         }[meth]
@@ -104,7 +114,7 @@ class WhenRunningAParametrisedSpecAndExamplesYieldsTuplesButTheMethodsOnlyAccept
         run_object(self.ParametrisedSpec, [self.plugin])
 
     def it_should_not_unpack_the_tuples(self):
-        assert self.ParametrisedSpec.params == [(1,2), (3,4)]
+        assert self.ParametrisedSpec.params == [(1, 2), (3, 4)]
 
 
 class WhenRunningAParametrisedSpecWithNonParametrisedMethods:
@@ -115,16 +125,18 @@ class WhenRunningAParametrisedSpecWithNonParametrisedMethods:
             actions = 0
             assertions = 0
             teardowns = 0
+
             @classmethod
             def examples(cls):
                 yield 1
                 yield 2
+
             def it(self):
                 self.__class__.assertions += 1
         self.ParametrisedSpec = ParametrisedSpec
 
         self.plugin = mock.Mock(spec=PluginInterface)
-        self.plugin.identify_method.side_effect = lambda meth:{
+        self.plugin.identify_method.side_effect = lambda meth: {
             ParametrisedSpec.examples: EXAMPLES,
             ParametrisedSpec.it: ASSERTION
         }[meth]
@@ -143,12 +155,13 @@ class WhenNotifyingAPluginOfExamples:
             def examples(cls):
                 yield 1
                 yield 2
+
             def it(self):
                 pass
         self.ParametrisedSpec = ParametrisedSpec
 
         self.plugin = mock.Mock(spec=PluginInterface)
-        self.plugin.identify_method.side_effect = lambda meth:{
+        self.plugin.identify_method.side_effect = lambda meth: {
             ParametrisedSpec.examples: EXAMPLES,
             ParametrisedSpec.it: ASSERTION
         }[meth]
@@ -184,18 +197,21 @@ class WhenNotifyingAPluginOfExamples:
 class WhenExamplesRaisesAnException:
     def context(self):
         self.exception = Exception()
+
         class ParametrisedSpec:
             total = 0
+
             @classmethod
             def examples(s):
                 yield 3
                 raise self.exception
+
             def it(s, example):
                 s.__class__.total += example
         self.spec = ParametrisedSpec
 
         self.plugin = mock.Mock(spec=PluginInterface)
-        self.plugin.identify_method.side_effect = lambda meth:{
+        self.plugin.identify_method.side_effect = lambda meth: {
             ParametrisedSpec.examples: EXAMPLES,
             ParametrisedSpec.it: ASSERTION
         }[meth]
@@ -215,12 +231,13 @@ class WhenUserFailsToMakeExamplesAClassmethod:
         class Naughty:
             def examples(self):
                 pass
+
             def it(self):
                 pass
         self.spec = Naughty
 
         self.plugin = mock.Mock(spec=PluginInterface)
-        self.plugin.identify_method.side_effect = lambda meth:{
+        self.plugin.identify_method.side_effect = lambda meth: {
             Naughty.examples: EXAMPLES,
             Naughty.it: ASSERTION
         }[meth]
@@ -237,15 +254,17 @@ class WhenExamplesReturnsNone:
     def context(self):
         class ParametrisedSpec:
             times_run = 0
+
             @classmethod
             def examples(cls):
                 pass
+
             def it(self):
                 self.__class__.times_run += 1
         self.spec = ParametrisedSpec
 
         self.plugin = mock.Mock(spec=PluginInterface)
-        self.plugin.identify_method.side_effect = lambda meth:{
+        self.plugin.identify_method.side_effect = lambda meth: {
             ParametrisedSpec.examples: EXAMPLES,
             ParametrisedSpec.it: ASSERTION
         }[meth]

@@ -9,19 +9,20 @@ from .importing import Importer
 class CommandLineSupplier(object):
     def setup_parser(self, parser):
         parser.add_argument('path',
-            action='store',
-            nargs='?',
-            default=os.getcwd(),
-            help="Path to the test file or directory to run. (Default: current directory)")
+                            action='store',
+                            nargs='?',
+                            default=os.getcwd(),
+                            help="Path to the test file or directory to run. (Default: current directory)")
 
     def initialise(self, args, env):
-        drive, path = os.path.splitdrive(args.path)  # the path may begin with, eg, "C:/"
+        # the path may begin with, eg, "C:/"
+        drive, path = os.path.splitdrive(args.path)
         if ':' in path:
             path, _, classname = args.path.rpartition(':')
         else:
             path, classname = args.path, ''
 
-        path = os.path.realpath(path)
+        path = os.path.realpath(os.path.join(drive, path))
 
         if not os.path.isfile(path) and not os.path.isdir(path):
             raise ValueError("File or folder not found: {}".format(path))
@@ -48,11 +49,12 @@ class CommandLineSupplier(object):
         return type(self) == type(other)
 
 
-# this plugin is unusual because there is no need to load it from an entry point
-# so no initialise method
+# this plugin is unusual because there is no need to load it from an entry
+# point so no initialise method
 class ObjectSupplier(object):
     def __init__(self, to_run):
         self.to_run = to_run
+
     def get_object_to_run(self):
         return self.to_run
 

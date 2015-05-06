@@ -11,10 +11,10 @@ class TeamCityReporter(StreamReporter):
 
     def setup_parser(self, parser):
         parser.add_argument('--teamcity',
-            action='store_true',
-            dest='teamcity',
-            default=False,
-            help="Enable teamcity test reporting.")
+                            action='store_true',
+                            dest='teamcity',
+                            default=False,
+                            help="Enable teamcity test reporting.")
 
     def initialise(self, args, env):
         return args.teamcity or ('TEAMCITY_VERSION' in env)

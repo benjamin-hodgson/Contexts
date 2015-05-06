@@ -2,18 +2,18 @@ import datetime
 from io import StringIO
 from unittest import mock
 from contexts.plugins.reporting import cli
-from .. import tools
 
 
 class WhenPrintingFinalCountsForAnEmptyRun:
     def context(self):
         self.stringio = StringIO()
         self.reporter = cli.FinalCountsReporter(self.stringio)
+
     def because_a_test_run_ends(self):
         self.reporter.test_run_ended()
+
     def it_should_output_zeroes(self):
-        assert self.stringio.getvalue() == (
-"""\
+        assert self.stringio.getvalue() == ("""\
 ----------------------------------------------------------------------
 PASSED!
 0 contexts, 0 assertions
@@ -28,24 +28,23 @@ class WhenPrintingFinalCountsForASuccessfulRun:
         ctx1 = type('', (), {})
         ctx2 = type('', (), {})
 
-        self.reporter.context_started(ctx1,'')
+        self.reporter.context_started(ctx1, '')
         self.reporter.assertion_started(lambda: None)
         self.reporter.assertion_passed(lambda: None)
         self.reporter.assertion_started(lambda: None)
         self.reporter.assertion_passed(lambda: None)
-        self.reporter.context_ended(ctx1,'')
+        self.reporter.context_ended(ctx1, '')
 
-        self.reporter.context_started(ctx2,'')
+        self.reporter.context_started(ctx2, '')
         self.reporter.assertion_started(lambda: None)
         self.reporter.assertion_passed(lambda: None)
-        self.reporter.context_ended(ctx2,'')
+        self.reporter.context_ended(ctx2, '')
 
     def because_the_test_run_ends(self):
         self.reporter.test_run_ended()
 
     def it_should_output_the_correct_numbers(self):
-        assert self.stringio.getvalue() == (
-"""\
+        assert self.stringio.getvalue() == ("""\
 ----------------------------------------------------------------------
 PASSED!
 2 contexts, 3 assertions
@@ -63,8 +62,7 @@ class WhenPrintingFinalCountsAfterAnAssertionFails:
         self.reporter.test_run_ended()
 
     def it_should_count_one_failure(self):
-        assert self.stringio.getvalue() == (
-"""\
+        assert self.stringio.getvalue() == ("""\
 ----------------------------------------------------------------------
 FAILED!
 0 contexts, 0 assertions: 1 failed, 0 errors
@@ -82,8 +80,7 @@ class WhenPrintingFinalCountsAfterAnAssertionErrors:
         self.reporter.test_run_ended()
 
     def it_should_count_one_error(self):
-        assert self.stringio.getvalue() == (
-"""\
+        assert self.stringio.getvalue() == ("""\
 ----------------------------------------------------------------------
 FAILED!
 0 contexts, 0 assertions: 0 failed, 1 error
@@ -101,8 +98,7 @@ class WhenPrintingFinalCountsAfterAContextErrors:
         self.reporter.test_run_ended()
 
     def it_should_count_one_error(self):
-        assert self.stringio.getvalue() == (
-"""\
+        assert self.stringio.getvalue() == ("""\
 ----------------------------------------------------------------------
 FAILED!
 0 contexts, 0 assertions: 0 failed, 1 error
@@ -120,8 +116,7 @@ class WhenPrintingFinalCountsAfterATestClassErrors:
         self.reporter.test_run_ended()
 
     def it_should_count_one_error(self):
-        assert self.stringio.getvalue() == (
-"""\
+        assert self.stringio.getvalue() == ("""\
 ----------------------------------------------------------------------
 FAILED!
 0 contexts, 0 assertions: 0 failed, 1 error

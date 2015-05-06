@@ -18,6 +18,7 @@ class WhenMarkingAClassAsASpec:
     def it_should_identify_it_as_a_context(self):
         assert self.result is CONTEXT
 
+
 class WhenMarkingAClassAsAContext:
     def context(self):
         @context

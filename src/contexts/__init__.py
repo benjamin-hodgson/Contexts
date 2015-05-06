@@ -58,4 +58,3 @@ def run_with_plugins(plugin_list):
     test_run.run()
 
     return composite.get_exit_code()
-

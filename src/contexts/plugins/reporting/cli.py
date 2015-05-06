@@ -9,28 +9,37 @@ class DotsReporter(StreamReporter):
     @classmethod
     def locate(cls):
         return (None, VerboseReporter)
+
     def initialise(self, args, env):
         return args.verbosity == 'normal'
 
     def assertion_passed(self, *args, **kwargs):
         self.dot()
+
     def assertion_failed(self, *args, **kwargs):
         self.F()
+
     def assertion_errored(self, *args, **kwargs):
         self.E()
+
     def context_errored(self, *args, **kwargs):
         self.E()
+
     def test_class_errored(self, *args, **kwargs):
         self.E()
+
     def unexpected_error(self, *args, **kwargs):
         self.E()
+
     def test_run_ended(self):
         self._print('')
 
     def dot(self):
         self._print('.', end='')
+
     def F(self):
         self._print('F', end='')
+
     def E(self):
         self._print('E', end='')
 
@@ -41,17 +50,17 @@ class VerboseReporter(StreamReporter):
     def setup_parser(self, parser):
         group = parser.add_mutually_exclusive_group(required=False)
         group.add_argument('-v', '--verbose',
-            action='store_const',
-            dest='verbosity',
-            const='verbose',
-            default='normal',
-            help="Enable verbose progress reporting.")
+                           action='store_const',
+                           dest='verbosity',
+                           const='verbose',
+                           default='normal',
+                           help="Enable verbose progress reporting.")
         group.add_argument('-q', '--quiet',
-            action='store_const',
-            dest='verbosity',
-            const='quiet',
-            default='normal',
-            help="Disable progress reporting.")
+                           action='store_const',
+                           dest='verbosity',
+                           const='quiet',
+                           default='normal',
+                           help="Disable progress reporting.")
 
     def initialise(self, args, env):
         return args.verbosity != "quiet"
@@ -161,10 +170,10 @@ class StdOutCapturingReporter(StreamReporter):
 
     def setup_parser(self, parser):
         parser.add_argument('-s', '--no-capture',
-            action='store_false',
-            dest='capture',
-            default=True,
-            help="Disable capturing of stdout during tests.")
+                            action='store_false',
+                            dest='capture',
+                            default=True,
+                            help="Disable capturing of stdout during tests.")
 
     def initialise(self, args, env):
         self.quiet = args.verbosity == "quiet"
@@ -172,7 +181,7 @@ class StdOutCapturingReporter(StreamReporter):
 
     def centred_dashes(self, string, indentation):
         num = str(70 - indentation)
-        return ("{:-^"+num+"}").format(string)
+        return ("{:-^" + num + "}").format(string)
 
     def context_started(self, name, example):
         self.real_stdout = sys.stdout
@@ -198,15 +207,17 @@ class StdOutCapturingReporter(StreamReporter):
             lines.extend(self.buffer.getvalue().strip().split('\n'))
             lines.append(self.centred_dashes(" >> end captured stdout << ", indentation))
             for line in lines:
-                self._print(' '*(indentation) + line)
+                self._print((' ' * indentation) + line)
 
 
 class TimedReporter(StreamReporter):
     @classmethod
     def locate(self):
         return (FinalCountsReporter, None)
+
     def initialise(self, args, env):
         return not args.verbosity == 'quiet'
+
     def test_run_started(self):
         self.start_time = datetime.datetime.now()
 
@@ -228,10 +239,10 @@ class Colouriser(StreamReporter):
     def setup_parser(self, parser):
         try:
             parser.add_argument('--no-colour',
-                action='store_false',
-                dest='colour',
-                default=True,
-                help='Disable coloured output.')
+                                action='store_false',
+                                dest='colour',
+                                default=True,
+                                help='Disable coloured output.')
         except argparse.ArgumentError:
             # just means the other one already did it
             pass
@@ -242,28 +253,28 @@ class Colouriser(StreamReporter):
         if args.colour:
             global colorama
             try:
-                import colorama
+                import colorama  # noqa
             except ImportError:
                 return False
             return True
 
     def context_errored(self, name, example, exception):
-        self.stream.write(colorama.Fore.RED)
+        self.stream.write(colorama.Fore.RED)  # noqa
 
     def assertion_passed(self, func):
-        self.stream.write(colorama.Fore.GREEN)
+        self.stream.write(colorama.Fore.GREEN)  # noqa
 
     def assertion_failed(self, func, exception):
-        self.stream.write(colorama.Fore.RED)
+        self.stream.write(colorama.Fore.RED)  # noqa
 
     def assertion_errored(self, func, exception):
-        self.stream.write(colorama.Fore.RED)
+        self.stream.write(colorama.Fore.RED)  # noqa
 
     def test_class_errored(self, cls, exception):
-        self.stream.write(colorama.Fore.RED)
+        self.stream.write(colorama.Fore.RED)  # noqa
 
     def unexpected_error(self, exception):
-        self.stream.write(colorama.Fore.RED)
+        self.stream.write(colorama.Fore.RED)  # noqa
 
 
 class UnColouriser(StreamReporter):
@@ -274,10 +285,10 @@ class UnColouriser(StreamReporter):
     def setup_parser(self, parser):
         try:
             parser.add_argument('--no-colour',
-                action='store_false',
-                dest='colour',
-                default=True,
-                help='Disable coloured output.')
+                                action='store_false',
+                                dest='colour',
+                                default=True,
+                                help='Disable coloured output.')
         except argparse.ArgumentError:
             # just means the other one already did it
             pass
@@ -288,28 +299,28 @@ class UnColouriser(StreamReporter):
         if args.colour:
             global colorama
             try:
-                import colorama
+                import colorama  # noqa
             except ImportError:
                 return False
             return True
 
     def context_errored(self, name, example, exception):
-        self.stream.write(colorama.Fore.RESET)
+        self.stream.write(colorama.Fore.RESET)  # noqa
 
     def assertion_passed(self, func):
-        self.stream.write(colorama.Fore.RESET)
+        self.stream.write(colorama.Fore.RESET)  # noqa
 
     def assertion_failed(self, func, exception):
-        self.stream.write(colorama.Fore.RESET)
+        self.stream.write(colorama.Fore.RESET)  # noqa
 
     def assertion_errored(self, func, exception):
-        self.stream.write(colorama.Fore.RESET)
+        self.stream.write(colorama.Fore.RESET)  # noqa
 
     def test_class_errored(self, cls, exception):
-        self.stream.write(colorama.Fore.RESET)
+        self.stream.write(colorama.Fore.RESET)  # noqa
 
     def unexpected_error(self, exception):
-        self.stream.write(colorama.Fore.RESET)
+        self.stream.write(colorama.Fore.RESET)  # noqa
 
 
 # these three are kinda hideous
@@ -354,10 +365,13 @@ class FailuresOnlyBefore(object):
     def context_started(self, name, example):
         self.master.set_streams(StringIO())
         self.master.current_context_failed = False
+
     def assertion_passed(self, func):
         return True
+
     def assertion_failed(self, func, exception):
         self.master.current_context_failed = True
+
     def assertion_errored(self, func, exception):
         self.master.current_context_failed = True
 
@@ -395,9 +409,11 @@ class FailuresOnlyAfter(object):
         if self.master.current_context_failed:
             self.master.final_report.write(self.master.fake_stream.getvalue())
         self.master.set_streams(StringIO())
+
     def context_errored(self, name, example, exception):
         self.master.final_report.write(self.master.fake_stream.getvalue())
         self.master.set_streams(StringIO())
+
     def unexpected_error(self, exception):
         self.master.set_streams(self.master.orig_stream)
 
