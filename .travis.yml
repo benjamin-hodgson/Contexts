@@ -5,10 +5,11 @@ python:
   - '3.4'
 
 install:
-  - pip install colorama
+  - pip install colorama flake8
   - python setup.py install
 
 script:
+  - flake8 src test --ignore=E501
   - run-contexts -v
 
 deploy:
