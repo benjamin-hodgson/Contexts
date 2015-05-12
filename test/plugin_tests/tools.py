@@ -1,3 +1,4 @@
+import argparse
 import collections
 from contexts.plugin_interface import NO_EXAMPLE
 
@@ -90,3 +91,8 @@ context_spec = collections.namedtuple("context_spec", ["cls", "name", "example"]
 def create_context(name='context', example=NO_EXAMPLE):
     cls = type(name, (), {})
     return context_spec(cls, name, example)
+
+
+class ExceptionThrowingArgumentParser(argparse.ArgumentParser):
+    def error(self, message):
+        raise Exception(message)

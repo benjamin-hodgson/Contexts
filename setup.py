@@ -6,6 +6,7 @@ from setuptools import setup, find_packages
 builtin_plugins = [
     'CommandLineSupplier = contexts.plugins.test_target_suppliers:CommandLineSupplier',
     'ExitCodeReporter = contexts.plugins.reporting:ExitCodeReporter',
+    'ArgvForwarder = contexts.plugins.argv_forwarder:ArgvForwarder',
     'Shuffler = contexts.plugins.shuffling:Shuffler',
     'Importer = contexts.plugins.importing:Importer',
     'AssertionRewritingImporter = contexts.plugins.importing.assertion_rewriting:AssertionRewritingImporter',
