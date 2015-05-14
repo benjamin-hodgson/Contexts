@@ -12,6 +12,7 @@ builtin_plugins = [
     'AssertionRewritingImporter = contexts.plugins.importing.assertion_rewriting:AssertionRewritingImporter',
     'DecoratorBasedIdentifier = contexts.plugins.identification.decorators:DecoratorBasedIdentifier',
     'NameBasedIdentifier = contexts.plugins.identification:NameBasedIdentifier',
+    'FileSpecIdentifier = contexts.plugins.identification:FileSpecIdentifier',
     'TeamCityReporter = contexts.plugins.reporting.teamcity:TeamCityReporter',
     'DotsReporter = contexts.plugins.reporting.cli:DotsReporter',
     'VerboseReporter = contexts.plugins.reporting.cli:VerboseReporter',
