@@ -72,21 +72,23 @@ class AssertionResult(Result):
         return 0
 
 
-class JenkinsReporter:
+class XmlReporter:
 
     def __init__(self):
         self.suites = Result("Test suites")
         self.path = None
 
     def initialise(self, args, environ):
-        if(args.jenkins_out):
-            self.path = args.jenkins_out
+        if(args and args.xml_path):
+            self.path = args.xml_path
             return True
         return False
 
     def setup_parser(self, parser):
-        parser.add_argument('--jenkins-out',
-                            dest='jenkins_out',
+        parser.add_argument('--xml-log',
+                            action='store',
+                            dest='xml_path',
+                            default=None,
                             help='Path for XML output'
                             )
 
