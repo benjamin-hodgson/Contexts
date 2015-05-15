@@ -123,7 +123,7 @@ class XmlReporter:
             "failures": str(self.suites.failures),
             "time": "{0:.2f}".format(self.suites.time.total_seconds())
 
-            })
+        })
 
     def write_test_suite(self, builder, suite):
         builder.start("testsuite", {

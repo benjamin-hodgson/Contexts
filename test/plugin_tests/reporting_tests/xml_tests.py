@@ -169,14 +169,16 @@ class When_an_assertion_fails(XmlOutputContext):
               ('another_made_up_file.py', 2, 'another_made_up_function', 'frame2')]
         self.exception = tools.build_fake_assertion_error(tb, "Gotcha")
         self.formatted_tb = (
-                                'Traceback (most recent call last):|n'
-                                '  File "made_up_file.py", line 3, in made_up_function|n'
-                                '    frame1|n'
-                                '  File "another_made_up_file.py", line 2, in another_made_up_function|n'
-                                '    frame2|n'
-                                'plugin_tests.tools.FakeAssertionError: Gotcha')
-        tb = [('made_up_file.py', 3, 'made_up_function', 'frame1'),
-              ('another_made_up_file.py', 2, 'another_made_up_function', 'frame2')]
+            'Traceback (most recent call last):|n'
+            '  File "made_up_file.py", line 3, in made_up_function|n'
+            '    frame1|n'
+            '  File "another_made_up_file.py", line 2, in another_made_up_function|n'
+            '    frame2|n'
+            'plugin_tests.tools.FakeAssertionError: Gotcha')
+        tb = [
+            ('made_up_file.py', 3, 'made_up_function', 'frame1'),
+            ('another_made_up_file.py', 2, 'another_made_up_function', 'frame2')
+        ]
 
         self.xml.context_started(ctx.cls)
         self.xml.assertion_started(assertion)
@@ -231,18 +233,32 @@ class When_an_assertion_errors(XmlOutputContext):
         ctx = tools.create_context('When_a_test_fails')
         assertion = lambda: None
         assertion.__name__ = 'it_should_be_counted_as_an_error'
-        tb = [('made_up_file.py', 3, 'made_up_function', 'frame1'),
-              ('another_made_up_file.py', 2, 'another_made_up_function', 'frame2')]
+        tb = [
+            ('made_up_file.py',
+             3,
+             'made_up_function',
+             'frame1'),
+            ('another_made_up_file.py',
+             2,
+             'another_made_up_function',
+             'frame2')]
         self.exception = tools.build_fake_assertion_error(tb, "Gotcha")
         self.formatted_tb = (
-                                'Traceback (most recent call last):|n'
-                                '  File "made_up_file.py", line 3, in made_up_function|n'
-                                '    frame1|n'
-                                '  File "another_made_up_file.py", line 2, in another_made_up_function|n'
-                                '    frame2|n'
-                                'plugin_tests.tools.FakeAssertionError: Gotcha')
-        tb = [('made_up_file.py', 3, 'made_up_function', 'frame1'),
-              ('another_made_up_file.py', 2, 'another_made_up_function', 'frame2')]
+            'Traceback (most recent call last):|n'
+            '  File "made_up_file.py", line 3, in made_up_function|n'
+            '    frame1|n'
+            '  File "another_made_up_file.py", line 2, in another_made_up_function|n'
+            '    frame2|n'
+            'plugin_tests.tools.FakeAssertionError: Gotcha')
+        tb = [
+            ('made_up_file.py',
+             3,
+             'made_up_function',
+             'frame1'),
+            ('another_made_up_file.py',
+             2,
+             'another_made_up_function',
+             'frame2')]
 
         self.xml.context_started(ctx.cls)
         self.xml.assertion_started(assertion)
