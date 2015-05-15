@@ -3,17 +3,19 @@ import os
 from pathlib import PurePath
 from contexts.plugin_interface import TEST_FOLDER, TEST_FILE
 
+
 class FileSpecIdentifier:
 
     def __init__(self):
         self._specs = None
 
     def setup_parser(self, parser):
-       parser.add_argument('--specs',
-                            action='store',
-                            dest='specs',
-                            default=None,
-                            help="Path to a file containing files and directories to search for tests.")
+        parser.add_argument(
+            '--specs',
+            action='store',
+            dest='specs',
+            default=None,
+            help="Path to a file containing files and directories to search for tests.")
 
     def initialise(self, args=None, env=None, file=None, cwd=None):
         """
@@ -47,12 +49,12 @@ class FileSpecIdentifier:
             self.read_from_file()
         return self._specs
 
+    def get_path(self, p):
+        return PurePath(self.cwd, p.rstrip())
+
     def read_from_file(self):
         if(self.file is not None):
             self._specs = [PurePath(self.cwd, p) for p in self.file.readlines()]
         else:
             with io.open(self.spec_file, 'r') as file:
-                self._specs = [PurePath(self.cwd, p.rstrip()) for p in file.readlines()]
-
-
-
+                self._specs = [self.get_path(p) for p in file.readlines()]
