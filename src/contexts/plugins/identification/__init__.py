@@ -2,7 +2,6 @@ import os.path
 import re
 from contexts.plugin_interface import TEST_FOLDER, TEST_FILE, CONTEXT, EXAMPLES, SETUP, ACTION, ASSERTION, TEARDOWN
 from contexts import errors
-from .filespec import FileSpecIdentifier
 from .. import cleverly_get_words
 
 
