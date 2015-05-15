@@ -55,7 +55,7 @@ class When_loading_the_specs_from_a_file(FileSpecContext):
 
         with io.open(self.tempfile, 'w') as f:
             f.write(self.testfile)
-        self.cmd_line = "--specs="+self.tempfile
+        self.cmd_line = "--specs=" + self.tempfile
 
     def because_we_initialise_the_plugin(self):
         self.spec = FileSpecIdentifier()
