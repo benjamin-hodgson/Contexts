@@ -1,6 +1,6 @@
 from argparse import ArgumentParser
 import io
-from pathlib import PurePath
+from os import path
 import tempfile
 
 from contexts.plugin_interface import TEST_FOLDER, TEST_FILE
@@ -15,7 +15,7 @@ class FileSpecContext:
     def make_path(self, *args):
         parts = [self.tempdir.name]
         parts.extend(args)
-        return str(PurePath(*parts))
+        return path.join(*parts)
 
     def cleanup_the_temp_dir(self):
         self.tempdir.cleanup()

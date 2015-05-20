@@ -1,6 +1,5 @@
 import io
 import os
-from pathlib import PurePath
 from contexts.plugin_interface import TEST_FOLDER, TEST_FILE
 
 
@@ -30,15 +29,13 @@ class FileSpecIdentifier:
         return self.spec_file is not None
 
     def identify_folder(self, folder):
-        folder = PurePath(folder)
         for f in self.specs:
             if f == folder:
                 return TEST_FOLDER
-            if(folder in f.parents):
+            if(f.startswith(folder)):
                 return TEST_FOLDER
 
     def identify_file(self, file):
-        file = PurePath(file)
         for f in self.specs:
             if(f == file):
                 return TEST_FILE
@@ -50,11 +47,11 @@ class FileSpecIdentifier:
         return self._specs
 
     def get_path(self, p):
-        return PurePath(self.cwd, p.rstrip())
+        return os.path.join(self.cwd, p.rstrip())
 
     def read_from_file(self):
         if(self.file is not None):
-            self._specs = [PurePath(self.cwd, p) for p in self.file.readlines()]
+            self._specs = [os.path.join(self.cwd, p) for p in self.file.readlines()]
         else:
             with io.open(self.spec_file, 'r') as file:
                 self._specs = [self.get_path(p) for p in file.readlines()]
