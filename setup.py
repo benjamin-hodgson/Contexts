@@ -22,6 +22,7 @@ builtin_plugins = [
     'FailuresOnlyAfter = contexts.plugins.reporting.cli:FailuresOnlyAfter',
     'FinalCountsReporter = contexts.plugins.reporting.cli:FinalCountsReporter',
     'TimedReporter = contexts.plugins.reporting.cli:TimedReporter',
+    'XmlReporter = contexts.plugins.reporting.xml:XmlReporter',
 ]
 
 
