@@ -85,7 +85,7 @@ class XmlReporter:
         return False
 
     def setup_parser(self, parser):
-        parser.add_argument('--xml-log',
+        parser.add_argument('--xml',
                             action='store',
                             dest='xml_path',
                             default=None,
