@@ -40,12 +40,12 @@ class When_the_plugin_is_initialised_without_an_output_file:
 class When_the_plugin_sets_up_argparser:
 
     def given_a_parser(self):
-        self.parser = argparse.ArgumentParser()
+        self.parser = tools.ExceptionThrowingArgumentParser()
         self.xml = xml.XmlReporter()
         self.xml.setup_parser(self.parser)
 
     def because_we_initialise_from_args(self):
-        args = self.parser.parse_args('--xml-log=foo'.split())
+        args = self.parser.parse_args('--xml=foo'.split())
         self.initialised = self.xml.initialise(args, None)
 
     def it_should_initialise_with_the_args(self):
