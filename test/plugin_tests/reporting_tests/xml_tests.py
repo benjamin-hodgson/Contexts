@@ -1,4 +1,3 @@
-import argparse
 import collections
 import os
 import tempfile
