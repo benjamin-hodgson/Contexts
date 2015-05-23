@@ -35,6 +35,7 @@ and any subdirectories (or packages).
   Contexts makes no promises about the order in which tests will be run.
 * ``--no-assert``: Disable :ref:`assertion rewriting <_assertion>` - don't try to add helpful messages to assertions made with
   the `assert` statement.
+* ``--xml``: Specify output file for a Jenkins-compatible XML test report
 
 
 .. _test-discovery:
