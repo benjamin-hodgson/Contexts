@@ -36,6 +36,7 @@ and any subdirectories (or packages).
 * ``--no-assert``: Disable :ref:`assertion rewriting <_assertion>` - don't try to add helpful messages to assertions made with
   the `assert` statement.
 * ``--xml``: Specify output file for a Jenkins-compatible XML test report
+* ``--filespec=<FILE>``: Path to a file which defines tests to run.
 
 
 .. _test-discovery:
