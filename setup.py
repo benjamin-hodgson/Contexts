@@ -6,7 +6,6 @@ except ImportError:
     from setuptools import setup, find_packages
 
 
-
 builtin_plugins = [
     'CommandLineSupplier = contexts.plugins.test_target_suppliers:CommandLineSupplier',
     'ExitCodeReporter = contexts.plugins.reporting:ExitCodeReporter',
@@ -33,7 +32,7 @@ builtin_plugins = [
 
 setup(
     name="Contexts",
-    version="0.10.2",
+    version="0.11.0",
     author="Benjamin Hodgson",
     author_email="benjamin.hodgson@huddle.net",
     url="https://github.com/benjamin-hodgson/Contexts",
