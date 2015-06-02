@@ -1,10 +1,10 @@
-from argparse import ArgumentParser
 import io
 from os import path
 import tempfile
 
 from contexts.plugin_interface import TEST_FOLDER, TEST_FILE
 from contexts.plugins.identification.filespec import FileSpecIdentifier
+from ..tools import ExceptionThrowingArgumentParser
 
 
 class FileSpecContext:
@@ -24,8 +24,8 @@ class FileSpecContext:
 class When_initialising_the_plugin_with_a_valid_command_line:
 
     def given_a_valid_command_line(self):
-        self.cmd_line = "--specs=foo.txt"
-        self.parser = ArgumentParser()
+        self.cmd_line = "--filespec=foo.txt"
+        self.parser = ExceptionThrowingArgumentParser()
 
     def because_we_initialise_the_plugin(self):
         self.spec = FileSpecIdentifier()
@@ -55,11 +55,11 @@ class When_loading_the_specs_from_a_file(FileSpecContext):
 
         with io.open(self.tempfile, 'w') as f:
             f.write(self.testfile)
-        self.cmd_line = "--specs=" + self.tempfile
+        self.cmd_line = "--filespec=" + self.tempfile
 
     def because_we_initialise_the_plugin(self):
         self.spec = FileSpecIdentifier()
-        self.parser = ArgumentParser()
+        self.parser = ExceptionThrowingArgumentParser()
         self.spec.setup_parser(self.parser)
         args = self.parser.parse_args(args=[self.cmd_line])
         self.result = self.spec.initialise(args, None, cwd=self.tempdir.name)
