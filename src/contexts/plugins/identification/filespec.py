@@ -10,7 +10,7 @@ class FileSpecIdentifier:
 
     def setup_parser(self, parser):
         parser.add_argument(
-            '--specs',
+            '--filespec',
             action='store',
             dest='specs',
             default=None,
