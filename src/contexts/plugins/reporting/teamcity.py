@@ -2,12 +2,13 @@ import sys
 from io import StringIO
 from . import cli
 from . import StreamReporter, context_name, format_exception, make_readable
+from .. import argv_forwarder
 
 
 class TeamCityReporter(StreamReporter):
     @classmethod
     def locate(cls):
-        return (None, cli.DotsReporter)
+        return (argv_forwarder.ArgvForwarder, cli.DotsReporter)
 
     def setup_parser(self, parser):
         parser.add_argument('--teamcity',

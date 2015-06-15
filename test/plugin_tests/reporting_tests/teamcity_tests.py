@@ -2,6 +2,8 @@ from io import StringIO
 import re
 import types
 import sys
+from contexts.plugins import argv_forwarder
+from contexts.plugins.reporting import cli
 from contexts.plugins.reporting import teamcity
 from contexts import setup, action, assertion
 from .. import tools
@@ -17,6 +19,17 @@ class TeamCitySharedContext:
         if n < 0:  # to hide the fact that the last line will be empty
             n -= 1
         return teamcity_parse(self.stringio.getvalue().split('\n')[n])
+
+
+class WhenLocatingThePlugin:
+    def when_framework_asks_where_the_plugin_wants_to_be(self):
+        self.result = teamcity.TeamCityReporter.locate()
+
+    def it_should_not_override_the_argv_forwarder(self):
+        assert self.result[0] == argv_forwarder.ArgvForwarder
+
+    def it_should_override_the_command_line_reporter(self):
+        assert self.result[1] == cli.DotsReporter
 
 
 ###########################################################
