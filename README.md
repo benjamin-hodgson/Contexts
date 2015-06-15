@@ -1,7 +1,7 @@
 Contexts
 ========
 [![Build Status](https://travis-ci.org/benjamin-hodgson/Contexts.png?branch=master)](https://travis-ci.org/benjamin-hodgson/Contexts)
-[![Documentation Status](https://readthedocs.org/projects/contexts/badge/?version=v0.11.0)](https://readthedocs.org/projects/contexts/?badge=v0.10.2)
+[![Documentation Status](https://readthedocs.org/projects/contexts/badge/?version=v0.11.1)](https://readthedocs.org/projects/contexts/?badge=v0.10.2)
 
 Dead simple descriptive testing for Python. No custom decorators, no context managers,
 no `.feature` files, no fuss.
