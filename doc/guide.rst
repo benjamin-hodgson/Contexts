@@ -261,6 +261,7 @@ run will be reported as a separate suite.
 Contexts reports failures to TeamCity along with any stack traces, and also captures and
 reports any activity on stdout and stderr.
 
+.. _keywords:
 List of keywords
 ================
 

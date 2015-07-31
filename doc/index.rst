@@ -19,6 +19,42 @@ focus on the behaviour, not the implementation, of your code.
 Contexts takes cues from `Behaviour Driven Development <http://dannorth.net/introducing-bdd/>`_,
 but it aims to be useful for more than just acceptance testing.
 
+Quick start
+-----------
+
+Install Contexts and optionally `colorama <https://pypi.python.org/pypi/colorama>`_.
+
+.. code-block:: bash
+
+    $ pip install contexts colorama
+
+Create a file in the current directory called ``test.py``. Put a class in that file; this will be your test. The class's name must include the word ``When``.
+
+Spread the *arrange, act, assert* steps of your test across three separate methods in the class; their names must match the :ref:`supported keywords <keywords>`.
+
+::
+
+    class WhenAddingTwoNumbers:
+        def given_the_two_numbers(self):
+            self.x = 4
+            self.y = 2
+        def when_i_add_them(self):
+            self.result = self.x + self.y
+        def it_should_produce_the_correct_sum(self):
+            assert self.result == 6
+
+
+Run the test!
+
+.. code-block:: bash
+
+    $ run-contexts
+    .
+    ----------------------------------------------------------------------
+    PASSED!
+    1 context, 1 assertion
+    (0.1 seconds)
+
 
 Table of contents
 -----------------

@@ -9,8 +9,8 @@ from .. import tools
 
 Args = collections.namedtuple("Args", ["xml_path"])
 
-# Initialisation tests
 
+# Initialisation tests
 
 class When_the_plugin_is_initialised:
 
