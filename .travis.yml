@@ -12,8 +12,11 @@ install:
 
 script:
   - flake8 src test --ignore=E501
-  - run-contexts -v
+  - coverage run -m contexts -v
   - pushd doc && make html && popd
+
+after_success:
+  coveralls
 
 deploy:
   provider: pypi
