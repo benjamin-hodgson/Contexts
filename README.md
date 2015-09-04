@@ -5,7 +5,7 @@ Contexts
 [![Coverage Status](https://coveralls.io/repos/benjamin-hodgson/Contexts/badge.svg?branch=master&service=github)](https://coveralls.io/github/benjamin-hodgson/Contexts?branch=master)
 [![Requirements Status](https://requires.io/github/benjamin-hodgson/Contexts/requirements.svg?branch=master)](https://requires.io/github/benjamin-hodgson/Contexts/requirements/?branch=master)
 
-Dead simple descriptive testing for Python. No custom decorators, no context managers,
+Dead simple _descriptive testing_ for Python. No custom decorators, no context managers,
 no `.feature` files, no fuss.
 
 -----------------------------
