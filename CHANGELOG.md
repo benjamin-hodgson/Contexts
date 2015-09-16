@@ -2,6 +2,12 @@ What's new in Contexts
 ======================
 
 
+Version 0.11.2
+--------------
+
+* Python 3.5 compatibility
+
+
 Version 0.11.0
 --------------
 

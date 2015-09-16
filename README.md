@@ -1,7 +1,7 @@
 Contexts
 ========
 [![Build Status](https://travis-ci.org/benjamin-hodgson/Contexts.png?branch=master)](https://travis-ci.org/benjamin-hodgson/Contexts)
-[![Documentation Status](https://readthedocs.org/projects/contexts/badge/?version=v0.11.1)](https://readthedocs.org/projects/contexts/?badge=v0.11.1)
+[![Documentation Status](https://readthedocs.org/projects/contexts/badge/?version=v0.11.2)](https://readthedocs.org/projects/contexts/?badge=v0.11.2)
 [![Coverage Status](https://coveralls.io/repos/benjamin-hodgson/Contexts/badge.svg?branch=master&service=github)](https://coveralls.io/github/benjamin-hodgson/Contexts?branch=master)
 [![Requirements Status](https://requires.io/github/benjamin-hodgson/Contexts/requirements.svg?branch=master)](https://requires.io/github/benjamin-hodgson/Contexts/requirements/?branch=master)
 
