@@ -176,7 +176,7 @@ class AssertionChildVisitor(ast.NodeVisitor):
             return [
                 self.assign('@contexts_assertion_var1', call_node.args[0]),
                 ast.For(ast.Tuple([ast.Name("@contexts_assertion_var_ix", ast.Store()),
-                                   ast.Name("@contexts_assertion_var_elem", ast.Store())], ast.Store()), ast.Call(self.load("enumerate"), [self.load('@contexts_assertion_var1')], [], None, None), [
+                                   ast.Name("@contexts_assertion_var_elem", ast.Store())], ast.Store()), ast.Call(func=self.load("enumerate"), args=[self.load('@contexts_assertion_var1')], keywords=[]), [
                     ast.Assert(
                         self.load('@contexts_assertion_var_elem'),
                         self.format("Not all elements of {0} were truthy. First falsy element: {1} at position {2}", [

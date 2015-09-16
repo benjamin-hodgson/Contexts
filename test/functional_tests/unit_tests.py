@@ -11,6 +11,11 @@ core_file = repr(contexts.core.__file__)[1:-1]
 this_file = repr(__file__)[1:-1]
 
 
+class Mock(mock.Mock):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, unsafe=True, **kwargs)
+
+
 class WhenAPluginSuppliesAClassToRun:
     def context(self):
         self.ran_method = False
@@ -20,7 +25,7 @@ class WhenAPluginSuppliesAClassToRun:
                 self.ran_method = True
 
         self.spec = TestSpec
-        self.plugin = mock.Mock(spec=PluginInterface)
+        self.plugin = Mock(spec=PluginInterface)
         self.plugin.get_object_to_run.return_value = TestSpec
         self.plugin.identify_method.return_value = ASSERTION
 
@@ -56,13 +61,13 @@ class WhenAPluginIdentifiesMethods:
 
         self.spec = TestSpec
 
-        self.none_plugin = mock.Mock(spec=PluginInterface)
+        self.none_plugin = Mock(spec=PluginInterface)
         self.none_plugin.identify_method.return_value = None
 
-        self.deleted_plugin = mock.Mock(spec=PluginInterface)
+        self.deleted_plugin = Mock(spec=PluginInterface)
         del self.deleted_plugin.identify_method
 
-        self.plugin = mock.Mock(spec=PluginInterface)
+        self.plugin = Mock(spec=PluginInterface)
         self.plugin.identify_method.side_effect = lambda meth: {
             TestSpec.method_zero: EXAMPLES,
             TestSpec.method_one: SETUP,
@@ -71,7 +76,7 @@ class WhenAPluginIdentifiesMethods:
             TestSpec.method_four: TEARDOWN
         }[meth]
 
-        self.too_late_plugin = mock.Mock(spec=PluginInterface)
+        self.too_late_plugin = Mock(spec=PluginInterface)
 
     def because_we_run_the_spec(self):
         run_object(self.spec, [self.none_plugin, self.deleted_plugin, self.plugin, self.too_late_plugin])
@@ -118,7 +123,7 @@ class WhenAPluginIdentifiesMultipleAssertions:
                 self.log.append('assertion')
 
         self.spec = Spec
-        self.plugin = mock.Mock(spec=PluginInterface)
+        self.plugin = Mock(spec=PluginInterface)
         self.plugin.identify_method.return_value = ASSERTION
 
     def because_we_run_the_spec(self):
@@ -137,7 +142,7 @@ class WhenAPluginRefusesToIdentifyAMethod:
                 self.log.append("should not happen")
 
         self.spec = Spec
-        self.plugin = mock.Mock(spec=PluginInterface)
+        self.plugin = Mock(spec=PluginInterface)
         self.plugin.identify_method.return_value = None
 
     def because_we_run_the_spec(self):
@@ -189,7 +194,7 @@ class WhenASpecHasASuperclassAndAPluginIdentifiesMethods:
         self.super = Super
         self.spec = Spec
 
-        self.plugin = mock.Mock(spec=PluginInterface)
+        self.plugin = Mock(spec=PluginInterface)
         self.plugin.identify_method.side_effect = lambda meth: {
             Super.method_zero: EXAMPLES,
             Super.method_one: SETUP,
@@ -262,7 +267,7 @@ class WhenAPluginReturnsMultipleMethodsOfTheSameType:
 
         self.spec = Spec
 
-        self.plugin = mock.Mock(spec=PluginInterface)
+        self.plugin = Mock(spec=PluginInterface)
         self.plugin.identify_method.side_effect = side_effect
 
     def because_we_run_the_spec(self):
@@ -297,7 +302,7 @@ class WhenRunningASpecWithPlugins:
 
         self.spec = TestSpec
 
-        self.plugin1 = mock.Mock(wraps=PluginInterface())
+        self.plugin1 = Mock(wraps=PluginInterface())
         del self.plugin1.process_assertion_list
         self.plugin1.identify_method = lambda meth: {
             TestSpec.method_with_establish_in_the_name: SETUP,
@@ -305,7 +310,7 @@ class WhenRunningASpecWithPlugins:
             TestSpec.method_with_should_in_the_name: ASSERTION,
             TestSpec.method_with_cleanup_in_the_name: TEARDOWN
         }[meth]
-        self.plugin2 = mock.Mock(wraps=PluginInterface())
+        self.plugin2 = Mock(wraps=PluginInterface())
         del self.plugin2.process_assertion_list
 
     def because_we_run_the_spec(self):
@@ -368,7 +373,7 @@ class WhenAPluginModifiesAnAssertionList:
         def modify_list(cls, l):
             self.called_with = (cls, l.copy())
             l[:] = [spy_assertion_method1, spy_assertion_method2]
-        self.plugin = mock.Mock(spec=PluginInterface)
+        self.plugin = Mock(spec=PluginInterface)
         self.plugin.identify_method.side_effect = lambda meth: {
             Spec.should1: ASSERTION,
             Spec.should2: ASSERTION,
@@ -413,7 +418,7 @@ class WhenAnAssertionFails:
                 TestSpec.instance = self
 
         self.spec = TestSpec
-        self.plugin = mock.Mock(spec=PluginInterface)
+        self.plugin = Mock(spec=PluginInterface)
         self.plugin.identify_method = lambda meth: {
             TestSpec.failing_should_method: ASSERTION,
             TestSpec.second_should_method: ASSERTION,
@@ -457,7 +462,7 @@ class WhenAnAssertionErrors:
                 TestSpec.instance = self
 
         self.spec = TestSpec
-        self.plugin = mock.Mock(wraps=PluginInterface())
+        self.plugin = Mock(wraps=PluginInterface())
         self.plugin.identify_method = lambda meth: {
             TestSpec.erroring_should_method: ASSERTION,
             TestSpec.second_should_method: ASSERTION,
@@ -500,7 +505,7 @@ class WhenAContextErrorsDuringTheSetup:
                 s.__class__.ran_cleanup = True
 
         self.spec = ErrorInSetup
-        self.plugin = mock.Mock(wraps=PluginInterface())
+        self.plugin = Mock(wraps=PluginInterface())
         self.plugin.identify_method = lambda meth: {
             ErrorInSetup.context: SETUP,
             ErrorInSetup.because: ACTION,
@@ -544,7 +549,7 @@ class WhenAContextErrorsDuringTheAction:
                 s.__class__.ran_cleanup = True
 
         self.spec = ErrorInAction
-        self.plugin = mock.Mock(wraps=PluginInterface())
+        self.plugin = Mock(wraps=PluginInterface())
         self.plugin.identify_method = lambda meth: {
             ErrorInAction.because: ACTION,
             ErrorInAction.it: ASSERTION,
@@ -578,7 +583,7 @@ class WhenAContextErrorsDuringTheCleanup:
                 raise self.exception
 
         self.spec = ErrorInTeardown
-        self.plugin = mock.Mock(wraps=PluginInterface())
+        self.plugin = Mock(wraps=PluginInterface())
         self.plugin.identify_method = lambda meth: {
             ErrorInTeardown.it: ASSERTION,
             ErrorInTeardown.cleanup: TEARDOWN
@@ -600,7 +605,7 @@ class WhenAPluginSetsTheExitCode:
         yield 99
 
     def context(self, exitcode):
-        self.plugin = mock.Mock(spec=PluginInterface)
+        self.plugin = Mock(spec=PluginInterface)
         self.plugin.get_exit_code.return_value = exitcode
 
     def because_we_run_something(self):
@@ -626,7 +631,7 @@ class WhenRunningAClassContainingNoAssertions:
 
         self.spec = NoAssertions
 
-        self.plugin = mock.Mock(spec=PluginInterface)
+        self.plugin = Mock(spec=PluginInterface)
         self.plugin.identify_method.side_effect = lambda meth: {
             NoAssertions.context: SETUP,
             NoAssertions.because: ACTION,
@@ -665,7 +670,7 @@ class WhenAPluginChoosesClasses:
         self.module.ToRun2 = ToRun2
         self.module.NotToRun = NotToRun
 
-        self.plugin = mock.Mock(spec=PluginInterface)
+        self.plugin = Mock(spec=PluginInterface)
         self.plugin.identify_class.side_effect = lambda cls: {
             ToRun1: CONTEXT,
             ToRun2: CONTEXT,
@@ -675,7 +680,7 @@ class WhenAPluginChoosesClasses:
             ToRun1.it_should_run_this: ASSERTION,
             ToRun2.it_should_run_this: ASSERTION,
         }[meth]
-        self.other_plugin = mock.Mock()
+        self.other_plugin = Mock()
         self.other_plugin.identify_class.return_value = None
 
     def because_we_run_the_module(self):
@@ -725,7 +730,7 @@ class WhenAPluginModifiesAClassList:
         def modify_list(mod, l):
             self.called_with = (mod, l.copy())
             l[:] = [AnotherClass1, AnotherClass2]
-        self.plugin = mock.Mock()
+        self.plugin = Mock()
         self.plugin.process_class_list = modify_list
         self.plugin.identify_class.return_value = CONTEXT
         self.plugin.identify_method.return_value = ASSERTION
