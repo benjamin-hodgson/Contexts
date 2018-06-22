@@ -1,7 +1,7 @@
 import collections
 import os
 import tempfile
-import xml.etree.ElementTree as ET
+from lxml import etree
 
 from contexts.plugins.reporting import xml
 from .. import tools
@@ -69,8 +69,8 @@ class XmlOutputContext:
 
     @property
     def test_suites(self):
-        tree = ET.parse(self.filename).getroot()
-        print(ET.tostring(tree))
+        tree = etree.parse(self.filename).getroot()
+        print(etree.tostring(tree))
         return tree
 
 
