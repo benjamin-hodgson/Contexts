@@ -62,7 +62,7 @@ class AssertionResult(Result):
 
     @property
     def nfo(self):
-        return '\n'.join(format_exception(self.failure or self.error))
+        return '\n' + '\n'.join(format_exception(self.failure or self.error)) + '\n'
 
     @property
     def failures(self):
