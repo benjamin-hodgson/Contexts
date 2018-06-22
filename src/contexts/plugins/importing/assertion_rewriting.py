@@ -147,7 +147,12 @@ class AssertionChildVisitor(ast.NodeVisitor):
                     ], keywords=[]),
                     ast.Call(func=self.load('tuple'), args=[
                         ast.GeneratorExp(self.clsname(self.load('@x')), [
-                            ast.comprehension(ast.Name('@x', ast.Store()), self.load('@contexts_assertion_var2'), []),
+                            ast.comprehension(
+                                target=ast.Name('@x', ast.Store()),
+                                iter=self.load('@contexts_assertion_var2'),
+                                ifs=[],
+                                is_async=False,
+                            ),
                         ]),
                     ], keywords=[]),
                     self.clsname(self.load('@contexts_assertion_var2'))
