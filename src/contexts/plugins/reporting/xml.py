@@ -1,6 +1,6 @@
 from datetime import datetime, timedelta
 import io
-import xml.etree.ElementTree as ET
+from lxml import etree
 
 from . import context_name, format_exception, make_readable
 from ...plugin_interface import NO_EXAMPLE
@@ -34,6 +34,11 @@ class Result:
             errors = errors + test.errors
         return errors
 
+    @property
+    def passed(self):
+        return not(self.failure or self.errors)
+
+
     def __len__(self):
         return len(self.children)
 
@@ -57,7 +62,7 @@ class AssertionResult(Result):
 
     @property
     def nfo(self):
-        return format_exception(self.failure or self.error)
+        return '\n'.join(format_exception(self.failure or self.error))
 
     @property
     def failures(self):
@@ -115,65 +120,54 @@ class XmlReporter:
         self.test.stop()
         self.test.error = exception
 
-    def write_test_suites(self, builder):
+    def write_test_suites(self):
         total_tests = sum([len(suite) for suite in self.suites])
-        builder.start("testsuites", {
-            "tests": str(total_tests),
-            "errors": str(self.suites.errors),
-            "failures": str(self.suites.failures),
-            "time": "{0:.2f}".format(self.suites.time.total_seconds())
+        return etree.Element(
+            "testsuites",
+            tests=str(total_tests),
+            errors=str(self.suites.errors),
+            failures=str(self.suites.failures),
+            time="{0:.2f}".format(self.suites.time.total_seconds()),
+        )
 
-        })
-
-    def write_test_suite(self, builder, suite):
-        builder.start("testsuite", {
-            "name": suite.name,
-            "tests": str(len(suite)),
-            "errors": str(suite.errors),
-            "failures": str(suite.failures),
-            "time": "{0:.2f}".format(suite.time.total_seconds())
-        })
+    def write_test_suite(self, suites_el, suite):
+        suite_el = etree.SubElement(
+            suites_el,
+            "testsuite",
+            name=suite.name,
+            tests=str(len(suite)),
+            errors=str(suite.errors),
+            failures=str(suite.failures),
+            time="{0:.2f}".format(suite.time.total_seconds()),
+        )
         for test in suite.children:
-            self.write_test(builder, test)
+            self.write_test(suite_el, test)
 
-    def write_test(self, builder, test):
-        builder.start("testcase", {
-            "name": test.name,
-            "time": "{0:.2f}".format(test.time.total_seconds())
-        })
+    def write_test(self, suite_el, test):
+        testcase_el = etree.SubElement(
+            suite_el,
+            "testcase",
+            name=test.name,
+            time="{0:.2f}".format(test.time.total_seconds())
+        )
 
-        if(test.failure):
-            builder.start("failure", {
-                "type": "failure",
-                "message": test.msg
-            })
-            builder.data(test.nfo)
-            builder.end("failure")
-        elif(test.error):
-            builder.start("error", {
-                "type": "error",
-                "message": test.msg
-            })
-            builder.data(test.nfo)
-            builder.end("error")
+        if test.passed:
+            return
+        tag = 'failure' if test.failure else 'error'
+        failure_el = etree.SubElement(
+            testcase_el,
+            tag,
+            type=tag,
+            message=test.msg
+        )
+        failure_el.text = test.nfo
 
-        builder.end('testcase')
-
-    def end_test_suite(self, builder):
-        builder.end('testsuite')
-
-    def end_test_suites(self, builder):
-        builder.end('testsuites')
 
     def test_run_ended(self):
         self.suites.stop()
-        builder = ET.TreeBuilder()
-        self.write_test_suites(builder)
+        suites_el = self.write_test_suites()
         for suite in self.suites:
-            self.write_test_suite(builder, suite)
-            self.end_test_suite(builder)
-        self.end_test_suites(builder)
+            self.write_test_suite(suites_el, suite)
 
-        el = ET.ElementTree(element=builder.close())
         with io.open(self.path, 'wb') as f:
-            el.write(f)
+            etree.ElementTree(suites_el).write(f, pretty_print=True)
