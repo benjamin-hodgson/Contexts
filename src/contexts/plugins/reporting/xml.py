@@ -160,7 +160,7 @@ class XmlReporter:
             type=tag,
             message=test.msg
         )
-        failure_el.text = test.nfo
+        failure_el.text = etree.CDATA(test.nfo)
 
 
     def test_run_ended(self):
