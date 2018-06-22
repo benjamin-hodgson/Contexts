@@ -3,3 +3,4 @@ sphinx
 flake8
 coverage
 coveralls
+lxml~=4.2

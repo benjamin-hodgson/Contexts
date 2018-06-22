@@ -36,7 +36,7 @@ setup(
     package_dir={'': 'src'},
     packages=find_packages('src'),
     install_requires=["setuptools >= 1.0"],
-    extras_require={'colour': ["colorama >= 0.2.7"]},
+    extras_require={'colour': ["colorama >= 0.2.7"], 'lxml': ["lxml~=4.2"]},
     entry_points={
         'console_scripts': ['run-contexts=contexts.__main__:cmd'],
         'contexts.plugins': builtin_plugins,
