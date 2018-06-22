@@ -69,7 +69,8 @@ class XmlOutputContext:
 
     @property
     def test_suites(self):
-        tree = etree.parse(self.filename).getroot()
+        parser = etree.XMLParser(strip_cdata=False)
+        tree = etree.parse(self.filename, parser=parser).getroot()
         print(etree.tostring(tree))
         return tree
 
@@ -203,6 +204,7 @@ class When_an_assertion_fails(XmlOutputContext):
         tb = self.formatted_tb.replace('|n', '\n')
         expected = f'\n{tb}\n'
         assert(self.test.find("failure").text == expected)
+        assert(b'CDATA' in etree.tostring(self.test.find('failure')))
 
     def it_should_not_have_been_skipped(self):
         assert(self.test.find("skipped") is None)
@@ -288,6 +290,7 @@ class When_an_assertion_errors(XmlOutputContext):
         tb = self.formatted_tb.replace('|n', '\n')
         expected = f'\n{tb}\n'
         assert(self.test.find("error").text == expected)
+        assert(b'CDATA' in etree.tostring(self.test.find('error')))
 
     def it_should_not_have_been_skipped(self):
         assert(self.test.find("skipped") is None)
