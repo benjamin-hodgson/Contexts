@@ -199,6 +199,11 @@ class When_an_assertion_fails(XmlOutputContext):
     def it_should_have_a_short_message(self):
         assert(self.test.find("failure").get("message") == "Gotcha")
 
+    def it_should_have_the_traceback_as_CDATA(self):
+        tb = self.formatted_tb.replace('|n', '\n')
+        expected = f'\n{tb}\n'
+        assert(self.test.find("failure").text == expected)
+
     def it_should_not_have_been_skipped(self):
         assert(self.test.find("skipped") is None)
 
@@ -278,6 +283,11 @@ class When_an_assertion_errors(XmlOutputContext):
 
     def it_should_have_a_short_message(self):
         assert(self.test.find("error").get("message") == "Gotcha")
+
+    def it_should_have_the_traceback_as_CDATA(self):
+        tb = self.formatted_tb.replace('|n', '\n')
+        expected = f'\n{tb}\n'
+        assert(self.test.find("error").text == expected)
 
     def it_should_not_have_been_skipped(self):
         assert(self.test.find("skipped") is None)
