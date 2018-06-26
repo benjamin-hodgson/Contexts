@@ -1,5 +1,6 @@
-from datetime import datetime, timedelta
 import io
+import re
+from datetime import datetime, timedelta
 from lxml import etree
 
 from . import context_name, format_exception, make_readable
@@ -76,6 +77,9 @@ class AssertionResult(Result):
             return 1
         return 0
 
+
+
+ANSI_ESCAPE = re.compile(r'\x1B\[[0-?]*[ -/]*[@-~]')
 
 class XmlReporter:
 
@@ -158,9 +162,9 @@ class XmlReporter:
             testcase_el,
             tag,
             type=tag,
-            message=test.msg
+            message=ANSI_ESCAPE.sub('', test.msg)
         )
-        failure_el.text = etree.CDATA(test.nfo)
+        failure_el.text = etree.CDATA(ANSI_ESCAPE.sub('', test.nfo))
 
 
     def test_run_ended(self):

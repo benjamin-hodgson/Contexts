@@ -1,3 +1,4 @@
+import colorama
 import collections
 import os
 import tempfile
@@ -167,7 +168,7 @@ class When_an_assertion_fails(XmlOutputContext):
         assertion.__name__ = 'it_should_be_counted_as_a_failure'
         tb = [('made_up_file.py', 3, 'made_up_function', 'frame1'),
               ('another_made_up_file.py', 2, 'another_made_up_function', 'frame2')]
-        self.exception = tools.build_fake_assertion_error(tb, "Gotcha")
+        self.exception = tools.build_fake_assertion_error(tb, 'Gotcha')
         self.formatted_tb = (
             'Traceback (most recent call last):|n'
             '  File "made_up_file.py", line 3, in made_up_function|n'
@@ -223,6 +224,46 @@ class When_an_assertion_fails(XmlOutputContext):
 
     def the_suites_element_should_report_one_failure(self):
         assert(self.test_suites.get("failures") == "1")
+
+    @property
+    def suite(self):
+        return self.test_suites.find('testsuite')
+
+    @property
+    def test(self):
+        return self.suite.find('testcase')
+
+
+class When_an_assertion_fails_with_an_ansi_escape_code_for_colour(XmlOutputContext):
+
+    def because_a_test_fails(self):
+        ctx = tools.create_context('When_a_test_fails')
+        assertion = lambda: None
+        assertion.__name__ = 'it_should_be_counted_as_a_failure'
+        tb = [('made_up_file.py', 3, 'made_up_function', 'frame1'),
+              ('another_made_up_file.py', 2, 'another_made_up_function', 'frame2')]
+        message = colorama.Fore.RED + 'Gotcha' + colorama.Style.RESET_ALL
+        self.exception = tools.build_fake_assertion_error(tb, message)
+        self.formatted_tb = (
+            'Traceback (most recent call last):|n'
+            '  File "made_up_file.py", line 3, in made_up_function|n'
+            '    frame1|n'
+            '  File "another_made_up_file.py", line 2, in another_made_up_function|n'
+            '    frame2|n'
+            'plugin_tests.tools.FakeAssertionError: Gotcha')
+        tb = [
+            ('made_up_file.py', 3, 'made_up_function', 'frame1'),
+            ('another_made_up_file.py', 2, 'another_made_up_function', 'frame2')
+        ]
+
+        self.xml.context_started(ctx.cls)
+        self.xml.assertion_started(assertion)
+        self.xml.assertion_failed(assertion, self.exception)
+        self.xml.test_run_ended()
+
+
+    def the_message_should_be_stripped_of_control_chars(self):
+        assert(self.test.find("failure").get("message") == "Gotcha")
 
     @property
     def suite(self):
@@ -317,3 +358,4 @@ class When_an_assertion_errors(XmlOutputContext):
     @property
     def test(self):
         return self.suite.find('testcase')
+
