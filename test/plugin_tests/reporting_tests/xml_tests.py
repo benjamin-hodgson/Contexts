@@ -261,7 +261,6 @@ class When_an_assertion_fails_with_an_ansi_escape_code_for_colour(XmlOutputConte
         self.xml.assertion_failed(assertion, self.exception)
         self.xml.test_run_ended()
 
-
     def the_message_should_be_stripped_of_control_chars(self):
         assert(self.test.find("failure").get("message") == "Gotcha")
 
@@ -358,4 +357,3 @@ class When_an_assertion_errors(XmlOutputContext):
     @property
     def test(self):
         return self.suite.find('testcase')
-

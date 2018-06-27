@@ -6,6 +6,8 @@ from lxml import etree
 from . import context_name, format_exception, make_readable
 from ...plugin_interface import NO_EXAMPLE
 
+ANSI_ESCAPE = re.compile(r'\x1B\[[0-?]*[ -/]*[@-~]')
+
 
 class Result:
 
@@ -38,7 +40,6 @@ class Result:
     @property
     def passed(self):
         return not(self.failure or self.errors)
-
 
     def __len__(self):
         return len(self.children)
@@ -77,9 +78,6 @@ class AssertionResult(Result):
             return 1
         return 0
 
-
-
-ANSI_ESCAPE = re.compile(r'\x1B\[[0-?]*[ -/]*[@-~]')
 
 class XmlReporter:
 
@@ -165,7 +163,6 @@ class XmlReporter:
             message=ANSI_ESCAPE.sub('', test.msg)
         )
         failure_el.text = etree.CDATA(ANSI_ESCAPE.sub('', test.nfo))
-
 
     def test_run_ended(self):
         self.suites.stop()
