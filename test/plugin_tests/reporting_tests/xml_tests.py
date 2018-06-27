@@ -203,7 +203,7 @@ class When_an_assertion_fails(XmlOutputContext):
 
     def it_should_have_the_traceback_as_CDATA(self):
         tb = self.formatted_tb.replace('|n', '\n')
-        expected = f'\n{tb}\n'
+        expected = '\n' + tb + \n'
         assert(self.test.find("failure").text == expected)
         assert(b'CDATA' in etree.tostring(self.test.find('failure')))
 
@@ -328,7 +328,7 @@ class When_an_assertion_errors(XmlOutputContext):
 
     def it_should_have_the_traceback_as_CDATA(self):
         tb = self.formatted_tb.replace('|n', '\n')
-        expected = f'\n{tb}\n'
+        expected = '\n' + tb + \n'
         assert(self.test.find("error").text == expected)
         assert(b'CDATA' in etree.tostring(self.test.find('error')))
 
