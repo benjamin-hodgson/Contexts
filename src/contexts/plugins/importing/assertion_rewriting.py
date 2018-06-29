@@ -1,5 +1,6 @@
 import ast
 import importlib.abc
+import sys
 from . import Importer
 
 
@@ -136,6 +137,11 @@ class AssertionChildVisitor(ast.NodeVisitor):
             #                             if isinstance(@contexts_assertion_var2, tuple)
             #                             else @contexts_assertion_var2.__name__)
             # assert isinstance(@contexts_assertion_var1, @contexts_assertion_var2), 'Asserted isinstance({0}, {1}) but found it to be a {2}'.format(@contexts_assertion_var1, repr(@contexts_assertion_var4).replace("'", ""), @contexts_assertion_var3)
+            if sys.version_info < (3, 6):
+                tupleAstArgs = ast.comprehension(ast.Name('@x', ast.Store()), self.load('@contexts_assertion_var2'), [])
+            else:
+                tupleAstArgs = ast.comprehension(ast.Name('@x', ast.Store()), self.load('@contexts_assertion_var2'), [], False)
+
             return [
                 self.assign('@contexts_assertion_var1', call_node.args[0]),
                 self.assign('@contexts_assertion_var2', call_node.args[1]),
@@ -145,9 +151,10 @@ class AssertionChildVisitor(ast.NodeVisitor):
                         self.load('@contexts_assertion_var2'),
                         self.load('tuple'),
                     ], keywords=[]),
+
                     ast.Call(func=self.load('tuple'), args=[
                         ast.GeneratorExp(self.clsname(self.load('@x')), [
-                            ast.comprehension(ast.Name('@x', ast.Store()), self.load('@contexts_assertion_var2'), []),
+                            tupleAstArgs,
                         ]),
                     ], keywords=[]),
                     self.clsname(self.load('@contexts_assertion_var2'))
