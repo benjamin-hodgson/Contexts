@@ -2,6 +2,7 @@ import os.path
 import re
 from contexts.plugin_interface import TEST_FOLDER, TEST_FILE, CONTEXT, EXAMPLES, SETUP, ACTION, ASSERTION, TEARDOWN
 from contexts import errors
+from textwrap import dedent
 from .. import cleverly_get_words
 
 
@@ -58,14 +59,20 @@ def assert_not_ambiguous(name, keywords):
     all_keyword_sets = {example_words, setup_words, action_words, assertion_words, cleanup_words}
     all_keyword_sets.remove(keywords)
 
-    for word in get_lowercase_words(name):
-        if any(word in s for s in all_keyword_sets):
-            msg = """The method {} is ambiguously named.
-You can override this check by explicitly marking your
-method using one of the decorators in the 'contexts' module:
-http://contexts.readthedocs.org/en/latest/guide.html#overriding-name-based-usage
-""".format(name)
-            raise errors.MethodNamingError(msg)
+    for method_word in get_lowercase_words(name):
+        for keyword in all_keyword_sets:
+            if method_word in keyword:
+                method_keyword = next(k for k in keywords if k in name)
+                msg = dedent(
+                    """
+                    The method {name} is ambiguously named:
+                        It contains both {method_word!r} and {method_keyword!r}
+                        You can override this check by explicitly marking your
+                        method using one of the decorators in the 'contexts' module:
+                        http://contexts.readthedocs.org/en/latest/guide.html#overriding-name-based-usage
+                    """
+                ).format(**locals())
+                raise errors.MethodNamingError(msg)
 
 
 def get_lowercase_words(string):
