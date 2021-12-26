@@ -15,7 +15,7 @@ __all__ = [
 
 def main():
     """
-    Call contexts.run() with the sepcified arguments,
+    Call contexts.run() with the specified arguments,
     exiting with code 0 if the test run was successful,
     code 1 if unsuccessful.
     """
