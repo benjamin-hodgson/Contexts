@@ -1,3 +1,7 @@
+I'm not maintaining this. You're welcome to fork it.
+====================================================
+
+
 Contexts
 ========
 [![Build Status](https://travis-ci.org/benjamin-hodgson/Contexts.png?branch=master)](https://travis-ci.org/benjamin-hodgson/Contexts)
